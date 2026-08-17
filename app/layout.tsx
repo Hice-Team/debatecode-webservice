@@ -1,28 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import AnnouncementGate from "./components/announcement-gate";
 import AutoTranslate from "./components/auto-translate";
 import ChannelTalk from "./components/channel-talk";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
+// Fonts are loaded via Google Fonts stylesheet to avoid Turbopack internal imports
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://debatecode.kr';
 const SITE_NAME = 'Debate Code';
@@ -83,14 +66,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ko"
-      className={`${spaceGrotesk.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
-    >
+    <html lang="ko" className={`h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {/* Monaco 에디터 · Pyodide 런타임 · Pretendard 웹폰트 CDN 선연결 (React 19가 head로 호이스팅) */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+        {/* Google Fonts (Space Grotesk, IBM Plex) loaded via stylesheet to avoid next/font runtime issues */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
         {/* Pretendard — 워드마크와 어울리는 국문 본문 서체 */}
         <link
           rel="stylesheet"

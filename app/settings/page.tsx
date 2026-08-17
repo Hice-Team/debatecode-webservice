@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { prisma } from '@/app/lib/prisma';
+import Link from 'next/link';
 import { verifySession } from '@/app/lib/dal';
 import { createClient } from '@/app/lib/supabase/server';
 import { maskSecret } from '@/app/lib/crypto';
@@ -187,7 +188,7 @@ export default async function SettingsPage() {
           label="비밀번호 변경"
           desc="주기적으로 바꾸면 계정을 더 안전하게 지킬 수 있습니다."
           stacked
-          control={<PasswordForm email={user.email} />}
+          control={<PasswordForm email={email} />}
         />
 
         <SettingRow

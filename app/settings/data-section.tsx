@@ -44,7 +44,7 @@ export default function DataSection({ aiSessionCount }: { aiSessionCount: number
     if (selected.size === 0) return;
     const fd = new FormData();
     for (const v of selected) fd.append('types', v);
-    await action(fd as unknown as FormData);
+    await (action as unknown as (fd: FormData) => Promise<unknown>)(fd as unknown as FormData);
     setShowModal(false);
     setSelected(new Set());
     setDone(true);
