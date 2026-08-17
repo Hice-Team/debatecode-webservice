@@ -1,0 +1,203 @@
+'use server';
+
+// 사용자 발신 요청 — 신고 / 문의 / 디베이트메이트 신청 / 문제 초안 제출.
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import { verifySession, getUser } from '../dal';
+import { prisma } from '../prisma';
+import { canAuthorProblems } from '../roles';
+import { createClient } from '../supabase/server';
+import { safeStorageKey } from '../storage';
+
+/* ---------- 신고 ---------- */
+
+export interface ReportState {
+  errors?: { form?: string[] };
+  saved?: boolean;
+}
+
+const reportSchema = z.object({
+  targetType: z.enum(['post', 'comment', 'user']),
+  targetId: z.string().min(1),
+  reason: z.string().min(1).max(40),
+  detail: z.string().trim().max(1000).optional().or(z.literal('')),
+});
+
+export async function submitReport(_prev: ReportState, formData: FormData): Promise<ReportState> {
+  const session = await verifySession();
+  const parsed = reportSchema.safeParse({
+    targetType: formData.get('targetType'),
+    targetId: formData.get('targetId'),
+    reason: formData.get('reason'),
+    detail: formData.get('detail') ?? '',
+  });
+  if (!parsed.success) return { errors: { form: ['신고 내용을 확인해 주세요.'] } };
+
+  await prisma.report.create({
+    data: {
+      reporterId: session.userId,
+      targetType: parsed.data.targetType,
+      targetId: parsed.data.targetId,
+      reason: parsed.data.reason,
+      detail: parsed.data.detail || null,
+    },
+  });
+  return { saved: true };
+}
+
+/* ---------- 문의 ---------- */
+
+export interface InquiryState {
+  errors?: { subject?: string[]; body?: string[]; form?: string[] };
+  saved?: boolean;
+}
+
+const inquirySchema = z.object({
+  subject: z.string().trim().min(2, '제목은 2자 이상이어야 합니다.').max(120),
+  body: z.string().trim().min(5, '내용은 5자 이상이어야 합니다.').max(4000),
+});
+
+export async function submitInquiry(_prev: InquiryState, formData: FormData): Promise<InquiryState> {
+  const user = await getUser();
+  const parsed = inquirySchema.safeParse({ subject: formData.get('subject'), body: formData.get('body') });
+  if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors };
+
+  await prisma.inquiry.create({
+    data: { userId: user.id, email: user.email, subject: parsed.data.subject, body: parsed.data.body },
+  });
+  return { saved: true };
+}
+
+/* ---------- 디베이트메이트 신청 ---------- */
+
+export interface MateApplyState {
+  errors?: { motivation?: string[]; attachment?: string[]; form?: string[] };
+  saved?: boolean;
+}
+
+const mateSchema = z.object({
+  motivation: z.string().trim().min(20, '지원 동기를 20자 이상 작성해 주세요.').max(2000),
+  portfolioUrl: z.string().trim().url('올바른 URL이 아닙니다.').optional().or(z.literal('')),
+});
+
+const MATE_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
+
+export async function applyDebateMate(_prev: MateApplyState, formData: FormData): Promise<MateApplyState> {
+  const user = await getUser();
+  if (user.role === 'debate_mate') return { errors: { form: ['이미 디베이트메이트입니다.'] } };
+
+  const parsed = mateSchema.safeParse({
+    motivation: formData.get('motivation'),
+    portfolioUrl: formData.get('portfolioUrl') ?? '',
+  });
+  if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors };
+
+  // 신청서 PDF — 폼에서 필수로 안내하므로 서버에서도 필수/형식/용량을 강제한다.
+  const attachment = formData.get('attachment');
+  if (!(attachment instanceof File) || attachment.size === 0)
+    return { errors: { attachment: ['신청서 PDF를 첨부해 주세요.'] } };
+  if (attachment.type !== 'application/pdf' && !attachment.name.toLowerCase().endsWith('.pdf'))
+    return { errors: { attachment: ['PDF 파일만 제출할 수 있습니다.'] } };
+  if (attachment.size > MATE_ATTACHMENT_MAX_BYTES)
+    return { errors: { attachment: ['파일 용량이 너무 큽니다. (최대 10MB)'] } };
+
+  const supabase = await createClient();
+  const path = safeStorageKey(user.id, attachment.name);
+  const { error: uploadError } = await supabase.storage
+    .from('community-uploads')
+    .upload(path, attachment, { contentType: 'application/pdf' });
+  if (uploadError) return { errors: { attachment: [`파일 업로드에 실패했습니다: ${uploadError.message}`] } };
+  const { data: uploaded } = supabase.storage.from('community-uploads').getPublicUrl(path);
+
+  // 재신청 시 이전 신청을 덮어써 pending으로 되돌린다.
+  await prisma.debateMateApplication.upsert({
+    where: { userId: user.id },
+    create: {
+      userId: user.id,
+      motivation: parsed.data.motivation,
+      portfolioUrl: parsed.data.portfolioUrl || null,
+      attachmentUrl: uploaded.publicUrl,
+      attachmentName: attachment.name,
+    },
+    update: {
+      motivation: parsed.data.motivation,
+      portfolioUrl: parsed.data.portfolioUrl || null,
+      attachmentUrl: uploaded.publicUrl,
+      attachmentName: attachment.name,
+      status: 'pending',
+      reviewedById: null,
+      reviewedAt: null,
+    },
+  });
+  revalidatePath('/dashboard');
+  return { saved: true };
+}
+
+/* ---------- 문제 초안 제출 (디베이트메이트/출제자) ---------- */
+
+export interface DraftState {
+  errors?: { form?: string[] };
+  saved?: boolean;
+}
+
+const draftSchema = z.object({
+  title: z.string().trim().min(2).max(120),
+  difficulty: z.coerce.number().int().min(1).max(4),
+  category: z.string().trim().min(1).max(40),
+  description: z.string().trim().min(10, '문제 설명을 10자 이상 작성해 주세요.').max(20000),
+});
+
+export async function submitProblemDraft(_prev: DraftState, formData: FormData): Promise<DraftState> {
+  const user = await getUser();
+  if (!canAuthorProblems(user.role)) return { errors: { form: ['문제 출제 권한이 없습니다.'] } };
+
+  const parsed = draftSchema.safeParse({
+    title: formData.get('title'),
+    difficulty: formData.get('difficulty'),
+    category: formData.get('category'),
+    description: formData.get('description'),
+  });
+  if (!parsed.success) return { errors: { form: ['문제 정보를 확인해 주세요.'] } };
+
+  // starterCodes / keywords / testCases는 JSON 문자열로 받는다(에디터가 직렬화).
+  const parseJson = <T,>(key: string, fallback: T): T => {
+    try {
+      const raw = formData.get(key);
+      return raw ? (JSON.parse(String(raw)) as T) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
+  const payload = {
+    tags: parseJson<string[]>('tags', []),
+    timeLimitMs: Number(formData.get('timeLimitMs') ?? 3000) || 3000,
+    starterCodes: parseJson<Record<string, string>>('starterCodes', {}),
+    keywords: parseJson<string[]>('keywords', []),
+    testCases: parseJson<unknown[]>('testCases', []),
+  };
+
+  // 저작권 기증 위임서 — donate=on일 때만 위임 기록. 서명자 이름 필수.
+  const donate = formData.get('copyrightDonate') === 'on';
+  const signerName = String(formData.get('signerName') ?? '').trim();
+  if (donate && signerName.length < 2) {
+    return { errors: { form: ['저작권 기증에 동의하려면 위임서에 서명자 이름을 입력해야 합니다.'] } };
+  }
+  const copyrightDelegation = donate
+    ? { donated: true, signerName, agreedAt: new Date().toISOString(), scope: 'debateCode 문제 은행 게시·복제·2차저작 이용 위임' }
+    : null;
+
+  await prisma.problemDraft.create({
+    data: {
+      authorId: user.id,
+      title: parsed.data.title,
+      difficulty: parsed.data.difficulty,
+      category: parsed.data.category,
+      description: parsed.data.description,
+      payload: payload as never,
+      copyrightDelegation: copyrightDelegation as never,
+    },
+  });
+  revalidatePath('/dashboard');
+  return { saved: true };
+}

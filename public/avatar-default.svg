@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="기본 프로필">
+  <defs>
+    <linearGradient id="dc-av" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5b4cf0"/>
+      <stop offset="1" stop-color="#1800ac"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" fill="#12142c"/>
+  <circle cx="48" cy="37" r="15" fill="url(#dc-av)"/>
+  <path d="M17 90c3.5-19 15.5-28 31-28s27.5 9 31 28z" fill="url(#dc-av)" opacity="0.9"/>
+</svg>

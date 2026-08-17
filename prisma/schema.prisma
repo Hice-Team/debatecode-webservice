@@ -1,0 +1,743 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider   = "prisma-client-js"
+  // Cloudflare Workers에는 네이티브 쿼리 엔진이 없다. driver adapter + WASM 쿼리
+  // 컴파일러를 쓰는 Rust-free 클라이언트를 생성한다(네이티브 .dll.node 미포함).
+  engineType = "client"
+  // 클라이언트를 node_modules가 아닌 앱 소스에 생성한다. node_modules/@prisma/client
+  // 를 심볼릭 링크로 추적하는 Next standalone 번들 문제(Windows EPERM)를 피하고,
+  // 번들러가 일반 소스 파일로 포함하도록 한다.
+  output     = "../app/generated/prisma"
+}
+
+// Supabase Auth(auth.users)가 인증/비밀번호를 소유한다.
+// id는 auth.users.id와 동일한 값 — 가입 시 DB 트리거(on_auth_user_created)가 이 행을 생성한다.
+model User {
+  id                     String                 @id @db.Uuid
+  email                  String                 @unique
+  name                   String
+  role                   String                 @default("user") // user | problem_setter | reviewer | admin | debate_mate | partner
+  createdAt              DateTime               @default(now())
+  // DebateAI 모델 설정 (사용자별)
+  aiProvider             String                 @default("mock") // mock | anthropic | gemini | openai | grok | groq | huggingface | bridge | local
+  aiModel                String? // 예: claude-sonnet-5, gemini-2.5-flash
+  // 면접·리팩토링 모드에서 쓸 debateAI 모델 (app/lib/ai/debateai-models.ts의 id)
+  // 비어 있으면 DEFAULT_CODE_MODEL_ID(deepseek-coder-v2)를 쓴다
+  aiCodeModel            String?
+  aiApiKey               String? // 주의: 데모 스코프 — 평문 저장 (README 한계 참조)
+  aiBaseUrl              String? // local/bridge LLM 엔드포인트 (OpenAI 호환, 예: http://localhost:11434/v1)
+  aiOnboarded            Boolean                @default(false) // 가입 후 AI 온보딩 단계를 거쳤는지 (건너뛰기 포함)
+  // Debate Free AI 일일 토큰 쿠터 — resetAt이 지나면 사용량이 0으로 초기화된다
+  freeTokensUsed         Int                    @default(0)
+  freeTokensResetAt      DateTime?
+  // 모델별 사용량 — { "<모델 id>": 토큰수 }. 창(freeTokensResetAt)이 넘어가면 함께 비워진다.
+  // 설정 화면이 "어느 모델을 얼마나 썼는지"를 보여 주기 위한 내역이며 합계는 freeTokensUsed다.
+  freeUsageByModel       Json?
+  // debateNetwork(MCP)·debateBridge 연동용 개인 액세스 토큰 — 평문은 저장하지 않고 sha256 해시만 보관
+  mcpTokenHash           String?                @unique // dcp_ 토큰의 sha256(hex)
+  mcpTokenPrefix         String? // 표시용 접두부 (예: dcp_ab12…)
+  mcpTokenCreatedAt      DateTime?
+  consentAt              DateTime? // 개인정보 수집·이용 동의 시각
+  // debateAI 이용약관 동의 시각 — AI 기능(면접·AI Search) 최초 이용 전 받는다
+  aiTermsAgreedAt        DateTime?
+  // 학습 활용 동의 (선택) — 동의한 경우에만 대화·코드가 가명처리 후 모델 개선에 쓰인다.
+  // 미동의여도 AI 기능 이용에 제한이 없다(KISA 안내서: 선택 동의 거부 시 불이익 금지).
+  aiTrainingConsentAt    DateTime?
+  twoFactorRecoveryEmail String?
+  twoFactorEnabled       Boolean                @default(false)
+  twoFactorSecret        String?
+  twoFactorTempSecret    String?
+  marketingConsentAt     DateTime? // 마케팅 수신 동의 시각 (선택 약관)
+  // 다단계 가입 위저드에서 수집하는 프로필 — 개인정보는 AES-256으로 암호화 저장(app/lib/crypto.ts)
+  birthdate              String? // 생년월일(암호화된 문자열, enc:v1:...)
+  gender                 String? // 암호화: male | female | other | undisclosed
+  position               String? // 암호화: 지망 포지션 (frontend | backend | ...)
+  major                  String? // 암호화: 전공 (선택)
+  interests              Json                   @default("[]") // string[] — 관심 태그(비민감)
+  referralSource         String? // 암호화: 접하게 된 경로 (search | sns | ...)
+  profileCompleted       Boolean                @default(false) // 가입 위저드(계정+프로필 단계)를 끝까지 완료했는지
+  suspendedUntil         DateTime? // 커뮤니티 제재 만료 시각 — 미래면 글/댓글 작성 불가
+  debateQAccess          Boolean                @default(false) // debateQ 사전사용 허용 (메이트가 아니어도 debateQ 이용 가능)
+  // 프로필/앱 설정
+  avatarUrl              String? // Storage 버킷 avatars의 공개 URL
+  emailNotifications     Boolean                @default(true)
+  preferredLanguage      String? // 코드 에디터 기본 언어
+  starScore              Int                    @default(0)
+  rankBadgeVisible       Boolean                @default(true) // 커뮤니티 글/답글에 등급 배지 노출 여부
+  // 등급 비공개(rankBadgeVisible=false) 사용자를 명예의 전당에 표시할 때 쓰는 고정 익명 식별자.
+  // 가입 시 1회 생성되며 익명글/익명 답글에도 같은 값을 쓴다. 예: "Anonymous 4271"
+  anonymousTag           String?                @unique
+  submissions            Submission[]
+  runAttempts            RunAttempt[]
+  interviews             InterviewSession[]
+  posts                  Post[]
+  comments               Comment[]
+  postLikes              PostLike[]
+  bookmarks              Bookmark[]
+  workbooks              Workbook[]
+  lessonProgress         LessonProgress[]
+  pollVotes              PollVote[]
+  loginEvents            LoginEvent[]
+  sanctions              Sanction[]
+  problemDrafts          ProblemDraft[]
+  mateApplication        DebateMateApplication?
+  debateQSessions        DebateQSession[]
+  pointEntries           PointLedger[]
+  pointRequests          PointRequest[]
+  shopOrders             ShopOrder[]
+  aiSessions             AiSession[]
+  debateAiChats          DebateAiChat[]
+  // 백업 코드(암호화된 문자열을 개별 행으로 저장)
+  backupCodes            BackupCode[]
+  // WebAuthn(보안키) 등록 정보
+  webauthnKeys           WebauthnKey[]
+  webauthnChallenge      String?
+}
+
+// ---------- 운영: 신고 / 문의 / 제재 / 검토큐 / 디베이트메이트 신청 ----------
+
+// 신고 — 게시글/댓글/사용자 대상. 콘솔의 신고 처리 큐에서 처리한다.
+model Report {
+  id          String    @id @default(cuid())
+  reporterId  String    @db.Uuid
+  targetType  String // post | comment | user
+  targetId    String
+  reason      String // spam | abuse | illegal | etc
+  detail      String?
+  status      String    @default("pending") // pending | resolved | dismissed
+  handledById String?   @db.Uuid
+  createdAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  @@index([status, createdAt])
+}
+
+// 문의 — 로그인/비로그인 모두. 콘솔의 문의 처리 큐에서 답변한다.
+model Inquiry {
+  id           String    @id @default(cuid())
+  userId       String?   @db.Uuid
+  email        String?
+  subject      String
+  body         String
+  status       String    @default("open") // open | answered | closed
+  answer       String?
+  answeredById String?   @db.Uuid
+  createdAt    DateTime  @default(now())
+  answeredAt   DateTime?
+
+  @@index([status, createdAt])
+}
+
+// 제재 이력 — 유형별 밴(열람/글/답글) + 기간(만료 없으면 영구). 해제해도 이력은 남는다.
+model Sanction {
+  id         String    @id @default(cuid())
+  userId     String    @db.Uuid
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String // read | post | comment
+  reason     String
+  expiresAt  DateTime? // null = 영구
+  active     Boolean   @default(true)
+  issuedById String?   @db.Uuid
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, active])
+}
+
+// 디베이트메이트 문제 검토큐 — 승인 시 payload로 Problem/TestCase를 생성한다.
+model ProblemDraft {
+  id                  String    @id @default(cuid())
+  authorId            String    @db.Uuid
+  author              User      @relation(fields: [authorId], references: [id])
+  title               String
+  difficulty          Int
+  category            String
+  description         String
+  payload             Json // { tags, timeLimitMs, starterCodes, keywords, testCases }
+  status              String    @default("pending") // pending | approved | rejected
+  reviewNote          String?
+  reviewedById        String?   @db.Uuid
+  createdAt           DateTime  @default(now())
+  reviewedAt          DateTime?
+  // 저작권 기증 위임서 — { donated, signerName, agreedAt, scope } (미작성 시 null = 저작권 보유)
+  copyrightDelegation Json?
+
+  @@index([status, createdAt])
+}
+
+// 디베이트메이트 신청 — 승인 시 신청자 role=debate_mate. 회수 시 status=revoked.
+model DebateMateApplication {
+  id             String    @id @default(cuid())
+  userId         String    @unique @db.Uuid
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  motivation     String
+  portfolioUrl   String?
+  attachmentUrl  String? // 신청서 PDF (Storage 공개 URL)
+  attachmentName String? // 업로드 원본 파일명 (표시용)
+  status         String    @default("pending") // pending | approved | rejected | revoked
+  reviewNote     String? // 반려서/승인 메모/회수 사유 — 신청자에게 표시된다
+  reviewedById   String?   @db.Uuid
+  createdAt      DateTime  @default(now())
+  reviewedAt     DateTime?
+}
+
+// IP 보안 — 로그인 위치/기기 기록 및 새 IP 감지
+model LoginEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipHash    String // sha256(userId:ip) — 이 사용자에게 반복된 IP인지 판별 (원문 IP 미저장)
+  ipMasked  String // 표시용 마스킹 IP (예: 203.0.113.x)
+  userAgent String?
+  isNew     Boolean  @default(false) // 이 사용자가 처음 보는 IP에서의 로그인인지
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model BackupCode {
+  id        String   @id @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.Uuid
+  code      String // encrypted code (use app/lib/crypto.encryptSecret)
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model WebauthnKey {
+  id         String   @id @db.Uuid
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String   @db.Uuid
+  name       String? // 사용자가 붙이는 이름
+  credential String? // 향후 credential JSON (암호화 가능)
+  createdAt  DateTime @default(now())
+}
+
+model Problem {
+  id              Int              @id @default(autoincrement())
+  slug            String           @unique
+  title           String
+  difficulty      Int // 1=입문 2=초급 3=중급 4=고급
+  category        String // "해시" | "스택" | "DP" | "그리디" | "그래프" | "자료구조"
+  tags            Json // string[]
+  description     String // 한국어 markdown
+  timeLimitMs     Int              @default(3000)
+  starterCodes    Json // { javascript: string, python: string }
+  keywords        Json // string[] — 면접 평가 기대 키워드
+  company         String? // 기출 기업명 (기출별 분류용, 예: "카카오")
+  examYear        String? // 기출 연도 (예: "2024")
+  testCases       TestCase[]
+  submissions     Submission[]
+  runAttempts     RunAttempt[]
+  bookmarks       Bookmark[]
+  workbookItems   WorkbookItem[]
+  debateQSessions DebateQSession[]
+  debateAiChats   DebateAiChat[]
+  setItems        ProblemSetItem[]
+}
+
+// ---------- 코딩테스트: 편성된 문제집 세트 ----------
+
+// 운영진이 콘솔에서 편성하는 문제 세트 — 기출 모음집, 실전 모의고사, 테마별 문제집.
+// /contests 라이브러리에 카드로 노출되고, 세트 상세에서 순서대로 풀 수 있다.
+model ProblemSet {
+  id           Int              @id @default(autoincrement())
+  slug         String           @unique
+  title        String
+  kind         String           @default("exam") // exam(기출 모음) | mock(실전 모의고사) | theme(테마별)
+  description  String
+  company      String? // kind=exam일 때 출제 기업
+  examYear     String? // 기출 연도
+  difficulty   Int              @default(2) // 세트 대표 난이도 1~4
+  timeLimitMin Int? // 세트 전체 권장 제한 시간(분). null이면 무제한
+  tags         Json             @default("[]") // string[]
+  published    Boolean          @default(false)
+  order        Int              @default(0) // 라이브러리 정렬 순서 (작을수록 앞)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  items        ProblemSetItem[]
+
+  @@index([published, kind, order])
+}
+
+model ProblemSetItem {
+  id        String     @id @default(cuid())
+  setId     Int
+  problemId Int
+  order     Int        @default(0)
+  set       ProblemSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  problem   Problem    @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([setId, problemId])
+  @@index([problemId])
+}
+
+// 나만의 문제집 (스크랩)
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String   @db.Uuid
+  problemId Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  problem   Problem  @relation(fields: [problemId], references: [id])
+
+  @@unique([userId, problemId])
+}
+
+model Workbook {
+  id        String         @id @default(cuid())
+  userId    String         @db.Uuid
+  name      String
+  isDefault Boolean        @default(false)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WorkbookItem[]
+
+  @@unique([userId, name])
+  @@index([userId, isDefault])
+}
+
+model WorkbookItem {
+  id         String   @id @default(cuid())
+  workbookId String
+  problemId  Int
+  createdAt  DateTime @default(now())
+  workbook   Workbook @relation(fields: [workbookId], references: [id], onDelete: Cascade)
+  problem    Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([workbookId, problemId])
+  @@index([problemId])
+}
+
+model TestCase {
+  id        Int     @id @default(autoincrement())
+  problemId Int
+  problem   Problem @relation(fields: [problemId], references: [id])
+  input     Json // 인자 배열 e.g. [[2,7,11,15], 9]
+  expected  Json // 기대 반환값 e.g. [0,1]
+  isHidden  Boolean @default(false)
+  order     Int     @default(0)
+}
+
+model Submission {
+  id          String            @id @default(cuid())
+  userId      String            @db.Uuid
+  problemId   Int
+  code        String
+  language    String // "javascript" | "python"
+  status      String // "PASS" | "FAIL" | "ERROR" | "TIMEOUT"
+  passedCount Int
+  totalCount  Int
+  runtimeMs   Int?
+  createdAt   DateTime          @default(now())
+  user        User              @relation(fields: [userId], references: [id])
+  problem     Problem           @relation(fields: [problemId], references: [id])
+  interview   InterviewSession?
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+// 실행/제출 시도 기록 — 워크스페이스의 시도횟수 탭 테이블. 실행 시각·코드·통과 여부를 남기고,
+// 항목을 누르면 그 시점의 코드를 에디터로 복원한다.
+model RunAttempt {
+  id          String   @id @default(cuid())
+  userId      String   @db.Uuid
+  problemId   Int
+  code        String
+  language    String // "javascript" | "python"
+  status      String // "PASS" | "FAIL" | "ERROR" | "TIMEOUT"
+  passedCount Int
+  totalCount  Int
+  kind        String   @default("run") // run | submit
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem     Problem  @relation(fields: [problemId], references: [id])
+
+  @@index([userId, problemId, createdAt(sort: Desc)])
+}
+
+model InterviewSession {
+  id           String     @id @default(cuid())
+  submissionId String     @unique
+  userId       String     @db.Uuid
+  status       String     @default("ACTIVE") // ACTIVE | COMPLETED
+  round        Int        @default(0)
+  // 면접장 입장 전에 고른 설정 — { rounds, level, focus } (app/lib/ai/interview-config.ts)
+  config       Json?
+  messages     Json       @default("[]") // ChatMessage[]
+  analysis     Json? // CodeAnalysis
+  report       Json? // DefenseReport
+  defenseScore Int?
+  weakKeywords Json       @default("[]") // string[]
+  createdAt    DateTime   @default(now())
+  submission   Submission @relation(fields: [submissionId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+}
+
+// debateQ — 디베이트메이트 전용: AI가 생성한 결함 코드를 수정하며 변론하는 모드
+model DebateQSession {
+  id          String   @id @default(cuid())
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemId   Int
+  problem     Problem  @relation(fields: [problemId], references: [id])
+  status      String   @default("ACTIVE") // ACTIVE | COMPLETED
+  round       Int      @default(1)
+  language    String // javascript | python
+  initialCode String // AI가 생성한 결함 코드 원본
+  currentCode String // 사용자가 수정 중인 최신 코드
+  flawHints   Json     @default("[]") // string[] — 심어진 결함 요약 (평가 컨텍스트)
+  messages    Json     @default("[]") // ChatMessage[]
+  attempts    Int      @default(0) // 실행(채점) 시도 횟수
+  codeHistory Json     @default("[]") // CodeRecord[] — AI가 생성한 모든 코드 버전 (열람용)
+  report      Json? // DefenseReport
+  score       Int?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+// debateAI 탭의 대화 — 이용자·문제당 하나만 둔다.
+//
+// 탭을 닫거나 새로고침해도 대화가 이어져야 하고, 같은 문제를 다시 열었을 때
+// 지난 대화가 그대로 있어야 "이 문제를 어디까지 이해했는지"가 남는다.
+// 여러 개를 만들지 않는 대신, 이용자가 원할 때 초기화(DELETE)할 수 있게 했다.
+model DebateAiChat {
+  id        String   @id @default(cuid())
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemId Int
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  // general 시그니처·디베이트 모드의 학습 대화
+  // refactor 리팩토링모드 — AI가 만든 결함 코드를 두고 나누는 대화
+  // 두 대화는 전제가 달라(내 코드 vs AI의 결함 코드) 한 줄기로 이으면 문맥이 어긋난다.
+  scope     String   @default("general")
+  messages  Json     @default("[]") // { role, content, command? }[]
+  model     String? // 마지막으로 고른 모델 id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, problemId, scope])
+  @@index([userId, updatedAt(sort: Desc)])
+}
+
+model Post {
+  id                  String       @id @default(cuid())
+  board               String // free | mentor | qna | market | sns
+  type                String       @default("text") // text | link (SNS 게시판은 link)
+  title               String
+  content             String
+  url                 String? // type=link일 때 외부 링크
+  snsPlatform         String? // velog | instagram | x | blog | etc (board=sns일 때)
+  authorId            String       @db.Uuid
+  // 작성자 익명 표시 — true면 목록/상세에서 작성자명 대신 anonymousTag를 쓴다
+  anonymous           Boolean      @default(false)
+  // 비밀글 — 작성자 본인과 관리자/디베이트메이트만 열람 가능 (문의게시판은 자동 true)
+  secret              Boolean      @default(false)
+  // 인증된 사용자에게만 답변 받기 — 멘토게시판에서 선택. 열람은 전원, 답글은 메이트/관리자만
+  verifiedOnlyReplies Boolean      @default(false)
+  // 채택된 답변 — 값이 있으면 더 이상 답글을 달 수 없다
+  adoptedCommentId    String?      @unique
+  adoptedAt           DateTime?
+  viewCount           Int          @default(0)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime? // 마지막 수정 시각 (수정된 적 없으면 null)
+  author              User         @relation(fields: [authorId], references: [id])
+  comments            Comment[]
+  attachments         Attachment[]
+  likes               PostLike[]
+
+  @@index([board, createdAt(sort: Desc)])
+}
+
+// 게시글 좋아요
+model PostLike {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+// 댓글/답글 — parentId가 null이면 최상위 댓글, 있으면 해당 댓글의 답글
+model Comment {
+  id        String    @id @default(cuid())
+  postId    String
+  authorId  String    @db.Uuid
+  parentId  String?
+  anonymous Boolean   @default(false) // 익명 답글 — 작성자명 대신 anonymousTag 표시
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? // 마지막 수정 시각 (수정된 적 없으면 null)
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id])
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([postId])
+}
+
+// 게시글 첨부 — 파일/이미지(Storage 업로드), 유튜브/외부 링크, 코드 스니펫, 투표
+model Attachment {
+  id        String     @id @default(cuid())
+  postId    String
+  kind      String // file | image | youtube | link | code | poll
+  url       String? // Storage 공개 URL 또는 외부 링크/유튜브 URL
+  label     String? // 파일명 / 링크 제목 / 투표 질문
+  content   String? // kind=code일 때 스니펫, kind=poll일 때 JSON {options: string[]}
+  language  String? // kind=code일 때 언어
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+  post      Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  votes     PollVote[]
+
+  @@index([postId])
+}
+
+// 투표 응답 — 첨부(kind=poll) 1건당 사용자 1표, 다시 누르면 취소/변경
+model PollVote {
+  id           String     @id @default(cuid())
+  attachmentId String
+  userId       String     @db.Uuid
+  optionIndex  Int
+  createdAt    DateTime   @default(now())
+  attachment   Attachment @relation(fields: [attachmentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@unique([attachmentId, userId])
+}
+
+// 전체 공지 팝업 — active인 공지 중 최신 1건을 사이트 전역 팝업으로 노출
+model Announcement {
+  id        String    @id @default(cuid())
+  title     String
+  content   String // markdown
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? // 마지막 수정 시각
+}
+
+// ---------- debateStudy: 코스웨어 ----------
+
+model Course {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  title       String
+  description String
+  language    String // "python" | "javascript" 등
+  order       Int      @default(0)
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id       Int              @id @default(autoincrement())
+  courseId Int
+  slug     String
+  title    String
+  content  String // 한국어 markdown (텍스트 + 코드 예제)
+  order    Int              @default(0)
+  course   Course           @relation(fields: [courseId], references: [id])
+  progress LessonProgress[]
+
+  @@unique([courseId, slug])
+}
+
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String   @db.Uuid
+  lessonId    Int
+  completedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  lesson      Lesson   @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+}
+
+// ---------- 디베이트메이트: 포인트 원장 / 활동 인증 / 디베이트샵 ----------
+
+// 포인트 원장 — 잔액은 이 테이블의 amount 합으로만 구한다(별도 잔액 컬럼을 두지 않는다).
+// 적립은 양수, 사용(상점 주문)은 음수. 승인 완료된 건만 기록되며 취소는 반대 부호 행을 추가한다.
+model PointLedger {
+  id        String   @id @default(cuid())
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int // 적립 +, 사용 -
+  kind      String // problem_approved | mentor_adopted | qna_adopted | sns_approved | bonus | shop_purchase | shop_refund | admin_adjust
+  memo      String?
+  refType   String? // problemDraft | post | comment | shopOrder | pointRequest
+  refId     String?
+  createdAt DateTime @default(now())
+
+  // 같은 활동으로 두 번 적립되지 않게 막는다 (예: 같은 답글 채택 재실행)
+  @@unique([userId, kind, refType, refId])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+// 활동 인증 신청 — 관리자 승인 후에야 원장에 적립된다(신청 시점에는 적립되지 않는다).
+model PointRequest {
+  id           String    @id @default(cuid())
+  userId       String    @db.Uuid
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind         String // sns_promo | etc
+  status       String    @default("pending") // pending | approved | rejected
+  amount       Int // 승인 시 지급할 포인트 (신청 시 정책값으로 채움)
+  // sns_promo: { platform, url, postId?, description }
+  payload      Json      @default("{}")
+  proofUrl     String? // 인증 스크린샷 (Storage)
+  reviewNote   String?
+  reviewedById String?   @db.Uuid
+  createdAt    DateTime  @default(now())
+  reviewedAt   DateTime?
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+// 디베이트샵 상품 — 기프티콘 카탈로그. 1,000P = 1,000원.
+model ShopProduct {
+  id          String      @id @default(cuid())
+  name        String
+  brand       String
+  priceKrw    Int // 정가(원). 필요 포인트와 1:1
+  imageUrl    String?
+  // 발급 채널 — kakao_biz(카카오쇼핑 for biz) | giftishow(기프티쇼) | manual(수동 발급)
+  provider    String      @default("manual")
+  providerSku String?
+  active      Boolean     @default(true)
+  order       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  orders      ShopOrder[]
+
+  @@index([active, order])
+}
+
+// 상점 주문 — 주문 시 포인트를 즉시 차감(원장에 음수 기록)하고, 쿠폰 발급은 별도 단계로 확정한다.
+// 발급 실패/취소 시 환불 원장을 추가한다.
+model ShopOrder {
+  id              String      @id @default(cuid())
+  userId          String      @db.Uuid
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId       String
+  product         ShopProduct @relation(fields: [productId], references: [id])
+  pointsSpent     Int
+  status          String      @default("requested") // requested | fulfilled | canceled | failed
+  // 발급 결과 — 쿠폰 코드는 발급 채널이 돌려준 값. 수동 발급이면 운영자가 입력한다.
+  couponCode      String?
+  couponExpiresAt DateTime?
+  providerOrderId String?
+  failureReason   String?
+  createdAt       DateTime    @default(now())
+  fulfilledAt     DateTime?
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status, createdAt])
+}
+
+// 출시 알림 신청 — 대기 페이지(debate-commingsoon)에서 이메일만 받는다.
+//
+// 회원가입이 아니다. 출시 소식을 한 번 보내기 위한 최소 수집이라 이메일 외에는 두지 않는다.
+// 같은 주소가 여러 번 오면 덮어쓴다(unique) — 중복 발송을 막기 위해서다.
+model LaunchNotify {
+  id         String    @id @default(cuid())
+  email      String    @unique
+  source     String    @default("coming-soon") // 어느 화면에서 남겼는지
+  notifiedAt DateTime? // 출시 메일을 실제로 보낸 시각
+  createdAt  DateTime  @default(now())
+
+  @@index([createdAt(sort: Desc)])
+}
+
+// ---------- 마케팅 ----------
+
+// 홍보성 이메일 수신 동의자 명단.
+//
+// User.marketingConsentAt과 따로 두는 이유가 셋 있다.
+//   1) 회원이 아닌 사람(출시 알림 신청자 등)도 같은 명단에 들어온다.
+//   2) 수신거부는 계정과 무관하게 링크 하나로 즉시 되어야 한다(unsubscribeToken).
+//   3) 발송 대상을 뽑을 때 User 전체를 훑지 않고 이 표만 읽으면 된다.
+// 동의를 철회하면 행을 지우지 않고 unsubscribedAt을 채운다 — 재동의 이력을 남기기 위함이다.
+model MarketingContact {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String?
+  userId           String?   @db.Uuid // 회원이면 연결, 탈퇴하면 null로 끊는다
+  source           String    @default("signup") // signup | settings | launch_notify | manual
+  consentedAt      DateTime  @default(now())
+  unsubscribedAt   DateTime? // 값이 있으면 발송 대상에서 제외
+  unsubscribeToken String    @unique
+  lastSentAt       DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([unsubscribedAt, consentedAt(sort: Desc)])
+}
+
+// 홍보 메일 발송 건 — 콘솔에서 작성하고 보낸다. 보낸 뒤에는 수정하지 않고 기록으로 남긴다.
+model EmailCampaign {
+  id             String    @id @default(cuid())
+  subject        String
+  body           String // 마크다운
+  audience       String    @default("all") // all | members | guests
+  status         String    @default("draft") // draft | sending | sent | failed
+  recipientCount Int       @default(0)
+  sentCount      Int       @default(0)
+  failedCount    Int       @default(0)
+  errorMessage   String?
+  createdById    String    @db.Uuid
+  createdAt      DateTime  @default(now())
+  sentAt         DateTime?
+
+  @@index([status, createdAt(sort: Desc)])
+}
+
+// ---------- AI Search: 대화 세션 ----------
+
+// AI Search 대화 세션 — 사용자당 최근 1개만 활성으로 유지한다.
+// '새로 시작하기'를 고르면 기존 세션을 삭제하고 새 세션을 만든다.
+model AiSession {
+  id           String      @id @default(cuid())
+  userId       String      @db.Uuid
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String? // 첫 질문에서 뽑은 요약 제목
+  model        String? // 이 세션에서 마지막으로 고른 모델 id (app/lib/ai/search-models.ts)
+  effort       String? // 마지막으로 고른 사고 강도 (low | medium | high)
+  // 가져온 세션이면 원본 파일 정보를 남긴다 — 최초 질문 위에 카드로 한 번만 보여준다
+  importedFrom Json? // { fileName, messageCount, importedAt }
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  messages     AiMessage[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+}
+
+model AiMessage {
+  id               String    @id @default(cuid())
+  sessionId        String
+  session          AiSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role             String // user | assistant
+  content          String
+  // 첨부 메타데이터 — [{ kind: image|file, name, url, mime, size }]
+  // 파일 첨부와 "모델이 그 파일을 이해하는가"는 별개 문제라 데이터만 보관한다.
+  attachments      Json      @default("[]")
+  // 답변 근거 문서 — [{ source, title, href }]. 검색 계층 결과이며 AI 계층과 분리돼 있다.
+  sources          Json      @default("[]")
+  model            String? // 이 답변을 만든 모델 id — 투명성 고지에 쓴다
+  // 이 답변에 든 토큰 — 공급자가 usage를 주면 그 값, 아니면 추정치.
+  // 어디까지가 실측인지 섞이면 안 되므로 estimated로 구분해 둔다.
+  promptTokens     Int?
+  completionTokens Int?
+  tokensEstimated  Boolean   @default(false)
+  // 생성에 쓴 사고 강도 (low | medium | high)
+  effort           String?
+  createdAt        DateTime  @default(now())
+
+  @@index([sessionId, createdAt])
+}

@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+/* Pretendard 웹폰트는 layout.tsx <head>의 <link>로 로드한다 (cdn.jsdelivr.net preconnect 포함). */
+
+/* 테마 시스템 — "네이비 다크 크롬 + 쿨 페이퍼 콘텐츠"
+   · 크롬(네비/푸터)과 몰입 표면(히어로/워크스페이스/마케팅 밴드)은 명시적 navy ink
+   · 콘텐츠 표면(대시보드/커뮤니티/설정 등)은 paper
+   브랜드 컬러는 워드마크 "Code"의 일렉트릭 인디고(#1800AC)에서 추출했다.
+   페이지는 자신의 팔레트를 명시적으로 소유하며 dark: 변형은 사용하지 않는다. */
+
+:root {
+  --background: #f5f6fb;
+  --foreground: #14152b;
+}
+
+@theme inline {
+  /* debateCode 브랜드 토큰 — 워드마크 인디고 기반 */
+  --color-ink: #08091a;        /* 네이비-블랙 에디터/크롬 배경 */
+  --color-ink-soft: #12142c;   /* 패널/텍스트 다크 */
+  --color-paper: #f5f6fb;      /* 쿨톤 라이트 배경 */
+
+  /* 브랜드 인디고 스케일 (#1800AC 기준) */
+  --color-brand-50: #eef0ff;
+  --color-brand-100: #dfe1ff;
+  --color-brand-200: #c4c6ff;
+  --color-brand-300: #a1a2ff;
+  --color-brand-400: #7d78fb;
+  --color-brand-500: #5b4cf0;
+  --color-brand-600: #4531d9;
+  --color-brand-700: #3421b8;   /* 워드마크 근사 */
+  --color-brand-800: #23158f;
+  --color-brand-900: #1800ac;   /* 워드마크 정확값 */
+  --color-brand-950: #10005f;
+
+  /* 시그널 액센트 = 브랜드 인디고 (기존 amber 대체) */
+  --color-signal: #4531d9;
+  --color-signal-soft: #5b4cf0;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Pretendard Variable", "Pretendard", var(--font-plex-sans), var(--font-geist-sans), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-plex-mono), var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-space-grotesk), "Pretendard", ui-sans-serif, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Pretendard Variable", "Pretendard", var(--font-plex-sans), ui-sans-serif, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 공유 컴포넌트 클래스 — 서버/클라이언트 어디서든 동일한 스타일을 쓴다 */
+@layer components {
+  .dc-card {
+    @apply bg-white rounded-2xl border border-ink/[0.06] shadow-[0_1px_3px_rgba(20,21,43,0.05)];
+  }
+  .dc-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 bg-signal text-white text-sm font-semibold rounded-xl hover:bg-brand-600 active:scale-[0.98] transition disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .dc-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-ink/10 bg-white text-sm font-medium text-ink-soft/75 hover:bg-paper hover:text-ink active:scale-[0.98] transition disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .dc-input {
+    @apply w-full rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-sm text-ink-soft placeholder:text-ink-soft/35 focus:outline-none focus:ring-2 focus:ring-signal/50 focus:border-signal/40;
+  }
+  /* 리스트 행 — 테이블 대신 쓰는 터치 친화 행 (토스식 리스트) */
+  .dc-row {
+    @apply flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-paper/70;
+  }
+  /* 메타 칩 — 카테고리/상태 등 보조 정보 */
+  .dc-chip {
+    @apply inline-flex items-center rounded-full border border-ink/[0.08] bg-paper px-2.5 py-0.5 text-[11px] font-medium text-ink-soft/70;
+  }
+}
+
+/* 인풋 박스 — 사용자가 드래그로 크기를 조절할 수 없다.
+   대신 내용에 맞춰 자동 확장(field-sizing) — 입력창을 클릭해 Enter로 줄을 늘리면 박스가 커진다. */
+textarea {
+  resize: none;
+  field-sizing: content;
+  max-height: 45vh;
+}
+
+/* 키보드 포커스 가시성 — 마우스 클릭에는 나타나지 않는다 */
+:focus-visible {
+  outline: 2px solid #4531d9;
+  outline-offset: 2px;
+}
+
+/* 면접 채팅 타자기 커서 */
+@keyframes dc-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 끝을 알 수 없는 진행 막대 — AI가 분석 중일 때처럼 남은 양을 계산할 수 없는 구간에 쓴다 */
+@keyframes dc-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.dc-indeterminate {
+  animation: dc-indeterminate 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dc-indeterminate {
+    animation: none;
+    width: 100%;
+    opacity: 0.4;
+  }
+}
+
+/* 히어로 3D 틸트용 부드러운 전환 */
+.dc-tilt {
+  transition: transform 0.15s ease-out;
+  transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  will-change: transform;
+}
+
+/* 스크롤바 (에디터/채팅 패널) */
+.dc-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.dc-scroll::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.12);
+  border-radius: 4px;
+}
+.dc-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 스크롤은 되지만 스크롤바는 보이지 않는 영역 (워크스페이스 탭 내비게이션 등) */
+.dc-scroll-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.dc-scroll-none::-webkit-scrollbar {
+  display: none;
+}

@@ -1,0 +1,114 @@
+import type { Metadata, Viewport } from "next";
+import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import "./globals.css";
+import Providers from "./providers";
+import AnnouncementGate from "./components/announcement-gate";
+import AutoTranslate from "./components/auto-translate";
+import ChannelTalk from "./components/channel-talk";
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://debatecode.kr';
+const SITE_NAME = 'Debate Code';
+const SITE_DESC =
+  '디베이트코드는 새로운 온라인 저지 서비스입니다. 일반적인 온라인 저지와 마찬가지로, 알고리즘 풀이 기능을 제공하지만 대화형 모드 제공을 통해 기술 면접까지 준비할 수 있습니다.';
+
+// 루트 메타데이터 — 하위 페이지는 title만 지정하면 template로 " · Debate Code"가 붙고,
+// favicon·openGraph·twitter·robots 등은 자동 상속된다.
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Debate Code · 대화형 온라인 저지',
+    template: '%s · Debate Code',
+  },
+  description: SITE_DESC,
+  applicationName: SITE_NAME,
+  keywords: ['온라인 저지', '코딩테스트', '기술면접', 'AI 면접', '알고리즘', 'DebateAI', 'Debate Code', '코딩 문제'],
+  authors: [{ name: 'Debate Code' }],
+  creator: 'Debate Code',
+  icons: {
+    icon: [{ url: '/icon.png', type: 'image/png' }],
+    shortcut: '/icon.png',
+    apple: '/icon.png',
+  },
+  manifest: '/manifest.webmanifest',
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'ko_KR',
+    url: SITE_URL,
+    title: 'Debate Code · 대화형 온라인 저지',
+    description: SITE_DESC,
+    images: [{ url: '/logo.png', width: 1200, height: 630, alt: 'Debate Code' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Debate Code · 대화형 온라인 저지',
+    description: SITE_DESC,
+    images: ['/logo.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+  },
+  formatDetection: { telephone: false, email: false, address: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0b0d12',
+  width: 'device-width',
+  initialScale: 1,
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang="ko"
+      className={`${spaceGrotesk.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col">
+        {/* Monaco 에디터 · Pyodide 런타임 · Pretendard 웹폰트 CDN 선연결 (React 19가 head로 호이스팅) */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+        {/* Pretendard — 워드마크와 어울리는 국문 본문 서체 */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
+        />
+        <Providers>
+          {children}
+          {/* EN 모드에서 화면의 한국어 텍스트(DB 콘텐츠 포함)를 자동 번역 */}
+          <AutoTranslate />
+        </Providers>
+        <AnnouncementGate />
+        {/* 채널톡 — 커뮤니티/대시보드/설정/온보딩에서만 우측 하단 노출 */}
+        <ChannelTalk />
+      </body>
+    </html>
+  );
+}

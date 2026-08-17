@@ -1,0 +1,3 @@
+-- AI Search 모델 선택 기록
+ALTER TABLE "AiSession" ADD COLUMN IF NOT EXISTS "model" TEXT;
+ALTER TABLE "AiMessage" ADD COLUMN IF NOT EXISTS "model" TEXT;
