@@ -1,23 +1,34 @@
-// 메일 발송 — Resend REST API를 직접 부른다(SDK 의존성 없이).
+// 메일 발송 — 우리 메일 계정에서 SMTP로 직접 보낸다.
 //
-// 키가 없는 환경에서는 실제로 보내지 않고 "보냈다면 이랬을 것"을 돌려준다. 개발 중에 콘솔의
+// 전송 수단은 두 가지를 지원하고, 설정된 쪽을 자동으로 고른다.
+//
+//   1) SMTP (기본)  SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS
+//      우리가 가진 메일 계정을 그대로 발신자로 쓴다. 외부 서비스에 가입할 필요도,
+//      도메인 소유를 증명할 필요도 없다.
+//   2) Resend       RESEND_API_KEY
+//      나중에 자체 도메인(debatecode.kr)으로 옮길 때를 위해 남겨 둔 경로다.
+//      SMTP 설정이 있으면 이쪽은 쓰지 않는다.
+//
+// 둘 다 없으면 실제로 보내지 않고 "보냈다면 이랬을 것"을 돌려준다(dryRun). 개발 중에 콘솔의
 // 발송 화면이 통째로 막히면 흐름을 확인할 수 없기 때문이다. 대신 결과에 dryRun을 표시해
 // 화면이 "실제 발송됨"으로 착각하지 않게 한다.
-//
-// env:
-//   RESEND_API_KEY   발송 키 (없으면 dry-run)
-//   EMAIL_FROM       보내는 주소 (예: "debateCode <noreply@debatecode.kr>")
+import { smtpSend, type SmtpConfig } from './smtp';
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
-const DEFAULT_FROM = 'debateCode <noreply@debatecode.kr>';
+const DEFAULT_FROM = 'debateCode <hicecorp.team@gmail.com>';
 
-/** 한 번에 보낼 수 있는 수신자 수 — 그 이상은 나눠 보낸다 */
+/**
+ * 한 번에 처리할 수신자 수.
+ *
+ * SMTP에서는 한 연결에서 연속으로 보낼 수 있는 통수에 서버마다 제한이 있다(Gmail은 약 100).
+ * 그보다 넉넉히 낮게 잡아 연결을 나눈다.
+ */
 const BATCH_SIZE = 50;
 
 export interface SendResult {
   sent: number;
   failed: number;
-  /** 키가 없어 실제로는 보내지 않은 경우 */
+  /** 전송 수단이 설정되지 않아 실제로는 보내지 않은 경우 */
   dryRun: boolean;
   error?: string;
 }
@@ -30,15 +41,62 @@ export interface MailMessage {
   unsubscribeUrl?: string;
 }
 
-function apiKey(): string | undefined {
-  return process.env.RESEND_API_KEY;
+/* ---------- 전송 수단 선택 ---------- */
+
+type Transport =
+  | { kind: 'smtp'; config: SmtpConfig }
+  | { kind: 'resend'; key: string }
+  | { kind: 'none' };
+
+export function fromAddress(): string {
+  return process.env.EMAIL_FROM || DEFAULT_FROM;
+}
+
+function transport(): Transport {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (host && user && pass) {
+    return {
+      kind: 'smtp',
+      config: {
+        host,
+        // 465(암묵적 TLS)만 지원한다 — 이유는 app/lib/smtp.ts 머리말 참고
+        port: Number(process.env.SMTP_PORT) || 465,
+        user,
+        pass,
+        ehloName: process.env.SMTP_EHLO_NAME || hostnameOfSite(),
+      },
+    };
+  }
+  const key = process.env.RESEND_API_KEY;
+  if (key) return { kind: 'resend', key };
+  return { kind: 'none' };
+}
+
+function hostnameOfSite(): string {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://debatecode.kr').hostname;
+  } catch {
+    return 'debatecode.kr';
+  }
 }
 
 export function isEmailLive(): boolean {
-  return !!apiKey();
+  return transport().kind !== 'none';
 }
 
-async function sendOne(message: MailMessage, key: string): Promise<boolean> {
+/** 콘솔·헬스체크에 그대로 띄우는 한 줄 설명 */
+export function emailTransportLabel(): string {
+  const active = transport();
+  if (active.kind === 'smtp') return `SMTP ${active.config.host}:${active.config.port} · 발신 ${fromAddress()}`;
+  if (active.kind === 'resend') return `Resend · 발신 ${fromAddress()}`;
+  return '전송 수단 미설정 — 발송은 dry-run으로 기록만 남는다';
+}
+
+/* ---------- 발송 ---------- */
+
+async function sendViaResend(message: MailMessage, key: string): Promise<boolean> {
   try {
     const res = await fetch(RESEND_ENDPOINT, {
       method: 'POST',
@@ -47,11 +105,10 @@ async function sendOne(message: MailMessage, key: string): Promise<boolean> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM || DEFAULT_FROM,
+        from: fromAddress(),
         to: [message.to],
         subject: message.subject,
         html: message.html,
-        // 수신거부는 본문 링크만이 아니라 헤더로도 알린다 — 스팸 신고 대신 해지로 이어진다
         ...(message.unsubscribeUrl
           ? {
               headers: {
@@ -73,25 +130,50 @@ async function sendOne(message: MailMessage, key: string): Promise<boolean> {
  * 주소 하나가 잘못됐다고 발송 전체가 멈추면 안 된다.
  */
 export async function sendBulk(messages: MailMessage[]): Promise<SendResult> {
-  const key = apiKey();
-  if (!key) return { sent: 0, failed: 0, dryRun: true };
+  const active = transport();
+  if (active.kind === 'none') return { sent: 0, failed: 0, dryRun: true };
 
+  const from = fromAddress();
   let sent = 0;
   let failed = 0;
+  let error: string | undefined;
+
   for (let i = 0; i < messages.length; i += BATCH_SIZE) {
     const batch = messages.slice(i, i + BATCH_SIZE);
-    const results = await Promise.all(batch.map((m) => sendOne(m, key)));
+
+    if (active.kind === 'smtp') {
+      const report = await smtpSend(
+        active.config,
+        batch.map((m) => ({
+          from,
+          to: m.to,
+          subject: m.subject,
+          html: m.html,
+          replyTo: process.env.EMAIL_REPLY_TO || undefined,
+          unsubscribeUrl: m.unsubscribeUrl,
+        })),
+      );
+      sent += report.sent;
+      failed += report.failed;
+      error ??= report.error;
+      continue;
+    }
+
+    const results = await Promise.all(batch.map((m) => sendViaResend(m, active.key)));
     for (const ok of results) {
       if (ok) sent += 1;
       else failed += 1;
     }
+    if (failed > 0) error ??= 'Resend가 발송을 거부했습니다.';
   }
-  return { sent, failed, dryRun: false };
+
+  return { sent, failed, dryRun: false, error };
 }
 
 export async function sendMail(message: MailMessage): Promise<SendResult> {
   return sendBulk([message]);
 }
+
 
 // ---------- 본문 틀 ----------
 

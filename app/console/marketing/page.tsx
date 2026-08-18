@@ -57,8 +57,9 @@ export default async function ConsoleMarketingPage() {
 
       {!live && (
         <p className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          발송 키(<code className="font-mono">RESEND_API_KEY</code>)가 설정되지 않았습니다. 지금은 대상 수만 확인되고
-          실제로 메일이 나가지 않습니다.
+          메일 전송 수단(<code className="font-mono">SMTP_HOST</code> · <code className="font-mono">SMTP_USER</code> ·{' '}
+          <code className="font-mono">SMTP_PASS</code>)이 설정되지 않았습니다. 지금은 대상 수만 확인되고 실제로 메일이
+          나가지 않습니다.
         </p>
       )}
 

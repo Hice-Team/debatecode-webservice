@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { getSessionWithProfile } from '@/app/lib/dal';
 import { hasConsoleAccess } from '@/app/lib/roles';
+import { isEmailLive, emailTransportLabel } from '@/app/lib/email';
 
 // GET /api/health — 배포 후 상태 점검 창구.
 //
@@ -110,14 +111,11 @@ function checkFreeAi(): Check {
 }
 
 function checkEmail(): Check {
-  const ok = configured('RESEND_API_KEY');
   return {
     key: 'email',
     label: '메일 발송',
-    status: ok ? 'ok' : 'unconfigured',
-    detail: ok
-      ? `Resend · 발신 ${process.env.EMAIL_FROM || '기본 주소'}`
-      : 'RESEND_API_KEY 미설정 — 발송은 dry-run으로 기록만 남는다',
+    status: isEmailLive() ? 'ok' : 'unconfigured',
+    detail: emailTransportLabel(),
   };
 }
 

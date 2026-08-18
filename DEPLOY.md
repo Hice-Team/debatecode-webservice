@@ -51,9 +51,12 @@ npx wrangler secret put AI_SECRET_KEY_2           # 이중 암호화 2차 키 (�
 npx wrangler secret put NAVER_CLIENT_ID
 npx wrangler secret put NAVER_CLIENT_SECRET
 
-# 메일 발송 — 없으면 dry-run으로 기록만 남는다
-npx wrangler secret put RESEND_API_KEY
-npx wrangler secret put EMAIL_FROM
+# 메일 발송(SMTP) — 없으면 dry-run으로 기록만 남는다
+npx wrangler secret put SMTP_HOST          # smtp.gmail.com
+npx wrangler secret put SMTP_PORT          # 465
+npx wrangler secret put SMTP_USER          # hicecorp.team@gmail.com
+npx wrangler secret put SMTP_PASS          # Gmail 앱 비밀번호 16자리 (계정 비밀번호 아님)
+npx wrangler secret put EMAIL_FROM         # debateCode <hicecorp.team@gmail.com>
 
 # Debate Free AI 업스트림 — 있는 키의 모델만 카탈로그에 노출된다
 npx wrangler secret put OPENAI_API_KEY
@@ -131,20 +134,56 @@ npx prisma generate
 
 ## 출시 전 반드시 확인 — 메일 발송
 
-가입 흐름이 **이메일 인증 코드**에 의존한다(`/signup` 2단계). 이 코드는 Supabase Auth가 보낸다.
+메일이 나가는 길은 **두 갈래**이고, 둘 다 같은 Gmail 계정(`hicecorp.team@gmail.com`)을 쓰지만
+설정하는 곳이 다르다. 하나만 해 두면 나머지 절반이 조용히 안 나간다.
 
-**Supabase 기본 메일 서비스는 시간당 몇 통 수준으로 제한된다.** 커스텀 SMTP를 설정하지 않으면
-사람이 몇 명만 몰려도 "코드가 오지 않아 가입이 안 되는" 상태가 된다. 코드 문제가 아니라
-설정 문제라 로그에도 잘 드러나지 않는다.
+| 무엇이 | 어디서 보내나 | 설정하는 곳 |
+|---|---|---|
+| 가입 인증 코드, 비밀번호 재설정 | Supabase Auth | Supabase 대시보드 → Authentication → Emails → **SMTP Settings** |
+| 문의 답변, 복구 이메일 코드, 홍보 메일 | 앱 ([app/lib/smtp.ts](app/lib/smtp.ts)) | Wrangler 시크릿 `SMTP_*` |
 
-1. Supabase 대시보드 → **Authentication → Emails → SMTP Settings**에서 커스텀 SMTP를 켠다.
-   Resend를 쓴다면: host `smtp.resend.com`, port `465`, user `resend`, password는 Resend API 키.
-2. **Authentication → Rate Limits**에서 시간당 발송 한도를 실제 예상 가입량에 맞게 올린다.
-3. 보내는 주소의 도메인에 SPF·DKIM을 설정한다. 없으면 스팸함으로 간다.
+### 1) Gmail 앱 비밀번호 발급 (양쪽이 같이 쓴다)
 
-앱이 직접 보내는 메일(문의 답변, 복구 이메일 코드, 홍보 메일)은 Supabase가 아니라
-`RESEND_API_KEY`를 쓴다 — **둘 다 설정해야 한다.** 키가 없으면 dry-run으로 기록만 남고
-실제로는 나가지 않는다(콘솔 화면에 그렇게 표시된다).
+1. `hicecorp.team@gmail.com`으로 로그인 → 구글 계정 → 보안 → **2단계 인증을 먼저 켠다**
+   (2단계 인증이 꺼져 있으면 앱 비밀번호 메뉴 자체가 나오지 않는다).
+2. <https://myaccount.google.com/apppasswords> 에서 앱 이름을 `debateCode`로 만들고
+   **16자리**를 받는다. 공백은 빼고 붙여넣는다.
+3. 이 값은 한 번만 보여 준다. 못 옮겨 적었으면 지우고 새로 만든다.
+
+### 2) Supabase Auth 쪽 (가입 인증 코드)
+
+Authentication → Emails → SMTP Settings:
+
+```
+Host      smtp.gmail.com
+Port      465
+Username  hicecorp.team@gmail.com
+Password  (위 앱 비밀번호)
+Sender    hicecorp.team@gmail.com / debateCode
+```
+
+**커스텀 SMTP를 켜지 않으면 Supabase 기본 메일은 시간당 몇 통 수준으로 막힌다.** 사람이 몇 명만
+몰려도 "코드가 오지 않아 가입이 안 되는" 상태가 되는데, 코드 문제가 아니라 설정 문제라
+로그에도 드러나지 않는다. 켠 뒤 **Authentication → Rate Limits**의 시간당 한도도 함께 올린다.
+
+### 3) 앱 쪽 (문의 답변·홍보 메일)
+
+위 "런타임 시크릿 등록"의 `SMTP_*` 다섯 개를 넣는다. 발신 주소(`EMAIL_FROM`)의 주소 부분은
+`SMTP_USER`와 **같아야 한다** — 다르면 Gmail이 조용히 바꾸거나 아예 거절한다.
+
+### 4) 배포 후 실제로 도착하는지 확인
+
+**콘솔 › 시스템 › 상태**의 "메일 도달 확인"에서 테스트 메일을 보낸다. 헬스체크는 키가 꽂혀
+있으면 초록불을 주지만, 앱 비밀번호 만료·발신 주소 불일치·스팸 분류는 그 초록불 아래에서
+벌어진다. **스팸함까지** 확인할 것.
+
+### 알아 둘 한도
+
+- 무료 Gmail 계정은 **하루 약 500통**(Google Workspace는 2,000통)이 상한이다.
+  홍보 메일 대상이 그보다 많으면 며칠로 나눠 보내거나 Workspace로 올려야 한다.
+- 발신이 `@gmail.com`인 동안에는 SPF·DKIM을 우리가 손댈 수 없다(구글 도메인이라 이미 서명된다).
+  자체 도메인(`@debatecode.kr`)으로 옮기는 시점에 SPF·DKIM·DMARC를 설정해야 하고,
+  그때는 `RESEND_API_KEY` 경로로 갈아타는 편이 낫다 — 코드는 이미 양쪽을 다 지원한다.
 
 ## 알려진 한계
 

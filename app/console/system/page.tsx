@@ -6,7 +6,9 @@ import { getUser } from '@/app/lib/dal';
 import { can } from '@/app/lib/permissions-server';
 import { getSettingsByCategory, maintenanceState, SETTING_DEFS } from '@/app/lib/settings';
 import { auditActionLabel } from '@/app/lib/audit';
+import { isEmailLive, emailTransportLabel } from '@/app/lib/email';
 import { PageHeader, StatGrid, Callout, EmptyRow, BTN_NEUTRAL } from '../ui';
+import TestMail from './test-mail';
 
 export const metadata: Metadata = { title: '시스템 상태' };
 
@@ -105,10 +107,8 @@ async function collectChecks() {
     {
       key: 'email',
       label: '메일 발송',
-      status: (configured('RESEND_API_KEY') ? 'ok' : 'unconfigured') as Status,
-      detail: configured('RESEND_API_KEY')
-        ? `Resend · 발신 ${process.env.EMAIL_FROM || '기본 주소'}`
-        : '미설정 — 발송이 dry-run으로 기록만 남는다',
+      status: (isEmailLive() ? 'ok' : 'unconfigured') as Status,
+      detail: emailTransportLabel(),
     },
     {
       key: 'webauthn',
@@ -233,6 +233,11 @@ export default async function SystemHealthPage() {
             );
           })}
         </div>
+        {canWrite && (
+          <div className="mt-3">
+            <TestMail defaultTo={user.email} />
+          </div>
+        )}
       </div>
 
       {/* 런타임 설정 요약 + 최근 변경 */}

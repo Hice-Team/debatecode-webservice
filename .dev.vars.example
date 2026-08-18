@@ -38,11 +38,27 @@ NEXT_PUBLIC_SITE_URL=
 NAVER_CLIENT_ID=
 NAVER_CLIENT_SECRET=
 
-# ---------- 선택: 메일 발송 (Resend) ----------
+# ---------- 메일 발송 (SMTP) ----------
+# 문의 답변 / 복구 이메일 인증코드 / 홍보 메일이 이 경로로 나간다.
+# 미설정이면 dry-run — 콘솔 화면은 동작하되 실제로 보내지 않는다(app/lib/email.ts).
+#
+# Gmail이면 SMTP_PASS는 계정 비밀번호가 아니라 앱 비밀번호(16자리)다:
+#   2단계 인증을 켠 뒤 https://myaccount.google.com/apppasswords 에서 발급.
+# 포트는 465(암묵적 TLS)만 지원한다 — 이유는 app/lib/smtp.ts 머리말 참고.
 
-# 없으면 dry-run — 콘솔 화면은 동작하되 실제로 보내지 않는다(app/lib/email.ts)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=
+SMTP_PASS=
+# 주소 부분이 SMTP_USER와 달라지면 Gmail이 거절하거나 조용히 바꿔 버린다
+EMAIL_FROM=debateCode <hicecorp.team@gmail.com>
+# 답장 받을 주소 (비우면 EMAIL_FROM)
+EMAIL_REPLY_TO=
+# EHLO에 쓸 이름 (비우면 NEXT_PUBLIC_SITE_URL의 호스트)
+SMTP_EHLO_NAME=
+
+# 자체 도메인으로 옮길 때를 위한 대안 경로. SMTP 설정이 있으면 무시된다.
 RESEND_API_KEY=
-EMAIL_FROM=
 
 # ---------- 선택: WebAuthn(보안키) ----------
 

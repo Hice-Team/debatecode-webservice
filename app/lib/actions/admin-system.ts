@@ -11,6 +11,7 @@ import { prisma } from '../prisma';
 import { requirePermission } from '../permissions-server';
 import { audit } from '../audit';
 import { SETTING_DEFS, settingDef, type SettingDef } from '../settings';
+import { sendMail, isEmailLive, emailTransportLabel } from '../email';
 
 /* ---------- 런타임 설정 ---------- */
 
@@ -205,4 +206,62 @@ export async function saveMaintenance(
   revalidatePath('/console/system', 'layout');
   revalidatePath('/', 'layout');
   return { saved: true };
+}
+
+/* ---------- 테스트 메일 ---------- */
+
+export interface TestMailState {
+  ok?: string;
+  error?: string;
+}
+
+/**
+ * 지금 설정된 전송 수단으로 실제 한 통을 보낸다.
+ *
+ * "키가 꽂혀 있는가"는 헬스체크가 알려 주지만, 그것과 "실제로 도착하는가"는 다른 문제다.
+ * 앱 비밀번호가 만료됐거나, 발신 주소가 계정과 달라 거절당하거나, 스팸함으로 직행하는
+ * 상황은 전부 헬스체크가 초록불인 채로 벌어진다. 배포 직후 이 버튼 한 번이 그걸 잡는다.
+ */
+export async function sendTestMail(_prev: TestMailState, formData: FormData): Promise<TestMailState> {
+  const caller = await getUser();
+  await requirePermission(caller, 'setting.write');
+
+  const to = String(formData.get('to') ?? '').trim() || caller.email;
+  if (!to || !to.includes('@')) return { error: '받는 주소를 입력해 주세요.' };
+
+  if (!isEmailLive()) {
+    return { error: '전송 수단이 설정되지 않았습니다(SMTP_HOST · SMTP_USER · SMTP_PASS).' };
+  }
+
+  const result = await sendMail({
+    to,
+    subject: '[debateCode] 메일 발송 테스트',
+    html: `
+      <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.7;color:#1a1d23;max-width:480px">
+        <h2 style="font-size:18px;margin:0 0 8px">메일 발송이 정상입니다</h2>
+        <p style="margin:0 0 16px;font-size:14px;color:#4b5563">
+          콘솔 › 시스템 › 상태에서 보낸 테스트 메일입니다. 이 메일이 도착했다면 문의 답변·인증 코드·홍보 메일이
+          모두 같은 경로로 나갑니다.
+        </p>
+        <p style="margin:0;font-size:12px;color:#6b7280">
+          전송 수단: ${emailTransportLabel()}<br />보낸 사람: ${caller.name ?? caller.email}
+        </p>
+      </div>`,
+  }).catch((error: unknown) => ({
+    sent: 0,
+    failed: 1,
+    dryRun: false,
+    error: error instanceof Error ? error.message : '발송에 실패했습니다.',
+  }));
+
+  await audit({
+    actor: caller,
+    action: 'system.test_mail',
+    targetType: 'setting',
+    targetId: 'email',
+    summary: `테스트 메일 → ${to} (${result.sent > 0 ? '성공' : `실패: ${result.error ?? '원인 미상'}`})`,
+  });
+
+  if (result.sent > 0) return { ok: `${to}(으)로 보냈습니다. 받은편지함과 스팸함을 모두 확인하세요.` };
+  return { error: result.error ?? '발송에 실패했습니다.' };
 }

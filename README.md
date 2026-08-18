@@ -12,7 +12,7 @@ npm run dev
 ```
 
 - 데모 계정: `demo@debate.code` / `demo1234` (관리자 권한, 완료된 면접 리포트 2건 포함)
-- 환경변수는 `.env` 참조 (`DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `AI_PROVIDER`)
+- 환경변수는 `.env` 참조 (`DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `AI_SECRET_KEY`, `SMTP_*`)
 
 ## 아키텍처
 
