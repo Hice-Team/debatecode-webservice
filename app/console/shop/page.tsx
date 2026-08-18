@@ -25,6 +25,9 @@ export default async function ConsoleShopPage() {
       providerSku: true,
       order: true,
       active: true,
+      scope: true,
+      description: true,
+      stock: true,
       _count: { select: { orders: true } },
     },
   });

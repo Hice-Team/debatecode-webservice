@@ -6,7 +6,11 @@ import { canReview } from '@/app/lib/roles';
 import { platformLabel } from '@/app/community/boards';
 import { POINT_KIND_LABELS } from '@/app/lib/points';
 import { failShopOrder, fulfillShopOrder, reviewPointRequest } from '@/app/lib/actions/admin-points';
-import { PageHeader, BTN_APPROVE, BTN_REJECT, BTN_PRIMARY, EmptyRow } from '../ui';
+import { PageHeader, SectionHeader, BTN_APPROVE, BTN_REJECT, BTN_PRIMARY, EmptyRow } from '../ui';
+import PointGrantForm, { type GrantTarget } from './grant-form';
+import { maskName } from '@/app/lib/privacy';
+import { roleLabel } from '@/app/lib/roles';
+import { SHOP_SCOPE_LABELS, type ShopScope } from '@/app/lib/shop-scope';
 
 export const metadata: Metadata = { title: '포인트 심사' };
 
@@ -29,7 +33,10 @@ export default async function ConsolePointsPage() {
     prisma.shopOrder.findMany({
       where: { status: 'requested' },
       orderBy: { createdAt: 'asc' },
-      include: { user: { select: { name: true, email: true } }, product: { select: { name: true, brand: true, provider: true } } },
+      include: {
+        user: { select: { name: true, email: true } },
+        product: { select: { name: true, brand: true, provider: true, scope: true } },
+      },
     }),
     prisma.pointLedger.findMany({
       orderBy: { createdAt: 'desc' },
@@ -37,6 +44,24 @@ export default async function ConsolePointsPage() {
       include: { user: { select: { name: true } } },
     }),
   ]);
+
+  // 포인트가 전 회원에게 열렸으므로 지급 대상도 메이트로 좁히지 않는다.
+  // 잔액은 원장 합계라 한 번에 집계해 붙인다.
+  const [members, ledgerSums] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 300,
+      select: { id: true, name: true, role: true },
+    }),
+    prisma.pointLedger.groupBy({ by: ['userId'], _sum: { amount: true } }),
+  ]);
+  const balanceByUser = new Map(ledgerSums.map((r) => [r.userId, r._sum.amount ?? 0]));
+  const grantTargets: GrantTarget[] = members.map((m) => ({
+    id: m.id,
+    name: maskName(m.name),
+    role: roleLabel(m.role),
+    balance: balanceByUser.get(m.id) ?? 0,
+  }));
 
   return (
     <>
@@ -150,8 +175,17 @@ export default async function ConsolePointsPage() {
                 <p className="mt-1 text-sm text-ink-soft/80">
                   {order.product.brand} {order.product.name}
                   <span className="ml-2 rounded border border-ink/10 bg-paper px-1.5 py-0.5 font-mono text-[10px] text-ink-soft/45">
+                    {SHOP_SCOPE_LABELS[order.product.scope as ShopScope] ?? order.product.scope}
+                  </span>
+                  <span className="ml-1.5 rounded border border-ink/10 bg-paper px-1.5 py-0.5 font-mono text-[10px] text-ink-soft/45">
                     {order.product.provider}
                   </span>
+                </p>
+
+                {/* 발송지 — 주문 시 이용자가 남긴 연락처. 이게 없으면 발급해 놓고 어디로 보낼지 모른다. */}
+                <p className="mt-1.5 rounded-lg border border-brand-200 bg-brand-50/50 px-3 py-2 font-mono text-[11px] text-brand-800">
+                  발송 {order.contactType === 'phone' ? '문자' : '메일'} ·{' '}
+                  <strong className="font-semibold">{order.contact ?? '미입력 (이용자에게 확인 필요)'}</strong>
                 </p>
 
                 <div className="mt-3 flex flex-col gap-2 lg:flex-row">
@@ -244,6 +278,15 @@ export default async function ConsolePointsPage() {
             </ul>
           )}
         </section>
+      </div>
+
+      {/* 운영자 수동 지급 — 자동 규칙으로 처리할 수 없는 보정·보상용 */}
+      <div className="mt-10">
+        <SectionHeader
+          title="포인트 수동 지급·차감"
+          sub="발급 실패 환급, 이벤트 보상, 잘못 지급된 포인트 회수에 씁니다. 사유는 원장과 감사 로그에 남습니다."
+        />
+        <PointGrantForm targets={grantTargets} />
       </div>
     </>
   );

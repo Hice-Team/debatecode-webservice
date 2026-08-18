@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { verifySession } from '@/app/lib/dal';
 import { prisma } from '@/app/lib/prisma';
 import { rateLimit } from '@/app/lib/rate-limit';
+import { featureBlockMessage, getLimit } from '@/app/lib/settings';
 import { DEFAULT_SEARCH_MODEL_ID, findSearchModel, isSearchModelId } from '@/app/lib/ai/search-models';
 import { fallbackAnswer, getSearchLlmConfig, streamSearchAnswer } from '@/app/lib/ai/search-answerer';
 import { EFFORTS, asEffort } from '@/app/lib/ai/effort';
@@ -52,7 +53,12 @@ function titleFrom(question: string): string {
 export async function POST(request: Request) {
   const { userId } = await verifySession();
 
-  if (!rateLimit(`ai-search:${userId}`, 15, 60_000)) {
+  // 운영 킬 스위치 — 업스트림 장애나 비용 급증 시 콘솔에서 끈다
+  const blocked = await featureBlockMessage('flag.ai_search');
+  if (blocked) return NextResponse.json({ error: blocked }, { status: 503 });
+
+  // 한도는 런타임 설정에서 읽는다 — 남용이 시작되면 재배포 없이 조인다
+  if (!rateLimit(`ai-search:${userId}`, await getLimit('limit.rate.ai_ask'), 60_000)) {
     return NextResponse.json({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' }, { status: 429 });
   }
 

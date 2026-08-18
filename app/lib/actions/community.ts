@@ -7,6 +7,7 @@ import { prisma } from '../prisma';
 import { verifySession, getUser } from '../dal';
 import { createClient } from '../supabase/server';
 import { sanctionMessage } from '../moderation';
+import { featureBlockMessage } from '../settings';
 import { safeStorageKey } from '../storage';
 import { forcedSecret, supportsVerifiedOnly } from '../board-rules';
 import { ensureAnonymousTag } from '../identity';
@@ -149,6 +150,10 @@ async function collectAttachments(
 
 export async function createPost(_prev: PostFormState, formData: FormData): Promise<PostFormState> {
   const session = await verifySession();
+
+  // 운영 킬 스위치 — 스팸이 쏟아질 때 콘솔에서 쓰기만 잠근다(읽기는 열어 둔다)
+  const blocked = await featureBlockMessage('flag.community_write');
+  if (blocked) return { errors: { form: [blocked] } };
 
   const suspended = await sanctionMessage(session.userId, 'post');
   if (suspended) return { errors: { form: [suspended] } };

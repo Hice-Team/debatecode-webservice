@@ -68,6 +68,7 @@ export default async function SettingsPage() {
         aiProvider: true, aiModel: true, aiApiKey: true, aiBaseUrl: true,
         mcpTokenPrefix: true, mcpTokenCreatedAt: true,
         twoFactorRecoveryEmail: true,
+        twoFactorRecoveryEmailVerifiedAt: true,
       },
     }),
     prisma.loginEvent.findMany({
@@ -195,7 +196,12 @@ export default async function SettingsPage() {
           label="2단계 인증 (복구 이메일)"
           desc="복구용 이메일을 등록하면 계정 복구 시 사용됩니다. TOTP·보안키는 추후 활성화됩니다."
           stacked
-          control={<TwoFactor initialEmail={user.twoFactorRecoveryEmail} />}
+          control={
+            <TwoFactor
+              initialEmail={user.twoFactorRecoveryEmail}
+              recoveryVerifiedAt={user.twoFactorRecoveryEmailVerifiedAt?.toISOString() ?? null}
+            />
+          }
         />
 
         <SettingRow

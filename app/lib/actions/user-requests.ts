@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { verifySession, getUser } from '../dal';
 import { prisma } from '../prisma';
+import { REPORT_TARGETS } from '../report-targets';
+import { featureBlockMessage } from '../settings';
 import { canAuthorProblems } from '../roles';
 import { createClient } from '../supabase/server';
 import { safeStorageKey } from '../storage';
@@ -17,10 +19,12 @@ export interface ReportState {
 }
 
 const reportSchema = z.object({
-  targetType: z.enum(['post', 'comment', 'user']),
+  targetType: z.enum(REPORT_TARGETS),
   targetId: z.string().min(1),
   reason: z.string().min(1).max(40),
   detail: z.string().trim().max(1000).optional().or(z.literal('')),
+  // 오류 신고에서 재현에 필요한 맥락 — 어느 화면/어떤 코드였는지
+  context: z.string().trim().max(4000).optional().or(z.literal('')),
 });
 
 export async function submitReport(_prev: ReportState, formData: FormData): Promise<ReportState> {
@@ -30,8 +34,20 @@ export async function submitReport(_prev: ReportState, formData: FormData): Prom
     targetId: formData.get('targetId'),
     reason: formData.get('reason'),
     detail: formData.get('detail') ?? '',
+    context: formData.get('context') ?? '',
   });
   if (!parsed.success) return { errors: { form: ['신고 내용을 확인해 주세요.'] } };
+
+  // 같은 대상에 대한 신고를 콘솔에서 하나의 케이스로 묶기 위한 키.
+  // 접수 시점에 채워 두면 목록 조회에서 그룹핑을 DB가 해 줄 수 있다.
+  const dedupeKey = `${parsed.data.targetType}:${parsed.data.targetId}`;
+
+  // 재현 정보는 사유 뒤에 붙여 한 필드로 저장한다 — 콘솔에서 한 번에 읽히게.
+  const detail = [parsed.data.detail || null, parsed.data.context ? `
+[재현 정보]
+${parsed.data.context}` : null]
+    .filter(Boolean)
+    .join('');
 
   await prisma.report.create({
     data: {
@@ -39,7 +55,11 @@ export async function submitReport(_prev: ReportState, formData: FormData): Prom
       targetType: parsed.data.targetType,
       targetId: parsed.data.targetId,
       reason: parsed.data.reason,
-      detail: parsed.data.detail || null,
+      detail: detail || null,
+      dedupeKey,
+      // 불법정보는 판단이 늦으면 법적 노출이 커지고, 채점 오류는 그대로 두면 이용자가
+      // 맞는 답을 틀렸다고 믿게 된다 — 둘 다 접수 즉시 우선순위를 올린다.
+      priority: ['illegal', 'wrong_testcase', 'judge_wrong'].includes(parsed.data.reason) ? 'high' : 'normal',
     },
   });
   return { saved: true };
@@ -85,6 +105,10 @@ const MATE_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
 export async function applyDebateMate(_prev: MateApplyState, formData: FormData): Promise<MateApplyState> {
   const user = await getUser();
   if (user.role === 'debate_mate') return { errors: { form: ['이미 디베이트메이트입니다.'] } };
+
+  // 모집을 닫을 때 콘솔에서 끈다
+  const blocked = await featureBlockMessage('flag.mate_application', '디베이트메이트 신청이 현재 마감되었습니다.');
+  if (blocked) return { errors: { form: [blocked] } };
 
   const parsed = mateSchema.safeParse({
     motivation: formData.get('motivation'),
@@ -150,6 +174,10 @@ const draftSchema = z.object({
 export async function submitProblemDraft(_prev: DraftState, formData: FormData): Promise<DraftState> {
   const user = await getUser();
   if (!canAuthorProblems(user.role)) return { errors: { form: ['문제 출제 권한이 없습니다.'] } };
+
+  // 검토 인력이 부족해 큐가 밀리면 콘솔에서 접수를 잠시 닫는다
+  const blocked = await featureBlockMessage('flag.problem_draft');
+  if (blocked) return { errors: { form: [blocked] } };
 
   const parsed = draftSchema.safeParse({
     title: formData.get('title'),

@@ -584,3 +584,113 @@ ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "aiTrainingConsentAt" TIMESTAMP(3);
 -- AI Search 모델 선택 기록
 ALTER TABLE "AiSession" ADD COLUMN IF NOT EXISTS "model" TEXT;
 ALTER TABLE "AiMessage" ADD COLUMN IF NOT EXISTS "model" TEXT;
+
+-- ============================================================================
+-- 2026-08-18: 운영 콘솔 기반 — 런타임 설정 / 감사 로그 / 권한 오버라이드 / 매크로
+--             + 신고·문의·제재 트리아지 컬럼
+-- (Supabase 프로젝트 gymgvibkcjokaohmmxkt에 적용 완료)
+-- ============================================================================
+
+-- 런타임 설정 — 기본값에서 벗어난 값만 들어온다. 비어 있어도 앱은 코드 기본값으로 동작한다.
+CREATE TABLE IF NOT EXISTS "AppSetting" (
+  "key"         TEXT PRIMARY KEY,
+  "value"       JSONB NOT NULL,
+  "category"    TEXT NOT NULL,
+  "updatedById" UUID,
+  "updatedAt"   TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS "AppSetting_category_idx" ON "AppSetting"("category");
+ALTER TABLE public."AppSetting" ENABLE ROW LEVEL SECURITY;
+
+-- 감사 로그 — 행위자 이름/역할은 스냅샷(계정이 지워져도 이력이 남게)
+CREATE TABLE IF NOT EXISTS "AuditLog" (
+  "id"         TEXT PRIMARY KEY,
+  "actorId"    UUID,
+  "actorName"  TEXT NOT NULL,
+  "actorRole"  TEXT NOT NULL,
+  "action"     TEXT NOT NULL,
+  "targetType" TEXT,
+  "targetId"   TEXT,
+  "summary"    TEXT NOT NULL,
+  "diff"       JSONB,
+  "ipMasked"   TEXT,
+  "createdAt"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS "AuditLog_createdAt_idx" ON "AuditLog"("createdAt" DESC);
+CREATE INDEX IF NOT EXISTS "AuditLog_actorId_createdAt_idx" ON "AuditLog"("actorId", "createdAt" DESC);
+CREATE INDEX IF NOT EXISTS "AuditLog_targetType_targetId_idx" ON "AuditLog"("targetType", "targetId");
+CREATE INDEX IF NOT EXISTS "AuditLog_action_createdAt_idx" ON "AuditLog"("action", "createdAt" DESC);
+ALTER TABLE public."AuditLog" ENABLE ROW LEVEL SECURITY;
+
+-- 개별 권한 오버라이드 — deny가 allow보다 세다
+CREATE TABLE IF NOT EXISTS "PermissionGrant" (
+  "id"          TEXT PRIMARY KEY,
+  "userId"      UUID NOT NULL,
+  "permission"  TEXT NOT NULL,
+  "effect"      TEXT NOT NULL DEFAULT 'allow',
+  "reason"      TEXT,
+  "expiresAt"   TIMESTAMP(3),
+  "grantedById" UUID,
+  "createdAt"   TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "PermissionGrant_userId_fkey" FOREIGN KEY ("userId")
+    REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "PermissionGrant_userId_permission_key" ON "PermissionGrant"("userId", "permission");
+CREATE INDEX IF NOT EXISTS "PermissionGrant_userId_idx" ON "PermissionGrant"("userId");
+ALTER TABLE public."PermissionGrant" ENABLE ROW LEVEL SECURITY;
+
+-- 매크로(정형 답변)
+CREATE TABLE IF NOT EXISTS "CannedResponse" (
+  "id"        TEXT PRIMARY KEY,
+  "scope"     TEXT NOT NULL,
+  "title"     TEXT NOT NULL,
+  "body"      TEXT NOT NULL,
+  "order"     INTEGER NOT NULL DEFAULT 0,
+  "active"    BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS "CannedResponse_scope_active_order_idx" ON "CannedResponse"("scope", "active", "order");
+ALTER TABLE public."CannedResponse" ENABLE ROW LEVEL SECURITY;
+
+-- 신고 트리아지
+ALTER TABLE "Report" ADD COLUMN IF NOT EXISTS "assigneeId"   UUID;
+ALTER TABLE "Report" ADD COLUMN IF NOT EXISTS "priority"     TEXT NOT NULL DEFAULT 'normal';
+ALTER TABLE "Report" ADD COLUMN IF NOT EXISTS "internalNote" TEXT;
+ALTER TABLE "Report" ADD COLUMN IF NOT EXISTS "actionTaken"  TEXT;
+ALTER TABLE "Report" ADD COLUMN IF NOT EXISTS "dedupeKey"    TEXT;
+CREATE INDEX IF NOT EXISTS "Report_dedupeKey_status_idx" ON "Report"("dedupeKey", "status");
+CREATE INDEX IF NOT EXISTS "Report_assigneeId_status_idx" ON "Report"("assigneeId", "status");
+UPDATE "Report" SET "dedupeKey" = "targetType" || ':' || "targetId" WHERE "dedupeKey" IS NULL;
+
+-- 문의 트리아지
+ALTER TABLE "Inquiry" ADD COLUMN IF NOT EXISTS "assigneeId"      UUID;
+ALTER TABLE "Inquiry" ADD COLUMN IF NOT EXISTS "category"        TEXT;
+ALTER TABLE "Inquiry" ADD COLUMN IF NOT EXISTS "priority"        TEXT NOT NULL DEFAULT 'normal';
+ALTER TABLE "Inquiry" ADD COLUMN IF NOT EXISTS "firstResponseAt" TIMESTAMP(3);
+CREATE INDEX IF NOT EXISTS "Inquiry_assigneeId_status_idx" ON "Inquiry"("assigneeId", "status");
+UPDATE "Inquiry" SET "firstResponseAt" = "answeredAt" WHERE "firstResponseAt" IS NULL AND "answeredAt" IS NOT NULL;
+
+-- 제재 근거 / 이의제기 / 해제 기록
+ALTER TABLE "Sanction" ADD COLUMN IF NOT EXISTS "evidence"     JSONB;
+ALTER TABLE "Sanction" ADD COLUMN IF NOT EXISTS "appealText"   TEXT;
+ALTER TABLE "Sanction" ADD COLUMN IF NOT EXISTS "appealedAt"   TIMESTAMP(3);
+ALTER TABLE "Sanction" ADD COLUMN IF NOT EXISTS "appealStatus" TEXT;
+ALTER TABLE "Sanction" ADD COLUMN IF NOT EXISTS "liftedById"   UUID;
+ALTER TABLE "Sanction" ADD COLUMN IF NOT EXISTS "liftedAt"     TIMESTAMP(3);
+ALTER TABLE "Sanction" ADD COLUMN IF NOT EXISTS "liftReason"   TEXT;
+CREATE INDEX IF NOT EXISTS "Sanction_active_expiresAt_idx" ON "Sanction"("active", "expiresAt");
+CREATE INDEX IF NOT EXISTS "Sanction_appealStatus_idx" ON "Sanction"("appealStatus");
+
+-- 2026-08-18b: 배포 전 점검 — RLS가 빠져 있던 표 4개
+-- anon 키로 PostgREST를 통해 읽기/쓰기가 가능한 상태였다(DebateAiChat·LaunchNotify는 개인정보).
+-- 앱은 전부 Prisma(서버)로만 접근하므로 정책 없이 RLS만 켠다.
+ALTER TABLE public."Workbook" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."WorkbookItem" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."DebateAiChat" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."LaunchNotify" ENABLE ROW LEVEL SECURITY;
+
+-- 2026-08-18c: 스키마에는 있는데 DB에 만들어진 적 없던 표 4개
+-- BackupCode/WebauthnKey(2차 보안), MarketingContact/EmailCampaign(홍보 메일).
+-- 이 표들이 없어서 해당 기능이 런타임에 전부 실패하고 있었다. 정의는 schema.prisma 참조.
+-- (실제 DDL은 Supabase 마이그레이션 create_missing_schema_tables 로 적용됨)

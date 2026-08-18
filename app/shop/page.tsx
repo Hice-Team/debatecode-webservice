@@ -5,6 +5,13 @@ import { prisma } from '@/app/lib/prisma';
 import { getSessionOptional } from '@/app/lib/dal';
 import { getPointSummary } from '@/app/lib/points';
 import { ORDER_STATUS_LABELS } from '@/app/lib/shop';
+import {
+  visibleScopes,
+  asShopScope,
+  SHOP_SCOPE_LABELS,
+  SHOP_SCOPE_DESC,
+  type ShopScope,
+} from '@/app/lib/shop-scope';
 
 export const metadata: Metadata = { title: '디베이트샵' };
 
@@ -23,14 +30,22 @@ function brandTone(brand: string): string {
   return BRAND_TONES[Math.abs(hash) % BRAND_TONES.length];
 }
 
-export default async function ShopPage() {
+export default async function ShopPage({ searchParams }: { searchParams: Promise<{ scope?: string }> }) {
   const session = await getSessionOptional();
+  const viewer = session
+    ? await prisma.user.findUnique({ where: { id: session.userId }, select: { role: true } })
+    : null;
+
+  // 볼 수 있는 상점 — 일반 회원은 일반 상점만, 메이트는 둘 다.
+  const scopes = visibleScopes(viewer?.role ?? 'user');
+  const { scope: requested } = await searchParams;
+  const scope: ShopScope = scopes.includes(asShopScope(requested)) ? asShopScope(requested) : scopes[0];
 
   const [products, summary, recentOrders] = await Promise.all([
     prisma.shopProduct.findMany({
-      where: { active: true },
+      where: { active: true, scope },
       orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
-      select: { id: true, name: true, brand: true, priceKrw: true, imageUrl: true },
+      select: { id: true, name: true, brand: true, priceKrw: true, imageUrl: true, description: true, stock: true },
     }),
     session ? getPointSummary(session.userId) : null,
     session
@@ -80,12 +95,33 @@ export default async function ShopPage() {
         )}
       </header>
 
+      {/* ---------- 상점 구분 ---------- */}
+      {scopes.length > 1 && (
+        <nav aria-label="상점 구분" className="dc-scroll-none mt-6 flex gap-1 overflow-x-auto border-b border-ink/10">
+          {scopes.map((sc) => (
+            <Link
+              key={sc}
+              href={`/shop?scope=${sc}`}
+              aria-current={sc === scope ? 'page' : undefined}
+              className={`-mb-px shrink-0 whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                sc === scope
+                  ? 'border-signal text-signal'
+                  : 'border-transparent text-ink-soft/60 hover:border-ink/20 hover:text-ink'
+              }`}
+            >
+              {SHOP_SCOPE_LABELS[sc]}
+            </Link>
+          ))}
+        </nav>
+      )}
+
       {/* ---------- 상품 진열 ---------- */}
       <section className="mt-8">
         <h2 className="border-b border-ink/10 pb-3 font-display text-lg font-bold tracking-tight text-ink">
-          교환 가능한 상품
+          {SHOP_SCOPE_LABELS[scope]}
           <span className="ml-1.5 font-mono text-xs font-normal text-ink-soft/35">{products.length}</span>
         </h2>
+        <p className="mt-2 text-[13px] text-ink-soft/55">{SHOP_SCOPE_DESC[scope]}</p>
 
         {products.length === 0 ? (
           <p className="mt-6 rounded-xl border border-dashed border-ink/15 px-4 py-16 text-center text-sm text-ink-soft/45">

@@ -5,6 +5,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import { saveShopProduct, type ShopAdminState } from '@/app/lib/actions/admin-shop';
 import { SHOP_PROVIDERS } from '@/app/lib/shop';
+import { SHOP_SCOPES, SHOP_SCOPE_LABELS, SHOP_SCOPE_DESC, type ShopScope } from '@/app/lib/shop-scope';
 
 const initialState: ShopAdminState = {};
 
@@ -18,6 +19,9 @@ export interface EditableProduct {
   providerSku: string | null;
   order: number;
   active: boolean;
+  scope: string;
+  description: string | null;
+  stock: number | null;
 }
 
 const LABEL = 'block font-mono text-[11px] uppercase tracking-wider text-ink-soft/55 mb-1.5';
@@ -27,6 +31,7 @@ const FIELD =
 export default function ProductForm({ editing, onDone }: { editing: EditableProduct | null; onDone: () => void }) {
   const [state, formAction, pending] = useActionState(saveShopProduct, initialState);
   const [imageUrl, setImageUrl] = useState(editing?.imageUrl ?? '');
+  const [scope, setScope] = useState<ShopScope>((editing?.scope as ShopScope) ?? 'general');
 
   // 저장에 성공하면 폼을 닫는다 — 목록은 서버가 새로 그려 준다
   useEffect(() => {
@@ -43,6 +48,34 @@ export default function ProductForm({ editing, onDone }: { editing: EditableProd
       </div>
 
       {editing && <input type="hidden" name="id" value={editing.id} />}
+
+      {/* 어느 상점에 걸릴지 — 카탈로그만 다르고 구매 흐름은 같다 */}
+      <fieldset className="mb-4">
+        <legend className={LABEL}>상점 구분</legend>
+        <div className="flex gap-2">
+          {SHOP_SCOPES.map((sc: ShopScope) => (
+            <label
+              key={sc}
+              className={`flex flex-1 cursor-pointer items-start gap-2 rounded-lg border px-3 py-2.5 transition-colors ${
+                scope === sc ? 'border-signal bg-brand-50/50' : 'border-ink/15 hover:border-ink/30'
+              }`}
+            >
+              <input
+                type="radio"
+                name="scope"
+                value={sc}
+                checked={scope === sc}
+                onChange={() => setScope(sc)}
+                className="mt-0.5 h-4 w-4 accent-[var(--color-signal)]"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-ink">{SHOP_SCOPE_LABELS[sc]}</span>
+                <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-soft/55">{SHOP_SCOPE_DESC[sc]}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -118,6 +151,34 @@ export default function ProductForm({ editing, onDone }: { editing: EditableProd
             채널 상품코드 (선택)
           </label>
           <input id="providerSku" name="providerSku" maxLength={80} defaultValue={editing?.providerSku ?? ''} className={`${FIELD} font-mono`} />
+        </div>
+        <div>
+          <label htmlFor="stock" className={LABEL}>
+            재고 (비우면 무제한)
+          </label>
+          <input
+            id="stock"
+            name="stock"
+            type="number"
+            min={0}
+            max={100000}
+            defaultValue={editing?.stock ?? ''}
+            placeholder="무제한"
+            className={`${FIELD} font-mono`}
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="description" className={LABEL}>
+            상품 설명 (선택)
+          </label>
+          <input
+            id="description"
+            name="description"
+            maxLength={300}
+            defaultValue={editing?.description ?? ''}
+            placeholder="예: 전국 매장에서 사용 가능 · 유효기간 발급일로부터 3개월"
+            className={FIELD}
+          />
         </div>
       </div>
 

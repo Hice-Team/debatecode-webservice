@@ -39,6 +39,14 @@ const productSchema = z.object({
   providerSku: z.string().max(80).optional().or(z.literal('')),
   order: z.coerce.number().int().min(0).max(999).optional(),
   active: z.boolean().optional(),
+  // 어느 상점에 걸릴지 — 일반(전 회원) / 메이트 전용
+  scope: z.enum(['general', 'mate']),
+  description: z.string().max(300).optional().or(z.literal('')),
+  // 비우면 무제한. 0이면 품절로 표시된다.
+  stock: z
+    .union([z.coerce.number().int().min(0).max(100000), z.literal('')])
+    .optional()
+    .transform((v) => (v === '' || v === undefined ? null : Number(v))),
 });
 
 /** 콘솔 권한 확인 — 상품은 공개 콘텐츠라 발행 권한과 같은 기준을 쓴다 */
@@ -66,12 +74,16 @@ export async function saveShopProduct(_prev: ShopAdminState, formData: FormData)
     providerSku: formData.get('providerSku'),
     order: formData.get('order') || 0,
     active: formData.get('active') === 'on',
+    scope: formData.get('scope') || 'general',
+    description: formData.get('description'),
+    stock: formData.get('stock') ?? '',
   });
   if (!parsed.success) {
     return { errors: { form: parsed.error.issues.map((i) => i.message) } };
   }
 
-  const { id, name, brand, priceKrw, imageUrl, provider, providerSku, order, active } = parsed.data;
+  const { id, name, brand, priceKrw, imageUrl, provider, providerSku, order, active, scope, description, stock } =
+    parsed.data;
   const data = {
     name,
     brand,
@@ -81,6 +93,9 @@ export async function saveShopProduct(_prev: ShopAdminState, formData: FormData)
     providerSku: providerSku || null,
     order: order ?? 0,
     active: !!active,
+    scope,
+    description: description || null,
+    stock,
   };
 
   if (id) {
@@ -90,6 +105,7 @@ export async function saveShopProduct(_prev: ShopAdminState, formData: FormData)
   }
 
   revalidatePath('/console/shop');
+  revalidatePath('/shop');
   revalidatePath('/shop');
   return { saved: true, message: id ? '상품을 수정했습니다.' : '상품을 등록했습니다.' };
 }

@@ -8,7 +8,27 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+
   "observability": {
-    "enabled": true
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      // 100% 샘플링 — 초기 운영에서는 전부 남긴다. 트래픽이 커지면 낮춘다.
+      "head_sampling_rate": 1,
+      // 요청 단위 요약 로그(상태코드·소요시간) — 배포 후 장애 추적의 기본 재료
+      "invocation_logs": true
+    }
   }
+
+  // ── 요금제에 따라 켤 수 있는 항목 (Workers Paid 필요, 켜기 전 대시보드에서 확인) ──
+  //
+  // "placement": { "mode": "smart" }
+  //   DB 왕복이 잦은 앱이라 오리진(Supabase ap-northeast-2) 근처에서 도는 편이 빠르다.
+  //
+  // "limits": { "cpu_ms": 60000 }
+  //   Prisma WASM 쿼리 컴파일 + 렌더가 겹치는 페이지의 CPU 여유.
+  //
+  // 정기 작업(cron)은 두지 않는다. OpenNext가 만드는 worker.js에는 `scheduled`
+  // 핸들러가 없어서, 트리거만 걸면 매 실행이 그대로 실패한다. 제재 만료 같은
+  // 시간 기반 상태는 읽는 시점에 `expiresAt > now`로 판정한다(app/lib/moderation.ts).
 }

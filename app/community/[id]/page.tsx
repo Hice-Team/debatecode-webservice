@@ -11,7 +11,7 @@ import LikeButton from './like-button';
 import PostActions from './post-actions';
 import PollCard, { type PollData } from './poll-card';
 import ShareButton from './share-button';
-import ReportButton from '../report-button';
+import ReportButton from '@/app/components/report-button';
 
 import { canViewPost, canReplyToPost, supportsAdoption } from '@/app/lib/board-rules';
 import { displayName } from '@/app/lib/display-name';

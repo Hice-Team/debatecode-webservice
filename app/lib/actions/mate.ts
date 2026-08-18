@@ -8,6 +8,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { verifySession, getUser } from '../dal';
 import { prisma } from '../prisma';
+import { canOrderScope, validateContact } from '../shop-scope';
+import { featureBlockMessage } from '../settings';
 import { POINT_AMOUNTS, POINT_KINDS, getPointSummary, grantPoints } from '../points';
 import { SNS_PLATFORMS } from '@/app/community/boards';
 
@@ -89,11 +91,33 @@ export async function requestSnsPromo(_prev: MateActionState, formData: FormData
  */
 export async function orderShopProduct(_prev: MateActionState, formData: FormData): Promise<MateActionState> {
   const { userId } = await verifySession();
+
+  // 발급 채널이 죽었을 때 콘솔에서 끈다 — 포인트만 빠지고 쿠폰이 안 나오는 사고를 막는다
+  const blocked = await featureBlockMessage('flag.shop_order', '기프티콘 발급이 일시 중지되었습니다. 포인트는 그대로 유지됩니다.');
+  if (blocked) return { errors: { form: [blocked] } };
+
   const productId = String(formData.get('productId') ?? '');
   if (!productId) return { errors: { form: ['상품을 선택해 주세요.'] } };
 
   const product = await prisma.shopProduct.findUnique({ where: { id: productId } });
   if (!product || !product.active) return { errors: { form: ['판매 중인 상품이 아닙니다.'] } };
+
+  // 메이트 전용 카탈로그는 메이트만 주문할 수 있다.
+  // 화면에서 감추는 것만으로는 부족하다 — 상품 ID만 알면 폼을 직접 보낼 수 있다.
+  const buyer = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  if (!canOrderScope(buyer?.role ?? 'user', product.scope)) {
+    return { errors: { form: ['디베이트메이트 전용 상품입니다.'] } };
+  }
+
+  // 발송받을 연락처 — 없으면 발급해 놓고 어디로 보낼지 몰라 운영자가 따로 물어야 했다
+  const contactType = String(formData.get('contactType') ?? 'phone');
+  const contact = String(formData.get('contact') ?? '').trim();
+  const contactError = validateContact(contactType, contact);
+  if (contactError) return { errors: { form: [contactError] } };
+
+  if (product.stock != null && product.stock <= 0) {
+    return { errors: { form: ['재고가 소진된 상품입니다.'] } };
+  }
 
   const summary = await getPointSummary(userId);
   if (summary.balance < product.priceKrw) {
@@ -102,8 +126,18 @@ export async function orderShopProduct(_prev: MateActionState, formData: FormDat
 
   // 주문 생성과 포인트 차감을 한 트랜잭션으로 묶는다 — 차감만 되고 주문이 없는 상태를 막는다
   await prisma.$transaction(async (tx) => {
+    if (product.stock != null) {
+      await tx.shopProduct.update({ where: { id: product.id }, data: { stock: { decrement: 1 } } });
+    }
     const order = await tx.shopOrder.create({
-      data: { userId, productId: product.id, pointsSpent: product.priceKrw, status: 'requested' },
+      data: {
+        userId,
+        productId: product.id,
+        pointsSpent: product.priceKrw,
+        status: 'requested',
+        contact,
+        contactType,
+      },
     });
     await tx.pointLedger.create({
       data: {
@@ -119,7 +153,12 @@ export async function orderShopProduct(_prev: MateActionState, formData: FormDat
 
   revalidatePath('/debate-mate/console');
   revalidatePath('/console/points');
-  return { saved: true, message: '주문이 접수되었습니다. 발급이 완료되면 쿠폰 코드가 표시됩니다.' };
+  revalidatePath('/shop');
+  revalidatePath('/shop/orders');
+  return {
+    saved: true,
+    message: '주문이 접수되었습니다. 운영자 승인 후 입력하신 연락처로 발송됩니다.',
+  };
 }
 
 /** 발급 전(requested) 주문을 사용자가 취소한다 — 차감한 포인트를 환불 원장으로 되돌린다. */

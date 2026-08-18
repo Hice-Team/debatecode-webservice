@@ -5,8 +5,9 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getUser } from '../dal';
 import { prisma } from '../prisma';
-import { ROLES, canGrantRoles, canReview, hasConsoleAccess, type Role } from '../roles';
+import { canReview, hasConsoleAccess } from '../roles';
 import { POINT_AMOUNTS, POINT_KINDS, grantPoints } from '../points';
+import { audit } from '../audit';
 
 // 콘솔 접근 가능 역할 전용 (제재/신고/공지 등 일반 운영)
 async function requireConsole() {
@@ -26,97 +27,12 @@ async function requireReviewer() {
   return caller;
 }
 
-/* ---------- 회원 및 권한 관리 ---------- */
 
-// 역할 부여 — 최고 관리자만. 6개 역할 중 하나로 지정.
-export async function setUserRole(formData: FormData) {
-  const caller = await getUser();
-  if (!canGrantRoles(caller.role)) throw new Error('권한을 변경할 수 있는 역할이 아닙니다.');
+/* ---------- 레거시: 대시보드 커뮤니티 화면 ---------- */
 
-  const targetUserId = String(formData.get('userId') ?? '');
-  const role = String(formData.get('role') ?? '') as Role;
-  if (!ROLES.includes(role)) throw new Error('알 수 없는 역할입니다.');
-  if (caller.id === targetUserId) throw new Error('본인의 권한은 변경할 수 없습니다.');
-
-  const target = await prisma.user.findUnique({ where: { id: targetUserId }, select: { id: true, role: true } });
-  if (!target) throw new Error('사용자를 찾을 수 없습니다.');
-
-  // 마지막 남은 최고관리자는 강등할 수 없다 — 관리자 전원 소실(락아웃) 방지
-  if (target.role === 'admin' && role !== 'admin') {
-    const adminCount = await prisma.user.count({ where: { role: 'admin' } });
-    if (adminCount <= 1) throw new Error('마지막 최고관리자는 강등할 수 없습니다.');
-  }
-
-  await prisma.user.update({ where: { id: targetUserId }, data: { role } });
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-}
-
-// 여러 사용자에 대해 역할을 일괄 변경
-export async function setMultipleUserRoles(formData: FormData) {
-  const caller = await getUser();
-  if (!canGrantRoles(caller.role)) throw new Error('권한을 변경할 수 있는 역할이 아닙니다.');
-
-  const idsRaw = String(formData.get('userIds') ?? '');
-  const role = String(formData.get('role') ?? '') as Role;
-  if (!idsRaw) return;
-  const ids = idsRaw.split(',').map((s) => s.trim()).filter(Boolean);
-  if (!ROLES.includes(role)) throw new Error('알 수 없는 역할입니다.');
-
-  // 보호: 본인이나 마지막 admin 강등 방지
-  const filtered = ids.filter((id) => id !== caller.id);
-  if (filtered.length === 0) throw new Error('대상 사용자가 없습니다.');
-
-  // 마지막 admin 보호: 만약 변경 대상에 admin이 포함되어 있고 강등이면 카운트 검사
-  const targets = await prisma.user.findMany({ where: { id: { in: filtered } }, select: { id: true, role: true } });
-  const adminsToDemote = targets.filter((t) => t.role === 'admin' && role !== 'admin').length;
-  if (adminsToDemote > 0) {
-    const adminCount = await prisma.user.count({ where: { role: 'admin' } });
-    if (adminCount - adminsToDemote <= 0) throw new Error('마지막 최고관리자는 강등할 수 없습니다.');
-  }
-
-  await prisma.user.updateMany({ where: { id: { in: filtered } }, data: { role } });
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-}
-
-// 여러 사용자에 대해 동일한 제재를 부여
-export async function issueSanctionBatch(formData: FormData) {
-  const caller = await requireConsole();
-  const idsRaw = String(formData.get('userIds') ?? '');
-  const type = String(formData.get('type') ?? '');
-  const reason = String(formData.get('reason') ?? '운영 정책 위반');
-  const daysRaw = Number(formData.get('days') ?? 0);
-  if (!idsRaw) return;
-  const ids = idsRaw.split(',').map((s) => s.trim()).filter(Boolean);
-  if (ids.length === 0) return;
-  if (!(SANCTION_TYPES as readonly string[]).includes(type)) throw new Error('알 수 없는 제재 유형입니다.');
-
-  const expiresAt = Number.isFinite(daysRaw) && daysRaw > 0 ? new Date(Date.now() + daysRaw * 24 * 3600 * 1000) : null;
-
-  await prisma.sanction.createMany({ data: ids.map((userId) => ({ userId, type, reason, expiresAt, issuedById: caller.id })) });
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-}
-
-// debateQ 사전사용 허용 토글 — 리팩토링모드가 전 회원에게 공개되면서 사용하지 않는다.
-// 과거 데이터 호환을 위해 액션과 컬럼은 남겨 두되 콘솔 UI에서는 노출하지 않는다.
-// @deprecated
-export async function toggleDebateQAccess(formData: FormData) {
-  const caller = await getUser();
-  if (!canGrantRoles(caller.role)) throw new Error('debateQ 사전사용은 관리자만 허용할 수 있습니다.');
-
-  const targetUserId = String(formData.get('userId') ?? '');
-  if (!targetUserId) return;
-  const target = await prisma.user.findUnique({ where: { id: targetUserId }, select: { debateQAccess: true } });
-  if (!target) return;
-
-  await prisma.user.update({ where: { id: targetUserId }, data: { debateQAccess: !target.debateQAccess } });
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-}
-
-// 커뮤니티 제재 — days > 0이면 지금부터 N일 제한, days = 0이면 해제 (레거시 suspendedUntil)
+// 커뮤니티 제재 — days > 0이면 지금부터 N일 제한, days = 0이면 해제 (레거시 suspendedUntil).
+// 새 제재는 콘솔 › 접근 제어 › 제재 센터를 쓴다(근거·이의제기·감사 로그가 붙는다).
+// 이 함수는 /dashboard/community의 빠른 조치 버튼만 남아 있어 유지한다.
 export async function suspendUser(targetUserId: string, days: number) {
   const caller = await requireConsole();
   if (caller.id === targetUserId) {
@@ -125,45 +41,17 @@ export async function suspendUser(targetUserId: string, days: number) {
 
   const suspendedUntil = days > 0 ? new Date(Date.now() + days * 24 * 3600 * 1000) : null;
   await prisma.user.update({ where: { id: targetUserId }, data: { suspendedUntil } });
+  await audit({
+    actor: caller,
+    action: days > 0 ? 'sanction.issue' : 'sanction.lift',
+    targetType: 'user',
+    targetId: targetUserId,
+    summary: days > 0 ? `커뮤니티 이용 ${days}일 제한 (대시보드 빠른 조치)` : '커뮤니티 이용 제한 해제 (대시보드 빠른 조치)',
+  });
 
   revalidatePath('/dashboard');
   revalidatePath('/console', 'layout');
   revalidatePath('/dashboard/community');
-}
-
-/* ---------- 제재(밴) 이력 ---------- */
-
-const SANCTION_TYPES = ['read', 'post', 'comment'] as const;
-
-// 제재 부여 — 유형(열람/글/답글) + 기간(일). days 비우거나 0이면 영구.
-export async function issueSanction(formData: FormData) {
-  const caller = await requireConsole();
-  const userId = String(formData.get('userId') ?? '');
-  const type = String(formData.get('type') ?? '');
-  const reason = String(formData.get('reason') ?? '').trim() || '운영 정책 위반';
-  const daysRaw = Number(formData.get('days') ?? 0);
-
-  if (!userId) throw new Error('대상 사용자가 없습니다.');
-  if (!(SANCTION_TYPES as readonly string[]).includes(type)) throw new Error('알 수 없는 제재 유형입니다.');
-  if (caller.id === userId) throw new Error('본인은 제재할 수 없습니다.');
-
-  const expiresAt = Number.isFinite(daysRaw) && daysRaw > 0 ? new Date(Date.now() + daysRaw * 24 * 3600 * 1000) : null;
-
-  await prisma.sanction.create({
-    data: { userId, type, reason, expiresAt, issuedById: caller.id },
-  });
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-}
-
-// 제재 해제 — 이력은 남기고 active=false
-export async function liftSanction(formData: FormData) {
-  await requireConsole();
-  const id = String(formData.get('id') ?? '');
-  if (!id) return;
-  await prisma.sanction.update({ where: { id }, data: { active: false } }).catch(() => {});
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
 }
 
 /* ---------- 커뮤니티 관리 ---------- */
@@ -177,66 +65,6 @@ export async function adminDeletePost(formData: FormData) {
   await prisma.post.delete({ where: { id: postId } }).catch(() => {});
   revalidatePath('/dashboard/community');
   revalidatePath('/community');
-}
-
-/* ---------- 신고 처리 큐 ---------- */
-
-// 신고 처리 — action=resolve|dismiss
-export async function resolveReport(formData: FormData) {
-  const caller = await requireConsole();
-  const id = String(formData.get('id') ?? '');
-  const action = String(formData.get('action') ?? '');
-  if (!id || !['resolve', 'dismiss'].includes(action)) return;
-
-  await prisma.report
-    .update({
-      where: { id },
-      data: {
-        status: action === 'resolve' ? 'resolved' : 'dismissed',
-        handledById: caller.id,
-        resolvedAt: new Date(),
-      },
-    })
-    .catch(() => {});
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-}
-
-/* ---------- 문의 처리 큐 ---------- */
-
-export interface InquiryReplyState {
-  errors?: { answer?: string[]; form?: string[] };
-  saved?: boolean;
-}
-
-const inquiryReplySchema = z.object({
-  id: z.string().min(1),
-  answer: z.string().trim().min(2, '답변은 2자 이상이어야 합니다.').max(4000),
-});
-
-export async function answerInquiry(_prev: InquiryReplyState, formData: FormData): Promise<InquiryReplyState> {
-  const caller = await requireConsole();
-  const parsed = inquiryReplySchema.safeParse({ id: formData.get('id'), answer: formData.get('answer') });
-  if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors };
-
-  await prisma.inquiry
-    .update({
-      where: { id: parsed.data.id },
-      data: { answer: parsed.data.answer, status: 'answered', answeredById: caller.id, answeredAt: new Date() },
-    })
-    .catch(() => {});
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-  return { saved: true };
-}
-
-export async function closeInquiry(formData: FormData) {
-  await requireConsole();
-  const id = String(formData.get('id') ?? '');
-  if (!id) return;
-  await prisma.inquiry.update({ where: { id }, data: { status: 'closed' } }).catch(() => {});
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
 }
 
 /* ---------- 디베이트메이트 문제 검토큐 ---------- */
@@ -309,6 +137,14 @@ export async function reviewProblemDraft(formData: FormData) {
     select: { authorId: true },
   });
 
+  await audit({
+    actor: caller,
+    action: approve ? 'problem.draft.approve' : 'problem.draft.reject',
+    targetType: 'problemDraft',
+    targetId: id,
+    summary: `${draft.title} — ${approve ? '승인·게시' : '반려'}${note ? ` (${note})` : ''}`,
+  });
+
   // 문제 출제 승인 보상 — 승인된 초안에만, 초안 1건당 1회 지급
   if (approve) {
     await grantPoints({
@@ -352,6 +188,15 @@ export async function reviewMateApplication(formData: FormData) {
       ? [prisma.user.update({ where: { id: app.userId }, data: { role: 'debate_mate' } })]
       : []),
   ]);
+
+  await audit({
+    actor: caller,
+    action: approve ? 'mate.approve' : 'mate.reject',
+    targetType: 'mate',
+    targetId: app.userId,
+    summary: `디베이트메이트 신청 ${approve ? '승인' : '반려'}${shouldPromote ? ' (역할 승격)' : ''}${note ? ` — ${note}` : ''}`,
+  });
+
   revalidatePath('/dashboard');
   revalidatePath('/console', 'layout');
 }
@@ -380,99 +225,47 @@ export async function revokeDebateMate(formData: FormData) {
         ]
       : []),
   ]);
+
+  await audit({
+    actor: caller,
+    action: 'mate.revoke',
+    targetType: 'mate',
+    targetId: userId,
+    summary: `디베이트메이트 권한 회수 — ${reason}`,
+  });
+
   revalidatePath('/dashboard');
   revalidatePath('/console', 'layout');
+}
+
+/**
+ * 메이트 경고 — 회수까지 가기 전 단계.
+ *
+ * 별도 표를 만들지 않고 감사 로그(action='mate.warn')로 남긴다. 경고는 상태가 아니라
+ * 사건이고, 필요한 것은 "몇 번 경고했나"와 "무엇 때문이었나" 둘뿐이라 이력만으로 충분하다.
+ */
+export async function warnDebateMate(formData: FormData) {
+  const caller = await requireReviewer();
+  const userId = String(formData.get('userId') ?? '');
+  const reason = String(formData.get('reason') ?? '').trim().slice(0, 1000);
+  if (!userId || !reason) return;
+
+  const target = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
+  if (!target) return;
+
+  await audit({
+    actor: caller,
+    action: 'mate.warn',
+    targetType: 'mate',
+    targetId: userId,
+    summary: `메이트 경고 — ${reason}`,
+  });
+
+  revalidatePath('/console/mates');
 }
 
 /* ---------- 전체 공지 팝업 ---------- */
 
-export interface AnnouncementFormState {
-  errors?: { title?: string[]; content?: string[]; form?: string[] };
-  saved?: boolean;
-}
-
-const announcementSchema = z.object({
-  title: z.string().trim().min(2, '제목은 2자 이상이어야 합니다.').max(80),
-  content: z.string().trim().min(5, '내용은 5자 이상이어야 합니다.').max(2000),
-});
-
-export async function saveAnnouncement(
-  _prev: AnnouncementFormState,
-  formData: FormData,
-): Promise<AnnouncementFormState> {
-  await requireConsole();
-
-  const parsed = announcementSchema.safeParse({
-    title: formData.get('title'),
-    content: formData.get('content'),
-  });
-  if (!parsed.success) {
-    return { errors: z.flattenError(parsed.error).fieldErrors };
-  }
-
-  // 새 공지를 등록하면 기존 활성 공지는 비활성화 — 팝업은 항상 1건만
-  await prisma.$transaction([
-    prisma.announcement.updateMany({ where: { active: true }, data: { active: false } }),
-    prisma.announcement.create({ data: parsed.data }),
-  ]);
-
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-  revalidatePath('/', 'layout');
-  return { saved: true };
-}
-
-// 기존 공지 수정 — 제목/내용 변경 (활성 상태는 건드리지 않음)
-export async function updateAnnouncement(
-  _prev: AnnouncementFormState,
-  formData: FormData,
-): Promise<AnnouncementFormState> {
-  await requireConsole();
-  const id = String(formData.get('id') ?? '');
-  const parsed = announcementSchema.safeParse({
-    title: formData.get('title'),
-    content: formData.get('content'),
-  });
-  if (!parsed.success) {
-    return { errors: z.flattenError(parsed.error).fieldErrors };
-  }
-  if (!id) return { errors: { form: ['공지를 찾을 수 없습니다.'] } };
-
-  await prisma.announcement
-    .update({ where: { id }, data: { ...parsed.data, updatedAt: new Date() } })
-    .catch(() => {});
-
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-  revalidatePath('/', 'layout');
-  return { saved: true };
-}
-
-export async function toggleAnnouncement(formData: FormData) {
-  await requireConsole();
-  const id = String(formData.get('id') ?? '');
-  const target = await prisma.announcement.findUnique({ where: { id }, select: { active: true } });
-  if (!target) return;
-
-  if (target.active) {
-    await prisma.announcement.update({ where: { id }, data: { active: false } });
-  } else {
-    // 활성화 시 다른 공지는 내린다
-    await prisma.$transaction([
-      prisma.announcement.updateMany({ where: { active: true }, data: { active: false } }),
-      prisma.announcement.update({ where: { id }, data: { active: true } }),
-    ]);
-  }
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-  revalidatePath('/', 'layout');
-}
-
-export async function deleteAnnouncement(formData: FormData) {
-  await requireConsole();
-  const id = String(formData.get('id') ?? '');
-  await prisma.announcement.delete({ where: { id } }).catch(() => {});
-  revalidatePath('/dashboard');
-  revalidatePath('/console', 'layout');
-  revalidatePath('/', 'layout');
-}
+// 공개 팝업은 app/lib/actions/admin-popups.ts 로 옮겼다.
+// 활성 1건 강제를 풀고(여러 개 동시 노출), 포스터 이미지와 이동 버튼이 붙으면서
+// 폼과 검증이 함께 커졌다.

@@ -9,7 +9,9 @@ import { revalidatePath } from 'next/cache';
 import { getUser } from '../dal';
 import { prisma } from '../prisma';
 import { canReview } from '../roles';
-import { POINT_KINDS, grantPoints } from '../points';
+import { POINT_KINDS, grantPoints, getPointSummary } from '../points';
+import { audit } from '../audit';
+import { maskName } from '../privacy';
 
 async function requireReviewer() {
   const caller = await getUser();
@@ -105,24 +107,73 @@ export async function failShopOrder(formData: FormData): Promise<void> {
   revalidatePath('/debate-mate/console');
 }
 
-/** 우수 기여 보너스 등 운영자 수동 지급. */
-export async function adjustPoints(formData: FormData): Promise<void> {
-  const caller = await requireReviewer();
-  const userId = String(formData.get('userId') ?? '');
-  const amount = Number(formData.get('amount'));
-  const memo = String(formData.get('memo') ?? '').trim() || '운영자 조정';
-  if (!userId || !Number.isFinite(amount) || amount === 0) return;
+export interface PointGrantState {
+  error?: string;
+  saved?: string;
+}
 
-  await grantPoints({
-    userId,
-    amount: Math.trunc(amount),
-    kind: POINT_KINDS.adminAdjust,
-    memo,
-    refType: 'admin',
-    // 같은 운영자가 같은 사유로 여러 번 줄 수 있어야 하므로 시각을 키에 포함한다
-    refId: `${caller.id}:${Date.now()}`,
-  });
+/**
+ * 운영자 수동 포인트 지급·차감.
+ *
+ * 쓰이는 자리가 둘이다:
+ *   · 잘못된 처리로 환급이 안 된 경우의 보정 (양수)
+ *   · 이벤트 보상, 잘못 지급된 포인트 회수 (양수/음수)
+ *
+ * 사유를 필수로 받는 이유: 원장은 감사 대상이다. "누가 왜 줬는지" 없이 숫자만 남으면
+ * 나중에 정산이 맞는지 확인할 방법이 없다. 같은 사유로 여러 번 줄 수 있어야 하므로
+ * 중복 방지 키에는 시각을 넣는다.
+ */
+export async function adjustPoints(
+  _prev: PointGrantState,
+  formData: FormData,
+): Promise<PointGrantState> {
+  try {
+    const caller = await requireReviewer();
+    const userId = String(formData.get('userId') ?? '');
+    const amount = Math.trunc(Number(formData.get('amount')));
+    const memo = String(formData.get('memo') ?? '').trim();
 
-  revalidatePath('/console/points');
-  revalidatePath('/debate-mate/console');
+    if (!userId) return { error: '대상 계정을 고르세요.' };
+    if (!Number.isFinite(amount) || amount === 0) return { error: '0이 아닌 포인트를 입력하세요.' };
+    if (Math.abs(amount) > 1_000_000) return { error: '한 번에 1,000,000P를 넘길 수 없습니다.' };
+    if (memo.length < 4) return { error: '지급 사유를 4자 이상 적어 주세요.' };
+
+    const target = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
+    if (!target) return { error: '대상 계정을 찾을 수 없습니다.' };
+
+    // 차감이면 잔액을 넘지 않는지 확인한다 — 음수 잔액은 상점 로직 전체를 흔든다
+    if (amount < 0) {
+      const { balance } = await getPointSummary(userId);
+      if (balance + amount < 0) {
+        return { error: `잔액이 부족합니다. (보유 ${balance.toLocaleString()}P)` };
+      }
+    }
+
+    await grantPoints({
+      userId,
+      amount,
+      kind: POINT_KINDS.adminAdjust,
+      memo,
+      refType: 'admin',
+      refId: `${caller.id}:${Date.now()}`,
+    });
+
+    await audit({
+      actor: caller,
+      action: 'point.adjust',
+      targetType: 'user',
+      targetId: userId,
+      summary: `${maskName(target.name)} 포인트 ${amount > 0 ? '+' : ''}${amount.toLocaleString()}P — ${memo}`,
+      diff: { after: { amount, memo } },
+    });
+
+    revalidatePath('/console/points');
+    revalidatePath('/debate-mate/console');
+    revalidatePath('/shop');
+    return {
+      saved: `${maskName(target.name)}에게 ${amount > 0 ? '+' : ''}${amount.toLocaleString()}P를 반영했습니다.`,
+    };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : '지급에 실패했습니다.' };
+  }
 }

@@ -8,6 +8,7 @@ import { cookies, headers } from 'next/headers';
 import { z } from 'zod';
 import { createClient } from '../supabase/server';
 import { prisma } from '../prisma';
+import { assertEnabled, featureBlockMessage } from '../settings';
 import { addMarketingConsent } from '../marketing';
 import { rateLimit, clientIp } from '../rate-limit';
 import { mapAuthError } from '../auth-errors';
@@ -107,6 +108,11 @@ const SESSION_EXPIRED = '세션이 만료되었습니다. 처음부터 다시 �
 
 /** 1단계 — 약관 동의를 기록한다. */
 export async function recordSignupConsent(_prev: ConsentState, formData: FormData): Promise<ConsentState> {
+  // 가입 킬 스위치 — 가입 스팸이 쏟아질 때 콘솔에서 끈다.
+  // 위저드의 첫 단계에서 막아야 어중간하게 만들어진 계정이 남지 않는다.
+  const blocked = await featureBlockMessage('flag.signup', '현재 신규 가입을 받지 않고 있습니다.');
+  if (blocked) return { errors: { form: [blocked] } };
+
   const { user } = await sessionUser();
   if (!user) return { errors: { form: [SESSION_EXPIRED] } };
 
@@ -228,6 +234,8 @@ export async function saveSignupProfile(_prev: ProfileStepState, formData: FormD
 
 /** 소셜 가입 — 동의 상태를 쿠키에 보존한 뒤 OAuth로 넘어간다. 콜백이 쿠키를 읽어 동의를 기록한다. */
 export async function signupWithOAuth(marketing: boolean, provider: OAuthProvider): Promise<void> {
+  await assertEnabled('flag.signup', '현재 신규 가입을 받지 않고 있습니다.');
+
   const supabase = await createClient();
   const h = await headers();
   const site = `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('host')}`;

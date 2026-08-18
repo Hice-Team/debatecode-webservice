@@ -8,6 +8,7 @@ import { ensureAnonymousTag } from '../identity';
 import { grantAdoptionPoints } from './mate';
 import { verifySession, getUser } from '../dal';
 import { sanctionMessage } from '../moderation';
+import { featureBlockMessage } from '../settings';
 
 export interface CommentFormState {
   errors?: { content?: string[]; form?: string[] };
@@ -22,6 +23,9 @@ const commentSchema = z.object({
 
 export async function createComment(_prev: CommentFormState, formData: FormData): Promise<CommentFormState> {
   const session = await verifySession();
+
+  const blocked = await featureBlockMessage('flag.community_write');
+  if (blocked) return { errors: { form: [blocked] } };
 
   const suspended = await sanctionMessage(session.userId, 'comment');
   if (suspended) return { errors: { form: [suspended] } };

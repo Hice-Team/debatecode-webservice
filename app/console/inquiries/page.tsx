@@ -2,77 +2,102 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/app/lib/prisma';
 import { getUser } from '@/app/lib/dal';
-import { canReview } from '@/app/lib/roles';
-import { maskEmail } from '@/app/lib/privacy';
-import { closeInquiry } from '@/app/lib/actions/admin';
-import InquiryReply from '../inquiry-reply';
-import { PageHeader, SectionHeader, EmptyRow, BTN_NEUTRAL } from '../ui';
+import { can } from '@/app/lib/permissions-server';
+import { maskEmail, maskName } from '@/app/lib/privacy';
+import { isEmailLive } from '@/app/lib/email';
+import InquiryWorkspace, { type InquiryItem, type Responder } from './inquiry-workspace';
+import { PageHeader, StatGrid, Callout } from '../ui';
 
 export const metadata: Metadata = { title: '문의 처리' };
 
-// 문의 처리 큐 — 미답변/답변됨 문의에 답변하고, 답변 완료 건은 보관(closed)한다.
+// 문의 처리 큐 — 담당자·분류·SLA가 붙은 트리아지 화면.
 export default async function InquiryManagementPage() {
   const user = await getUser();
-  if (!canReview(user.role)) redirect('/console');
+  if (!(await can(user, 'inquiry.respond'))) redirect('/console');
 
-  const [inquiries, closed] = await Promise.all([
-    prisma.inquiry.findMany({ where: { status: { in: ['open', 'answered'] } }, orderBy: { createdAt: 'desc' }, take: 50 }),
-    prisma.inquiry.findMany({ where: { status: 'closed' }, orderBy: { answeredAt: 'desc' }, take: 15 }),
+  const [rows, responderRows] = await Promise.all([
+    prisma.inquiry.findMany({ orderBy: { createdAt: 'desc' }, take: 300 }),
+    prisma.user.findMany({
+      where: { role: { in: ['admin', 'reviewer'] } },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    }),
   ]);
+
+  // 답변자 이름 — 이름만 붙이면 되므로 필요한 ID만 모아 한 번에 조회한다
+  const answeredByIds = [...new Set(rows.map((q) => q.answeredById).filter((id): id is string => Boolean(id)))];
+  const answerers = answeredByIds.length
+    ? await prisma.user.findMany({ where: { id: { in: answeredByIds } }, select: { id: true, name: true } })
+    : [];
+  const nameById = new Map(answerers.map((a) => [a.id, maskName(a.name)]));
+
+  const responders: Responder[] = responderRows.map((r) => ({ id: r.id, name: maskName(r.name) }));
+  const responderNameById = new Map(responders.map((r) => [r.id, r.name]));
+
+  const items: InquiryItem[] = rows.map((q) => ({
+    id: q.id,
+    subject: q.subject,
+    body: q.body,
+    contact: maskEmail(q.email),
+    canEmail: Boolean(q.email),
+    status: (q.status === 'answered' ? 'answered' : q.status === 'closed' ? 'closed' : 'open') as InquiryItem['status'],
+    category: q.category,
+    priority: q.priority ?? 'normal',
+    assigneeId: q.assigneeId,
+    assigneeName: q.assigneeId ? (responderNameById.get(q.assigneeId) ?? null) : null,
+    answer: q.answer,
+    answeredByName: q.answeredById ? (nameById.get(q.answeredById) ?? null) : null,
+    createdAt: q.createdAt.toISOString(),
+    firstResponseAt: q.firstResponseAt ? q.firstResponseAt.toISOString() : null,
+  }));
+
+  const now = new Date().getTime();
+  const open = items.filter((q) => q.status === 'open');
+  const stale = open.filter((q) => now - new Date(q.createdAt).getTime() > 24 * 3600_000).length;
+  const unassigned = open.filter((q) => !q.assigneeId).length;
+
+  // 첫 응답까지 걸린 평균 시간 — 응대가 실제로 빨라지고 있는지 보는 유일한 숫자
+  const responded = items.filter((q) => q.firstResponseAt);
+  const avgHours = responded.length
+    ? Math.round(
+        responded.reduce(
+          (sum, q) => sum + (new Date(q.firstResponseAt!).getTime() - new Date(q.createdAt).getTime()),
+          0,
+        ) /
+          responded.length /
+          3600_000,
+      )
+    : null;
 
   return (
     <div>
-      <PageHeader eyebrow="INQUIRY MANAGEMENT" title="문의 처리 큐" sub="사용자 문의에 답변하면 상태가 ANSWERED로 바뀌고, 보관하면 목록에서 정리됩니다." />
+      <PageHeader
+        eyebrow="INQUIRY TRIAGE"
+        title="문의 처리"
+        sub="답변은 저장 후에도 수정할 수 있고, 저장과 동시에 회신 메일이 나갑니다."
+      />
 
-      <div className="divide-y divide-ink/5 rounded-2xl border border-ink/10 bg-white">
-        {inquiries.length === 0 && <EmptyRow text="문의가 없습니다." />}
-        {inquiries.map((q) => (
-          <div key={q.id} className="px-5 py-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`rounded border px-1.5 py-0.5 font-mono text-[10px] ${
-                  q.status === 'open' ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                }`}
-              >
-                {q.status === 'open' ? 'OPEN' : 'ANSWERED'}
-              </span>
-              <span className="truncate font-medium text-ink">{q.subject}</span>
-              <span className="ml-auto font-mono text-[11px] text-ink-soft/50">
-                {maskEmail(q.email)} · {q.createdAt.toLocaleDateString('ko-KR')}
-              </span>
-            </div>
-            <p className="mt-1.5 text-sm leading-relaxed text-ink-soft/70">{q.body}</p>
-            {q.answer ? (
-              <div className="mt-2 flex items-start gap-2">
-                <form action={closeInquiry}>
-                  <input type="hidden" name="id" value={q.id} />
-                  <button className={BTN_NEUTRAL}>보관</button>
-                </form>
-                <p className="text-sm text-emerald-800/80">
-                  <span className="mr-1 font-mono text-[11px]">답변:</span>
-                  {q.answer}
-                </p>
-              </div>
-            ) : (
-              <InquiryReply id={q.id} />
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-10">
-        <SectionHeader title="보관된 문의" />
-        <div className="divide-y divide-ink/5 rounded-2xl border border-ink/10 bg-white">
-          {closed.length === 0 && <EmptyRow text="보관된 문의가 없습니다." />}
-          {closed.map((q) => (
-            <div key={q.id} className="flex items-center gap-3 px-5 py-3.5">
-              <span className="shrink-0 rounded-full border border-ink/10 bg-paper px-2 py-0.5 font-mono text-[10px] text-ink-soft/55">CLOSED</span>
-              <span className="truncate font-medium text-ink">{q.subject}</span>
-              <span className="ml-auto font-mono text-[11px] text-ink-soft/45">{q.createdAt.toLocaleDateString('ko-KR')}</span>
-            </div>
-          ))}
+      {!isEmailLive() && (
+        <div className="mb-5">
+          <Callout tone="warn" title="메일 키가 설정되지 않았습니다">
+            답변은 저장되지만 회신 메일은 실제로 발송되지 않습니다(dry-run). 이용자는 답변을 확인할 수 없으므로,
+            운영 전에 <code className="rounded bg-white/60 px-1">RESEND_API_KEY</code>를 설정하세요.
+          </Callout>
         </div>
+      )}
+
+      <div className="mb-5">
+        <StatGrid
+          stats={[
+            { label: '미답변', value: open.length, warn: open.length > 0 },
+            { label: '24시간 초과', value: stale, warn: stale > 0 },
+            { label: '담당자 미지정', value: unassigned },
+            { label: '평균 첫 응답', value: avgHours != null ? `${avgHours}시간` : '—' },
+          ]}
+        />
       </div>
+
+      <InquiryWorkspace items={items} responders={responders} currentUserId={user.id} />
     </div>
   );
 }

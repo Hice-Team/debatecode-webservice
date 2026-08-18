@@ -5,6 +5,7 @@ import { PageShell } from '@/app/components/page-shell';
 import BackButton from '@/app/components/back-button';
 import { prisma } from '@/app/lib/prisma';
 import { getSessionOptional } from '@/app/lib/dal';
+import { canOrderScope, SHOP_SCOPE_LABELS, asShopScope } from '@/app/lib/shop-scope';
 import { getPointSummary } from '@/app/lib/points';
 import { POINT_TO_KRW_NOTE, providerLabel } from '@/app/lib/shop';
 import PurchaseForm from './purchase-form';
@@ -15,17 +16,34 @@ export default async function ShopProductPage({ params }: PageProps<'/shop/[id]'
   const { id } = await params;
   const session = await getSessionOptional();
 
-  const [product, summary] = await Promise.all([
+  const [product, summary, viewer] = await Promise.all([
     prisma.shopProduct.findUnique({
       where: { id },
-      select: { id: true, name: true, brand: true, priceKrw: true, imageUrl: true, provider: true, active: true },
+      select: {
+        id: true,
+        name: true,
+        brand: true,
+        priceKrw: true,
+        imageUrl: true,
+        provider: true,
+        active: true,
+        scope: true,
+        description: true,
+        stock: true,
+      },
     }),
     session ? getPointSummary(session.userId) : null,
+    session
+      ? prisma.user.findUnique({ where: { id: session.userId }, select: { role: true, email: true } })
+      : null,
   ]);
   if (!product) notFound();
 
   const balance = summary?.balance ?? 0;
   const shortfall = Math.max(0, product.priceKrw - balance);
+  // 메이트 전용 상품은 자격이 없으면 신청 버튼 자체를 막는다(서버 액션에서도 다시 검사한다)
+  const allowedScope = canOrderScope(viewer?.role ?? 'user', product.scope);
+  const soldOut = product.stock != null && product.stock <= 0;
 
   return (
     <PageShell width="4xl">
@@ -116,10 +134,22 @@ export default async function ShopProductPage({ params }: PageProps<'/shop/[id]'
                   </p>
                 )}
 
+                {!allowedScope && (
+                  <p className="mt-3 rounded-lg border border-ink/15 bg-paper/60 px-3 py-2 text-[13px] text-ink-soft/70">
+                    디베이트메이트 전용 상품입니다.
+                  </p>
+                )}
+                {soldOut && (
+                  <p className="mt-3 rounded-lg border border-ink/15 bg-paper/60 px-3 py-2 text-[13px] text-ink-soft/70">
+                    재고가 모두 소진되었습니다.
+                  </p>
+                )}
+
                 <PurchaseForm
                   productId={product.id}
                   productLabel={`${product.brand} ${product.name}`}
-                  disabled={!product.active || shortfall > 0}
+                  disabled={!product.active || shortfall > 0 || !allowedScope || soldOut}
+                  defaultEmail={viewer?.email ?? undefined}
                 />
               </>
             )}

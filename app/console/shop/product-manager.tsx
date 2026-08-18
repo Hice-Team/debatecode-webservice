@@ -4,6 +4,7 @@
 // 실제 저장·토글·삭제는 전부 서버 액션이 처리한다.
 import { useCallback, useState } from 'react';
 import { deleteShopProduct, toggleShopProduct } from '@/app/lib/actions/admin-shop';
+import { SHOP_SCOPE_LABELS, type ShopScope } from '@/app/lib/shop-scope';
 import { providerLabel } from '@/app/lib/shop';
 import ProductForm, { type EditableProduct } from './product-form';
 
@@ -67,7 +68,9 @@ export default function ProductManager({ products }: { products: ManagedProduct[
                   {product.brand} {product.name}
                 </p>
                 <p className="font-mono text-[11px] text-ink-soft/45">
-                  {product.priceKrw.toLocaleString()}P · {providerLabel(product.provider)} · 순서 {product.order}
+                  {product.priceKrw.toLocaleString()}P · {SHOP_SCOPE_LABELS[product.scope as ShopScope] ?? product.scope} ·{' '}
+                  {providerLabel(product.provider)} · 순서 {product.order}
+                  {product.stock != null && ` · 재고 ${product.stock}`}
                   {product.orderCount > 0 && ` · 주문 ${product.orderCount}건`}
                 </p>
               </div>

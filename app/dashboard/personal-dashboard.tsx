@@ -4,6 +4,7 @@ import { RadarChart, BarDistribution } from '@/app/components/charts';
 import I18nSlot from '@/app/components/i18n-slot';
 import { RANKS, rankForScore } from '@/app/lib/star-score';
 import { getMyRanks } from '@/app/lib/ranking';
+import { getPointSummary } from '@/app/lib/points';
 import MateApply from './mate-apply';
 import {
   DIFFICULTY_LABELS,
@@ -53,7 +54,7 @@ function computeStreak(dates: Date[]): number {
 export default async function PersonalDashboard({ userId, name, role }: { userId: string; name: string; role: string }) {
   const isMate = role === 'debate_mate' || role === 'admin';
 
-  const [passedProblems, totalSubmissions, recentSubmissions, interviews, allSubs, myPosts, myComments, newReplies, mateApp, debateQCount, profile, myRanks] =
+  const [passedProblems, totalSubmissions, recentSubmissions, interviews, allSubs, myPosts, myComments, newReplies, mateApp, debateQCount, profile, myRanks, points] =
     await Promise.all([
       prisma.submission.findMany({ where: { userId, status: 'PASS' }, select: { problemId: true }, distinct: ['problemId'] }),
       prisma.submission.count({ where: { userId } }),
@@ -79,6 +80,8 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
       prisma.debateQSession.count({ where: { userId, status: 'COMPLETED' } }),
       prisma.user.findUnique({ where: { id: userId }, select: { starScore: true, rankBadgeVisible: true } }),
       getMyRanks(userId),
+      // 포인트가 전 회원에게 열렸으므로 대시보드에서 잔액과 상점 진입을 함께 보여 준다
+      getPointSummary(userId),
     ]);
 
   // ---- 통계 집계 ----
@@ -368,6 +371,31 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
               ))}
             </div>
           </div>
+
+          {/* 디베이트포인트 · 상점 — 포인트는 이제 전 회원이 쓴다 */}
+          <Link
+            href="/shop"
+            className="group flex items-center gap-4 rounded-2xl border border-ink/10 bg-white p-5 transition-colors hover:border-brand-300 hover:bg-brand-50/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+          >
+            <span
+              aria-hidden
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-xl ring-1 ring-inset ring-brand-100"
+            >
+              🎁
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">DEBATE POINT</p>
+              <p className="mt-0.5 font-display text-2xl font-bold text-ink">
+                {points.balance.toLocaleString()}
+                <span className="ml-0.5 text-base font-semibold text-ink-soft/50">P</span>
+              </p>
+              <p className="mt-0.5 text-xs text-ink-soft/55">
+                {points.reserved > 0
+                  ? `발급 대기 ${points.reserved.toLocaleString()}P · 상점에서 교환하기 →`
+                  : '문제를 풀면 난이도에 비례해 쌓입니다. 상점에서 교환하기 →'}
+              </p>
+            </div>
+          </Link>
 
           {isMate ? (
             /* debateQ 타일 — 디베이트메이트 전용 */

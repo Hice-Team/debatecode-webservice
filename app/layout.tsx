@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import AnnouncementGate from "./components/announcement-gate";
+import MaintenanceGate from "./components/maintenance-gate";
+import GlobalBanner from "./components/global-banner";
 import AutoTranslate from "./components/auto-translate";
 import ChannelTalk from "./components/channel-talk";
 
@@ -60,7 +62,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+// 유지보수 게이트와 전역 배너가 런타임 설정을 읽으므로 async 컴포넌트다.
+// 두 값 모두 요청당 1회 조회로 끝난다(app/lib/settings.ts의 React cache).
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -88,7 +92,12 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
         />
         <Providers>
-          {children}
+          {/* 점검 모드가 켜져 있으면 일반 방문자에게는 안내 화면만 보인다 */}
+          <MaintenanceGate>
+            {/* 콘솔에서 설정한 상시 안내 한 줄 — 비어 있으면 아무것도 렌더하지 않는다 */}
+            <GlobalBanner />
+            {children}
+          </MaintenanceGate>
           {/* EN 모드에서 화면의 한국어 텍스트(DB 콘텐츠 포함)를 자동 번역 */}
           <AutoTranslate />
         </Providers>

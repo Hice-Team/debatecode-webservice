@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/app/lib/prisma';
 import { createClient } from '@/app/lib/supabase/server';
 import { rateLimit } from '@/app/lib/rate-limit';
+import { featureBlockMessage } from '@/app/lib/settings';
 import { generateFlawedCode } from '@/app/lib/ai/debateq-gen';
 import type { Language } from '@/app/lib/types';
 
@@ -79,6 +80,10 @@ export async function POST(request: Request) {
       return NextResponse.json(payload(existing, true));
     }
   }
+
+  // 운영 킬 스위치 — 새 세션만 막고 진행 중 세션은 그대로 이어진다
+  const blocked = await featureBlockMessage('flag.debateq');
+  if (blocked) return NextResponse.json({ error: blocked }, { status: 503 });
 
   // 코드 생성은 LLM 호출 — 사용자당 분당 3회
   if (!rateLimit(`debateq-create:${user.id}`, 3, 60_000)) {

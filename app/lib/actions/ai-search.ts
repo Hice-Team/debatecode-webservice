@@ -165,8 +165,18 @@ export async function reportAiMessage(formData: FormData): Promise<{ saved?: boo
   });
   if (!owned) return { error: '신고할 답변을 찾지 못했습니다.' };
 
+  // targetType을 'ai_search'로 맞춘다. 예전 'ai_message'는 콘솔 신고 큐의 대상 목록에 없어서
+  // 접수는 되는데 화면에 잡히지 않았다 — 사실상 사라지는 신고였다.
+  // dedupeKey도 함께 채워야 케이스 단위 트리아지에 묶인다.
   await prisma.report.create({
-    data: { reporterId: userId, targetType: 'ai_message', targetId: messageId, reason, detail: detail || null },
+    data: {
+      reporterId: userId,
+      targetType: 'ai_search',
+      targetId: messageId,
+      reason,
+      detail: detail || null,
+      dedupeKey: `ai_search:${messageId}`,
+    },
   });
   return { saved: true };
 }

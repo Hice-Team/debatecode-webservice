@@ -1,13 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useActionState } from 'react';
-import { saveRecoveryEmail } from '@/app/lib/actions/settings';
+import RecoveryEmail from './recovery-email';
 
-export default function TwoFactor({ initialEmail }: { initialEmail?: string | null }) {
-  const [email, setEmail] = useState(initialEmail ?? '');
-  const [state, action, pending] = useActionState(saveRecoveryEmail, {} as any);
-
+export default function TwoFactor({
+  initialEmail,
+  recoveryVerifiedAt,
+}: {
+  initialEmail?: string | null;
+  /** 복구 이메일을 코드로 확인한 시각 — 없으면 '미확인'으로 표시한다 */
+  recoveryVerifiedAt?: string | null;
+}) {
   const [provisioning, setProvisioning] = useState(false);
   const [otpauth, setOtpauth] = useState<string | null>(null);
   const [code, setCode] = useState('');
@@ -128,18 +131,8 @@ export default function TwoFactor({ initialEmail }: { initialEmail?: string | nu
 
   return (
     <div className="space-y-4">
-      <form action={action} className="space-y-3">
-        <div>
-          <label className="block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5">복구 이메일</label>
-          <input value={email} onChange={(e) => setEmail(e.target.value)} name="recoveryEmail" placeholder="recovery@example.com" className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm" />
-        </div>
-        <div className="flex items-center gap-3">
-          <button type="submit" disabled={pending} className="px-4 py-2 rounded-lg bg-signal text-white">{pending ? '저장 중…' : '저장'}</button>
-          <span className="text-sm text-ink-soft/60">TOTP 및 보안키는 아래에서 등록할 수 있습니다.</span>
-        </div>
-        {state.errors?.form && <p className="text-sm text-rose-600">{state.errors.form[0]}</p>}
-        {state.saved && <p className="text-sm text-emerald-700">저장되었습니다.</p>}
-      </form>
+      {/* 복구 이메일 — 코드 확인을 거쳐야 저장된다(app/settings/security/recovery-email.tsx) */}
+      <RecoveryEmail current={initialEmail ?? null} verifiedAt={recoveryVerifiedAt ?? null} />
 
       <div className="rounded-xl border border-ink/10 bg-white p-4">
         <h4 className="font-semibold">Google Authenticator (TOTP)</h4>

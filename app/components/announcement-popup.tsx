@@ -1,60 +1,189 @@
 'use client';
 
-// 전체 공지 팝업 — 웹 접속 시 중앙 모달로 노출.
-// "오늘 하루 보지 않기"를 체크하고 닫은 경우에만 24시간 동안 숨기고,
-// 그냥 닫으면 다음 페이지 접속(새로고침/재방문) 때 다시 뜬다.
-import { useEffect, useState } from 'react';
+// 공개 팝업 — 접속 시 중앙 모달로 노출. 로그인 여부와 무관하게 뜬다.
+//
+// 여러 개가 동시에 Live일 수 있다. 한꺼번에 겹쳐 띄우면 아무것도 안 읽히므로
+// 한 번에 하나씩 보여 주고 "다음"으로 넘긴다 — 개수는 상단에 표시한다.
+//
+// "오늘 하루 보지 않기"는 팝업 단위로 기억한다. 예전에는 키가 하나뿐이라
+// 새 팝업을 올리면 이전에 숨긴 기록이 덮여 버렸다.
+import { useMemo, useState, useSyncExternalStore } from 'react';
 
-const HIDE_KEY = 'dc-announcement-hide'; // { id, until } JSON
+const HIDE_KEY = 'dc-popup-hidden'; // { [id]: until(ms) }
 
-function hiddenToday(id: string): boolean {
+export interface PopupItem {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl: string | null;
+  variant: string;
+  linkType: string;
+  linkTarget: string | null;
+  linkLabel: string | null;
+}
+
+/** 링크 해석 — 서버(app/lib/popups.ts)와 같은 규칙. 클라이언트 번들에 서버 모듈을 끌어오지 않으려고 옮겨 적었다. */
+function resolveLink(item: PopupItem): { href: string; label: string; external: boolean } | null {
+  const value = (item.linkTarget ?? '').trim();
+  if (item.linkType === 'none' || !value) return null;
+  const fallback = { post: '자세히 보기', url: '바로가기', mail: '문의하기' }[item.linkType] ?? '바로가기';
+  const label = (item.linkLabel ?? '').trim() || fallback;
+
+  if (item.linkType === 'post') {
+    const id = value.includes('/') ? value.replace(/\/+$/, '').split('/').pop()! : value;
+    return { href: `/community/${id}`, label, external: false };
+  }
+  if (item.linkType === 'mail') {
+    return value.includes('@') ? { href: `mailto:${value}`, label, external: true } : null;
+  }
   try {
-    const raw = localStorage.getItem(HIDE_KEY);
-    if (!raw) return false;
-    const saved = JSON.parse(raw) as { id?: string; until?: number };
-    return saved.id === id && typeof saved.until === 'number' && saved.until > Date.now();
+    const url = new URL(value.startsWith('http') ? value : `https://${value}`);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+    return { href: url.toString(), label, external: true };
   } catch {
-    return false;
+    return null;
   }
 }
 
-export default function AnnouncementPopup({ id, title, content }: { id: string; title: string; content: string }) {
-  const [visible, setVisible] = useState(false);
-  const [hideToday, setHideToday] = useState(false);
+/* ---------- 숨김 상태 (localStorage) ---------- */
 
-  useEffect(() => {
-    if (!hiddenToday(id)) setVisible(true);
-  }, [id]);
+// 스냅샷은 같은 값이면 같은 문자열이어야 한다 — 매번 새 객체를 만들면 무한 렌더가 된다.
+let hiddenSnapshot = '{}';
+
+function readHiddenRaw(): string {
+  try {
+    hiddenSnapshot = window.localStorage.getItem(HIDE_KEY) ?? '{}';
+  } catch {
+    // 저장소를 못 읽으면 아무것도 숨기지 않은 것으로 본다
+  }
+  return hiddenSnapshot;
+}
+
+// 서버에는 localStorage가 없다. 서버 스냅샷을 따로 주면 React가 하이드레이션 불일치 없이
+// "서버는 빈 값 → 마운트 후 실제 값"으로 전환해 준다. useEffect + setState보다 안전하다.
+function serverHidden(): string {
+  return '{}';
+}
+
+function subscribeHidden(onChange: () => void): () => void {
+  window.addEventListener('storage', onChange);
+  return () => window.removeEventListener('storage', onChange);
+}
+
+function parseHidden(raw: string): Record<string, number> {
+  try {
+    return JSON.parse(raw) as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+export default function AnnouncementPopup({
+  items,
+  onAllClosed,
+}: {
+  items: PopupItem[];
+  /** 배너에서 수동으로 연 경우, 다 닫으면 부모가 버튼 상태를 되돌릴 수 있게 알린다 */
+  onAllClosed?: () => void;
+}) {
+  const hiddenRaw = useSyncExternalStore(subscribeHidden, readHiddenRaw, serverHidden);
+  const [index, setIndex] = useState(0);
+  const [hideToday, setHideToday] = useState(false);
+  // 이번 세션에서 사용자가 닫은 팝업 — 저장소와 별개로 화면에서만 치운다
+  const [dismissed, setDismissed] = useState<string[]>([]);
+
+  const queue = useMemo(() => {
+    const hidden = parseHidden(hiddenRaw);
+    const now = new Date().getTime();
+    return items.filter((i) => !(hidden[i.id] > now) && !dismissed.includes(i.id));
+  }, [items, hiddenRaw, dismissed]);
+
+  if (queue.length === 0) return null;
+  const item = queue[Math.min(index, queue.length - 1)];
+  if (!item) return null;
+
+  const link = resolveLink(item);
+  const isPoster = item.variant === 'poster' && item.imageUrl;
 
   function close() {
     if (hideToday) {
-      // 24시간 동안 이 공지를 숨긴다
-      localStorage.setItem(HIDE_KEY, JSON.stringify({ id, until: Date.now() + 24 * 3600 * 1000 }));
+      const hidden = parseHidden(hiddenRaw);
+      hidden[item.id] = new Date().getTime() + 24 * 3600 * 1000;
+      try {
+        window.localStorage.setItem(HIDE_KEY, JSON.stringify(hidden));
+      } catch {
+        // 저장에 실패해도 닫히기는 해야 한다
+      }
     }
-    setVisible(false); // 체크하지 않으면 저장하지 않음 — 다음 접속 시 다시 노출
+    setHideToday(false);
+    const next = [...dismissed, item.id];
+    setDismissed(next);
+    setIndex(0);
+    if (queue.length <= 1) onAllClosed?.();
   }
-
-  if (!visible) return null;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="presentation">
-      {/* 배경 딤 — 클릭 시 (하루 숨김 없이) 닫기 */}
       <div aria-hidden className="absolute inset-0 bg-ink/50 backdrop-blur-[2px]" onClick={close} />
 
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="dc-notice-title"
-        className="relative w-[min(28rem,100%)] overflow-hidden rounded-2xl bg-white shadow-2xl shadow-black/30 animate-in fade-in zoom-in-95 duration-200"
+        className="relative w-[min(30rem,100%)] overflow-hidden rounded-2xl bg-white shadow-2xl shadow-black/30 animate-in fade-in zoom-in-95 duration-200"
       >
-        <div className="bg-brand-900 px-6 py-4 text-white">
-          <p className="font-mono text-[10px] tracking-wider text-brand-300">NOTICE</p>
-          <h3 id="dc-notice-title" className="mt-0.5 text-lg font-bold leading-snug">{title}</h3>
-        </div>
-        <div className="max-h-[50vh] overflow-y-auto px-6 py-5">
-          <p className="text-sm text-ink-soft/80 leading-relaxed whitespace-pre-line">{content}</p>
-        </div>
-        <div className="flex items-center gap-3 border-t border-ink/10 bg-paper/60 px-6 py-3.5">
+        {/* 여러 건일 때 몇 번째인지 — 닫아도 또 뜨는 이유를 알 수 있게 */}
+        {queue.length > 1 && (
+          <div className="flex items-center gap-1.5 bg-ink/[0.04] px-6 py-1.5">
+            <span className="font-mono text-[10px] text-ink-soft/50">
+              공지 {index + 1} / {queue.length}
+            </span>
+            <div className="ml-auto flex gap-1">
+              {queue.map((q, i) => (
+                <span
+                  key={q.id}
+                  aria-hidden
+                  className={`h-1 w-4 rounded-full ${i === index ? 'bg-brand-600' : 'bg-ink/15'}`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 포스터 이미지 */}
+        {item.imageUrl && (
+          // 외부 Storage URL이라 next/image 최적화를 태우지 않는다(도메인 화이트리스트 불필요)
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.imageUrl}
+            alt={item.title}
+            className={`w-full object-cover ${isPoster ? 'max-h-[60vh] object-contain bg-ink/[0.03]' : 'h-40'}`}
+          />
+        )}
+
+        {!isPoster && (
+          <div className="bg-brand-900 px-6 py-4 text-white">
+            <p className="font-mono text-[10px] tracking-wider text-brand-300">NOTICE</p>
+            <h3 id="dc-notice-title" className="mt-0.5 text-lg font-bold leading-snug">
+              {item.title}
+            </h3>
+          </div>
+        )}
+
+        {(isPoster || item.content) && (
+          <div className="max-h-[40vh] overflow-y-auto px-6 py-5">
+            {isPoster && (
+              <h3 id="dc-notice-title" className="mb-2 text-lg font-bold leading-snug text-ink">
+                {item.title}
+              </h3>
+            )}
+            {item.content && (
+              <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft/80">{item.content}</p>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3 border-t border-ink/10 bg-paper/60 px-6 py-3.5">
           <label className="flex cursor-pointer items-center gap-2 text-xs text-ink-soft/70">
             <input
               type="checkbox"
@@ -64,13 +193,26 @@ export default function AnnouncementPopup({ id, title, content }: { id: string; 
             />
             오늘 하루 보지 않기
           </label>
-          <button
-            type="button"
-            onClick={close}
-            className="ml-auto rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
-          >
-            닫기
-          </button>
+
+          <div className="ml-auto flex items-center gap-2">
+            {link && (
+              <a
+                href={link.href}
+                {...(link.external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
+                onClick={close}
+                className="rounded-lg border border-brand-300 bg-white px-3.5 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+              >
+                {link.label} {link.external ? '↗' : '→'}
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={close}
+              className="rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+            >
+              {index < queue.length - 1 ? '다음' : '닫기'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

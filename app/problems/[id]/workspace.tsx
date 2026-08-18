@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
+import ReportButton from '@/app/components/report-button';
 import remarkGfm from 'remark-gfm';
 import { runJudge, disposeJudgeWorkers } from '@/app/lib/judge/client';
 import {
@@ -796,6 +797,24 @@ export default function Workspace({
           </Link>
         </h1>
         <span className="font-mono text-[11px] text-white/40">{problem.category}</span>
+
+        {/* 문제·에디터 신고 — 지문이나 채점이 잘못됐을 때 이용자가 그 자리에서 알릴 수 있어야 한다.
+            문의로 흘려보내면 어느 문제였는지부터 다시 물어야 한다. */}
+        <ReportButton
+          targetType="problem"
+          targetId={String(problem.id)}
+          variant="icon"
+          label="문제 오류 신고"
+          autoContext={[
+            `문제 #${problem.id} ${problem.title}`,
+            `난이도 ${problem.difficulty} · ${problem.category}`,
+            `언어 ${language}`,
+            '',
+            '--- 작성 중인 코드 ---',
+            code.slice(0, 2000),
+          ].join('\n')}
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/15 text-white/40 transition-colors hover:border-rose-400/50 hover:text-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
+        />
         {/* 가이드 다시 보기 — "앞으로 보지 않기"로 껐어도 여기서 언제든 다시 열 수 있다 */}
         <button
           type="button"

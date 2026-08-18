@@ -4,7 +4,7 @@
 // 답글은 좌측 연결선이 있는 스레드로 들여쓰고 인라인 컴포저(자동 포커스)로 작성한다.
 import { useActionState, useEffect, useRef, useState } from 'react';
 import CommentForm from './comment-form';
-import ReportButton from '../report-button';
+import ReportButton from '@/app/components/report-button';
 import AuthorBadges from '@/app/components/author-badges';
 import { adoptAnswer } from '@/app/lib/actions/comments';
 import { updateComment, deleteComment, type CommentFormState } from '@/app/lib/actions/comments';
