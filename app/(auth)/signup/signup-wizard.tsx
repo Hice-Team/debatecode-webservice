@@ -1,12 +1,17 @@
 'use client';
 
-// 다단계 가입 위저드 — 약관 동의 → 이메일 인증 → 계정 정보 → 프로필 → 환영.
-// 소셜 가입은 이메일 인증 단계의 OAuth 버튼으로 진입하며, 콜백 후 계정 단계부터 재개된다.
+// 다단계 가입 위저드 — 약관 동의 → 계정 정보 → 프로필 → 환영.
+//
+// 이메일 인증 단계는 없앴다. 코드가 오지 않으면 가입 자체가 막혔고, 그 실패는 우리 로그에도
+// 남지 않았다. 대신 마지막 단계를 마쳐야 계정이 만들어지고(app/lib/actions/signup.ts),
+// 중간에 이탈해도 12시간 안에 돌아오면 입력값이 그대로 남아 있다.
+//
+// 소셜 가입은 동의 단계의 OAuth 버튼으로 진입하며, 콜백 후 계정 단계부터 재개된다.
+// 이때는 이메일·비밀번호를 묻지 않는다(이미 소셜 계정이 정한다).
 import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   recordSignupConsent,
-  completeSignupConsent,
   saveSignupAccount,
   saveSignupProfile,
   signupWithOAuth,
@@ -14,8 +19,6 @@ import {
   type AccountStepState,
   type ProfileStepState,
 } from '@/app/lib/actions/signup';
-import { createClient } from '@/app/lib/supabase/client';
-import { mapAuthError } from '@/app/lib/auth-errors';
 import OAuthButtons from '../oauth-buttons';
 import {
   GENDER_OPTIONS,
@@ -25,12 +28,11 @@ import {
   MAX_INTERESTS,
 } from './options';
 
-type Step = 'consent' | 'email' | 'account' | 'profile' | 'welcome';
+type Step = 'consent' | 'account' | 'profile' | 'welcome';
 
-const STEP_ORDER: Step[] = ['consent', 'email', 'account', 'profile', 'welcome'];
+const STEP_ORDER: Step[] = ['consent', 'account', 'profile', 'welcome'];
 const STEP_LABELS: Record<Step, string> = {
   consent: '약관 동의',
-  email: '이메일 인증',
   account: '계정 정보',
   profile: '프로필',
   welcome: '완료',
@@ -105,13 +107,11 @@ const REQUIRED_TERMS = [
 ] as const;
 
 function ConsentStep({
-  hasSession,
   marketing,
   setMarketing,
   onNext,
   oauthError,
 }: {
-  hasSession: boolean;
   marketing: boolean;
   setMarketing: (v: boolean) => void;
   onNext: () => void;
@@ -121,7 +121,7 @@ function ConsentStep({
   const allRequired = REQUIRED_TERMS.every((t) => checked[t.key]);
   const allChecked = allRequired && marketing;
 
-  // 세션이 이미 있는 경우(소셜로 먼저 로그인된 신규 유저) 동의를 서버에 기록하고 넘어간다
+  // 동의 시점에 초안이 만들어진다 — 여기서부터 이탈해도 12시간 안에 이어서 할 수 있다
   const [state, formAction, pending] = useActionState<ConsentState, FormData>(recordSignupConsent, {});
   useEffect(() => {
     if (state.recorded) onNext();
@@ -185,217 +185,21 @@ function ConsentStep({
 
       <FormError messages={state.errors?.form} />
 
-      {hasSession ? (
-        <form action={formAction}>
-          {marketing && <input type="hidden" name="marketing" value="on" />}
-          <button type="submit" disabled={!allRequired || pending} className={primaryBtnClass}>
-            {pending ? '저장 중…' : '동의하고 계속하기'}
-          </button>
-        </form>
-      ) : (
-        <button type="button" onClick={onNext} disabled={!allRequired} className={primaryBtnClass}>
-          동의하고 계속하기
-        </button>
-      )}
-    </div>
-  );
-}
-
-/* ---------- 2단계: 이메일 입력 + 인증 코드 ---------- */
-
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-
-function EmailStep({
-  marketing,
-  onVerified,
-  onBack,
-}: {
-  marketing: boolean;
-  onVerified: () => void;
-  onBack: () => void;
-}) {
-  const [email, setEmail] = useState('');
-  const [token, setToken] = useState('');
-  const [sent, setSent] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [emailError, setEmailError] = useState<string>();
-  const [tokenError, setTokenError] = useState<string>();
-  const [formError, setFormError] = useState<string>();
-  const [cooldown, setCooldown] = useState(0);
-
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const id = setInterval(() => setCooldown((c) => c - 1), 1000);
-    return () => clearInterval(id);
-  }, [cooldown > 0]);
-
-  // 인증 코드 발송 — 브라우저 Supabase 클라이언트로 직접 처리한다.
-  async function sendCode(e?: React.FormEvent) {
-    e?.preventDefault();
-    setEmailError(undefined);
-    setFormError(undefined);
-    const trimmed = email.trim();
-    if (!EMAIL_RE.test(trimmed)) {
-      setEmailError('올바른 이메일 형식이 아닙니다.');
-      return;
-    }
-    setSending(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email: trimmed,
-      options: { shouldCreateUser: true },
-    });
-    setSending(false);
-    if (error) {
-      setFormError(mapAuthError(error));
-      return;
-    }
-    setSent(true);
-    setToken('');
-    setCooldown(60);
-  }
-
-  // 인증 코드 검증 → 세션 생성 후 서버에 약관 동의를 기록한다.
-  async function verifyCode(e: React.FormEvent) {
-    e.preventDefault();
-    setTokenError(undefined);
-    setFormError(undefined);
-    if (!/^\d{6}$/.test(token)) {
-      setTokenError('6자리 인증 코드를 입력해 주세요.');
-      return;
-    }
-    setVerifying(true);
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.verifyOtp({
-      type: 'email',
-      email: email.trim(),
-      token,
-    });
-    if (error || !data.user) {
-      setVerifying(false);
-      setTokenError(error ? mapAuthError(error) : '인증에 실패했습니다. 다시 시도해 주세요.');
-      return;
-    }
-    const result = await completeSignupConsent(email.trim(), token, marketing);
-    setVerifying(false);
-    if (!result.verified) {
-      setFormError(result.error ?? '동의 기록 중 오류가 발생했습니다.');
-      return;
-    }
-    onVerified();
-  }
-
-  if (!sent) {
-    return (
-      <div className="space-y-5">
-        <div>
-          <h2 className="text-lg font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-            이메일을 인증해 주세요
-          </h2>
-          <p className="mt-1 text-sm text-ink-soft/50">입력한 주소로 6자리 인증 코드를 보내드립니다.</p>
-        </div>
-
-        <form onSubmit={sendCode} className="space-y-5">
-          <div>
-            <label htmlFor="email" className={labelClass}>
-              EMAIL
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className={inputClass}
-            />
-            <FieldError messages={emailError ? [emailError] : undefined} />
-          </div>
-
-          <FormError messages={formError ? [formError] : undefined} />
-
-          <button type="submit" disabled={sending} className={primaryBtnClass}>
-            {sending ? '발송 중…' : '인증 코드 받기'}
-          </button>
-        </form>
-
-        {/* 간편 가입 — 이메일 인증 아래 섹션. 동의 상태는 쿠키로 보존된다 */}
-        <OAuthButtons action={signupWithOAuth.bind(null, marketing)} heading="간편 가입" />
-
-        <button
-          type="button"
-          onClick={onBack}
-          className="w-full text-center text-xs text-ink-soft/40 hover:text-ink-soft transition-colors"
-        >
-          ← 약관 동의로 돌아가기
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-lg font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-          인증 코드를 입력해 주세요
-        </h2>
-        <p className="mt-1 text-sm text-ink-soft/50">
-          <span className="font-mono text-ink-soft">{email}</span> 으로 발송된 6자리 코드를 입력해 주세요.
-        </p>
-      </div>
-
-      <form onSubmit={verifyCode} className="space-y-5">
-        <div>
-          <label htmlFor="token" className={labelClass}>
-            VERIFICATION CODE
-          </label>
-          <input
-            id="token"
-            name="token"
-            inputMode="numeric"
-            pattern="\d{6}"
-            maxLength={6}
-            required
-            autoFocus
-            value={token}
-            onChange={(e) => setToken(e.target.value.replace(/\D/g, ''))}
-            placeholder="000000"
-            className={`${inputClass} text-center font-mono text-xl tracking-[0.5em]`}
-          />
-          <FieldError messages={tokenError ? [tokenError] : undefined} />
-        </div>
-
-        <FormError messages={formError ? [formError] : undefined} />
-
-        <button type="submit" disabled={verifying} className={primaryBtnClass}>
-          {verifying ? '확인 중…' : '인증하기'}
+      <form action={formAction}>
+        {marketing && <input type="hidden" name="marketing" value="on" />}
+        <button type="submit" disabled={!allRequired || pending} className={primaryBtnClass}>
+          {pending ? '저장 중…' : '동의하고 계속하기'}
         </button>
       </form>
 
-      <div className="flex items-center justify-between text-xs text-ink-soft/40">
-        <button
-          type="button"
-          onClick={() => {
-            setSent(false);
-            setFormError(undefined);
-            setTokenError(undefined);
-          }}
-          className="hover:text-ink-soft transition-colors"
-        >
-          ← 이메일 다시 입력
-        </button>
-        <button
-          type="button"
-          onClick={() => sendCode()}
-          disabled={cooldown > 0 || sending}
-          className="hover:text-ink-soft transition-colors disabled:opacity-50"
-        >
-          {cooldown > 0 ? `코드 재발송 (${cooldown}s)` : '코드 재발송'}
-        </button>
-      </div>
+      {/* 간편 가입 — 동의를 마쳐야 열린다. 동의 상태는 쿠키로 보존돼 콜백에서 기록된다. */}
+      {allRequired ? (
+        <OAuthButtons action={signupWithOAuth.bind(null, marketing)} heading="간편 가입" />
+      ) : (
+        <p className="text-center text-xs text-ink-soft/40">
+          필수 약관에 동의하면 소셜 계정으로도 가입할 수 있습니다.
+        </p>
+      )}
     </div>
   );
 }
@@ -427,20 +231,31 @@ function Chip({
   );
 }
 
-/* ---------- 3단계: 계정 정보 ---------- */
+/* ---------- 2단계: 계정 정보 ---------- */
 
+// requiresPassword=false는 소셜 가입이다. 이메일과 비밀번호는 소셜 계정이 정하므로
+// 입력칸 자체를 그리지 않는다 — 비워 둔 칸을 보여 주면 "여기도 채워야 하나" 하고 멈춘다.
 function AccountStep({
   requiresPassword,
+  initialEmail,
   initialNickname,
+  initialBirthdate,
+  initialGender,
+  resumableByEmail,
   onSaved,
 }: {
   requiresPassword: boolean;
+  initialEmail: string;
   initialNickname: string;
+  initialBirthdate: string;
+  initialGender: string;
+  /** 같은 IP에 진행 중이던 초안이 있다 — 이메일을 맞게 넣으면 이어진다 */
+  resumableByEmail: boolean;
   onSaved: (nickname: string) => void;
 }) {
   const [state, formAction, pending] = useActionState<AccountStepState, FormData>(saveSignupAccount, {});
   const [showPassword, setShowPassword] = useState(false);
-  const [gender, setGender] = useState('');
+  const [gender, setGender] = useState(initialGender);
   const nicknameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -454,13 +269,36 @@ function AccountStep({
           계정 정보를 입력해 주세요
         </h2>
         <p className="mt-1 text-sm text-ink-soft/50">
-          {requiresPassword ? '로그인에 사용할 비밀번호와 기본 정보를 설정합니다.' : '서비스에서 사용할 기본 정보를 설정합니다.'}
+          {requiresPassword ? '로그인에 사용할 이메일·비밀번호와 기본 정보를 설정합니다.' : '서비스에서 사용할 기본 정보를 설정합니다.'}
         </p>
       </div>
+
+      {resumableByEmail && (
+        <p className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-900">
+          이 네트워크에서 진행하던 가입이 있습니다. 그때 쓴 이메일을 그대로 입력하면 이어서 진행됩니다.
+        </p>
+      )}
 
       <form action={formAction} className="space-y-5">
         {requiresPassword && (
           <>
+            <div>
+              <label htmlFor="email" className={labelClass}>
+                EMAIL
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                defaultValue={initialEmail}
+                placeholder="you@example.com"
+                className={inputClass}
+              />
+              <FieldError messages={state.errors?.email} />
+            </div>
+
             <div>
               <label htmlFor="password" className={labelClass}>
                 PASSWORD
@@ -526,7 +364,14 @@ function AccountStep({
           <label htmlFor="birthdate" className={labelClass}>
             BIRTHDATE
           </label>
-          <input id="birthdate" name="birthdate" type="date" required className={inputClass} />
+          <input
+            id="birthdate"
+            name="birthdate"
+            type="date"
+            required
+            defaultValue={initialBirthdate}
+            className={inputClass}
+          />
           <FieldError messages={state.errors?.birthdate} />
         </div>
 
@@ -693,14 +538,20 @@ function WelcomeStep({ nickname }: { nickname: string }) {
 export default function SignupWizard({
   initialStep,
   requiresPassword,
+  initialEmail,
   initialNickname,
-  hasSession,
+  initialBirthdate,
+  initialGender,
+  resumableByEmail,
   oauthError,
 }: {
   initialStep: Step;
   requiresPassword: boolean;
+  initialEmail: string;
   initialNickname: string;
-  hasSession: boolean;
+  initialBirthdate: string;
+  initialGender: string;
+  resumableByEmail: boolean;
   oauthError?: string;
 }) {
   const [step, setStep] = useState<Step>(initialStep);
@@ -713,22 +564,21 @@ export default function SignupWizard({
 
       {step === 'consent' && (
         <ConsentStep
-          hasSession={hasSession}
           marketing={marketing}
           setMarketing={setMarketing}
-          onNext={() => setStep(hasSession ? 'account' : 'email')}
+          onNext={() => setStep('account')}
           oauthError={oauthError}
         />
-      )}
-
-      {step === 'email' && (
-        <EmailStep marketing={marketing} onVerified={() => setStep('account')} onBack={() => setStep('consent')} />
       )}
 
       {step === 'account' && (
         <AccountStep
           requiresPassword={requiresPassword}
+          initialEmail={initialEmail}
           initialNickname={initialNickname}
+          initialBirthdate={initialBirthdate}
+          initialGender={initialGender}
+          resumableByEmail={resumableByEmail}
           onSaved={(name) => {
             if (name) setNickname(name);
             setStep('profile');

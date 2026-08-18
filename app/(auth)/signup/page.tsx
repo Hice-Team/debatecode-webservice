@@ -3,15 +3,19 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/app/lib/supabase/server';
 import { prisma } from '@/app/lib/prisma';
+import { loadDraft } from '@/app/lib/signup-draft';
+import { decryptSecret } from '@/app/lib/crypto';
 import SignupWizard from './signup-wizard';
 
 export const metadata: Metadata = { title: '회원가입' };
 
-// 세션 상태에 따라 위저드 시작 단계를 결정한다.
-// · 세션 없음 → 약관 동의부터
-// · 세션 있음 + 동의 전(소셜로 먼저 로그인된 신규 유저) → 약관 동의부터
-// · 세션 있음 + 동의 완료 + 프로필 미완 → 계정 정보부터 (소셜 콜백 복귀 지점)
-// · 프로필 완료 → 대시보드로
+// 위저드 시작 단계는 **진행 중인 초안**이 결정한다(app/lib/signup-draft.ts).
+// 계정은 마지막 단계에서 만들어지므로, 그전까지의 진행 상태는 세션이 아니라 초안에만 있다.
+//
+// · 초안 없음 → 약관 동의부터
+// · 초안 있음 → 초안이 기록한 단계부터, 입력값을 채워서
+// · 같은 IP에 초안이 있으나 쿠키가 없음 → 동의부터 시작하되 "이어서 할 수 있다"고 알린다
+// · 프로필까지 끝난 계정으로 들어옴 → 대시보드로
 export default async function SignupPage({ searchParams }: PageProps<'/signup'>) {
   const { oauthError } = await searchParams;
 
@@ -20,9 +24,13 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
     data: { user },
   } = await supabase.auth.getUser();
 
-  let initialStep: 'consent' | 'account' = 'consent';
-  let requiresPassword = true;
-  let initialNickname = '';
+  const { draft, resumableByEmail } = await loadDraft();
+
+  let initialStep: 'consent' | 'account' | 'profile' = 'consent';
+  // 세션이 있으면 소셜 가입이다 — 이메일·비밀번호는 소셜 계정이 정하므로 묻지 않는다.
+  const requiresPassword = !user;
+  let initialEmail = draft?.email ?? '';
+  let initialNickname = draft?.nickname ?? '';
 
   if (user) {
     const dbUser = await prisma.user.findUnique({
@@ -31,13 +39,21 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
     });
     if (dbUser?.profileCompleted) redirect('/dashboard');
 
-    // 네이버는 커스텀 OAuth라 magiclink로 세션을 발급해 app_metadata.provider가 'email'로 찍힌다.
-    // user_metadata.provider 마커로 소셜 가입을 판별해 비밀번호 요구를 건너뛴다.
-    const isSocial = user.app_metadata.provider !== 'email' || user.user_metadata?.provider === 'naver';
-    requiresPassword = !isSocial;
-    initialNickname = dbUser?.name ?? (typeof user.user_metadata?.name === 'string' ? user.user_metadata.name : '');
-    initialStep = dbUser?.consentAt ? 'account' : 'consent';
+    initialEmail = user.email ?? initialEmail;
+    initialNickname =
+      initialNickname || dbUser?.name || (typeof user.user_metadata?.name === 'string' ? user.user_metadata.name : '');
+
+    // 소셜 가입은 OAuth 콜백이 동의를 이미 기록한다 — 돌아온 사람에게 동의를 두 번 받지 않는다
+    if (dbUser?.consentAt) initialStep = 'account';
   }
+
+  if (draft?.step === 'account' || draft?.step === 'profile') {
+    initialStep = draft.step;
+  }
+
+  // 초안의 개인정보는 암호화돼 있다 — 화면에 다시 채우려면 여기서 푼다
+  const initialBirthdate = (await decryptSecret(draft?.birthdateEnc)) ?? '';
+  const initialGender = (await decryptSecret(draft?.genderEnc)) ?? '';
 
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-12">
@@ -58,8 +74,11 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
           <SignupWizard
             initialStep={initialStep}
             requiresPassword={requiresPassword}
+            initialEmail={initialEmail}
             initialNickname={initialNickname}
-            hasSession={!!user}
+            initialBirthdate={initialBirthdate}
+            initialGender={initialGender}
+            resumableByEmail={resumableByEmail}
             oauthError={typeof oauthError === 'string' ? oauthError : undefined}
           />
         </div>
