@@ -5,7 +5,7 @@
 import { useState, useTransition, useActionState } from 'react';
 import Link from 'next/link';
 import { deleteAllAiSessions } from '@/app/lib/actions/ai-search-transfer';
-import { deleteSelectedUserData } from '@/app/lib/actions/settings';
+import { deleteSelectedUserData, type DeleteDataState } from '@/app/lib/actions/settings';
 
 const DOCS = [
   { href: '/legal/terms', label: '서비스 이용약관', desc: '서비스 이용 조건과 풀이 모드·AI 기능 고지' },
@@ -18,7 +18,7 @@ const DOCS = [
 export default function DataSection({ aiSessionCount }: { aiSessionCount: number }) {
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
-  const [actionState, action] = useActionState(deleteSelectedUserData, {} as any);
+  const [actionState, action, deleting] = useActionState<DeleteDataState, FormData>(deleteSelectedUserData, {});
   const [showModal, setShowModal] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -130,8 +130,8 @@ export default function DataSection({ aiSessionCount }: { aiSessionCount: number
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button type="button" onClick={() => setShowModal(false)} className="rounded-lg px-4 py-2 border">취소</button>
-              <button type="submit" disabled={selected.size === 0 || actionState.pending} className="rounded-lg bg-rose-600 px-4 py-2 text-white">
-                {actionState.pending ? '삭제 중…' : '선택 항목 삭제'}
+              <button type="submit" disabled={selected.size === 0 || deleting} className="rounded-lg bg-rose-600 px-4 py-2 text-white">
+                {deleting ? '삭제 중…' : '선택 항목 삭제'}
               </button>
             </div>
             {actionState.sent && actionState.error && <p className="mt-3 text-sm text-rose-600">{actionState.error}</p>}

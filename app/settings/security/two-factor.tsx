@@ -3,6 +3,19 @@
 import { useState } from 'react';
 import RecoveryEmail from './recovery-email';
 
+/**
+ * /api/settings/webauthn/register/begin이 내려주는 등록 옵션.
+ * 브라우저 타입(PublicKeyCredentialCreationOptions)과 달리 버퍼 자리가 base64url 문자열이다.
+ */
+type WebAuthnCreateOptions = Omit<
+  PublicKeyCredentialCreationOptions,
+  'challenge' | 'user' | 'excludeCredentials'
+> & {
+  challenge: string;
+  user: Omit<PublicKeyCredentialUserEntity, 'id'> & { id: string };
+  excludeCredentials?: Array<Omit<PublicKeyCredentialDescriptor, 'id'> & { id: string }>;
+};
+
 export default function TwoFactor({
   initialEmail,
   recoveryVerifiedAt,
@@ -68,18 +81,24 @@ export default function TwoFactor({
         return buffer;
       }
 
-      const publicKey: any = { ...opts };
-      publicKey.challenge = base64urlToBuffer(opts.challenge);
-      publicKey.user.id = base64urlToBuffer(opts.user.id);
-      if (publicKey.excludeCredentials) {
-        publicKey.excludeCredentials = publicKey.excludeCredentials.map((c: any) => ({ ...c, id: base64urlToBuffer(c.id) }));
-      }
+      // 서버는 JSON만 보낼 수 있어 challenge·user.id·excludeCredentials를 base64url 문자열로
+      // 내려보낸다. 브라우저 API는 ArrayBuffer만 받으므로 여기서 되돌린다.
+      const { challenge, user, excludeCredentials, ...rest } = opts as WebAuthnCreateOptions;
+      const publicKey: PublicKeyCredentialCreationOptions = {
+        ...rest,
+        challenge: base64urlToBuffer(challenge),
+        user: { ...user, id: base64urlToBuffer(user.id) },
+        ...(excludeCredentials
+          ? { excludeCredentials: excludeCredentials.map((c) => ({ ...c, id: base64urlToBuffer(c.id) })) }
+          : {}),
+      };
 
       const credential = (await navigator.credentials.create({ publicKey })) as PublicKeyCredential | null;
       if (!credential) return alert('브라우저가 자격증명을 생성하지 못했습니다.');
 
-      const clientDataJSON = (credential.response as any).clientDataJSON && Array.from(new Uint8Array((credential.response as any).clientDataJSON));
-      const attestationObject = (credential.response as any).attestationObject && Array.from(new Uint8Array((credential.response as any).attestationObject));
+      const response = credential.response as AuthenticatorAttestationResponse;
+      const clientDataJSON = Array.from(new Uint8Array(response.clientDataJSON));
+      const attestationObject = Array.from(new Uint8Array(response.attestationObject));
 
       const body = {
         id: credential.id,

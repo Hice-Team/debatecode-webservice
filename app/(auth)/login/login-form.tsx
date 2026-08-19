@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { createClient } from '@/app/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { mapAuthError } from '@/app/lib/auth-errors';
@@ -12,32 +12,40 @@ const emailSchema = z.string().email('올바른 이메일 형식이 아닙니다
 
 const SAVED_EMAIL_KEY = 'dc_saved_email';
 
+// 저장된 아이디는 브라우저에만 있다 — 서버 렌더에는 존재하지 않는다.
+//
+// 예전에는 effect에서 읽어 setState 했는데, 그러면 첫 렌더가 빈 값으로 한 번 그려진 뒤
+// 곧바로 다시 그려진다(입력칸이 깜빡인다). React Compiler도 이 패턴을 막는다.
+// useSyncExternalStore는 서버 스냅샷을 따로 받으므로 하이드레이션 불일치 없이 첫 렌더에
+// 바로 값을 넣을 수 있다. localStorage는 이 페이지가 떠 있는 동안 밖에서 바뀌지 않으므로
+// 구독은 아무것도 하지 않는다.
+const noopSubscribe = () => () => {};
+
+function readSavedEmail(): string | null {
+  try {
+    return localStorage.getItem(SAVED_EMAIL_KEY);
+  } catch {
+    return null; // localStorage가 꺼진 환경(사생활 보호 모드 등)
+  }
+}
+
 export default function LoginForm({ oauthError }: { oauthError?: string }) {
   const router = useRouter();
   const supabase = createClient();
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
-  const [email, setEmail] = useState('');
-  const [remember, setRemember] = useState(false);
+  const savedEmail = useSyncExternalStore(noopSubscribe, readSavedEmail, () => null);
+  // 이용자가 손대기 전에는 저장된 값을 그대로 보여 준다(null = 아직 손대지 않음).
+  const [emailInput, setEmailInput] = useState<string | null>(null);
+  const [rememberInput, setRememberInput] = useState<boolean | null>(null);
+  const email = emailInput ?? savedEmail ?? '';
+  const remember = rememberInput ?? Boolean(savedEmail);
 
   const [errors, setErrors] = useState<{
     email?: string[];
     password?: string[];
     form?: string[];
   }>({});
-
-  // 저장된 아이디(이메일) 불러오기 — 브라우저 localStorage 기반
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(SAVED_EMAIL_KEY);
-      if (saved) {
-        setEmail(saved);
-        setRemember(true);
-      }
-    } catch {
-      /* localStorage 비활성 환경 무시 */
-    }
-  }, []);
 
   // 로그인 성공 시: 아이디 저장 + (지원 브라우저라면) 자격증명/패스키 저장 프롬프트
   async function persistCredential(loginEmail: string, password?: string) {
@@ -143,7 +151,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
             autoComplete="username email webauthn"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmailInput(e.target.value)}
             placeholder="you@example.com"
             className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
           />
@@ -184,7 +192,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
           <input
             type="checkbox"
             checked={remember}
-            onChange={(e) => setRemember(e.target.checked)}
+            onChange={(e) => setRememberInput(e.target.checked)}
             className="h-4 w-4 rounded border-ink/30 text-signal accent-[#4531d9] focus:ring-signal/40"
           />
           아이디 저장

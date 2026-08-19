@@ -1,4 +1,5 @@
 import { prisma } from '@/app/lib/prisma';
+import type { Prisma } from '@/app/generated/prisma/client';
 import { verifySession } from '@/app/lib/dal';
 import Link from 'next/link';
 
@@ -8,7 +9,7 @@ export default async function LoginList({ searchParams }: { searchParams?: { q?:
   const page = Math.max(1, Number(searchParams?.page ?? '1'));
   const pageSize = 20;
 
-  const where: any = { userId };
+  const where: Prisma.LoginEventWhereInput = { userId };
   if (q) {
     where.OR = [{ userAgent: { contains: q } }, { ipMasked: { contains: q } }];
   }

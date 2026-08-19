@@ -168,39 +168,60 @@ export async function signOutDevice(formData: FormData) {
   revalidatePath('/settings');
 }
 
-/** 선택한 종류의 서비스 이용 데이터를 삭제한다. */
-export async function deleteSelectedUserData(formData: FormData) {
+export interface DeleteDataState {
+  /** 한 번이라도 실행했는지 — 결과 문구를 언제 띄울지 판단한다 */
+  sent?: boolean;
+  error?: string;
+}
+
+/**
+ * 선택한 종류의 서비스 이용 데이터를 삭제한다.
+ *
+ * useActionState가 부르므로 시그니처는 반드시 (이전 상태, FormData)여야 한다.
+ * 예전에는 FormData 하나만 받도록 되어 있어서 첫 인자로 상태 객체가 들어갔고,
+ * formData.getAll이 그 객체에서 호출되며 삭제가 통째로 실패했다.
+ */
+export async function deleteSelectedUserData(
+  _prev: DeleteDataState,
+  formData: FormData,
+): Promise<DeleteDataState> {
   const session = await verifySession();
   const types = formData.getAll('types').map((v) => String(v));
+  if (types.length === 0) return { sent: true, error: '삭제할 항목을 선택해 주세요.' };
 
-  await prisma.$transaction(async (tx) => {
-    if (types.includes('activityLogs')) {
-      await tx.runAttempt.deleteMany({ where: { userId: session.userId } });
-    }
-    if (types.includes('submissions')) {
-      await tx.submission.deleteMany({ where: { userId: session.userId } });
-    }
-    if (types.includes('posts')) {
-      await tx.post.deleteMany({ where: { authorId: session.userId } });
-    }
-    if (types.includes('comments')) {
-      await tx.comment.deleteMany({ where: { authorId: session.userId } });
-    }
-    if (types.includes('aiSessions')) {
-      await tx.aiSession.deleteMany({ where: { userId: session.userId } });
-    }
-    if (types.includes('debateChats')) {
-      await tx.debateAiChat.deleteMany({ where: { userId: session.userId } });
-    }
-    if (types.includes('bookmarks')) {
-      await tx.bookmark.deleteMany({ where: { userId: session.userId } });
-    }
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (types.includes('activityLogs')) {
+        await tx.runAttempt.deleteMany({ where: { userId: session.userId } });
+      }
+      if (types.includes('submissions')) {
+        await tx.submission.deleteMany({ where: { userId: session.userId } });
+      }
+      if (types.includes('posts')) {
+        await tx.post.deleteMany({ where: { authorId: session.userId } });
+      }
+      if (types.includes('comments')) {
+        await tx.comment.deleteMany({ where: { authorId: session.userId } });
+      }
+      if (types.includes('aiSessions')) {
+        await tx.aiSession.deleteMany({ where: { userId: session.userId } });
+      }
+      if (types.includes('debateChats')) {
+        await tx.debateAiChat.deleteMany({ where: { userId: session.userId } });
+      }
+      if (types.includes('bookmarks')) {
+        await tx.bookmark.deleteMany({ where: { userId: session.userId } });
+      }
+    });
+  } catch (error) {
+    return { sent: true, error: error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다.' };
+  }
 
   // 캐시/클라이언트 데이터: 서버쪽은 경로 재검증으로 반영
   revalidatePath('/settings');
   revalidatePath('/study');
   revalidatePath('/study/search');
+  return { sent: true };
 }
 
 export async function skipAiOnboarding() {
