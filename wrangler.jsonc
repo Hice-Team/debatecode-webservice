@@ -9,6 +9,22 @@
     "binding": "ASSETS"
   },
 
+  // 자기 자신을 가리키는 서비스 바인딩 — OpenNext가 요구한다(공식 get-started).
+  // 캐시 재검증(revalidatePath)처럼 워커가 자기 자신을 다시 불러야 하는 경로에서 쓰인다.
+  // "service" 값은 위의 "name"과 반드시 같아야 한다.
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "debate-project"
+    }
+  ],
+
+  // next/image 최적화 — 이 바인딩이 없으면 Workers에서 이미지 최적화가 동작하지 않는다.
+  // app/components/footer.tsx · nav-logo.tsx가 next/image를 쓴다.
+  "images": {
+    "binding": "IMAGES"
+  },
+
   "observability": {
     "enabled": true,
     "logs": {

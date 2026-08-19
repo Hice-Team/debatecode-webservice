@@ -10,6 +10,11 @@
 
 # ---------- 필수 ----------
 
+# 로컬 미리보기(`npm run preview`)에서 Next가 어느 .env 파일을 읽을지 정한다.
+# 비워 두면 "production"으로 간주되어 .env.development가 무시된다 — OpenNext 공식 권장값.
+NEXTJS_ENV=development
+
+
 # Supabase Postgres — Workers에서는 pooler(6543, pgbouncer) URL을 써야 한다
 DATABASE_URL=
 # 마이그레이션용 직결 URL (5432)
