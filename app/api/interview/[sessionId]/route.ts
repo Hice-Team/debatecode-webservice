@@ -66,7 +66,7 @@ export async function POST(request: Request, ctx: RouteContext<'/api/interview/[
     aiConfig.aiBaseUrl = await decryptSecret(aiConfig.aiBaseUrl);
   }
   // 디베이트메이트는 Pro Tier 상용 모델을 키 없이 쓸 수 있다
-  const aiConfigWithRole = aiConfig ? { ...aiConfig, isMate: aiConfig.role === 'debate_mate' } : null;
+  const aiConfigWithRole = aiConfig;
   // Debate Free AI — 일일 토큰 소진 시 규칙 기반 모델로 자동 전환, 사용 시 토큰 누적
   const usingFreeAi = aiConfig?.aiProvider === 'builtin_ai';
   const freeQuota = usingFreeAi ? await getFreeAiQuota(user.id) : null;
@@ -216,7 +216,7 @@ export async function PATCH(request: Request, ctx: RouteContext<'/api/interview/
       aiConfig.aiApiKey = await decryptSecret(aiConfig.aiApiKey);
       aiConfig.aiBaseUrl = await decryptSecret(aiConfig.aiBaseUrl);
     }
-    const ai = getProviderFor(aiConfig ? { ...aiConfig, isMate: aiConfig.role === 'debate_mate' } : null);
+    const ai = getProviderFor(aiConfig);
     const problem = interview.submission.problem;
     const language = interview.submission.language as Language;
     const problemMeta = {

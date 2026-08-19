@@ -7,7 +7,6 @@
 // "근거"로 덧붙이지 않으므로, 화면에 보이는 내용은 전부 DeepSeek의 출력이다.
 import { llmChatStream, type LlmChunk, type LlmConfig, type LlmUsage } from './llm-interviewer';
 import { DEFAULT_EFFORT, effortDirective, effortMaxTokens, type Effort } from './effort';
-import { getBuiltinLlmConfig } from './builtin';
 import { getFreeAiLlmConfig } from './free-ai';
 import { findSearchModel } from './search-models';
 
@@ -43,33 +42,13 @@ function getHuggingFaceConfig(modelId?: string | null): LlmConfig | null {
 }
 
 /**
- * Perplexity 자체 API — OpenAI 호환이라 같은 클라이언트로 호출한다.
- * env: PERPLEXITY_API_KEY (유료 계정 필요)
- */
-function getPerplexityConfig(model: string): LlmConfig | null {
-  const apiKey = process.env.PERPLEXITY_API_KEY;
-  if (!apiKey) return null;
-  return {
-    kind: 'openai-compatible',
-    provider: 'perplexity',
-    baseUrl: 'https://api.perplexity.ai',
-    apiKey,
-    model,
-  };
-}
-
-/**
  * 사용할 모델 설정을 고른다.
  *
- * 유료 모델(Perplexity)은 대체 경로를 두지 않는다 — 키가 없는데 무료 모델로 몰래 바꿔
- * 답하면, 이용자는 고른 적 없는 모델의 답을 Perplexity의 답으로 읽게 되기 때문이다.
- * 무료 모델은 1순위 Hugging Face → 2순위 Free AI → 3순위 빌트인으로 내려간다.
- * 모두 없으면 null이며, 호출부는 안내 문구를 답변 자리에 넣는다.
+ * 1순위 Hugging Face(고른 모델) → 2순위 Free AI 기본 모델로 내려간다.
+ * 둘 다 없으면 null이며, 호출부는 안내 문구를 답변 자리에 넣는다.
  */
 export function getSearchLlmConfig(modelId?: string | null): LlmConfig | null {
-  const model = findSearchModel(modelId);
-  if (model.upstream === 'perplexity') return getPerplexityConfig(model.repo);
-  return getHuggingFaceConfig(modelId) ?? getFreeAiLlmConfig() ?? getBuiltinLlmConfig();
+  return getHuggingFaceConfig(modelId) ?? getFreeAiLlmConfig();
 }
 
 /** 추론형 모델 대응 — 넉넉히 잡는다. */
@@ -85,12 +64,9 @@ export function hasModelCatalogAccess(): boolean {
  * 왜 AI가 답하지 못했는지(키 미설정 / 호출 실패)를 구분해 알려준다 — 빈 답변만 보이면
  * 이용자는 오작동으로 받아들이기 때문이다.
  */
-export function fallbackAnswer(reason: 'no-key' | 'failed', modelId?: string | null): string {
+export function fallbackAnswer(reason: 'no-key' | 'failed'): string {
   if (reason === 'failed') return '_AI 응답을 받지 못했습니다. 잠시 후 다시 시도하거나 다른 모델을 선택해 보세요._';
-  // 유료 모델은 왜 못 쓰는지가 다르다 — 무료 모델로 바꾸면 바로 쓸 수 있다는 것까지 알린다
-  return findSearchModel(modelId).upstream === 'perplexity'
-    ? '_Perplexity는 유료 모델입니다. 서비스에 결제 키(`PERPLEXITY_API_KEY`)가 연결되어 있지 않아 지금은 사용할 수 없습니다. 무료 모델(DeepSeek)을 선택하면 바로 답변받을 수 있습니다._'
-    : '_AI 응답 모델이 연결되어 있지 않습니다. 환경변수 `HUGGINGFACE_API_KEY`를 설정하면 DeepSeek이 직접 답변합니다._';
+  return '_AI 응답 모델이 연결되어 있지 않습니다. 환경변수 `HUGGINGFACE_API_KEY`를 설정하면 DeepSeek이 직접 답변합니다._';
 }
 
 export interface AnswerInput {

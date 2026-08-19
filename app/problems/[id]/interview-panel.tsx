@@ -70,7 +70,7 @@ export default function InterviewPanel({
   config = DEFAULT_INTERVIEW_CONFIG,
   model = DEFAULT_CODE_MODEL_ID,
   onModelChange,
-  access = { hasOwnKey: false, isMate: false, hasLocalEndpoint: false },
+  access = { hasOwnKey: false, hasLocalEndpoint: false },
 }: {
   sessionId: string;
   firstQuestion: string;
@@ -81,7 +81,7 @@ export default function InterviewPanel({
   config?: InterviewConfig;
   model?: DebateAiModelId;
   onModelChange?: (m: DebateAiModelId) => void;
-  access?: { hasOwnKey: boolean; isMate: boolean; hasLocalEndpoint: boolean };
+  access?: { hasOwnKey: boolean; hasLocalEndpoint: boolean };
 }) {
   const [messages, setMessages] = useState<Message[]>([
     { role: 'ai', content: firstQuestion, typing: true },

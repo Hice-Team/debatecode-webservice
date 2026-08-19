@@ -171,7 +171,7 @@ export async function POST(request: Request) {
 
         if (!getSearchLlmConfig(modelId)) {
           step('dispatch', 'done', '모델 미연결');
-          answer = fallbackAnswer('no-key', modelId);
+          answer = fallbackAnswer('no-key');
         } else {
           step('dispatch', 'running', `${model.label} · ${model.repo}`);
           let dispatched = false;

@@ -7,6 +7,19 @@
 // hidden  목록에 띄우지 않지만 저장값으로는 유효하다. `mock`은 Free Tier 한도를 다 쓴 뒤
 //         자동으로 돌아가는 자리라서 선택지에서만 빼고 값 자체는 살려 둔다.
 // locked  아직 고를 수 없다 — UI에서 잠기고 서버 액션도 거부한다.
+//
+// ── 유지보수 메모 ───────────────────────────────────────────────────────────
+// 상용 API는 **전부 이용자 키(BYOK)**다. 서비스가 요금을 대는 것은 Hugging Face 하나뿐이고,
+// 그 키는 HUGGINGFACE_API_KEY 한 개다(app/lib/ai/free-ai.ts).
+//
+// 새 상용 제공사를 붙이려면 네 곳을 함께 고친다 — 하나라도 빠뜨리면 "목록엔 보이는데
+// 저장이 안 되는" 상태가 된다:
+//   1) 아래 AI_PROVIDERS에 group:'native'로 추가
+//   2) DEFAULT_MODELS · KEY_HINTS · KEY_CONSOLE_URLS에 같은 key로 항목 추가
+//   3) provider.ts의 OPENAI_COMPATIBLE_BASE_URLS (OpenAI 호환이 아니면 분기 추가)
+//   4) debateai-models.ts의 DEBATEAI_MODELS에 tier:'byok'로,
+//      debateai-upstream.ts의 COMMERCIAL 표에 호출 규격 추가
+// ───────────────────────────────────────────────────────────────────────────
 export const AI_PROVIDERS = [
   // 내장 면접관 — Free Tier 하나만 남긴다
   { key: 'builtin_ai', label: 'DebateAI Free Tier', group: 'default', needsKey: false, needsUrl: false, locked: false, hidden: false },

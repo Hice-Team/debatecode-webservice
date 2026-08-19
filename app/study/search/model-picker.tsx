@@ -118,12 +118,6 @@ export default function ModelPicker({
                   <span className="block text-sm font-medium text-ink">
                     {model.label}
                     <span className="ml-1.5 font-mono text-[10px] font-normal text-ink-soft/40">{model.vendor}</span>
-                    {/* 유료 표시 — 무료 모델과 섞여 있으니 고르기 전에 알 수 있어야 한다 */}
-                    {model.paid && (
-                      <span className="ml-1.5 rounded-full border border-brand-300/50 bg-brand-50 px-1.5 py-px align-middle text-[9px] font-semibold text-signal">
-                        유료
-                      </span>
-                    )}
                   </span>
                   <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-soft/50">{model.hint}</span>
                 </span>

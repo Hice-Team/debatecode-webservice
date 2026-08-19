@@ -3,13 +3,11 @@
 //
 // 티어가 넷이고, 각각 "무엇이 있어야 쓸 수 있는가"가 다르다.
 //   free   서비스가 키를 대는 기본 제공 모델. 누구나 바로 쓴다(일일 토큰 쿠터 적용).
-//   byok   이용자가 설정에서 자기 API 키를 등록해야 쓴다.
-//   pro    디베이트메이트 혜택 — 서비스 키로 상용 모델을 쓴다.
+//          업스트림은 Hugging Face 하나뿐이다(app/lib/ai/free-ai-models.ts).
+//   byok   이용자가 설정에서 자기 API 키를 등록해야 쓴다. 서비스는 이 요금을 대지 않는다.
 //   local  이용자 컴퓨터에서 도는 모델(Ollama/debateBridge) 또는 debateNetwork(MCP).
-//
-// byok와 pro는 같은 모델을 가리킨다. 어느 쪽으로 열리는지는 이용자의 역할·키 등록 여부가 정한다.
 
-export type ModelTier = 'free' | 'byok' | 'pro' | 'local';
+export type ModelTier = 'free' | 'byok' | 'local';
 
 /**
  * 무엇에 쓰는 모델인가 — Free Tier는 열세 개나 되어 이름만으로는 고를 수 없다.
@@ -47,15 +45,13 @@ export const ROLE_ORDER: ModelRole[] = ['reasoning', 'fast', 'code', 'agent'];
 
 export const TIER_LABELS: Record<ModelTier, string> = {
   free: 'Free Tier',
-  byok: 'BYOK · Pro Tier',
-  pro: 'Pro Tier',
+  byok: 'BYOK — 내 API 키',
   local: 'Local',
 };
 
 export const TIER_NOTES: Record<ModelTier, string> = {
   free: '기본 제공 — 일일 토큰 한도 안에서 바로 사용',
-  byok: '내 API 키 등록 시 사용 · 디베이트메이트는 키 없이 사용',
-  pro: '디베이트메이트 전용 혜택',
+  byok: '설정에서 내 API 키를 등록하면 사용',
   local: '내 컴퓨터에서 실행 — debateBridge 앱 또는 debateNetwork(MCP) 필요',
 };
 
@@ -79,7 +75,7 @@ export const DEBATEAI_MODELS: DebateAiModel[] = [
   { id: 'qwen3-coder-next', label: 'Qwen3-Coder-Next', vendor: 'Alibaba', tier: 'free', role: 'agent', hint: '코드 에이전트 — 여러 파일·긴 수정' },
   { id: 'kimi-k3', label: 'Kimi K3', vendor: 'Moonshot AI', tier: 'free', role: 'agent', hint: '긴 문맥 — 대화를 오래 끌고 간다' },
 
-  /* ---------- BYOK / Pro Tier ---------- */
+  /* ---------- BYOK — 이용자 API 키 ---------- */
   { id: 'chatgpt', label: 'ChatGPT', vendor: 'OpenAI', tier: 'byok' },
   { id: 'gemini', label: 'Gemini', vendor: 'Google', tier: 'byok' },
   { id: 'claude', label: 'Claude', vendor: 'Anthropic', tier: 'byok' },
@@ -139,13 +135,12 @@ export function groupByRole(models: DebateAiModel[]): Array<{ role: ModelRole | 
  */
 export function modelAvailability(
   model: DebateAiModel,
-  ctx: { hasOwnKey: boolean; isMate: boolean; hasLocalEndpoint: boolean },
+  ctx: { hasOwnKey: boolean; hasLocalEndpoint: boolean },
 ): { usable: boolean; reason?: string } {
   if (model.tier === 'free') return { usable: true };
-  if (model.tier === 'byok' || model.tier === 'pro') {
-    if (ctx.isMate) return { usable: true };
+  if (model.tier === 'byok') {
     if (ctx.hasOwnKey) return { usable: true };
-    return { usable: false, reason: '설정에서 내 API 키를 등록하면 사용할 수 있습니다 (디베이트메이트는 키 없이 사용)' };
+    return { usable: false, reason: '설정에서 내 API 키를 등록하면 사용할 수 있습니다' };
   }
   if (!ctx.hasLocalEndpoint) {
     return { usable: false, reason: 'debateBridge 앱을 실행하거나 debateNetwork 엔드포인트를 설정해 주세요' };

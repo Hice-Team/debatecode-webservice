@@ -57,8 +57,6 @@ export interface UserAiConfig {
   aiBaseUrl: string | null;
   /** 설정 → 서비스에서 고른 면접·리팩토링 전용 모델 (debateai-models.ts의 id) */
   aiCodeModel?: string | null;
-  /** 디베이트메이트 — Pro Tier 상용 모델을 키 없이 쓸 수 있다 */
-  isMate?: boolean;
 }
 
 export { AI_PROVIDERS, DEFAULT_MODELS, DEFAULT_BASE_URLS } from './config';
@@ -82,12 +80,11 @@ export function getProviderFor(config?: UserAiConfig | null): InterviewerProvide
   const resolved = resolveDebateAiUpstream(codeModel, {
     apiKey: config.aiApiKey,
     baseUrl: config.aiBaseUrl,
-    isMate: !!config.isMate,
   });
   if ('config' in resolved) return new LlmInterviewer(resolved.config);
 
-  // Debate Free AI — 서버 env 키로 동작하는 기본 제공 실제 AI (키 미설정 시 규칙 기반 폴백).
-  // aiModel에는 사용자가 고른 제공자 계열(gemma|groq|grok|huggingface)이 저장된다.
+  // Debate Free AI — 서버 키(HUGGINGFACE_API_KEY)로 도는 기본 제공 모델.
+  // aiModel에는 이용자가 고른 Free AI 카탈로그의 모델 id가 저장된다.
   // 일일 토큰 쿠터는 각 API 라우트에서 검사한다 (소진 시 mock 전달).
   if (config.aiProvider === 'builtin_ai') {
     const freeConfig = getFreeAiLlmConfig(config.aiModel);

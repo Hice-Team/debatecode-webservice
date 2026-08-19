@@ -1,97 +1,46 @@
 // Debate Free AI — debateCode가 기본 제공하는 실제 AI.
-// 운영자 API 키(env)로 여러 상용/오픈 모델을 돌려쓰며, 사용자별 하루 100,000 토큰을 제공한다.
-// 토큰 소진 시 규칙 기반 모델로 자동 전환되고, 소진 시점 기준 24시간 뒤 초기화된다.
 //
-// env (있는 키의 모델만 사용된다 — 카탈로그 순서대로 첫 번째 가용 모델 선택):
-//   OPENAI_API_KEY                  ChatGPT API Platform
-//   GROQ_API_KEY                    Groq (GPT OSS 20B, Llama)
-//   GOOGLE_AI_API_KEY|GEMINI_API_KEY  Google AI Studio (Gemini, Gemma)
-//   GROK_API_KEY|XAI_API_KEY        xAI Grok API
-//   HUGGINGFACE_API_KEY|HF_TOKEN    Hugging Face (DeepSeek, EXAONE)
+// 업스트림은 **Hugging Face Inference Router 하나뿐이다.** 키 하나로 여러 오픈 모델을 부를 수
+// 있어서, 제공사마다 계정과 결제 수단을 걸어 두지 않고도 무료 티어를 감당할 수 있다.
+// 상용 API(OpenAI·Claude·Gemini·Grok·Perplexity)는 이용자가 자기 키를 등록해서 쓴다.
+//
+// 사용자별 하루 100,000 토큰을 제공하고, 소진하면 규칙 기반 모델로 내려간다
+// (소진 시점 기준 24시간 뒤 초기화).
+//
+// env:
+//   HUGGINGFACE_API_KEY | HF_TOKEN   필수 — 없으면 규칙 기반 폴백
 import { prisma } from '../prisma';
 import type { LlmConfig } from './llm-interviewer';
-import { FREE_AI_DAILY_LIMIT, isFreeAiFamily, type FreeAiFamily } from './free-ai-models';
+import { FREE_AI_DAILY_LIMIT, freeAiRepo } from './free-ai-models';
 
 export {
   FREE_AI_DAILY_LIMIT,
-  FREE_AI_FAMILIES,
-  FREE_AI_MODELS,
-  isFreeAiFamily,
-  type FreeAiFamily,
-  type FreeAiModel,
+  FREE_AI_DEFAULT_MODEL_ID,
+  FREE_AI_REPOS,
+  FREE_FALLBACK_REPO,
+  freeAiRepo,
 } from './free-ai-models';
 
-function env(...names: string[]): string | undefined {
-  for (const n of names) {
-    const v = process.env[n];
-    if (v) return v;
-  }
-  return undefined;
-}
-
-// 계열별 LlmConfig — 서버에 해당 계열 키가 없으면 null
-function familyConfig(family: FreeAiFamily): LlmConfig | null {
-  if (family === 'gemma') {
-    const key = env('GOOGLE_AI_API_KEY', 'GEMINI_API_KEY');
-    if (!key) return null;
-    // Gemma는 system_instruction 미지원 — Google AI Studio의 OpenAI 호환 엔드포인트를 쓴다
-    return {
-      kind: 'openai-compatible',
-      provider: 'google',
-      baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-      apiKey: key,
-      model: process.env.FREE_AI_GEMMA_MODEL || 'gemma-3-27b-it',
-    };
-  }
-  if (family === 'groq') {
-    const key = env('GROQ_API_KEY');
-    if (!key) return null;
-    return {
-      kind: 'openai-compatible',
-      provider: 'groq',
-      baseUrl: 'https://api.groq.com/openai/v1',
-      apiKey: key,
-      model: process.env.FREE_AI_GROQ_MODEL || 'llama-3.3-70b-versatile',
-    };
-  }
-  if (family === 'grok') {
-    const key = env('GROK_API_KEY', 'XAI_API_KEY');
-    if (!key) return null;
-    return {
-      kind: 'openai-compatible',
-      provider: 'grok',
-      baseUrl: 'https://api.x.ai/v1',
-      apiKey: key,
-      model: process.env.FREE_AI_GROK_MODEL || 'grok-4.5',
-    };
-  }
-  const key = env('HUGGINGFACE_API_KEY', 'HF_TOKEN');
-  if (!key) return null;
+/**
+ * 기본 제공 모델의 호출 설정. 서버 키가 없으면 null(→ 호출자가 규칙 기반으로 내려간다).
+ *
+ * modelId는 debateAI 카탈로그의 id다. 모르는 값이면 기본 모델로 떨어진다 —
+ * 예전에 고를 수 있던 모델이 저장돼 있어도 화면이 깨지지 않게.
+ */
+export function getFreeAiLlmConfig(modelId?: string | null): LlmConfig | null {
+  const apiKey = process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN;
+  if (!apiKey) return null;
   return {
     kind: 'openai-compatible',
     provider: 'huggingface',
     baseUrl: 'https://router.huggingface.co/v1',
-    apiKey: key,
-    model: process.env.FREE_AI_HF_MODEL || 'deepseek-ai/DeepSeek-V3',
+    apiKey,
+    model: freeAiRepo(modelId),
   };
 }
 
-const FAMILY_ORDER: FreeAiFamily[] = ['groq', 'gemma', 'grok', 'huggingface'];
-
-// 사용자가 고른 계열 우선, 키가 없으면 나머지 계열 순서대로 폴백 (전부 없으면 null → 규칙 기반)
-export function getFreeAiLlmConfig(preferredFamily?: string | null): LlmConfig | null {
-  const order: FreeAiFamily[] = isFreeAiFamily(preferredFamily)
-    ? [preferredFamily, ...FAMILY_ORDER.filter((f) => f !== preferredFamily)]
-    : FAMILY_ORDER;
-  for (const family of order) {
-    const config = familyConfig(family);
-    if (config) return config;
-  }
-  return null;
-}
-
 export function isFreeAiLive(): boolean {
-  return getFreeAiLlmConfig() !== null;
+  return Boolean(process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN);
 }
 
 // 대략적 토큰 추정 — 프롬프트+응답 문자열 길이 / 4 (한국어·코드 혼용 기준 보수적 근사)

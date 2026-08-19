@@ -34,7 +34,7 @@ export default function ModelMenu({
   effort: Effort;
   onEffortChange: (next: Effort) => void;
   disabled?: boolean;
-  access: { hasOwnKey: boolean; isMate: boolean; hasLocalEndpoint: boolean };
+  access: { hasOwnKey: boolean; hasLocalEndpoint: boolean };
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -145,9 +145,10 @@ export default function ModelMenu({
           </div>
 
           {/* 못 고르는 모델이 왜 잠겨 있는지 — 목록 끝에 한 번만 적는다 */}
-          {!access.hasOwnKey && !access.isMate && (
+          {!access.hasOwnKey && (
             <p className="mx-1.5 mt-1 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-[10px] leading-relaxed text-white/35">
-              설정 → 서비스에서 내 API 키를 등록하면 상용 모델을 쓸 수 있습니다. 디베이트메이트는 키 없이 열립니다.
+              설정 → 서비스에서 내 API 키를 등록하면 상용 모델(ChatGPT · Claude · Gemini · Grok · Perplexity)을 쓸 수
+              있습니다.
             </p>
           )}
         </div>

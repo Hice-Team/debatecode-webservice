@@ -58,19 +58,9 @@ npx wrangler secret put SMTP_USER          # hicecorp.team@gmail.com
 npx wrangler secret put SMTP_PASS          # Gmail 앱 비밀번호 16자리 (계정 비밀번호 아님)
 npx wrangler secret put EMAIL_FROM         # debateCode <hicecorp.team@gmail.com>
 
-# Debate Free AI 업스트림 — 있는 키의 모델만 카탈로그에 노출된다
-npx wrangler secret put OPENAI_API_KEY
-npx wrangler secret put GROQ_API_KEY
-npx wrangler secret put GOOGLE_AI_API_KEY
-npx wrangler secret put GROK_API_KEY
+# AI — Free AI · debateQ · AI Search · 번역이 전부 이 키 하나를 쓴다.
+# 상용 API 키는 넣지 않는다(이용자가 설정에서 자기 키를 등록해 쓴다).
 npx wrangler secret put HUGGINGFACE_API_KEY
-npx wrangler secret put ANTHROPIC_API_KEY
-npx wrangler secret put PERPLEXITY_API_KEY
-
-# debateQ 빌트인 모델 — 미설정 시 규칙 기반 폴백
-npx wrangler secret put AI_BUILTIN_PROVIDER
-npx wrangler secret put AI_BUILTIN_MODEL
-npx wrangler secret put AI_BUILTIN_API_KEY
 ```
 
 ### 빌드 변수 등록 (GitHub Secrets)

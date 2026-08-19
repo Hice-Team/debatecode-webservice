@@ -41,7 +41,6 @@ export default async function ProblemPage({ params, searchParams }: PageProps<'/
     : null;
   const aiAccess = {
     hasOwnKey: !!aiRow?.aiApiKey,
-    isMate: aiRow?.role === 'debate_mate',
     hasLocalEndpoint: !!aiRow?.aiBaseUrl,
   };
 

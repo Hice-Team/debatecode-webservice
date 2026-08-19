@@ -91,22 +91,18 @@ function checkEncryption(): Check {
   };
 }
 
+// Debate Free AI·debateQ·AI Search·번역이 전부 이 키 하나에 매달려 있다.
+// 상용 API(OpenAI·Claude 등)는 이용자가 자기 키를 등록해 쓰므로 여기서 보지 않는다.
 function checkFreeAi(): Check {
-  const providers: Array<[string, string[]]> = [
-    ['OpenAI', ['OPENAI_API_KEY']],
-    ['Groq', ['GROQ_API_KEY']],
-    ['Google AI', ['GOOGLE_AI_API_KEY', 'GEMINI_API_KEY']],
-    ['xAI', ['GROK_API_KEY', 'XAI_API_KEY']],
-    ['Hugging Face', ['HUGGINGFACE_API_KEY', 'HF_TOKEN']],
-    ['Anthropic', ['ANTHROPIC_API_KEY']],
-  ];
-  const live = providers.filter(([, names]) => configured(...names)).map(([label]) => label);
+  const ok = configured('HUGGINGFACE_API_KEY', 'HF_TOKEN');
   return {
     key: 'free_ai',
-    label: 'Debate Free AI 업스트림',
-    // 하나도 없으면 규칙 기반 폴백으로 내려가므로 장애는 아니지만 품질이 떨어진다
-    status: live.length === 0 ? 'degraded' : 'ok',
-    detail: live.length === 0 ? '키 없음 — 규칙 기반 폴백으로 동작' : `${live.length}개 가용: ${live.join(', ')}`,
+    label: 'Debate Free AI (Hugging Face)',
+    // 없어도 규칙 기반 폴백으로 돌긴 하므로 장애는 아니지만, AI 기능이 사실상 죽는다
+    status: ok ? 'ok' : 'degraded',
+    detail: ok
+      ? 'Hugging Face Inference Router · 기본 모델 DeepSeek Coder-V2'
+      : 'HUGGINGFACE_API_KEY 미설정 — AI 기능이 규칙 기반 폴백으로 동작',
   };
 }
 

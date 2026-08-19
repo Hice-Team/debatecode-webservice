@@ -116,7 +116,6 @@ export async function POST(request: Request) {
   const settings = {
     apiKey: row ? await decryptSecret(row.aiApiKey) : null,
     baseUrl: row ? await decryptSecret(row.aiBaseUrl) : null,
-    isMate: row?.role === 'debate_mate',
   };
 
   // 일일 쿠터는 서비스가 비용을 대는 경우에만 — 개인 키·로컬 실행은 이용자 부담이라 적용하지 않는다

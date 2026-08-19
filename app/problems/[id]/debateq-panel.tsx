@@ -88,7 +88,7 @@ export default function DebateQPanel({
   chatModel,
   onChatModelChange,
   refactorMode,
-  aiAccess = { hasOwnKey: false, isMate: false, hasLocalEndpoint: false },
+  aiAccess = { hasOwnKey: false, hasLocalEndpoint: false },
 }: {
   session: DebateQSessionPayload;
   problem: WorkspaceProblem;
@@ -99,7 +99,7 @@ export default function DebateQPanel({
   /** copilot: AI 프롬프트로만 수정 / editor: 직접 수정 */
   refactorMode: RefactorMode;
   /** BYOK/Local 모델 사용 가능 여부 판단 재료 */
-  aiAccess?: { hasOwnKey: boolean; isMate: boolean; hasLocalEndpoint: boolean };
+  aiAccess?: { hasOwnKey: boolean; hasLocalEndpoint: boolean };
 }) {
   const { sessionId, language } = session;
   const [code, setCode] = useState(session.code);

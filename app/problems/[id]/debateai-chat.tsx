@@ -91,7 +91,7 @@ export default function DebateAiChat({
    */
   forceAgent = false,
   /** BYOK/Local 모델을 쓸 수 있는지 판단할 재료 */
-  access = { hasOwnKey: false, isMate: false, hasLocalEndpoint: false },
+  access = { hasOwnKey: false, hasLocalEndpoint: false },
 }: {
   problemId: number;
   language: Language;
@@ -114,7 +114,7 @@ export default function DebateAiChat({
   commandHint?: string;
   commandSuggestions?: string[];
   forceAgent?: boolean;
-  access?: { hasOwnKey: boolean; isMate: boolean; hasLocalEndpoint: boolean };
+  access?: { hasOwnKey: boolean; hasLocalEndpoint: boolean };
 }) {
   const { language: uiLang } = useLanguage();
   const [turns, setTurns] = useState<ChatTurn[]>([]);

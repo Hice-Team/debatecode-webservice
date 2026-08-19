@@ -177,7 +177,7 @@ export default function Workspace({
   entry,
   builtinLive,
   defaultChatModel = DEFAULT_CHAT_MODEL_ID,
-  aiAccess = { hasOwnKey: false, isMate: false, hasLocalEndpoint: false },
+  aiAccess = { hasOwnKey: false, hasLocalEndpoint: false },
 }: {
   problem: WorkspaceProblem;
   isLoggedIn: boolean;
@@ -186,7 +186,7 @@ export default function Workspace({
   /** 설정에서 고른 면접·리팩토링 기본 모델 */
   defaultChatModel?: DebateAiModelId;
   /** BYOK/Local 모델을 쓸 수 있는지 판단할 재료 — 서버에서 내려준다 */
-  aiAccess?: { hasOwnKey: boolean; isMate: boolean; hasLocalEndpoint: boolean };
+  aiAccess?: { hasOwnKey: boolean; hasLocalEndpoint: boolean };
 }) {
   const { language: uiLang } = useLanguage();
   const [mode, setMode] = useState<Mode>('SOLVING');

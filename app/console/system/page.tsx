@@ -43,15 +43,8 @@ async function collectChecks() {
     dbError = error instanceof Error ? error.message.slice(0, 160) : '연결 실패';
   }
 
-  const aiProviders: Array<[string, string[]]> = [
-    ['OpenAI', ['OPENAI_API_KEY']],
-    ['Groq', ['GROQ_API_KEY']],
-    ['Google AI', ['GOOGLE_AI_API_KEY', 'GEMINI_API_KEY']],
-    ['xAI', ['GROK_API_KEY', 'XAI_API_KEY']],
-    ['Hugging Face', ['HUGGINGFACE_API_KEY', 'HF_TOKEN']],
-    ['Anthropic', ['ANTHROPIC_API_KEY']],
-  ];
-  const liveAi = aiProviders.filter(([, names]) => configured(...names)).map(([label]) => label);
+  // AI 기능(Free AI·debateQ·AI Search·번역)은 전부 이 키 하나를 쓴다
+  const hasAi = configured('HUGGINGFACE_API_KEY', 'HF_TOKEN');
   const hasSupabase = configured('NEXT_PUBLIC_SUPABASE_URL') && configured('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
   return [
@@ -100,9 +93,11 @@ async function collectChecks() {
     },
     {
       key: 'free_ai',
-      label: 'Debate Free AI 업스트림',
-      status: (liveAi.length === 0 ? 'degraded' : 'ok') as Status,
-      detail: liveAi.length === 0 ? '키 없음 — 규칙 기반 폴백으로 동작' : `${liveAi.length}개 가용: ${liveAi.join(', ')}`,
+      label: 'Debate Free AI (Hugging Face)',
+      status: (hasAi ? 'ok' : 'degraded') as Status,
+      detail: hasAi
+        ? 'Hugging Face Inference Router · 기본 모델 DeepSeek Coder-V2'
+        : 'HUGGINGFACE_API_KEY 미설정 — AI 기능이 규칙 기반 폴백으로 동작',
     },
     {
       key: 'email',
