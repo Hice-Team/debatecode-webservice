@@ -6,7 +6,7 @@
 //      우리가 가진 메일 계정을 그대로 발신자로 쓴다. 외부 서비스에 가입할 필요도,
 //      도메인 소유를 증명할 필요도 없다.
 //   2) Resend       RESEND_API_KEY
-//      나중에 자체 도메인(debatecode.kr)으로 옮길 때를 위해 남겨 둔 경로다.
+//      나중에 자체 도메인(debatecode.org)으로 옮길 때를 위해 남겨 둔 경로다.
 //      SMTP 설정이 있으면 이쪽은 쓰지 않는다.
 //
 // 둘 다 없으면 실제로 보내지 않고 "보냈다면 이랬을 것"을 돌려준다(dryRun). 개발 중에 콘솔의
@@ -76,9 +76,9 @@ function transport(): Transport {
 
 function hostnameOfSite(): string {
   try {
-    return new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://debatecode.kr').hostname;
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://debatecode.org').hostname;
   } catch {
-    return 'debatecode.kr';
+    return 'debatecode.org';
   }
 }
 

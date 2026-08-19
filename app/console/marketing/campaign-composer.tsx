@@ -19,7 +19,7 @@ const SAMPLE = `# 이번 주 새 기출 세트가 열렸습니다
 - 카카오 2026 상반기 기출 세트 공개
 - 실전 모의고사 Vol.4 추가
 
-[문제 풀러 가기](https://debatecode.kr/contests)`;
+[문제 풀러 가기](https://debatecode.org/contests)`;
 
 export default function CampaignComposer({ counts }: { counts: Record<Audience, number> }) {
   const [state, formAction, pending] = useActionState(saveCampaign, initialState);

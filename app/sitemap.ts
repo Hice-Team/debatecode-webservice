@@ -7,7 +7,7 @@ import { prisma } from '@/app/lib/prisma';
 // 여기에도 넣지 않는다. 목록에 있는데 못 들어가는 주소는 크롤러에게 오류로 남을 뿐이다.
 //
 // 문제·글은 수가 많아 상한을 둔다. 사이트맵의 목적은 전수 나열이 아니라 진입점 제공이다.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://debatecode.kr';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://debatecode.org';
 const MAX_ROWS = 500;
 
 const STATIC_ROUTES: Array<{ path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] }> = [

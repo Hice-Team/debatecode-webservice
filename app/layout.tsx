@@ -9,7 +9,7 @@ import ChannelTalk from "./components/channel-talk";
 
 // Fonts are loaded via Google Fonts stylesheet to avoid Turbopack internal imports
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://debatecode.kr';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://debatecode.org';
 const SITE_NAME = 'Debate Code';
 const SITE_DESC =
   '디베이트코드는 새로운 온라인 저지 서비스입니다. 일반적인 온라인 저지와 마찬가지로, 알고리즘 풀이 기능을 제공하지만 대화형 모드 제공을 통해 기술 면접까지 준비할 수 있습니다.';

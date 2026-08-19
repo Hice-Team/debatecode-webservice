@@ -62,7 +62,7 @@ RESEND_API_KEY=
 
 # ---------- 선택: WebAuthn(보안키) ----------
 
-# 배포 도메인 기준. 예: RPID=debatecode.kr, ORIGIN=https://debatecode.kr
+# 배포 도메인 기준. 예: RPID=debatecode.org, ORIGIN=https://debatecode.org
 NEXT_PUBLIC_WEBAUTHN_RPID=
 NEXT_PUBLIC_WEBAUTHN_ORIGIN=
 

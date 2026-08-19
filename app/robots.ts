@@ -11,7 +11,7 @@ import type { MetadataRoute } from 'next';
 //                     따로 받는다. robots로 일괄 수집되는 경로를 열어 둘 이유가 없다.
 //
 // robots.txt는 규약이지 강제가 아니다. 실제 차단은 미들웨어의 UA 검사·레이트리밋과 함께 가야 한다.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://debatecode.kr';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://debatecode.org';
 
 /** 어떤 봇에게도 열지 않는 경로 — 로그인 뒤 화면과 결과가 남는 동작들 */
 const PRIVATE_PATHS = [

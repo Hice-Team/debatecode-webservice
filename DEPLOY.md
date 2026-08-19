@@ -182,7 +182,7 @@ Sender    hicecorp.team@gmail.com / debateCode
 - 무료 Gmail 계정은 **하루 약 500통**(Google Workspace는 2,000통)이 상한이다.
   홍보 메일 대상이 그보다 많으면 며칠로 나눠 보내거나 Workspace로 올려야 한다.
 - 발신이 `@gmail.com`인 동안에는 SPF·DKIM을 우리가 손댈 수 없다(구글 도메인이라 이미 서명된다).
-  자체 도메인(`@debatecode.kr`)으로 옮기는 시점에 SPF·DKIM·DMARC를 설정해야 하고,
+  자체 도메인(`@debatecode.org`)으로 옮기는 시점에 SPF·DKIM·DMARC를 설정해야 하고,
   그때는 `RESEND_API_KEY` 경로로 갈아타는 편이 낫다 — 코드는 이미 양쪽을 다 지원한다.
 
 ## 알려진 한계

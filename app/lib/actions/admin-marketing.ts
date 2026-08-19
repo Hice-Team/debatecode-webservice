@@ -20,7 +20,7 @@ export interface CampaignState {
   message?: string;
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://debatecode.kr';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://debatecode.org';
 
 const campaignSchema = z.object({
   subject: z.string().min(2, '제목을 입력해 주세요.').max(120, '제목이 너무 깁니다.'),
