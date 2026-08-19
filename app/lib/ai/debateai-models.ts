@@ -45,13 +45,13 @@ export const ROLE_ORDER: ModelRole[] = ['reasoning', 'fast', 'code', 'agent'];
 
 export const TIER_LABELS: Record<ModelTier, string> = {
   free: 'Free Tier',
-  byok: 'BYOK — 내 API 키',
+  byok: 'Pro Tier — 내 API 키',
   local: 'Local',
 };
 
 export const TIER_NOTES: Record<ModelTier, string> = {
   free: '기본 제공 — 일일 토큰 한도 안에서 바로 사용',
-  byok: '설정에서 내 API 키를 등록하면 사용',
+  byok: '설정에서 내 API 키를 등록하면 열린다 — 요금은 그 키의 계정으로 청구된다',
   local: '내 컴퓨터에서 실행 — debateBridge 앱 또는 debateNetwork(MCP) 필요',
 };
 

@@ -98,25 +98,79 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
         {provider === 'builtin_ai' && freeQuota && <FreeUsagePanel quota={freeQuota} />}
       </section>
 
-      {/* ---------- 네이티브 API (준비중으로 비활성화) ---------- */}
+      {/* ---------- 네이티브 API (BYOK → Pro Tier) ---------- */}
       <section>
-        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft/50">네이티브 API</p>
+        <div className="mb-1.5 flex flex-wrap items-center gap-2">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft/50">네이티브 API — Pro Tier</p>
+          {initial.hasKey && (
+            <span className="rounded-full border border-brand-300/60 bg-brand-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-signal">
+              PRO 활성
+            </span>
+          )}
+        </div>
+        <p className="mb-2 text-[11px] leading-relaxed text-ink-soft/55">
+          본인 API 키를 등록하면 ChatGPT · Claude · Gemini · Grok · Perplexity를 debateAI 탭과 면접·리팩토링에서
+          쓸 수 있습니다. 요금은 등록한 키의 계정으로 청구됩니다.
+        </p>
+
         <div className="grid gap-2 sm:grid-cols-2">
           {nativeProviders.map((p) => (
-            <div
+            <label
               key={p.key}
-              className="flex cursor-not-allowed items-center gap-3 rounded-lg border border-ink/10 bg-paper/60 px-4 py-3 text-sm text-ink-soft/40"
-              title="아직 지원 준비 중입니다"
+              className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors ${
+                provider === p.key ? 'border-signal bg-brand-50/40 text-ink' : 'border-ink/10 hover:border-ink/30'
+              }`}
             >
-              <input type="radio" disabled className="accent-[#4531d9]" />
+              <input
+                type="radio"
+                name="aiProvider"
+                value={p.key}
+                checked={provider === p.key}
+                onChange={() => setProvider(p.key)}
+                className="accent-[#4531d9]"
+              />
               <span className="flex-1">
                 {p.label}
                 <span className="block font-mono text-[10px] font-normal text-ink-soft/45">{KEY_HINTS[p.key]}</span>
               </span>
-              <span className="shrink-0 rounded-full border border-ink/10 bg-white px-2 py-0.5 font-mono text-[10px] text-ink-soft/50">준비중</span>
-            </div>
+            </label>
           ))}
         </div>
+
+        {/* 키 입력 — 고른 제공사가 있을 때만. 값은 서버에서 이중 암호화되어 저장된다. */}
+        {usingNative && (
+          <div className="mt-3 rounded-xl border border-ink/10 bg-paper/40 p-4">
+            <label htmlFor="aiApiKey" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+              API KEY
+            </label>
+            <input
+              id="aiApiKey"
+              name="aiApiKey"
+              type="password"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder={initial.hasKey ? '등록됨 — 바꿀 때만 입력' : KEY_HINTS[provider]}
+              className="w-full rounded-lg border border-ink/15 bg-white px-4 py-2.5 font-mono text-sm placeholder:text-ink-soft/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+            />
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-ink-soft/55">
+              <span>
+                {initial.hasKey
+                  ? `현재 등록된 키: ${initial.keyHint ?? '****'} · 비워 두고 저장하면 그대로 유지됩니다.`
+                  : '키는 서버에서 AES-256-GCM으로 이중 암호화되어 저장되며, 이 화면으로 다시 내려오지 않습니다.'}
+              </span>
+              {KEY_CONSOLE_URLS[provider] && (
+                <a
+                  href={KEY_CONSOLE_URLS[provider]}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="shrink-0 font-medium text-brand-600 underline underline-offset-2"
+                >
+                  키 발급받기 →
+                </a>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ---------- 내 컴퓨터에서 실행 (잠금) ---------- */}

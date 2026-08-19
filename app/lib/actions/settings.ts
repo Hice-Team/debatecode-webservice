@@ -94,7 +94,9 @@ export async function saveAiSettings(
     where: { id: session.userId },
     data: {
       aiProvider,
-      aiModel: aiModel || null,
+      // 이 폼이 aiModel을 보내지 않을 때는 건드리지 않는다 — 모델은 debateAI 탭·AI Search의
+      // 셀렉터에서 고르므로, 여기서 null로 덮으면 저장할 때마다 그 선택이 초기화된다.
+      ...(formData.has('aiModel') ? { aiModel: aiModel || null } : {}),
       aiApiKey: keyToStore,
       aiBaseUrl: await encryptSecret(aiBaseUrl || DEFAULT_BASE_URLS[aiProvider] || null),
       aiOnboarded: true,
