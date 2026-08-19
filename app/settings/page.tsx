@@ -59,7 +59,7 @@ export default async function SettingsPage() {
   // 익명 식별자는 설정 화면에서 처음 보여줄 수 있으므로 여기서 확보해 둔다
   const anonymousTag = await ensureAnonymousTag(userId);
 
-  const [user, loginEvents] = await Promise.all([
+  const [user, loginEvents, webauthnKeys] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
@@ -69,6 +69,7 @@ export default async function SettingsPage() {
         mcpTokenPrefix: true, mcpTokenCreatedAt: true,
         twoFactorRecoveryEmail: true,
         twoFactorRecoveryEmailVerifiedAt: true,
+        twoFactorEnabled: true,
       },
     }),
     prisma.loginEvent.findMany({
@@ -76,6 +77,11 @@ export default async function SettingsPage() {
       orderBy: { createdAt: 'desc' },
       take: 5,
       select: { id: true, ipMasked: true, userAgent: true, isNew: true, createdAt: true },
+    }),
+    prisma.webauthnKey.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, name: true, createdAt: true },
     }),
   ]);
 
@@ -193,13 +199,19 @@ export default async function SettingsPage() {
         />
 
         <SettingRow
-          label="2단계 인증 (복구 이메일)"
-          desc="복구용 이메일을 등록하면 계정 복구 시 사용됩니다. TOTP·보안키는 추후 활성화됩니다."
+          label="2단계 인증"
+          desc="복구 이메일 · 인증 앱(TOTP) · 보안키(WebAuthn)를 함께 관리합니다."
           stacked
           control={
             <TwoFactor
               initialEmail={user.twoFactorRecoveryEmail}
               recoveryVerifiedAt={user.twoFactorRecoveryEmailVerifiedAt?.toISOString() ?? null}
+              initialEnabled={user.twoFactorEnabled}
+              keys={webauthnKeys.map((k) => ({
+                id: k.id,
+                name: k.name,
+                createdAt: k.createdAt.toISOString(),
+              }))}
             />
           }
         />
