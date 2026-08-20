@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { prisma } from '@/app/lib/prisma';
 import Link from 'next/link';
-import { verifySession } from '@/app/lib/dal';
+import { getUser, verifySession } from '@/app/lib/dal';
 import { createClient } from '@/app/lib/supabase/server';
 import { maskSecret } from '@/app/lib/crypto';
 import { getFreeUsageSummary } from '@/app/lib/ai/usage-summary';
@@ -33,6 +33,10 @@ function deviceLabel(ua: string | null): string {
 // 통합 설정 — 계정 / 커뮤니티 프로필 / 서비스 / AI 제공자를 한 페이지에서 관리한다.
 export default async function SettingsPage() {
   const { userId, email } = await verifySession();
+  // 앱 쪽 계정 행이 있는지 먼저 확인한다. 없으면 아래 조회들이 차례로 터지는데,
+  // 이 페이지에는 오류 경계도 없어서 "설정에 아예 못 들어간다"로 보였다.
+  // getUser()는 그런 반쪽 계정을 복구 경로(/auth/recover)로 보낸다.
+  await getUser();
 
   // 로그인된 기기(활성 세션) — auth.sessions에서 조회. 현재 세션은 JWT의 session_id로 식별한다.
   const supabase = await createClient();
@@ -180,7 +184,7 @@ export default async function SettingsPage() {
           prefix={user.mcpTokenPrefix}
           createdAt={user.mcpTokenCreatedAt ? user.mcpTokenCreatedAt.toISOString() : null}
         />
-        <ul className="mt-4 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-ink-soft/55">
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-fg-muted">
           <li>로컬 LLM은 debateBridge 또는 debateNetwork로 연결하며 위 토큰이 필요합니다.</li>
           <li>AI를 연결하지 않아도 채점 시스템과 내장 면접관은 그대로 사용할 수 있습니다.</li>
         </ul>
@@ -222,9 +226,9 @@ export default async function SettingsPage() {
           stacked
           control={
             <>
-              <div className="divide-y divide-ink/5 overflow-hidden rounded-xl border border-ink/10">
+              <div className="divide-y divide-ink/5 overflow-hidden rounded-xl border border-hairline">
               {devices.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-ink-soft/50">활성 세션 정보를 불러올 수 없습니다.</p>
+                <p className="px-4 py-8 text-center text-sm text-fg-muted">활성 세션 정보를 불러올 수 없습니다.</p>
               ) : (
                 devices.map((d) => {
                   const isCurrent = d.id === currentSessionId;
@@ -240,7 +244,7 @@ export default async function SettingsPage() {
                             </span>
                           )}
                         </p>
-                        <p className="font-mono text-[11px] text-ink-soft/50">
+                        <p className="font-mono text-[11px] text-fg-muted">
                           {d.ip ? `IP ${d.ip.replace(/(\d+\.\d+\.\d+)\.\d+/, '$1.x')} · ` : ''}
                           마지막 활동 {new Date(d.updated_at).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' })}
                         </p>
@@ -259,7 +263,7 @@ export default async function SettingsPage() {
               )}
               </div>
               <div className="mt-2 text-right">
-                <Link href="/settings/security/logins" className="text-sm text-ink-soft/60 hover:text-ink-soft">더보기</Link>
+                <Link href="/settings/security/logins" className="text-sm text-fg-secondary hover:text-ink-soft">더보기</Link>
               </div>
             </>
           }
@@ -270,9 +274,9 @@ export default async function SettingsPage() {
           desc="모르는 위치가 있다면 즉시 비밀번호를 변경하세요. IP 원문은 저장하지 않고 마스킹합니다."
           stacked
           control={
-            <div className="divide-y divide-ink/5 overflow-hidden rounded-xl border border-ink/10">
+            <div className="divide-y divide-ink/5 overflow-hidden rounded-xl border border-hairline">
               {loginEvents.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-ink-soft/50">아직 기록된 로그인이 없습니다.</p>
+                <p className="px-4 py-8 text-center text-sm text-fg-muted">아직 기록된 로그인이 없습니다.</p>
               ) : (
                 loginEvents.map((e) => (
                   <div key={e.id} className="flex items-center gap-3 px-4 py-3">
@@ -286,9 +290,9 @@ export default async function SettingsPage() {
                           </span>
                         )}
                       </p>
-                      <p className="font-mono text-[11px] text-ink-soft/50">IP {e.ipMasked}</p>
+                      <p className="font-mono text-[11px] text-fg-muted">IP {e.ipMasked}</p>
                     </div>
-                    <span className="ml-auto shrink-0 font-mono text-[11px] text-ink-soft/50">
+                    <span className="ml-auto shrink-0 font-mono text-[11px] text-fg-muted">
                       {new Date(e.createdAt).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' })}
                     </span>
                   </div>

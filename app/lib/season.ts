@@ -1,18 +1,58 @@
-// 명예의 전당 시즌 — 한 주가 한 시즌이다.
+// 시즌 — 랭킹을 세는 구간.
 //
-// 매주 월요일 00:00(KST)에 시즌이 바뀌고 순위가 0에서 다시 시작한다. 별도의 배치 작업이나
-// 저장 테이블은 두지 않는다. 시즌은 "언제부터 언제까지"라는 구간일 뿐이고, 랭킹은 그 구간의
-// 활동 기록으로 매번 다시 집계된다(app/lib/ranking.ts). 그래서 주가 넘어가는 순간
+// 예전에는 "매주 월요일"과 시작 기준일이 코드에 박혀 있었다. 그래서 "이번 주부터 시즌 1로
+// 다시 시작한다" 같은 운영 판단에도 배포가 필요했다. 이제 기준일·길이·시작 번호를 런타임
+// 설정에서 읽는다(app/lib/settings.ts의 season.*).
+//
+// 여전히 별도의 시즌 표나 배치 작업은 없다. 시즌은 "언제부터 언제까지"라는 구간일 뿐이고,
+// 랭킹은 그 구간의 활동 기록으로 매번 다시 집계된다(app/lib/ranking.ts). 구간이 옮겨 가면
 // 아무것도 하지 않아도 새 시즌 순위가 된다.
 //
 // 시간대를 KST로 고정하는 이유: 이용자가 한국 기준으로 "이번 주"를 센다. 서버가 어디서 돌든
 // 경계가 같아야 하므로 UTC 오프셋을 직접 더해 계산한다.
+import { getSetting } from './settings';
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** 시즌 1이 시작한 월요일 00:00 KST (= 2025-01-06 00:00 KST) */
-const SEASON_EPOCH_MS = Date.UTC(2025, 0, 5, 15, 0, 0);
+/** 기본값 — 설정을 읽지 못해도 예전과 같은 시즌 경계로 동작한다. */
+const DEFAULT_EPOCH_MS = Date.UTC(2025, 0, 5, 15, 0, 0); // 2025-01-06 00:00 KST
+const DEFAULT_LENGTH_MS = 7 * DAY_MS;
+
+export interface SeasonConfig {
+  epochMs: number;
+  lengthMs: number;
+  /** 기준일의 시즌 번호 */
+  indexBase: number;
+}
+
+export const DEFAULT_SEASON_CONFIG: SeasonConfig = {
+  epochMs: DEFAULT_EPOCH_MS,
+  lengthMs: DEFAULT_LENGTH_MS,
+  indexBase: 1,
+};
+
+/** 'YYYY-MM-DD'(KST 00:00 기준)를 ms로. 형식이 어긋나면 기본 기준일을 쓴다. */
+export function parseEpoch(value: string): number {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return DEFAULT_EPOCH_MS;
+  const [, y, m, d] = match;
+  return Date.UTC(Number(y), Number(m) - 1, Number(d)) - KST_OFFSET_MS;
+}
+
+/** 콘솔 설정을 반영한 시즌 구성 — 서버에서만 쓴다. */
+export async function getSeasonConfig(): Promise<SeasonConfig> {
+  const [epoch, lengthDays, indexBase] = await Promise.all([
+    getSetting<string>('season.epoch'),
+    getSetting<number>('season.length_days'),
+    getSetting<number>('season.index_base'),
+  ]);
+  return {
+    epochMs: parseEpoch(epoch),
+    lengthMs: Math.max(1, Math.round(lengthDays)) * DAY_MS,
+    indexBase: Math.max(1, Math.round(indexBase)),
+  };
+}
 
 export interface Season {
   /** 1부터 세는 시즌 번호 */
@@ -22,19 +62,26 @@ export interface Season {
   end: Date;
 }
 
-/** 그 시각이 속한 시즌. */
-export function seasonAt(now: Date = new Date()): Season {
-  const elapsed = now.getTime() - SEASON_EPOCH_MS;
-  // 에폭 이전이면(시계가 어긋난 경우 등) 1주차로 본다
-  const week = elapsed < 0 ? 0 : Math.floor(elapsed / WEEK_MS);
-  const startMs = SEASON_EPOCH_MS + week * WEEK_MS;
-  return { index: week + 1, start: new Date(startMs), end: new Date(startMs + WEEK_MS) };
+/** 그 시각이 속한 시즌. 구성을 넘기지 않으면 기본값(주간 · 2025-01-06 시작)으로 센다. */
+export function seasonAt(now: Date = new Date(), config: SeasonConfig = DEFAULT_SEASON_CONFIG): Season {
+  const { epochMs, lengthMs, indexBase } = config;
+  const elapsed = now.getTime() - epochMs;
+  // 기준일 이전이면(시계가 어긋났거나 기준일을 미래로 둔 경우) 첫 시즌으로 본다
+  const step = elapsed < 0 ? 0 : Math.floor(elapsed / lengthMs);
+  const startMs = epochMs + step * lengthMs;
+  return { index: indexBase + step, start: new Date(startMs), end: new Date(startMs + lengthMs) };
+}
+
+/** 콘솔 설정까지 반영한 현재 시즌 — 서버 컴포넌트/액션에서 쓴다. */
+export async function currentSeason(now: Date = new Date()): Promise<Season> {
+  return seasonAt(now, await getSeasonConfig());
 }
 
 export function previousSeason(season: Season): Season {
+  const lengthMs = season.end.getTime() - season.start.getTime();
   return {
     index: Math.max(1, season.index - 1),
-    start: new Date(season.start.getTime() - WEEK_MS),
+    start: new Date(season.start.getTime() - lengthMs),
     end: new Date(season.start),
   };
 }

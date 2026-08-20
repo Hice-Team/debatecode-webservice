@@ -22,7 +22,7 @@ interface SetValues {
 }
 
 const FIELD = 'w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25';
-const LABEL = 'mb-1 block font-mono text-[10px] font-semibold uppercase tracking-wider text-ink-soft/45';
+const LABEL = 'mb-1 block font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-muted';
 
 export default function ProblemSetForm({ mode, set }: { mode: 'create' | 'edit'; set?: SetValues }) {
   const action = mode === 'edit' ? updateProblemSet : createProblemSet;
@@ -133,7 +133,7 @@ export default function ProblemSetForm({ mode, set }: { mode: 'create' | 'edit';
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-soft/75">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-fg">
           <input type="checkbox" name="published" defaultChecked={set?.published ?? false} className="h-4 w-4 accent-[var(--color-signal)]" />
           라이브러리에 공개
         </label>

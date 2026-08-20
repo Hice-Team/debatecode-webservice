@@ -12,7 +12,7 @@
 import { cache } from 'react';
 import { prisma } from './prisma';
 
-export type SettingCategory = 'flag' | 'limit' | 'content' | 'integration' | 'maintenance';
+export type SettingCategory = 'flag' | 'limit' | 'content' | 'integration' | 'maintenance' | 'season';
 export type SettingValueType = 'boolean' | 'number' | 'string' | 'text' | 'enum';
 
 export interface SettingDef {
@@ -32,6 +32,50 @@ export interface SettingDef {
 }
 
 export const SETTING_DEFS = [
+  /* ---------- 시즌 · 랭킹 ----------
+     시즌은 원래 코드에 박힌 기준일에서 계산했다. 그래서 "이번 주부터 시즌 1로 다시 시작"
+     같은 운영 판단을 하려면 배포가 필요했다. 기준일·길이·번호를 설정으로 빼서
+     콘솔에서 바꿀 수 있게 한다. 랭킹은 활동 기록으로 매번 다시 집계되므로,
+     초기화는 "언제부터 세는가"를 옮기는 것으로 충분하다. */
+  {
+    key: 'season.epoch',
+    category: 'season',
+    valueType: 'string',
+    label: '시즌 기준일',
+    description: '이 날짜(KST 00:00)부터 아래 "시작 시즌 번호"로 세기 시작한다. 예: 2026-08-17',
+    default: '2025-01-06',
+  },
+  {
+    key: 'season.length_days',
+    category: 'season',
+    valueType: 'number',
+    label: '시즌 길이(일)',
+    description: '한 시즌이 며칠인가. 기본은 한 주.',
+    default: 7,
+    min: 1,
+    max: 365,
+  },
+  {
+    key: 'season.index_base',
+    category: 'season',
+    valueType: 'number',
+    label: '시작 시즌 번호',
+    description: '기준일의 시즌 번호. 1로 두면 기준일 주가 시즌 1이다.',
+    default: 1,
+    min: 1,
+    max: 9999,
+  },
+  {
+    key: 'ranking.reset_at',
+    category: 'season',
+    valueType: 'string',
+    label: '랭킹 집계 시작 시각',
+    description:
+      '이 시각 이전의 활동은 랭킹에서 세지 않는다(ISO 8601). 비우면 제한 없음. 콘솔 › 시즌·랭킹에서 버튼으로 채우는 값이라 직접 손댈 일은 드물다.',
+    default: '',
+    danger: true,
+  },
+
   /* ---------- 유지보수 ---------- */
   {
     key: 'maintenance.enabled',
@@ -301,6 +345,7 @@ export const SETTING_CATEGORY_LABELS: Record<SettingCategory, string> = {
   limit: '한도',
   integration: '연동',
   content: '콘텐츠',
+  season: '시즌 · 랭킹',
 };
 
 /* ---------- 읽기 ---------- */

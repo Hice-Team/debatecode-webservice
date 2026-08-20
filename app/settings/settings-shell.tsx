@@ -61,7 +61,7 @@ export default function SettingsShell({
             onChange={(e) => setQuery(e.target.value)}
             aria-label="설정 검색"
             placeholder="설정 검색"
-            className="w-full rounded-full border border-ink/10 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-ink-soft/35 focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/20"
+            className="w-full rounded-full border border-hairline bg-white py-2 pl-9 pr-3 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/20"
           />
         </div>
 
@@ -75,10 +75,10 @@ export default function SettingsShell({
                 onClick={() => setActive(c.id)}
                 aria-current={on ? 'true' : undefined}
                 className={`flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
-                  on ? 'bg-ink/[0.06] font-semibold text-ink' : 'text-ink-soft/65 hover:bg-ink/[0.03] hover:text-ink'
+                  on ? 'bg-ink/[0.06] font-semibold text-ink' : 'text-fg-secondary hover:bg-ink/[0.03] hover:text-ink'
                 }`}
               >
-                <span aria-hidden className={on ? 'text-signal' : 'text-ink-soft/45'}>
+                <span aria-hidden className={on ? 'text-signal' : 'text-fg-muted'}>
                   {c.icon}
                 </span>
                 {c.label}
@@ -86,7 +86,7 @@ export default function SettingsShell({
             );
           })}
           {matched.length === 0 && (
-            <p className="px-3 py-6 text-sm text-ink-soft/40">일치하는 설정이 없습니다.</p>
+            <p className="px-3 py-6 text-sm text-fg-quiet">일치하는 설정이 없습니다.</p>
           )}
         </nav>
       </aside>
@@ -95,7 +95,7 @@ export default function SettingsShell({
       <section aria-live="polite" className="min-w-0">
         {current && (
           <>
-            <h2 className="border-b border-ink/10 pb-3 font-display text-xl font-bold tracking-tight text-ink">
+            <h2 className="border-b border-hairline pb-3 font-display text-xl font-bold tracking-tight text-ink">
               {current.label}
             </h2>
             <div className="pt-1">{panels[current.id]}</div>

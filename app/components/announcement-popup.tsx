@@ -130,12 +130,12 @@ export default function AnnouncementPopup({
         role="dialog"
         aria-modal="true"
         aria-labelledby="dc-notice-title"
-        className="relative w-[min(30rem,100%)] overflow-hidden rounded-2xl bg-white shadow-2xl shadow-black/30 animate-in fade-in zoom-in-95 duration-200"
+        className="relative w-[min(30rem,100%)] overflow-hidden rounded-[var(--radius-panel)] bg-white shadow-2xl shadow-black/30 animate-in fade-in zoom-in-95 duration-200"
       >
         {/* 여러 건일 때 몇 번째인지 — 닫아도 또 뜨는 이유를 알 수 있게 */}
         {queue.length > 1 && (
           <div className="flex items-center gap-1.5 bg-ink/[0.04] px-6 py-1.5">
-            <span className="font-mono text-[10px] text-ink-soft/50">
+            <span className="font-mono text-[10px] text-fg-muted">
               공지 {index + 1} / {queue.length}
             </span>
             <div className="ml-auto flex gap-1">
@@ -178,13 +178,13 @@ export default function AnnouncementPopup({
               </h3>
             )}
             {item.content && (
-              <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft/80">{item.content}</p>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-fg">{item.content}</p>
             )}
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-3 border-t border-ink/10 bg-paper/60 px-6 py-3.5">
-          <label className="flex cursor-pointer items-center gap-2 text-xs text-ink-soft/70">
+        <div className="flex flex-wrap items-center gap-3 border-t border-hairline bg-paper/60 px-6 py-3.5">
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-fg-secondary">
             <input
               type="checkbox"
               checked={hideToday}

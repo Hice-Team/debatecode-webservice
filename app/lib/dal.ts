@@ -50,6 +50,8 @@ export const getUser = cache(async () => {
     where: { id: userId },
     select: { id: true, email: true, name: true, role: true, createdAt: true },
   });
-  if (!user) redirect('/login');
+  // 인증은 됐는데 앱 쪽 계정이 없는 반쪽 상태 — /login으로 보내면 무한 고리가 된다
+  // (/login은 세션이 있으면 /dashboard로 되돌려 보낸다). 복구 경로가 세션을 끊어 준다.
+  if (!user) redirect('/auth/recover');
   return user;
 });

@@ -46,8 +46,8 @@ export default function SolveTimer({
         urgent
           ? 'border-rose-500/40 bg-rose-500/15 text-rose-200 motion-safe:animate-pulse'
           : strict
-            ? 'border-white/15 bg-white/5 text-white/75'
-            : 'border-white/15 bg-white/5 text-white/60'
+            ? 'border-white/15 bg-white/5 text-fg-on-dark'
+            : 'border-white/15 bg-white/5 text-fg-on-dark-secondary'
       }`}
     >
       <span aria-hidden>{strict ? '⏳' : '⏱'}</span>

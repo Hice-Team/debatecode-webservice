@@ -51,26 +51,26 @@ export default function SetItemsEditor({
     });
 
   return (
-    <div className="grid gap-0 lg:grid-cols-2 lg:divide-x lg:divide-ink/[0.07]">
+    <div className="grid gap-0 lg:grid-cols-2 lg:divide-x lg:divide-hairline">
       {/* 편성된 문제 */}
       <div className="p-5">
         <h4 className="mb-3 text-sm font-bold text-ink">
-          편성된 문제 <span className="font-mono text-xs text-ink-soft/40">{items.length}</span>
+          편성된 문제 <span className="font-mono text-xs text-fg-quiet">{items.length}</span>
         </h4>
         {items.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-ink/15 px-4 py-8 text-center text-sm text-ink-soft/45">
+          <p className="rounded-xl border border-dashed border-ink/15 px-4 py-8 text-center text-sm text-fg-muted">
             오른쪽에서 문제를 추가해 세트를 구성하세요.
           </p>
         ) : (
           <ol className="space-y-1.5">
             {items.map((item, index) => (
-              <li key={item.id} className="flex items-center gap-2 rounded-xl border border-ink/10 px-3 py-2">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-ink/[0.06] font-mono text-[11px] font-bold text-ink-soft/50">
+              <li key={item.id} className="flex items-center gap-2 rounded-xl border border-hairline px-3 py-2">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-ink/[0.06] font-mono text-[11px] font-bold text-fg-muted">
                   {index + 1}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-ink">{item.problem.title}</p>
-                  <p className="truncate font-mono text-[10px] text-ink-soft/40">
+                  <p className="truncate font-mono text-[10px] text-fg-quiet">
                     {item.problem.category} · {DIFFICULTY_LABELS[item.problem.difficulty]}
                   </p>
                 </div>
@@ -80,7 +80,7 @@ export default function SetItemsEditor({
                     disabled={pending || index === 0}
                     onClick={() => run(moveProblemInSet, { itemId: item.id, direction: 'up' })}
                     aria-label="위로"
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-ink/12 text-ink-soft/60 hover:border-brand-300 hover:text-signal disabled:opacity-30"
+                    className="grid h-7 w-7 place-items-center rounded-lg border border-hairline text-fg-secondary hover:border-brand-300 hover:text-signal disabled:opacity-30"
                   >
                     ↑
                   </button>
@@ -89,7 +89,7 @@ export default function SetItemsEditor({
                     disabled={pending || index === items.length - 1}
                     onClick={() => run(moveProblemInSet, { itemId: item.id, direction: 'down' })}
                     aria-label="아래로"
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-ink/12 text-ink-soft/60 hover:border-brand-300 hover:text-signal disabled:opacity-30"
+                    className="grid h-7 w-7 place-items-center rounded-lg border border-hairline text-fg-secondary hover:border-brand-300 hover:text-signal disabled:opacity-30"
                   >
                     ↓
                   </button>
@@ -98,7 +98,7 @@ export default function SetItemsEditor({
                     disabled={pending}
                     onClick={() => run(removeProblemFromSet, { itemId: item.id })}
                     aria-label="제거"
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-ink/12 text-rose-600 hover:border-rose-300 disabled:opacity-30"
+                    className="grid h-7 w-7 place-items-center rounded-lg border border-hairline text-rose-600 hover:border-rose-300 disabled:opacity-30"
                   >
                     ×
                   </button>
@@ -110,7 +110,7 @@ export default function SetItemsEditor({
       </div>
 
       {/* 문제 추가 */}
-      <div className="border-t border-ink/[0.07] p-5 lg:border-t-0">
+      <div className="border-t border-hairline p-5 lg:border-t-0">
         <h4 className="mb-3 text-sm font-bold text-ink">문제 추가</h4>
         <input
           type="search"
@@ -120,16 +120,16 @@ export default function SetItemsEditor({
           className="mb-3 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25"
         />
         {candidates.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-ink-soft/45">
+          <p className="px-4 py-8 text-center text-sm text-fg-muted">
             {query ? '검색 결과가 없습니다.' : '추가할 수 있는 문제가 없습니다.'}
           </p>
         ) : (
           <ul className="space-y-1.5">
             {candidates.map((p) => (
-              <li key={p.id} className="flex items-center gap-2 rounded-xl border border-ink/10 px-3 py-2">
+              <li key={p.id} className="flex items-center gap-2 rounded-xl border border-hairline px-3 py-2">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-ink">{p.title}</p>
-                  <p className="truncate font-mono text-[10px] text-ink-soft/40">
+                  <p className="truncate font-mono text-[10px] text-fg-quiet">
                     {p.category} · {DIFFICULTY_LABELS[p.difficulty]}
                     {p.company ? ` · ${p.company}` : ''}
                   </p>

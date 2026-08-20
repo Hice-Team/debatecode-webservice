@@ -70,7 +70,7 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
           </h1>
         </div>
 
-        <div className="bg-white rounded-xl border border-ink/10 shadow-sm p-8">
+        <div className="bg-white rounded-xl border border-hairline shadow-sm p-8">
           <SignupWizard
             initialStep={initialStep}
             requiresPassword={requiresPassword}
@@ -83,7 +83,7 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
           />
         </div>
 
-        <p className="mt-6 text-center text-sm text-ink-soft/60">
+        <p className="mt-6 text-center text-sm text-fg-secondary">
           이미 계정이 있나요?{' '}
           <Link
             href="/login"

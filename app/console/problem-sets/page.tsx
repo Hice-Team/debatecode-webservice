@@ -65,8 +65,8 @@ export default async function ConsoleProblemSetsPage({ searchParams }: PageProps
           { label: '비공개', value: sets.length - publishedCount },
           { label: '문제 미편성', value: emptyCount, warn: emptyCount > 0 },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-ink/10 bg-white px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">{stat.label}</p>
+          <div key={stat.label} className="rounded-xl border border-hairline bg-white px-4 py-3">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
             <p className={`mt-1 font-display text-2xl font-bold ${stat.warn ? 'text-rose-600' : 'text-ink'}`}>
               {stat.value}
             </p>
@@ -84,7 +84,7 @@ export default async function ConsoleProblemSetsPage({ searchParams }: PageProps
       >
         <div className="min-w-0">
           <p className="text-sm font-semibold text-ink">기존 기출 문제로 세트 자동 편성</p>
-          <p className="mt-0.5 text-xs text-ink-soft/60">
+          <p className="mt-0.5 text-xs text-fg-secondary">
             Problem의 기업·연도 정보를 묶어 기출 모음집을 만듭니다. 이미 있는 세트는 건너뜁니다.
           </p>
         </div>
@@ -95,8 +95,8 @@ export default async function ConsoleProblemSetsPage({ searchParams }: PageProps
 
       {/* 편성 중인 세트 — 문제 추가/순서 변경 */}
       {editing && (
-        <section className="mb-8 overflow-hidden rounded-2xl border border-signal/30 bg-white">
-          <div className="flex flex-wrap items-center gap-3 border-b border-ink/[0.07] bg-brand-50/50 px-5 py-3">
+        <section className="mb-8 overflow-hidden rounded-[var(--radius-panel)] border border-signal/30 bg-white">
+          <div className="flex flex-wrap items-center gap-3 border-b border-hairline bg-brand-50/50 px-5 py-3">
             <div className="min-w-0">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-brand-600">Editing</p>
               <h3 className="truncate font-bold text-ink">{editing.title}</h3>
@@ -106,7 +106,7 @@ export default async function ConsoleProblemSetsPage({ searchParams }: PageProps
             </Link>
           </div>
 
-          <div className="border-b border-ink/[0.07] p-5">
+          <div className="border-b border-hairline p-5">
             <ProblemSetForm mode="edit" set={editing} />
           </div>
 
@@ -116,15 +116,15 @@ export default async function ConsoleProblemSetsPage({ searchParams }: PageProps
 
       {/* 새 세트 만들기 */}
       {!editing && (
-        <section className="mb-8 rounded-2xl border border-ink/10 bg-white p-5">
+        <section className="mb-8 rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
           <h3 className="mb-4 font-bold text-ink">새 세트 만들기</h3>
           <ProblemSetForm mode="create" />
         </section>
       )}
 
       {/* 세트 목록 */}
-      <section className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
-        <div className="border-b border-ink/[0.07] px-5 py-3">
+      <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="border-b border-hairline px-5 py-3">
           <h3 className="font-bold text-ink">편성된 세트</h3>
         </div>
         {sets.length === 0 ? (
@@ -140,7 +140,7 @@ export default async function ConsoleProblemSetsPage({ searchParams }: PageProps
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold text-ink">{set.title}</p>
-                    <p className="truncate font-mono text-[11px] text-ink-soft/40">
+                    <p className="truncate font-mono text-[11px] text-fg-quiet">
                       /{set.slug} · {set._count.items}문제 · {DIFFICULTY_LABELS[set.difficulty] ?? '—'}
                       {set.company ? ` · ${set.company}` : ''}
                       {set.examYear ? ` · ${set.examYear}` : ''}
@@ -149,7 +149,7 @@ export default async function ConsoleProblemSetsPage({ searchParams }: PageProps
 
                   <span
                     className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                      set.published ? 'bg-emerald-50 text-emerald-700' : 'bg-ink/5 text-ink-soft/45'
+                      set.published ? 'bg-emerald-50 text-emerald-700' : 'bg-ink/5 text-fg-muted'
                     }`}
                   >
                     {set.published ? '공개' : '비공개'}

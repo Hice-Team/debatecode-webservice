@@ -50,12 +50,12 @@ export function AreaChart({
       </svg>
       <div className="mt-2 flex flex-wrap gap-4 px-1">
         {series.map((s) => (
-          <span key={s.label} className="inline-flex items-center gap-1.5 text-[11px] text-ink-soft/70">
+          <span key={s.label} className="inline-flex items-center gap-1.5 text-[11px] text-fg-secondary">
             <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: s.color }} />
-            {s.label} <span className="font-mono text-ink-soft/55">{s.points.reduce((a, b) => a + b, 0)}건</span>
+            {s.label} <span className="font-mono text-fg-muted">{s.points.reduce((a, b) => a + b, 0)}건</span>
           </span>
         ))}
-        <span className="ml-auto font-mono text-[10px] text-ink-soft/50">
+        <span className="ml-auto font-mono text-[10px] text-fg-muted">
           {labels[0]} — {labels[labels.length - 1]}
         </span>
       </div>
@@ -76,7 +76,7 @@ export function Gauge({ label, value, unit, tone = '#4531d9' }: { label: string;
   const dash = (pct / 100) * C;
 
   return (
-    <div className="flex flex-col items-center rounded-2xl border border-ink/10 bg-white p-4">
+    <div className="flex flex-col items-center rounded-[var(--radius-panel)] border border-hairline bg-white p-4">
       <svg viewBox="0 0 100 56" className="w-full max-w-[130px]" role="img" aria-label={`${label} ${Math.round(pct)}${unit ?? '%'}`}>
         <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="currentColor" className="text-ink/8" strokeWidth={9} strokeLinecap="round" />
         <path
@@ -92,7 +92,7 @@ export function Gauge({ label, value, unit, tone = '#4531d9' }: { label: string;
           <tspan style={{ fontSize: 9 }}>{unit ?? '%'}</tspan>
         </text>
       </svg>
-      <p className="mt-1 text-xs font-medium text-ink-soft/60">{label}</p>
+      <p className="mt-1 text-xs font-medium text-fg-secondary">{label}</p>
     </div>
   );
 }
@@ -149,16 +149,16 @@ export function RadarChart({ axes, size = 220 }: { axes: { label: string; value:
 
 export function BarDistribution({ items, tone = '#4531d9' }: { items: { label: string; value: number }[]; tone?: string }) {
   const max = Math.max(1, ...items.map((i) => i.value));
-  if (items.length === 0) return <p className="text-sm text-ink-soft/50">데이터가 없습니다.</p>;
+  if (items.length === 0) return <p className="text-sm text-fg-muted">데이터가 없습니다.</p>;
   return (
     <div className="space-y-2.5" role="list">
       {items.map((it) => (
         <div key={it.label} role="listitem" className="flex items-center gap-3" aria-label={`${it.label} ${it.value}건`}>
-          <span className="w-24 shrink-0 truncate text-xs text-ink-soft/70">{it.label}</span>
+          <span className="w-24 shrink-0 truncate text-xs text-fg-secondary">{it.label}</span>
           <div className="h-2.5 flex-1 rounded-full bg-ink/5" aria-hidden>
             <div className="h-full rounded-full" style={{ width: `${(it.value / max) * 100}%`, background: tone }} />
           </div>
-          <span className="w-8 shrink-0 text-right font-mono text-[11px] text-ink-soft/60">{it.value}</span>
+          <span className="w-8 shrink-0 text-right font-mono text-[11px] text-fg-secondary">{it.value}</span>
         </div>
       ))}
     </div>

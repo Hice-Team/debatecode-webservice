@@ -75,16 +75,16 @@ export default function ProblemFilters({
   const chipBase =
     'px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer';
   const on = 'bg-brand-50 text-brand-700 border-brand-300 shadow-[inset_0_0_0_1px_rgba(69,49,217,0.15)]';
-  const off = 'bg-white text-ink-soft/65 border-ink/12 hover:border-brand-300 hover:text-signal';
+  const off = 'bg-white text-fg-secondary border-hairline hover:border-brand-300 hover:text-signal';
 
-  const groupLabel = 'font-mono text-[10px] uppercase tracking-wider text-ink-soft/40 w-20 shrink-0 pt-1.5';
+  const groupLabel = 'font-mono text-[10px] uppercase tracking-wider text-fg-quiet w-20 shrink-0 pt-1.5';
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-[0_1px_2px_rgba(20,21,43,0.04)]">
+    <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white shadow-[0_1px_2px_rgba(20,21,43,0.04)]">
       {/* 검색 + 필터 토글 */}
       <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center">
         <label className="relative flex-1">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-soft/40">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-fg-quiet">
             <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2">
               <circle cx="11" cy="11" r="6" />
               <path d="m20 20-4.2-4.2" strokeLinecap="round" />
@@ -95,7 +95,7 @@ export default function ProblemFilters({
             value={q}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder={t('search-placeholder', language)}
-            className="w-full rounded-lg border border-ink/12 bg-paper px-4 py-2.5 pl-10 text-sm placeholder:text-ink-soft/30 focus:border-signal/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-signal/30"
+            className="w-full rounded-lg border border-hairline bg-paper px-4 py-2.5 pl-10 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-signal/30"
           />
         </label>
         <button
@@ -104,7 +104,7 @@ export default function ProblemFilters({
           className={`inline-flex items-center justify-center gap-2 rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-colors ${
             showFilters || activeCount > 0
               ? 'border-brand-300 bg-brand-50 text-signal'
-              : 'border-ink/12 text-ink-soft/70 hover:border-brand-300 hover:text-signal'
+              : 'border-hairline text-fg-secondary hover:border-brand-300 hover:text-signal'
           }`}
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2">

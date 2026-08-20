@@ -7,6 +7,8 @@
 //   빠짐: "새 채팅에서 브랜치 생성"(AI Search 세션 전용), "법적 문제 신고"(신고 대상 id 필요)
 // 남는 항목은 이 답변 하나에만 적용되는 동작이다.
 import { useEffect, useRef, useState } from 'react';
+import { useSpeech } from '@/app/lib/speech';
+import SpeechPlayer from '@/app/components/speech-player';
 import { EFFORT_HINTS, EFFORT_LABELS, asEffort } from '@/app/lib/ai/effort';
 import { findDebateAiModel } from '@/app/lib/ai/debateai-models';
 
@@ -23,18 +25,6 @@ export interface AnswerUsage {
 }
 
 const ICON = 'h-4 w-4 fill-none stroke-current stroke-[1.6]';
-
-/** 낭독 전에 마크다운 기호를 걷어낸다 — 별표와 백틱을 그대로 읽으면 알아듣기 어렵다. */
-function toSpeech(markdown: string): string {
-  return markdown
-    .replace(/```[\s\S]*?```/g, ' 코드 블록 생략. ')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/[*_>#|]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 export default function AnswerToolbar({
   content,
@@ -58,7 +48,7 @@ export default function AnswerToolbar({
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
+  const speech = useSpeech('ko');
   const menuRef = useRef<HTMLDivElement>(null);
 
   const model = findDebateAiModel(modelId);
@@ -79,9 +69,6 @@ export default function AnswerToolbar({
     };
   }, [menuOpen]);
 
-  // 화면을 떠날 때 낭독이 계속되지 않도록
-  useEffect(() => () => window.speechSynthesis?.cancel(), []);
-
   async function copyAnswer() {
     try {
       await navigator.clipboard.writeText(content);
@@ -92,21 +79,10 @@ export default function AnswerToolbar({
     }
   }
 
+  /** 듣기 — 재생 중이면 멈추고, 아니면 이 답변을 처음부터 읽는다. */
   function toggleSpeech() {
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-    if (speaking) {
-      synth.cancel();
-      setSpeaking(false);
-      return;
-    }
-    synth.cancel();
-    const utterance = new SpeechSynthesisUtterance(toSpeech(content));
-    utterance.lang = 'ko-KR';
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
-    synth.speak(utterance);
-    setSpeaking(true);
+    if (speech.speaking) speech.stop();
+    else speech.speak(content);
   }
 
   /** 이 답변 하나만 .json으로 — 컴포저의 전체 내보내기와 대비된다 */
@@ -129,9 +105,9 @@ export default function AnswerToolbar({
   }
 
   const buttonClass =
-    'grid h-7 w-7 place-items-center rounded-full text-white/35 transition-colors hover:bg-white/10 hover:text-white/80 disabled:opacity-30';
+    'grid h-7 w-7 place-items-center rounded-full text-fg-on-dark-quiet transition-colors hover:bg-white/10 hover:text-fg-on-dark disabled:opacity-30';
   const menuItemClass =
-    'flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[12px] text-white/75 transition-colors hover:bg-white/[0.06]';
+    'flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[12px] text-fg-on-dark transition-colors hover:bg-white/[0.06]';
 
   const totalTokens = (usage?.promptTokens ?? 0) + (usage?.completionTokens ?? 0);
 
@@ -191,7 +167,7 @@ export default function AnswerToolbar({
           type="button"
           onClick={() => setAboutOpen(true)}
           title="응답 세부정보 보기"
-          className="ml-1 rounded-full px-1.5 font-mono text-[10px] text-white/25 transition-colors hover:text-white/60"
+          className="ml-1 rounded-full px-1.5 font-mono text-[10px] text-fg-on-dark-quiet transition-colors hover:text-fg-on-dark-secondary"
         >
           {totalTokens.toLocaleString()} tok{usage?.estimated ? '≈' : ''}
         </button>
@@ -224,7 +200,7 @@ export default function AnswerToolbar({
                 <path d="M4 9v6h3.5L13 19V5L7.5 9H4Z" strokeLinejoin="round" />
                 <path d="M16.5 9.2a4 4 0 0 1 0 5.6M19 6.7a7.5 7.5 0 0 1 0 10.6" strokeLinecap="round" />
               </svg>
-              {speaking ? '듣기 중지' : '듣기'}
+              {speech.speaking ? '듣기 중지' : '듣기'}
             </button>
 
             <button type="button" role="menuitem" className={menuItemClass} onClick={() => { exportAnswer(); setMenuOpen(false); }}>
@@ -265,14 +241,14 @@ export default function AnswerToolbar({
       {aboutOpen && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <button type="button" aria-label="닫기" onClick={() => setAboutOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <section className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-[#171A24] p-5 shadow-2xl shadow-black/60">
+          <section className="relative z-10 w-full max-w-sm rounded-[var(--radius-panel)] border border-white/10 bg-[#171A24] p-5 shadow-2xl shadow-black/60">
             <h3 className="text-base font-bold text-white">응답 세부정보</h3>
             <dl className="mt-4 space-y-3 text-[13px]">
               <div>
-                <dt className="font-mono text-[10px] uppercase tracking-wider text-white/35">생성 엔진</dt>
-                <dd className="mt-0.5 text-white/75">
+                <dt className="font-mono text-[10px] uppercase tracking-wider text-fg-on-dark-quiet">생성 엔진</dt>
+                <dd className="mt-0.5 text-fg-on-dark">
                   {model.label} · {model.vendor}
-                  {usage?.repo && <span className="ml-1.5 font-mono text-[11px] text-white/35">{usage.repo}</span>}
+                  {usage?.repo && <span className="ml-1.5 font-mono text-[11px] text-fg-on-dark-quiet">{usage.repo}</span>}
                 </dd>
                 {usage?.replaced && (
                   <dd className="mt-1 text-[11px] leading-relaxed text-brand-300/80">
@@ -283,21 +259,21 @@ export default function AnswerToolbar({
 
               {totalTokens > 0 && (
                 <div>
-                  <dt className="font-mono text-[10px] uppercase tracking-wider text-white/35">사용 토큰</dt>
-                  <dd className="mt-0.5 text-white/75">
+                  <dt className="font-mono text-[10px] uppercase tracking-wider text-fg-on-dark-quiet">사용 토큰</dt>
+                  <dd className="mt-0.5 text-fg-on-dark">
                     {totalTokens.toLocaleString()} tokens
-                    <span className="ml-1.5 font-mono text-[11px] text-white/35">
+                    <span className="ml-1.5 font-mono text-[11px] text-fg-on-dark-quiet">
                       (입력 {(usage?.promptTokens ?? 0).toLocaleString()} · 출력{' '}
                       {(usage?.completionTokens ?? 0).toLocaleString()})
                     </span>
                     {usage?.estimated && (
-                      <span className="ml-1.5 rounded-full border border-white/10 px-1.5 py-px text-[10px] text-white/45">
+                      <span className="ml-1.5 rounded-full border border-white/10 px-1.5 py-px text-[10px] text-fg-on-dark-muted">
                         추정치
                       </span>
                     )}
                   </dd>
                   {usage?.estimated && (
-                    <dd className="mt-1 text-[11px] leading-relaxed text-white/35">
+                    <dd className="mt-1 text-[11px] leading-relaxed text-fg-on-dark-quiet">
                       공급자가 사용량을 알려 주지 않아 글자 수로 계산한 값입니다.
                     </dd>
                   )}
@@ -306,27 +282,27 @@ export default function AnswerToolbar({
 
               {usage?.effort && (
                 <div>
-                  <dt className="font-mono text-[10px] uppercase tracking-wider text-white/35">응답 강도</dt>
-                  <dd className="mt-0.5 text-white/75">
+                  <dt className="font-mono text-[10px] uppercase tracking-wider text-fg-on-dark-quiet">응답 강도</dt>
+                  <dd className="mt-0.5 text-fg-on-dark">
                     {EFFORT_LABELS[asEffort(usage.effort)]}
-                    <span className="ml-1.5 text-[11px] text-white/35">{EFFORT_HINTS[asEffort(usage.effort)]}</span>
+                    <span className="ml-1.5 text-[11px] text-fg-on-dark-quiet">{EFFORT_HINTS[asEffort(usage.effort)]}</span>
                   </dd>
                 </div>
               )}
 
               {createdAt && (
                 <div>
-                  <dt className="font-mono text-[10px] uppercase tracking-wider text-white/35">생성 시각</dt>
-                  <dd className="mt-0.5 text-white/75">{new Date(createdAt).toLocaleString('ko-KR')}</dd>
+                  <dt className="font-mono text-[10px] uppercase tracking-wider text-fg-on-dark-quiet">생성 시각</dt>
+                  <dd className="mt-0.5 text-fg-on-dark">{new Date(createdAt).toLocaleString('ko-KR')}</dd>
                 </div>
               )}
 
               <div>
-                <dt className="font-mono text-[10px] uppercase tracking-wider text-white/35">답변 길이</dt>
-                <dd className="mt-0.5 text-white/75">{content.length.toLocaleString()}자</dd>
+                <dt className="font-mono text-[10px] uppercase tracking-wider text-fg-on-dark-quiet">답변 길이</dt>
+                <dd className="mt-0.5 text-fg-on-dark">{content.length.toLocaleString()}자</dd>
               </div>
             </dl>
-            <p className="mt-4 text-[11px] leading-relaxed text-white/35">
+            <p className="mt-4 text-[11px] leading-relaxed text-fg-on-dark-quiet">
               AI가 생성한 내용이며 사실과 다를 수 있습니다. 제출 전에 직접 확인해 주세요.
             </p>
             <button
@@ -337,6 +313,13 @@ export default function AnswerToolbar({
               닫기
             </button>
           </section>
+        </div>
+      )}
+
+      {/* 낭독 재생 바 — 줄 전체를 차지하도록 flex-wrap 안에서 w-full로 둔다 */}
+      {speech.speaking && (
+        <div className="w-full">
+          <SpeechPlayer controller={speech} tone="dark" />
         </div>
       )}
     </div>

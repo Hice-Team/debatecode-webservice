@@ -25,7 +25,7 @@ const PROFILE_LINKS = [
 ];
 
 const row =
-  'block rounded-lg px-3 py-2.5 text-sm font-medium text-ink-soft/70 hover:bg-ink/5 hover:text-ink-soft transition-colors';
+  'block rounded-lg px-3 py-2.5 text-sm font-medium text-fg-secondary hover:bg-ink/5 hover:text-ink-soft transition-colors';
 
 export default function MobileAuthProfile({ name, email, avatarUrl }: Props) {
   const { language } = useLanguage();
@@ -46,11 +46,11 @@ export default function MobileAuthProfile({ name, email, avatarUrl }: Props) {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold text-ink-soft">{name}</span>
-            <span className="block truncate text-xs text-ink-soft/50">{email}</span>
+            <span className="block truncate text-xs text-fg-muted">{email}</span>
           </span>
           <svg
             viewBox="0 0 24 24"
-            className={`h-4 w-4 shrink-0 text-ink-soft/40 transition-transform ${open ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 shrink-0 text-fg-quiet transition-transform ${open ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             strokeWidth="2"

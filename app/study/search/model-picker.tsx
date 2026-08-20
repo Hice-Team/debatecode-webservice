@@ -62,7 +62,7 @@ export default function ModelPicker({
             ? `${current.vendor} · ${current.label} · Effort ${EFFORT_LABELS_EN[effort]}`
             : '모델 키가 없어 문서 검색 모드로 동작합니다'
         }
-        className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2 text-xs font-medium text-ink-soft/60 transition hover:bg-paper hover:text-ink disabled:opacity-40 sm:px-3"
+        className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2 text-xs font-medium text-fg-secondary transition hover:bg-paper hover:text-ink disabled:opacity-40 sm:px-3"
       >
         <span
           aria-hidden
@@ -79,14 +79,14 @@ export default function ModelPicker({
         <div
           role="listbox"
           aria-label="모델 선택"
-          className={`absolute right-0 z-50 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-ink/10 bg-white py-1.5 shadow-xl shadow-ink/10 animate-in fade-in duration-150 ${
+          className={`absolute right-0 z-50 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white py-1.5 shadow-xl shadow-ink/10 animate-in fade-in duration-150 ${
             placement === 'top'
               ? 'bottom-full mb-2 slide-in-from-bottom-1'
               : 'top-full mt-2 slide-in-from-top-1'
           }`}
         >
           {!live && (
-            <p className="mx-1.5 mb-1 rounded-lg bg-paper px-3 py-2 text-[11px] leading-relaxed text-ink-soft/50">
+            <p className="mx-1.5 mb-1 rounded-lg bg-paper px-3 py-2 text-[11px] leading-relaxed text-fg-muted">
               모델 키가 설정되지 않아 지금은 문서 검색 결과만 제공합니다.
             </p>
           )}
@@ -117,16 +117,16 @@ export default function ModelPicker({
                 <span className="min-w-0">
                   <span className="block text-sm font-medium text-ink">
                     {model.label}
-                    <span className="ml-1.5 font-mono text-[10px] font-normal text-ink-soft/40">{model.vendor}</span>
+                    <span className="ml-1.5 font-mono text-[10px] font-normal text-fg-quiet">{model.vendor}</span>
                   </span>
-                  <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-soft/50">{model.hint}</span>
+                  <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">{model.hint}</span>
                 </span>
               </button>
             );
           })}
 
           {/* 응답 강도 — 모델 목록 아래, 같은 메뉴 안에서 이어서 고른다 */}
-          <div className="mt-1 border-t border-ink/[0.07] pt-1">
+          <div className="mt-1 border-t border-hairline pt-1">
             <EffortSlider value={effort} onChange={onEffortChange} />
           </div>
         </div>

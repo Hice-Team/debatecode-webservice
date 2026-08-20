@@ -796,7 +796,7 @@ export default function Workspace({
             {problem.title}
           </Link>
         </h1>
-        <span className="font-mono text-[11px] text-white/40">{problem.category}</span>
+        <span className="font-mono text-[11px] text-fg-on-dark-quiet">{problem.category}</span>
 
         {/* 문제·에디터 신고 — 지문이나 채점이 잘못됐을 때 이용자가 그 자리에서 알릴 수 있어야 한다.
             문의로 흘려보내면 어느 문제였는지부터 다시 물어야 한다. */}
@@ -813,7 +813,7 @@ export default function Workspace({
             '--- 작성 중인 코드 ---',
             code.slice(0, 2000),
           ].join('\n')}
-          className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/15 text-white/40 transition-colors hover:border-rose-400/50 hover:text-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/15 text-fg-on-dark-quiet transition-colors hover:border-rose-400/50 hover:text-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
         />
         {/* 가이드 다시 보기 — "앞으로 보지 않기"로 껐어도 여기서 언제든 다시 열 수 있다 */}
         <button
@@ -821,7 +821,7 @@ export default function Workspace({
           onClick={() => setTourOpen(true)}
           aria-label="사용 가이드 다시 보기"
           title="사용 가이드 다시 보기"
-          className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-white/20 text-[10px] font-bold text-white/40 transition-colors hover:border-brand-400 hover:text-brand-300"
+          className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-white/20 text-[10px] font-bold text-fg-on-dark-quiet transition-colors hover:border-brand-400 hover:text-brand-300"
         >
           ?
         </button>
@@ -837,9 +837,9 @@ export default function Workspace({
             <SolveTimer setup={setup} stopped={timeUp || !!completion} onTimeUp={handleTimeUp} />
             <div
               title={t('setup-locked-hint', uiLang)}
-              className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/75"
+              className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-fg-on-dark"
             >
-              <span aria-hidden className="text-white/30">🔒</span>
+              <span aria-hidden className="text-fg-on-dark-quiet">🔒</span>
               <span data-tour="mode">{t(MODE_LABEL_KEYS[activeMode], uiLang)}</span>
               <span aria-hidden className="h-4 w-px shrink-0 bg-white/15" />
               {/* 리팩토링은 AI가 준 결함 코드에서 출발해 시작 코드 난이도 개념이 없다 */}
@@ -965,7 +965,7 @@ export default function Workspace({
               {/* 탭 내비게이션 — 스크롤은 가능하지만 스크롤바는 표시하지 않는다 */}
               <div
                 data-tour="tabs"
-                className="dc-scroll-none flex items-center overflow-x-auto border-b border-white/10 text-[11px] font-medium text-white/40"
+                className="dc-scroll-none flex items-center overflow-x-auto border-b border-white/10 text-[11px] font-medium text-fg-on-dark-quiet"
                 role="tablist"
               >
                 {/* debateAI 탭은 시그니처·디베이트 모드 모두에 있다.
@@ -982,7 +982,7 @@ export default function Workspace({
                         ? 'border-b-2 border-brand-400 font-bold text-brand-400'
                         : tab.accent
                           ? 'font-semibold text-brand-300/80 hover:text-brand-200'
-                          : 'hover:text-white/70'
+                          : 'hover:text-fg-on-dark-secondary'
                     }`}
                   >
                     {tab.accent && (
@@ -1023,12 +1023,12 @@ export default function Workspace({
                 <div className="flex-grow overflow-y-auto dc-scroll px-5 py-4">
                   {sidebarTab === 'problem' && (
                     <>
-                      <article className="prose-invert max-w-none text-[15px] leading-relaxed [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:text-brand-300 [&_h2:first-child]:mt-0 [&_p]:my-2.5 [&_p]:text-white/80 [&_li]:text-white/80 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_code]:font-mono [&_code]:text-[13px] [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_pre]:bg-white/5 [&_pre]:border [&_pre]:border-white/10 [&_pre]:rounded-lg [&_pre]:p-4 [&_pre]:overflow-x-auto [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_table]:w-full [&_table]:my-3 [&_th]:text-left [&_th]:font-mono [&_th]:text-xs [&_th]:text-white/50 [&_th]:border-b [&_th]:border-white/15 [&_th]:px-3 [&_th]:py-2 [&_td]:px-3 [&_td]:py-2 [&_td]:border-b [&_td]:border-white/5 [&_td]:text-white/80">
+                      <article className="prose-invert max-w-none text-[15px] leading-relaxed [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:text-brand-300 [&_h2:first-child]:mt-0 [&_p]:my-2.5 [&_p]:text-fg-on-dark [&_li]:text-fg-on-dark [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_code]:font-mono [&_code]:text-[13px] [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_pre]:bg-white/5 [&_pre]:border [&_pre]:border-white/10 [&_pre]:rounded-lg [&_pre]:p-4 [&_pre]:overflow-x-auto [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_table]:w-full [&_table]:my-3 [&_th]:text-left [&_th]:font-mono [&_th]:text-xs [&_th]:text-fg-on-dark-muted [&_th]:border-b [&_th]:border-white/15 [&_th]:px-3 [&_th]:py-2 [&_td]:px-3 [&_td]:py-2 [&_td]:border-b [&_td]:border-white/5 [&_td]:text-fg-on-dark">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{problem.description}</ReactMarkdown>
                       </article>
                       <div className="mt-6 flex flex-wrap gap-2">
                         {problem.tags.map((t) => (
-                          <span key={t} className="font-mono text-[11px] text-white/40 bg-white/5 border border-white/10 rounded-full px-2.5 py-1">
+                          <span key={t} className="font-mono text-[11px] text-fg-on-dark-quiet bg-white/5 border border-white/10 rounded-full px-2.5 py-1">
                             #{t}
                           </span>
                         ))}
@@ -1042,7 +1042,7 @@ export default function Workspace({
                       <div className="flex items-baseline justify-between">
                         <p className="font-bold text-white text-sm">시도 기록 ({attemptCount}회)</p>
                         {!isLoggedIn && (
-                          <span className="text-[10px] text-white/30">로그인하면 기록이 저장됩니다</span>
+                          <span className="text-[10px] text-fg-on-dark-quiet">로그인하면 기록이 저장됩니다</span>
                         )}
                       </div>
                       {/* 컨트롤 바 — 정렬은 왼쪽 끝, 편집(또는 편집 중 버튼셋)은 오른쪽 끝에 붙고
@@ -1053,7 +1053,7 @@ export default function Workspace({
                             value={attemptOrder}
                             onChange={(e) => { setAttemptOrder(e.target.value as 'latest' | 'oldest'); setAttemptPage(1); }}
                             aria-label={t('sort-order', uiLang)}
-                            className="rounded border border-white/15 bg-ink px-2 py-1 text-[11px] text-white/75"
+                            className="rounded border border-white/15 bg-ink px-2 py-1 text-[11px] text-fg-on-dark"
                           >
                             <option value="latest">{t('sort-latest', uiLang)}</option>
                             <option value="oldest">{t('sort-oldest', uiLang)}</option>
@@ -1064,7 +1064,7 @@ export default function Workspace({
                               <button
                                 onClick={() => setSelectedAttemptIds(allAttemptsSelected ? [] : runHistory.map((r) => r.id))}
                                 disabled={runHistory.length === 0}
-                                className="rounded border border-white/15 px-2 py-1 text-[11px] text-white/70 transition-colors hover:border-white/35 hover:text-white disabled:opacity-30"
+                                className="rounded border border-white/15 px-2 py-1 text-[11px] text-fg-on-dark-secondary transition-colors hover:border-white/35 hover:text-white disabled:opacity-30"
                               >
                                 {t(allAttemptsSelected ? 'deselect-all' : 'select-all', uiLang)}
                               </button>
@@ -1087,7 +1087,7 @@ export default function Workspace({
                             <button
                               onClick={() => setAttemptEditing(true)}
                               disabled={runHistory.length === 0}
-                              className="rounded border border-white/15 px-2.5 py-1 text-[11px] text-white/70 transition-colors hover:border-white/35 hover:text-white disabled:opacity-30"
+                              className="rounded border border-white/15 px-2.5 py-1 text-[11px] text-fg-on-dark-secondary transition-colors hover:border-white/35 hover:text-white disabled:opacity-30"
                             >
                               {t('edit', uiLang)}
                             </button>
@@ -1095,14 +1095,14 @@ export default function Workspace({
                         </div>
                       )}
                       {runHistory.length === 0 ? (
-                        <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-6 text-center text-xs text-white/35">
+                        <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-6 text-center text-xs text-fg-on-dark-quiet">
                           아직 실행 기록이 없습니다. ▶ 실행 또는 제출을 하면 여기에 쌓입니다.
                         </p>
                       ) : (
                         <div className="overflow-hidden rounded-lg border border-white/10">
                           <table className="w-full text-left font-mono text-[11px]">
                             <thead>
-                              <tr className="border-b border-white/10 bg-white/[0.03] text-white/35">
+                              <tr className="border-b border-white/10 bg-white/[0.03] text-fg-on-dark-quiet">
                                 {isLoggedIn && attemptEditing && (
                                   <th className="w-8 px-2 py-2">
                                     <input
@@ -1153,7 +1153,7 @@ export default function Workspace({
                                         />
                                       </td>
                                     )}
-                                    <td className="whitespace-nowrap px-3 py-2 text-white/60">
+                                    <td className="whitespace-nowrap px-3 py-2 text-fg-on-dark-secondary">
                                       {new Date(rec.ts).toLocaleString('ko-KR', {
                                         month: '2-digit',
                                         day: '2-digit',
@@ -1162,7 +1162,7 @@ export default function Workspace({
                                       })}
                                       {rec.kind === 'submit' && <span className="ml-1 text-brand-300">{t('submit-label', uiLang)}</span>}
                                     </td>
-                                    <td className="max-w-0 truncate px-3 py-2 text-white/40">{firstLine}</td>
+                                    <td className="max-w-0 truncate px-3 py-2 text-fg-on-dark-quiet">{firstLine}</td>
                                     <td className="whitespace-nowrap px-3 py-2 text-right">
                                       <span
                                         className={`rounded-full border px-2 py-0.5 text-[10px] ${
@@ -1224,8 +1224,8 @@ export default function Workspace({
                               ] as const
                             ).map(([k, v]) => (
                               <p key={k} className="flex justify-between">
-                                <span className="text-white/40">{k}</span>
-                                <span className="text-white/70">{v}</span>
+                                <span className="text-fg-on-dark-quiet">{k}</span>
+                                <span className="text-fg-on-dark-secondary">{v}</span>
                               </p>
                             ))}
                           </div>
@@ -1234,32 +1234,32 @@ export default function Workspace({
                           <p className="font-bold text-white text-sm mb-2">{t('live-code-analysis', uiLang)}</p>
                           <div className="space-y-1.5 font-mono text-[11px]">
                             <p className="flex justify-between">
-                              <span className="text-white/40">{t('time-complexity', uiLang)}</span>
+                              <span className="text-fg-on-dark-quiet">{t('time-complexity', uiLang)}</span>
                               <span className={a.hasNestedLoops ? 'text-rose-400' : 'text-emerald-400'}>{a.complexityGuess}</span>
                             </p>
                             <p className="flex justify-between">
-                              <span className="text-white/40">{t('nested-loops', uiLang)}</span>
+                              <span className="text-fg-on-dark-quiet">{t('nested-loops', uiLang)}</span>
                               <span className={a.hasNestedLoops ? 'text-rose-400' : 'text-emerald-400'}>
                                 {a.hasNestedLoops ? `${a.maxLoopDepth}${t('depth-detected', uiLang)}` : t('none', uiLang)}
                               </span>
                             </p>
                             <p className="flex justify-between">
-                              <span className="text-white/40">{t('recursion', uiLang)}</span>
-                              <span className="text-white/70">{a.usesRecursion ? t('detected', uiLang) : t('none', uiLang)}</span>
+                              <span className="text-fg-on-dark-quiet">{t('recursion', uiLang)}</span>
+                              <span className="text-fg-on-dark-secondary">{a.usesRecursion ? t('detected', uiLang) : t('none', uiLang)}</span>
                             </p>
                             <p className="flex justify-between">
-                              <span className="text-white/40">{t('structures-detected', uiLang)}</span>
-                              <span className="text-white/70">{a.structures.length ? a.structures.join(', ') : t('none', uiLang)}</span>
+                              <span className="text-fg-on-dark-quiet">{t('structures-detected', uiLang)}</span>
+                              <span className="text-fg-on-dark-secondary">{a.structures.length ? a.structures.join(', ') : t('none', uiLang)}</span>
                             </p>
                             <p className="flex justify-between">
-                              <span className="text-white/40">{t('edge-guard', uiLang)}</span>
+                              <span className="text-fg-on-dark-quiet">{t('edge-guard', uiLang)}</span>
                               <span className={a.hasEdgeGuard ? 'text-emerald-400' : 'text-rose-400'}>
                                 {a.hasEdgeGuard ? t('detected', uiLang) : t('not-detected', uiLang)}
                               </span>
                             </p>
                             <p className="flex justify-between">
-                              <span className="text-white/40">{t('code-lines', uiLang)}</span>
-                              <span className="text-white/70">{a.lineCount}{t('lines', uiLang)}</span>
+                              <span className="text-fg-on-dark-quiet">{t('code-lines', uiLang)}</span>
+                              <span className="text-fg-on-dark-secondary">{a.lineCount}{t('lines', uiLang)}</span>
                             </p>
                           </div>
                         </div>
@@ -1274,14 +1274,14 @@ export default function Workspace({
                   {/* 메모 — 입력 아래 오른쪽에 초기화/저장, 구분선 아래 이전 기록 테이블 */}
                   {sidebarTab === 'notes' && (
                     <div>
-                      <label className="block text-sm text-white/70">
+                      <label className="block text-sm text-fg-on-dark-secondary">
                         <span className="mb-2 block font-medium text-white">메모</span>
                         <textarea
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
                           rows={7}
                           placeholder="핵심 아이디어, 오답 원인, 리팩토링 포인트를 적어두세요."
-                          className="block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-signal/60"
+                          className="block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-fg-on-dark-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
                         />
                       </label>
                       {notes.trim().length > 0 && (
@@ -1289,7 +1289,7 @@ export default function Workspace({
                           <button
                             type="button"
                             onClick={() => setNotes('')}
-                            className="rounded-lg border border-white/15 px-3 py-1.5 text-[11px] font-semibold text-white/60 transition-colors hover:border-white/35 hover:text-white"
+                            className="rounded-lg border border-white/15 px-3 py-1.5 text-[11px] font-semibold text-fg-on-dark-secondary transition-colors hover:border-white/35 hover:text-white"
                           >
                             {t('reset', uiLang)}
                           </button>
@@ -1304,7 +1304,7 @@ export default function Workspace({
                       )}
 
                       <div className="mt-5 border-t border-white/10 pt-4">
-                        <p className="mb-2 text-xs font-semibold text-white/60">{t('memo-history', uiLang)}</p>
+                        <p className="mb-2 text-xs font-semibold text-fg-on-dark-secondary">{t('memo-history', uiLang)}</p>
 
                         {/* 컨트롤 바 — 정렬은 왼쪽 끝, 편집/편집 중 버튼셋은 오른쪽 끝 */}
                         {memoHistory.length > 0 && (
@@ -1313,7 +1313,7 @@ export default function Workspace({
                               value={memoOrder}
                               onChange={(e) => setMemoOrder(e.target.value as 'latest' | 'oldest')}
                               aria-label={t('sort-order', uiLang)}
-                              className="rounded border border-white/15 bg-ink px-2 py-1 text-[11px] text-white/75"
+                              className="rounded border border-white/15 bg-ink px-2 py-1 text-[11px] text-fg-on-dark"
                             >
                               <option value="latest">{t('sort-latest', uiLang)}</option>
                               <option value="oldest">{t('sort-oldest', uiLang)}</option>
@@ -1324,7 +1324,7 @@ export default function Workspace({
                                 <button
                                   type="button"
                                   onClick={() => setSelectedMemoTs(allMemosSelected ? [] : orderedMemos.map((m) => m.ts))}
-                                  className="rounded border border-white/15 px-2 py-1 text-[11px] text-white/70 transition-colors hover:border-white/35 hover:text-white"
+                                  className="rounded border border-white/15 px-2 py-1 text-[11px] text-fg-on-dark-secondary transition-colors hover:border-white/35 hover:text-white"
                                 >
                                   {t(allMemosSelected ? 'deselect-all' : 'select-all', uiLang)}
                                 </button>
@@ -1349,7 +1349,7 @@ export default function Workspace({
                               <button
                                 type="button"
                                 onClick={() => setMemoEditing(true)}
-                                className="rounded border border-white/15 px-2.5 py-1 text-[11px] text-white/70 transition-colors hover:border-white/35 hover:text-white"
+                                className="rounded border border-white/15 px-2.5 py-1 text-[11px] text-fg-on-dark-secondary transition-colors hover:border-white/35 hover:text-white"
                               >
                                 {t('edit', uiLang)}
                               </button>
@@ -1358,14 +1358,14 @@ export default function Workspace({
                         )}
 
                         {memoHistory.length === 0 ? (
-                          <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-5 text-center text-[11px] text-white/30">
+                          <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-5 text-center text-[11px] text-fg-on-dark-quiet">
                             {t('no-memos-yet', uiLang)}
                           </p>
                         ) : (
                           <div className="overflow-hidden rounded-lg border border-white/10">
                             <table className="w-full text-left text-[11px]">
                               <thead>
-                                <tr className="border-b border-white/10 bg-white/[0.03] font-mono text-white/35">
+                                <tr className="border-b border-white/10 bg-white/[0.03] font-mono text-fg-on-dark-quiet">
                                   {memoEditing && (
                                     <th className="w-8 px-2 py-2">
                                       <input
@@ -1421,14 +1421,14 @@ export default function Workspace({
                                         aria-pressed={!!m.pinned}
                                         aria-label={t(m.pinned ? 'unpin-memo' : 'pin-memo', uiLang)}
                                         title={t(m.pinned ? 'unpin-memo' : 'pin-memo', uiLang)}
-                                        className={`transition-colors ${m.pinned ? 'text-brand-300' : 'text-white/25 hover:text-white/60'}`}
+                                        className={`transition-colors ${m.pinned ? 'text-brand-300' : 'text-fg-on-dark-quiet hover:text-fg-on-dark-secondary'}`}
                                       >
                                         <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill={m.pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.6" aria-hidden>
                                           <path d="M9 3h6l-1 5 3.5 3.5H14V21l-2-2-2 2v-9.5H6.5L10 8 9 3Z" strokeLinejoin="round" />
                                         </svg>
                                       </button>
                                     </td>
-                                    <td className="whitespace-nowrap px-3 py-2 font-mono text-white/45">
+                                    <td className="whitespace-nowrap px-3 py-2 font-mono text-fg-on-dark-muted">
                                       {new Date(m.ts).toLocaleString(uiLang === 'en' ? 'en-US' : 'ko-KR', {
                                         month: '2-digit',
                                         day: '2-digit',
@@ -1436,14 +1436,14 @@ export default function Workspace({
                                         minute: '2-digit',
                                       })}
                                     </td>
-                                    <td className="whitespace-pre-wrap px-3 py-2 leading-relaxed text-white/75">{m.text}</td>
+                                    <td className="whitespace-pre-wrap px-3 py-2 leading-relaxed text-fg-on-dark">{m.text}</td>
                                     {!memoEditing && (
                                       <td className="px-2 py-2">
                                         <button
                                           type="button"
                                           onClick={() => setMemoHistory((prev) => prev.filter((x) => x.ts !== m.ts))}
                                           aria-label={t('delete-memo', uiLang)}
-                                          className="text-white/25 transition-colors hover:text-rose-400"
+                                          className="text-fg-on-dark-quiet transition-colors hover:text-rose-400"
                                         >
                                           ✕
                                         </button>
@@ -1484,8 +1484,8 @@ export default function Workspace({
         {/* 우: 검정 에디터 카드 (데모와 동일한 크롬) */}
         <div className="relative flex min-h-[380px] lg:min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10 bg-[#0B0D12]">
           <div className="flex items-center gap-3 border-b border-white/10 px-4 py-2">
-            <span className="font-mono text-[10px] text-white/40">solution.{language === 'python' ? 'py' : 'js'}</span>
-            <span className="text-[9px] uppercase tracking-wider text-white/20">sandbox</span>
+            <span className="font-mono text-[10px] text-fg-on-dark-quiet">solution.{language === 'python' ? 'py' : 'js'}</span>
+            <span className="text-[9px] uppercase tracking-wider text-fg-on-dark-quiet">sandbox</span>
             {mode === 'INTERVIEW' && (
               <span className="font-mono text-[10px] text-brand-300">라이브 리팩터링 가능</span>
             )}
@@ -1497,7 +1497,7 @@ export default function Workspace({
                   setResults([]);
                 }}
                 disabled={mode === 'INTERVIEW'}
-                className="bg-ink border border-white/15 rounded-lg px-2.5 py-1 font-mono text-[11px] text-white/80 focus:outline-none focus:border-signal disabled:opacity-50"
+                className="bg-ink border border-white/15 rounded-lg px-2.5 py-1 font-mono text-[11px] text-fg-on-dark focus:outline-none focus:border-signal disabled:opacity-50"
               >
                 {(Object.keys(LANGUAGE_LABELS) as Language[]).map((l) => (
                   <option key={l} value={l}>
@@ -1510,7 +1510,7 @@ export default function Workspace({
                 onClick={handleRun}
                 disabled={judging || submitting || timeUp}
                 title={timeUp ? t('time-over', uiLang) : mode === 'INTERVIEW' ? t('run-again', uiLang) : t('run', uiLang)}
-                className="inline-flex h-8 items-center rounded-lg border border-white/15 px-3 text-[11px] font-semibold text-white/85 transition-colors hover:bg-white/10 disabled:opacity-40"
+                className="inline-flex h-8 items-center rounded-lg border border-white/15 px-3 text-[11px] font-semibold text-fg-on-dark transition-colors hover:bg-white/10 disabled:opacity-40"
               >
                 {judging ? `${t('running', uiLang)}…` : mode === 'INTERVIEW' ? t('run-again', uiLang) : t('run', uiLang)}
               </button>
@@ -1594,12 +1594,12 @@ export default function Workspace({
               (시계도 코드도 처음부터 다시 시작한다). */}
           {timeUp && !completion && (
             <div className="absolute inset-0 z-30 grid place-items-center bg-ink/90 p-6 backdrop-blur-sm">
-              <div className="w-full max-w-md rounded-2xl border border-rose-500/30 bg-[#12141C] p-6 text-center">
+              <div className="w-full max-w-md rounded-[var(--radius-panel)] border border-rose-500/30 bg-[#12141C] p-6 text-center">
                 <p className="text-4xl">⏳</p>
                 <p className="mt-3 text-xl font-bold text-rose-300" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                   {t('time-over', uiLang)}
                 </p>
-                <p className="mt-1.5 text-sm text-white/55">
+                <p className="mt-1.5 text-sm text-fg-on-dark-muted">
                   {setup.limitMinutes}
                   {t('minutes-short', uiLang)} {t('time-over-desc', uiLang)}
                 </p>
@@ -1612,7 +1612,7 @@ export default function Workspace({
                 </button>
                 <Link
                   href={entry.returnPath}
-                  className="mt-2 block w-full rounded-xl border border-white/15 py-2.5 text-sm font-medium text-white/65 transition hover:border-white/35 hover:text-white"
+                  className="mt-2 block w-full rounded-xl border border-white/15 py-2.5 text-sm font-medium text-fg-on-dark-secondary transition hover:border-white/35 hover:text-white"
                 >
                   {entry.source === 'SET' && entry.setTitle ? `${entry.setTitle}(으)로 돌아가기` : '문제집으로 돌아가기'}
                 </Link>
@@ -1641,7 +1641,7 @@ export default function Workspace({
                     }`}
                   >
                     <p className="font-semibold text-sm mb-1">기본 모드</p>
-                    <p className="text-xs text-white/50 leading-relaxed">시간 제한 없이 충분히 고민하며 답변합니다.</p>
+                    <p className="text-xs text-fg-on-dark-muted leading-relaxed">시간 제한 없이 충분히 고민하며 답변합니다.</p>
                   </button>
                   <button
                     onClick={() => setInterviewMode('strict')}
@@ -1652,17 +1652,17 @@ export default function Workspace({
                     }`}
                   >
                     <p className="font-semibold text-sm mb-1 text-rose-300">엄격 모드</p>
-                    <p className="text-xs text-white/50 leading-relaxed">답변마다 90초 제한. 실전처럼 압박 속에서 방어합니다.</p>
+                    <p className="text-xs text-fg-on-dark-muted leading-relaxed">답변마다 90초 제한. 실전처럼 압박 속에서 방어합니다.</p>
                   </button>
                 </div>
 
                 {/* 면접 질문 커스텀 — 같은 코드라도 무엇을 파고드느냐에 따라 다른 면접이 된다 */}
                 <div className="space-y-3 rounded-lg border border-white/10 bg-white/[0.03] p-4">
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-white/35">면접 질문 커스텀</p>
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-fg-on-dark-quiet">면접 질문 커스텀</p>
 
                   {/* 문항 수 */}
                   <div className="flex items-center gap-3">
-                    <span className="w-14 shrink-0 text-xs text-white/60">문항 수</span>
+                    <span className="w-14 shrink-0 text-xs text-fg-on-dark-secondary">문항 수</span>
                     <div className="flex items-center gap-1">
                       {ROUND_CHOICES.map((n) => (
                         <button
@@ -1673,19 +1673,19 @@ export default function Workspace({
                           className={`h-7 w-7 rounded-lg text-[11px] font-semibold transition-colors ${
                             interviewConfig.rounds === n
                               ? 'bg-signal text-white'
-                              : 'border border-white/15 text-white/55 hover:border-white/35 hover:text-white'
+                              : 'border border-white/15 text-fg-on-dark-muted hover:border-white/35 hover:text-white'
                           }`}
                         >
                           {n}
                         </button>
                       ))}
                     </div>
-                    <span className="ml-auto text-[10px] text-white/30">3연속 완벽 방어 시 조기 종료</span>
+                    <span className="ml-auto text-[10px] text-fg-on-dark-quiet">3연속 완벽 방어 시 조기 종료</span>
                   </div>
 
                   {/* 난이도 — 시작 코드 난이도와 같은 세 칸·같은 디자인 */}
                   <div className="flex items-center gap-3">
-                    <span className="w-14 shrink-0 text-xs text-white/60">난이도</span>
+                    <span className="w-14 shrink-0 text-xs text-fg-on-dark-secondary">난이도</span>
                     <div className="rounded-lg border border-white/15 bg-white/5 p-0.5 text-[11px] font-semibold">
                       <SegmentedControl
                         ariaLabel="면접 난이도"
@@ -1699,13 +1699,13 @@ export default function Workspace({
                       />
                     </div>
                   </div>
-                  <p className="pl-[4.25rem] text-[10.5px] leading-relaxed text-white/35">
+                  <p className="pl-[4.25rem] text-[10.5px] leading-relaxed text-fg-on-dark-quiet">
                     {LEVEL_HINTS[interviewConfig.level]}
                   </p>
 
                   {/* 경향 */}
                   <div className="flex items-start gap-3">
-                    <span className="w-14 shrink-0 pt-1 text-xs text-white/60">경향</span>
+                    <span className="w-14 shrink-0 pt-1 text-xs text-fg-on-dark-secondary">경향</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap gap-1.5">
                         {(Object.keys(FOCUS_LABELS) as InterviewFocus[]).map((f) => (
@@ -1718,14 +1718,14 @@ export default function Workspace({
                             className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
                               interviewConfig.focus === f
                                 ? 'bg-signal text-white'
-                                : 'border border-white/15 text-white/55 hover:border-white/35 hover:text-white'
+                                : 'border border-white/15 text-fg-on-dark-muted hover:border-white/35 hover:text-white'
                             }`}
                           >
                             {FOCUS_LABELS[f]}
                           </button>
                         ))}
                       </div>
-                      <p className="mt-1.5 text-[10.5px] leading-relaxed text-white/35">
+                      <p className="mt-1.5 text-[10.5px] leading-relaxed text-fg-on-dark-quiet">
                         {FOCUS_HINTS[interviewConfig.focus]}
                       </p>
                     </div>
@@ -1741,7 +1741,7 @@ export default function Workspace({
                   />
                   <span className="text-sm">
                     🔊 보이스 모드
-                    <span className="block text-xs text-white/45">AI 질문을 음성으로 듣고, 마이크로 답변합니다 (Chrome/Edge)</span>
+                    <span className="block text-xs text-fg-on-dark-muted">AI 질문을 음성으로 듣고, 마이크로 답변합니다 (Chrome/Edge)</span>
                   </span>
                 </label>
 
@@ -1765,7 +1765,7 @@ export default function Workspace({
                 <p className="text-2xl font-bold text-emerald-400" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                   ALL TESTS PASSED
                 </p>
-                <p className="font-mono text-sm text-white/60">AI 면접관이 코드를 분석하고 있습니다…</p>
+                <p className="font-mono text-sm text-fg-on-dark-secondary">AI 면접관이 코드를 분석하고 있습니다…</p>
               </div>
             </div>
           )}

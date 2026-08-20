@@ -80,6 +80,12 @@ const ICONS: Record<string, React.ReactNode> = {
   audit: (
     <path d="M3 1.5h7l3 3v10H3v-13Zm7 0v3h3M5.5 8h5m-5 2.5h5" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
   ),
+  season: (
+    <path d="M8 1.5 9.9 5.6l4.4.5-3.3 3 .9 4.4L8 11.3 4.1 13.5l.9-4.4-3.3-3 4.4-.5L8 1.5Z" strokeWidth="1.3" fill="none" strokeLinejoin="round" />
+  ),
+  feedback: (
+    <path d="M5.5 13.5V7l2.5-4a1.2 1.2 0 0 1 1.7 1.3L9 7h3.3a1.2 1.2 0 0 1 1.2 1.4l-.8 4.1a1.2 1.2 0 0 1-1.2 1H5.5Zm0 0H2.5V7h3" strokeWidth="1.4" fill="none" strokeLinejoin="round" />
+  ),
   // 시스템
   system: (
     <path d="M2 8h3l1.5-4 3 8L11 8h3" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -96,7 +102,7 @@ function ItemBadge({ count, label }: { count: number; label: string }) {
   return (
     <span
       className={`rounded-full px-1.5 py-0.5 font-mono text-[10px] font-bold ${
-        count > 0 ? 'bg-rose-600 text-white' : 'bg-ink/5 text-ink-soft/45'
+        count > 0 ? 'bg-rose-600 text-white' : 'bg-ink/5 text-fg-muted'
       }`}
       aria-label={`${label} ${count}`}
     >
@@ -188,7 +194,7 @@ export default function ConsoleSidebar({
       {/* 모바일: 가로 스크롤 칩 — 묶음 없이 한 줄로 흐른다 */}
       <nav
         aria-label={t('console-menu-aria', language)}
-        className="dc-scroll-none lg:hidden sticky top-0 z-10 overflow-x-auto border-b border-ink/10 bg-white/95 px-4 py-2 backdrop-blur"
+        className="dc-scroll-none lg:hidden sticky top-0 z-10 overflow-x-auto border-b border-hairline bg-white/95 px-4 py-2 backdrop-blur"
       >
         {maintenanceOn && (
           <p className="mb-2 rounded-lg bg-amber-100 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900">
@@ -201,7 +207,7 @@ export default function ConsoleSidebar({
               key={item.href}
               href={item.href}
               className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                isActive(item) ? 'bg-signal text-white' : 'text-ink-soft/70 hover:bg-paper hover:text-ink'
+                isActive(item) ? 'bg-signal text-white' : 'text-fg-secondary hover:bg-paper hover:text-ink'
               }`}
             >
               {t(item.labelKey, language)}
@@ -212,12 +218,12 @@ export default function ConsoleSidebar({
       </nav>
 
       {/* 데스크톱: 좌측 고정 레일 */}
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-ink/10 bg-white lg:sticky lg:top-0 lg:h-screen">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-hairline bg-white lg:sticky lg:top-0 lg:h-screen">
         <div className="px-6 pb-4 pt-7">
           <p className="text-lg font-bold text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             {t('console-title', language)}
           </p>
-          <p className="mt-0.5 text-sm text-ink-soft/55">{t('console-sub', language)}</p>
+          <p className="mt-0.5 text-sm text-fg-muted">{t('console-sub', language)}</p>
         </div>
 
         {/* 유지보수 경고 — 켜 두고 잊는 사고가 제일 흔해서 늘 보이는 자리에 둔다 */}
@@ -248,7 +254,7 @@ export default function ConsoleSidebar({
                   onClick={() => toggleGroup(group)}
                   aria-expanded={!isCollapsed}
                   aria-label={`${t(`console-group-${group}`, language)} — ${t('console-group-toggle', language)}`}
-                  className="flex w-full items-center gap-1.5 rounded-lg px-3.5 pb-1.5 pt-1 text-left font-mono text-[10px] font-semibold uppercase tracking-widest text-ink-soft/35 hover:text-ink-soft/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                  className="flex w-full items-center gap-1.5 rounded-lg px-3.5 pb-1.5 pt-1 text-left font-mono text-[10px] font-semibold uppercase tracking-widest text-fg-quiet hover:text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                 >
                   <span aria-hidden className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`}>
                     ▾
@@ -271,7 +277,7 @@ export default function ConsoleSidebar({
                           href={item.href}
                           aria-current={active ? 'page' : undefined}
                           className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal ${
-                            active ? 'bg-signal text-white shadow-sm shadow-brand-600/30' : 'text-ink-soft/75 hover:bg-paper hover:text-ink'
+                            active ? 'bg-signal text-white shadow-sm shadow-brand-600/30' : 'text-fg hover:bg-paper hover:text-ink'
                           }`}
                         >
                           <svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" aria-hidden className="shrink-0">
@@ -290,14 +296,14 @@ export default function ConsoleSidebar({
         </nav>
 
         {/* 하단 접속자 카드 */}
-        <div className="border-t border-ink/10 p-4">
+        <div className="border-t border-hairline p-4">
           <div className="flex items-center gap-3 rounded-xl bg-paper/80 px-3.5 py-3">
             <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-signal text-xs font-bold text-white">
               {(userName[0] ?? 'A').toUpperCase()}
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-ink">{userName}</p>
-              <p className="flex items-center gap-1.5 font-mono text-[10px] text-ink-soft/50">
+              <p className="flex items-center gap-1.5 font-mono text-[10px] text-fg-muted">
                 {roleName}
                 <span aria-hidden className="h-1 w-1 rounded-full bg-emerald-500" />
                 Active

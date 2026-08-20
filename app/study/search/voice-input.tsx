@@ -297,7 +297,7 @@ export function VoiceConsentDialog({
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="voice-consent-title">
       <button type="button" aria-label={strings.cancel} onClick={onDecline} className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
-      <section className="relative z-10 w-full max-w-sm rounded-2xl border border-ink/10 bg-white p-6 shadow-2xl shadow-ink/25">
+      <section className="relative z-10 w-full max-w-sm rounded-[var(--radius-panel)] border border-hairline bg-white p-6 shadow-2xl shadow-ink/25">
         <span aria-hidden className="grid h-11 w-11 place-items-center rounded-full bg-brand-50 text-signal">
           <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-[1.7]">
             <rect x="9" y="3" width="6" height="11" rx="3" />
@@ -308,15 +308,15 @@ export function VoiceConsentDialog({
         <h3 id="voice-consent-title" className="mt-3 text-base font-bold text-ink">
           {strings.title}
         </h3>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-ink-soft/70">{strings.body}</p>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-fg-secondary">{strings.body}</p>
 
-        <ul className="mt-3 space-y-1.5 rounded-xl bg-paper px-3.5 py-3 text-[12px] leading-relaxed text-ink-soft/60">
+        <ul className="mt-3 space-y-1.5 rounded-xl bg-paper px-3.5 py-3 text-[12px] leading-relaxed text-fg-secondary">
           <li className="flex gap-2">
-            <span aria-hidden className="text-ink-soft/35">·</span>
+            <span aria-hidden className="text-fg-quiet">·</span>
             {strings.browserNote}
           </li>
           <li className="flex gap-2">
-            <span aria-hidden className="text-ink-soft/35">·</span>
+            <span aria-hidden className="text-fg-quiet">·</span>
             {strings.noStore}
           </li>
         </ul>
@@ -327,7 +327,7 @@ export function VoiceConsentDialog({
           <button
             type="button"
             onClick={onDecline}
-            className="rounded-xl border border-ink/12 px-4 py-2 text-sm font-medium text-ink-soft/70 transition hover:border-ink/25"
+            className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-fg-secondary transition hover:border-ink/25"
           >
             {strings.cancel}
           </button>
@@ -363,8 +363,8 @@ export function VoiceButton({
 }) {
   const idle =
     tone === 'dark'
-      ? 'text-white/55 hover:bg-white/10 hover:text-white'
-      : 'text-ink-soft/50 hover:bg-paper hover:text-signal';
+      ? 'text-fg-on-dark-muted hover:bg-white/10 hover:text-white'
+      : 'text-fg-muted hover:bg-paper hover:text-signal';
   return (
     <button
       type="button"
@@ -465,13 +465,13 @@ export function VoiceWaveform({
       >
         {transcript}
         {interim && (
-          <span className={tone === 'dark' ? 'text-white/45' : 'text-ink-soft/40'}>
+          <span className={tone === 'dark' ? 'text-fg-on-dark-muted' : 'text-fg-quiet'}>
             {transcript ? ' ' : ''}
             {interim}
           </span>
         )}
         {!spoken && (
-          <span className={tone === 'dark' ? 'text-white/40' : 'text-ink-soft/35'}>{placeholder}</span>
+          <span className={tone === 'dark' ? 'text-fg-on-dark-quiet' : 'text-fg-quiet'}>{placeholder}</span>
         )}
       </p>
     </div>

@@ -16,7 +16,7 @@ import {
   platformLabel,
 } from "./boards";
 import Pagination from "@/app/components/pagination";
-import { seasonAt } from "@/app/lib/season";
+import { currentSeason } from "@/app/lib/season";
 import { getSessionOptional } from "@/app/lib/dal";
 import { visiblePostsWhere } from "@/app/lib/board-rules";
 import { displayName } from "@/app/lib/display-name";
@@ -48,6 +48,8 @@ interface PostRowData {
   createdAt: Date;
   anonymous: boolean;
   secret: boolean;
+  pinned: boolean;
+  bounty: number | null;
   adoptedCommentId: string | null;
   author: { name: string; anonymousTag: string | null };
   _count: { comments: number; likes: number };
@@ -155,14 +157,27 @@ export default async function CommunityPage({
     createdAt: true,
     anonymous: true,
     secret: true,
+    pinned: true,
+    bounty: true,
     adoptedCommentId: true,
     author: { select: { name: true, anonymousTag: true } },
     _count: { select: { comments: true, likes: true } },
   } as const;
 
-  const season = seasonAt();
+  const season = await currentSeason();
   const weekAgo = new Date(new Date().getTime() - 7 * 24 * 3600 * 1000);
-  const [posts, totalCount, freshCounts, trending] = await Promise.all([
+  const [pinnedPosts, posts, totalCount, freshCounts, trending] = await Promise.all([
+    // 고정 공지 — 게시판·검색·페이지와 무관하게 항상 맨 위에 붙는다.
+    // 어느 게시판을 보고 있든 공지는 봐야 하는 내용이라 목록 쿼리와 따로 가져온다.
+    // 단, 검색 중이거나 2페이지 이후에는 붙이지 않는다(찾던 결과를 밀어내지 않도록).
+    query || pageNum > 1
+      ? Promise.resolve([])
+      : prisma.post.findMany({
+          where: { ...visible, pinned: true },
+          orderBy: { pinnedAt: 'desc' },
+          take: 5,
+          select: postSelect,
+        }),
     prisma.post.findMany({
       where,
       orderBy: orderByFor(activeSort),
@@ -267,7 +282,7 @@ export default async function CommunityPage({
           </div>
           {BOARD_GROUPS.map((group) => (
             <div key={group.key} className="mt-4">
-              <p className="px-3 pb-1 font-mono text-[10px] font-semibold uppercase tracking-widest text-ink-soft/30">
+              <p className="px-3 pb-1 font-mono text-[10px] font-semibold uppercase tracking-widest text-fg-quiet">
                 {group.label}
               </p>
               <div className="space-y-0.5">
@@ -287,13 +302,13 @@ export default async function CommunityPage({
           {/* 모바일에서는 우측 레일이 사라지므로 명예의 전당을 여기에 붙인다 */}
           <Link
             href="/hall-of-fame"
-            className="mt-4 flex items-center gap-2 rounded-lg border border-ink/10 bg-white px-3 py-2 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50/40 xl:hidden"
+            className="mt-4 flex items-center gap-2 rounded-lg border border-hairline bg-white px-3 py-2 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50/40 xl:hidden"
           >
             <span aria-hidden>🏆</span>
-            <span className="min-w-0 flex-1 truncate font-medium text-ink-soft/75">
+            <span className="min-w-0 flex-1 truncate font-medium text-fg">
               <I18nSlot k="hof-inline" fallback="이번 시즌 명예의 전당" />
             </span>
-            <span className="shrink-0 font-mono text-[11px] text-ink-soft/35">
+            <span className="shrink-0 font-mono text-[11px] text-fg-quiet">
               S{season.index}
             </span>
           </Link>
@@ -306,12 +321,12 @@ export default async function CommunityPage({
             <div className="mb-3">
               <h2 className="font-display text-lg font-bold tracking-tight text-ink">
                 {listTitle}
-                <span className="ml-1.5 font-mono text-xs font-normal text-ink-soft/35">
+                <span className="ml-1.5 font-mono text-xs font-normal text-fg-quiet">
                   {totalCount}
                 </span>
               </h2>
               {listDesc && (
-                <p className="mt-0.5 text-[13px] text-ink-soft/50">
+                <p className="mt-0.5 text-[13px] text-fg-muted">
                   {listDesc}
                 </p>
               )}
@@ -329,7 +344,7 @@ export default async function CommunityPage({
                   className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                     !activePlatform
                       ? "bg-brand-50 font-semibold text-signal"
-                      : "text-ink-soft/50 hover:text-ink"
+                      : "text-fg-muted hover:text-ink"
                   }`}
                 >
                   <I18nSlot k="all-platforms" fallback="전체 플랫폼" />
@@ -345,7 +360,7 @@ export default async function CommunityPage({
                     className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                       activePlatform === pf.key
                         ? "bg-brand-50 font-semibold text-signal"
-                        : "text-ink-soft/50 hover:text-ink"
+                        : "text-fg-muted hover:text-ink"
                     }`}
                   >
                     {pf.label}
@@ -380,19 +395,19 @@ export default async function CommunityPage({
                   defaultValue={query}
                   aria-label="게시글 검색"
                   placeholder="게시글 검색"
-                  className="w-full rounded-lg border border-ink/10 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-ink-soft/35 focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/20"
+                  className="w-full rounded-lg border border-hairline bg-white py-2 pl-9 pr-3 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/20"
                 />
               </form>
 
               {/* 정렬 드롭다운 */}
               <details className="relative shrink-0">
-                <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-ink/10 bg-white px-3 py-2 text-sm text-ink-soft/70 transition-colors marker:content-none hover:border-ink/25">
+                <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-hairline bg-white px-3 py-2 text-sm text-fg-secondary transition-colors marker:content-none hover:border-ink/25">
                   {SORTS.find((s) => s.key === activeSort)!.label}
-                  <span aria-hidden className="text-ink-soft/35">
+                  <span aria-hidden className="text-fg-quiet">
                     ▾
                   </span>
                 </summary>
-                <div className="absolute right-0 top-full z-20 mt-1 min-w-[12rem] overflow-hidden rounded-lg border border-ink/10 bg-white py-1 shadow-lg shadow-ink/5">
+                <div className="absolute right-0 top-full z-20 mt-1 min-w-[12rem] overflow-hidden rounded-lg border border-hairline bg-white py-1 shadow-lg shadow-ink/5">
                   {SORTS.map((s) => (
                     <Link
                       key={s.key}
@@ -403,7 +418,7 @@ export default async function CommunityPage({
                       className={`block px-3 py-2 text-sm transition-colors hover:bg-brand-50/60 ${
                         s.key === activeSort
                           ? "font-semibold text-signal"
-                          : "text-ink-soft/70"
+                          : "text-fg-secondary"
                       }`}
                     >
                       {s.label}
@@ -415,9 +430,15 @@ export default async function CommunityPage({
 
             {/* ---------- 목록 ----------
              카드가 아니라 줄이다. 제목이 가장 크고 나머지는 그 아래·옆으로 물러난다. */}
-            {posts.length > 0 ? (
-              <ul className="mt-3 border-t border-ink/10">
-                {posts.map((post) => (
+            {posts.length > 0 || pinnedPosts.length > 0 ? (
+              <ul className="mt-3 border-t border-hairline">
+                {pinnedPosts.map((post) => (
+                  <PostRow key={`pinned-${post.id}`} post={post} showBoard={activeBoard === ALL_BOARD} />
+                ))}
+                {posts
+                  // 고정 글이 아래 목록에 또 나오지 않게 뺀다
+                  .filter((post) => !pinnedPosts.some((p) => p.id === post.id))
+                  .map((post) => (
                   <PostRow
                     key={post.id}
                     post={post}
@@ -426,8 +447,8 @@ export default async function CommunityPage({
                 ))}
               </ul>
             ) : (
-              <div className="mt-3 border-t border-ink/10 py-20 text-center">
-                <p className="text-sm text-ink-soft/45">
+              <div className="mt-3 border-t border-hairline py-20 text-center">
+                <p className="text-sm text-fg-muted">
                   {query ? (
                     <I18nSlot
                       k="no-posts-found"
@@ -462,20 +483,20 @@ export default async function CommunityPage({
         <aside className="hidden xl:block xl:sticky xl:top-6 xl:self-start">
           <Link
             href="/hall-of-fame"
-            className="group flex items-center gap-2 rounded-xl border border-ink/10 bg-white px-3.5 py-3 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50/40"
+            className="group flex items-center gap-2 rounded-xl border border-hairline bg-white px-3.5 py-3 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50/40"
           >
             <span aria-hidden>🏆</span>
             <span className="min-w-0 flex-1">
-              <span className="block font-medium text-ink-soft/80 group-hover:text-signal">
+              <span className="block font-medium text-fg group-hover:text-signal">
                 <I18nSlot k="hof-inline" fallback="이번 시즌 명예의 전당" />
               </span>
-              <span className="font-mono text-[10px] text-ink-soft/35">
+              <span className="font-mono text-[10px] text-fg-quiet">
                 시즌 {season.index}
               </span>
             </span>
             <span
               aria-hidden
-              className="text-ink-soft/30 transition-transform group-hover:translate-x-0.5"
+              className="text-fg-quiet transition-transform group-hover:translate-x-0.5"
             >
               →
             </span>
@@ -483,8 +504,8 @@ export default async function CommunityPage({
 
           {/* 이번 주 인기글 — 목록을 훑지 않아도 볼 만한 글에 닿게 한다 */}
           {trending.length > 0 && (
-            <section className="mt-4 overflow-hidden rounded-xl border border-ink/10 bg-white">
-              <h2 className="border-b border-ink/[0.07] px-3.5 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-widest text-ink-soft/40">
+            <section className="mt-4 overflow-hidden rounded-xl border border-hairline bg-white">
+              <h2 className="border-b border-hairline px-3.5 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-widest text-fg-quiet">
                 이번 주 많이 읽은 글
               </h2>
               <ol className="divide-y divide-ink/5">
@@ -494,14 +515,14 @@ export default async function CommunityPage({
                       href={`/community/${t.id}`}
                       className="group flex items-start gap-2 px-3.5 py-2.5 transition-colors hover:bg-brand-50/40"
                     >
-                      <span className="mt-0.5 shrink-0 font-mono text-[11px] font-bold text-ink-soft/25">
+                      <span className="mt-0.5 shrink-0 font-mono text-[11px] font-bold text-fg-quiet">
                         {i + 1}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="line-clamp-2 text-xs leading-relaxed text-ink-soft/80 group-hover:text-signal">
+                        <span className="line-clamp-2 text-xs leading-relaxed text-fg group-hover:text-signal">
                           {t.title}
                         </span>
-                        <span className="mt-0.5 block font-mono text-[10px] text-ink-soft/35">
+                        <span className="mt-0.5 block font-mono text-[10px] text-fg-quiet">
                           {boardLabel(t.board)} · 조회 {t.viewCount}
                           {t._count.comments > 0 &&
                             ` · 답글 ${t._count.comments}`}
@@ -515,17 +536,17 @@ export default async function CommunityPage({
           )}
 
           {/* 글쓰기 안내 — 어느 게시판에 무엇을 쓰는지 */}
-          <section className="mt-4 rounded-xl border border-ink/10 bg-paper/50 px-3.5 py-3">
-            <h2 className="font-mono text-[10px] font-semibold uppercase tracking-widest text-ink-soft/40">
+          <section className="mt-4 rounded-xl border border-hairline bg-paper/50 px-3.5 py-3">
+            <h2 className="font-mono text-[10px] font-semibold uppercase tracking-widest text-fg-quiet">
               어디에 쓸까요
             </h2>
             <dl className="mt-2 space-y-2">
               {BOARDS.slice(0, 4).map((b) => (
                 <div key={b.key}>
-                  <dt className="text-[11px] font-semibold text-ink-soft/70">
+                  <dt className="text-[11px] font-semibold text-fg-secondary">
                     {b.label}
                   </dt>
-                  <dd className="text-[11px] leading-relaxed text-ink-soft/45">
+                  <dd className="text-[11px] leading-relaxed text-fg-muted">
                     {b.desc}
                   </dd>
                 </div>
@@ -558,7 +579,7 @@ function BoardLink({
       href={href}
       aria-current={active ? 'page' : undefined}
       className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
-        active ? 'bg-signal font-semibold text-white' : 'text-ink-soft/70 hover:bg-brand-50/60 hover:text-signal'
+        active ? 'bg-signal font-semibold text-white' : 'text-fg-secondary hover:bg-brand-50/60 hover:text-signal'
       }`}
     >
       <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -587,10 +608,11 @@ function PostRow({
   post: PostRowData;
   showBoard: boolean;
 }) {
-  const notice = post.board === "notice";
+  // 고정된 글은 어느 게시판 소속이든 공지처럼 보여 준다 — 왜 맨 위에 있는지 드러나야 한다
+  const notice = post.board === "notice" || post.pinned;
   return (
     <li
-      className={`border-b border-ink/[0.07] ${notice ? "bg-amber-50/60" : ""}`}
+      className={`border-b border-hairline ${notice ? "bg-amber-50/60" : ""}`}
     >
       <Link
         href={`/community/${post.id}`}
@@ -603,11 +625,12 @@ function PostRow({
           <div className="flex items-center gap-1.5">
             {notice && (
               <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 font-mono text-[10px] font-bold text-amber-800">
+                {post.pinned ? '📌 ' : ''}
                 <I18nSlot k="pinned-notice" fallback="공지" />
               </span>
             )}
             {!notice && showBoard && (
-              <span className="shrink-0 font-mono text-[11px] text-ink-soft/35">
+              <span className="shrink-0 font-mono text-[11px] text-fg-quiet">
                 {boardLabel(post.board)}
               </span>
             )}
@@ -616,6 +639,14 @@ function PostRow({
                 className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${platformColor(post.snsPlatform)}`}
               >
                 {platformLabel(post.snsPlatform)}
+              </span>
+            )}
+            {post.bounty && !post.adoptedCommentId && (
+              <span
+                className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-emerald-700"
+                title="채택 시 답변자에게 지급되는 포인트"
+              >
+                {post.bounty}P
               </span>
             )}
             {post.secret && (
@@ -643,7 +674,7 @@ function PostRow({
           </div>
 
           {/* 작성자 · 시각 */}
-          <p className="mt-1 truncate font-mono text-[11px] text-ink-soft/40">
+          <p className="mt-1 truncate font-mono text-[11px] text-fg-quiet">
             <span data-no-translate>
               {displayName(post.author, post.anonymous)}
             </span>
@@ -655,7 +686,7 @@ function PostRow({
         </div>
 
         {/* 반응 — 좋아요·조회 */}
-        <div className="hidden shrink-0 items-center gap-3 font-mono text-[11px] text-ink-soft/40 sm:flex">
+        <div className="hidden shrink-0 items-center gap-3 font-mono text-[11px] text-fg-quiet sm:flex">
           <span
             className={`inline-flex items-center gap-1 ${post._count.likes > 0 ? "text-rose-500/70" : ""}`}
           >

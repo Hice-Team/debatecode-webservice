@@ -32,7 +32,7 @@ const CONTENT_MAX = 10_000;
 
 // 미리보기 본문 서식 — 글쓰기 폼과 같은 규칙을 쓴다
 const PREVIEW =
-  'min-h-[16rem] break-words px-4 py-4 text-[15px] leading-relaxed text-ink-soft/85 [&_p]:my-2 [&_p]:whitespace-pre-wrap [&_li]:whitespace-pre-wrap [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:font-display [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-ink [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:font-bold [&_h3]:text-ink [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:border-brand-300 [&_blockquote]:pl-3 [&_blockquote]:text-ink-soft/60 [&_code]:rounded [&_code]:bg-ink/[0.06] [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-ink/[0.04] [&_pre]:p-3 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_a]:text-signal [&_a]:underline sm:px-5';
+  'min-h-[16rem] break-words px-4 py-4 text-[15px] leading-relaxed text-fg [&_p]:my-2 [&_p]:whitespace-pre-wrap [&_li]:whitespace-pre-wrap [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:font-display [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-ink [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:font-bold [&_h3]:text-ink [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:border-brand-300 [&_blockquote]:pl-3 [&_blockquote]:text-fg-secondary [&_code]:rounded [&_code]:bg-ink/[0.06] [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-ink/[0.04] [&_pre]:p-3 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_a]:text-signal [&_a]:underline sm:px-5';
 
 interface Props {
   postId: string;
@@ -69,7 +69,7 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
       ))}
 
       {/* 제목·본문·첨부는 한 편의 글이므로 테두리는 하나만 두고 안에서 실선으로 나눈다 */}
-      <div className="overflow-hidden rounded-xl border border-ink/10 bg-white">
+      <div className="overflow-hidden rounded-xl border border-hairline bg-white">
         <div className="px-4 pt-4 sm:px-5">
           <label htmlFor="title" className="sr-only">
             {t('post-title', language)}
@@ -87,14 +87,14 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
           {state.errors?.title && <p className="pb-2 text-xs text-rose-600">{state.errors.title[0]}</p>}
         </div>
 
-        <div className="flex items-center border-t border-ink/[0.07] px-3 py-1.5">
+        <div className="flex items-center border-t border-hairline px-3 py-1.5">
           <div className="ml-auto flex items-center gap-0.5 text-[11px] font-medium">
             <button
               type="button"
               onClick={() => setPreview(false)}
               aria-pressed={!preview}
               className={`rounded-md px-2.5 py-1 transition-colors ${
-                !preview ? 'font-semibold text-signal' : 'text-ink-soft/45 hover:text-ink'
+                !preview ? 'font-semibold text-signal' : 'text-fg-muted hover:text-ink'
               }`}
             >
               {t('write-tab-edit', language)}
@@ -104,7 +104,7 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
               onClick={() => setPreview(true)}
               aria-pressed={preview}
               className={`rounded-md px-2.5 py-1 transition-colors ${
-                preview ? 'font-semibold text-signal' : 'text-ink-soft/45 hover:text-ink'
+                preview ? 'font-semibold text-signal' : 'text-fg-muted hover:text-ink'
               }`}
             >
               {t('write-tab-preview', language)}
@@ -117,7 +117,7 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
             {content.trim() ? (
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
             ) : (
-              <p className="text-sm text-ink-soft/30">{t('write-preview-empty', language)}</p>
+              <p className="text-sm text-fg-quiet">{t('write-preview-empty', language)}</p>
             )}
           </div>
         )}
@@ -155,8 +155,8 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
           <AttachmentComposer ref={composerRef} />
         </div>
 
-        <div className="flex border-t border-ink/[0.07] px-4 py-1.5 sm:px-5">
-          <span className={`ml-auto font-mono text-[10px] ${content.length >= CONTENT_MAX ? 'text-rose-500' : 'text-ink-soft/30'}`}>
+        <div className="flex border-t border-hairline px-4 py-1.5 sm:px-5">
+          <span className={`ml-auto font-mono text-[10px] ${content.length >= CONTENT_MAX ? 'text-rose-500' : 'text-fg-quiet'}`}>
             {content.length.toLocaleString()}/{CONTENT_MAX.toLocaleString()}
           </span>
         </div>
@@ -166,16 +166,16 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
       {/* 기존 첨부 — 삭제/복원 토글. 저장 시 removeAttachments로 전송된다 */}
       {attachments.length > 0 && (
         <div>
-          <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft/50">기존 첨부</p>
+          <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wider text-fg-muted">기존 첨부</p>
           <ul className="space-y-1">
             {attachments.map((a) => {
               const isRemoved = removed.has(a.id);
               return (
                 <li key={a.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-ink/[0.03]">
-                  <span className="shrink-0 rounded bg-paper px-1.5 py-0.5 font-mono text-[10px] text-ink-soft/45 ring-1 ring-inset ring-ink/10">
+                  <span className="shrink-0 rounded bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted ring-1 ring-inset ring-ink/10">
                     {KIND_LABEL[a.kind] ?? a.kind}
                   </span>
-                  <span className={`truncate ${isRemoved ? 'text-ink-soft/30 line-through' : 'text-ink-soft/70'}`}>
+                  <span className={`truncate ${isRemoved ? 'text-fg-quiet line-through' : 'text-fg-secondary'}`}>
                     {a.label || a.url || KIND_LABEL[a.kind] || a.kind}
                   </span>
                   <button
@@ -184,7 +184,7 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
                     className={`ml-auto shrink-0 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                       isRemoved
                         ? 'text-emerald-600 hover:bg-emerald-50'
-                        : 'text-ink-soft/40 hover:bg-rose-50 hover:text-rose-500'
+                        : 'text-fg-quiet hover:bg-rose-50 hover:text-rose-500'
                     }`}
                   >
                     {isRemoved ? '복원' : '삭제'}

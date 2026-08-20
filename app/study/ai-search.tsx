@@ -53,10 +53,10 @@ export default function AiSearch({ liveModel, authed }: { liveModel: boolean; au
 
   return (
     <section className="mb-14" aria-labelledby="ai-search-title">
-      <div className="relative rounded-3xl px-3 pb-8 pt-9 sm:px-8 sm:pb-10 sm:pt-12">
+      <div className="relative rounded-[var(--radius-panel)] px-3 pb-8 pt-9 sm:px-8 sm:pb-10 sm:pt-12">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 rounded-3xl"
+          className="pointer-events-none absolute inset-0 -z-10 rounded-[var(--radius-panel)]"
           style={{
             background:
               'linear-gradient(180deg, rgba(238,240,255,0.95) 0%, rgba(247,248,255,0.6) 55%, rgba(255,255,255,0) 100%)',
@@ -77,7 +77,7 @@ export default function AiSearch({ liveModel, authed }: { liveModel: boolean; au
         >
           {t('ai-search-title', language)}
         </h2>
-        <p className="mt-2 text-center text-sm text-ink-soft/55">{t('ai-search-desc', language)}</p>
+        <p className="mt-2 text-center text-sm text-fg-muted">{t('ai-search-desc', language)}</p>
 
         <form
           onSubmit={(e) => {
@@ -87,7 +87,7 @@ export default function AiSearch({ liveModel, authed }: { liveModel: boolean; au
           className="mx-auto mt-7 w-full max-w-3xl"
         >
           {/* 넓은 화면은 알약 한 줄, 폰은 입력 아래로 컨트롤이 내려간다(둥근 모서리도 함께 완화) */}
-          <div className="flex flex-wrap items-center gap-0.5 rounded-3xl border border-ink/[0.06] bg-white p-1.5 sm:flex-nowrap sm:gap-1 sm:rounded-full sm:py-2 sm:pl-3 sm:pr-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.10)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.16)]">
+          <div className="flex flex-wrap items-center gap-0.5 rounded-[var(--radius-panel)] border border-hairline bg-white p-1.5 sm:flex-nowrap sm:gap-1 sm:rounded-full sm:py-2 sm:pl-3 sm:pr-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.10)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.16)]">
             <AttachMenu
               placement="bottom"
               // 첨부는 업로드 API가 로그인을 요구한다 — 눌러 보고 실패하게 두지 않는다
@@ -119,7 +119,7 @@ export default function AiSearch({ liveModel, authed }: { liveModel: boolean; au
                 }}
                 placeholder={t('ai-search-placeholder', language)}
                 aria-label={t('ai-search-title', language)}
-                className="min-w-0 flex-1 bg-transparent px-2 py-1.5 text-[15px] text-ink placeholder:text-ink-soft/35 focus:outline-none"
+                className="min-w-0 flex-1 bg-transparent px-2 py-1.5 text-[15px] text-ink placeholder:text-fg-quiet focus:outline-none"
               />
             )}
 
@@ -151,7 +151,7 @@ export default function AiSearch({ liveModel, authed }: { liveModel: boolean; au
                 disabled={!query.trim() || busy}
                 aria-label={t('ai-search-submit', language)}
                 title={t('ai-search-submit', language)}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-soft/50 transition hover:bg-brand-50 hover:text-signal active:scale-95 disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-ink-soft/50"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-fg-muted transition hover:bg-brand-50 hover:text-signal active:scale-95 disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-fg-muted"
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2" aria-hidden>
                   <circle cx="11" cy="11" r="7" />
@@ -169,14 +169,14 @@ export default function AiSearch({ liveModel, authed }: { liveModel: boolean; au
           />
 
           {(notice || voice.error || busy) && (
-            <p className="mt-2 text-center text-[11px] text-ink-soft/50">
+            <p className="mt-2 text-center text-[11px] text-fg-muted">
               {busy ? t('ai-attach-uploading', language) : (notice ?? voice.error)}
             </p>
           )}
         </form>
       </div>
 
-      <p className="mx-auto w-full max-w-3xl text-center text-[11px] leading-relaxed text-ink-soft/45">
+      <p className="mx-auto w-full max-w-3xl text-center text-[11px] leading-relaxed text-fg-muted">
         {t('ai-search-disclaimer', language)}
       </p>
 

@@ -12,7 +12,7 @@ export default function NavLinks({ links }: Props) {
   const { language } = useLanguage();
 
   return (
-    <ul className="hidden md:flex items-center gap-7 text-sm font-medium text-ink-soft/60">
+    <ul className="hidden md:flex items-center gap-7 text-sm font-medium text-fg-secondary">
       {links.map((m) => (
         <li key={m.href}>
           <Link href={m.href} className="hover:text-ink-soft transition-colors">

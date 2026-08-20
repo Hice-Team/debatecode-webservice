@@ -40,14 +40,14 @@ export default async function DebateMatePage() {
       <PageHeader slug="debate-mate" title="디베이트메이트" className="mb-6" />
 
       {/* 히어로 */}
-      <section className="rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-8">
+      <section className="rounded-[var(--radius-panel)] border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-8">
         <span className="text-xs font-bold uppercase tracking-wider text-brand-600">
           <I18nSlot k="mate-program" fallback="MATE PROGRAM" />
         </span>
         <h2 className="mt-2 text-2xl font-bold tracking-tight text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           <I18nSlot k="mate-hero-title" fallback="함께 문제를 만들고, 포인트를 얻으세요" />
         </h2>
-        <p className="mt-3 text-sm text-ink-soft/70 leading-relaxed max-w-2xl">
+        <p className="mt-3 text-sm text-fg-secondary leading-relaxed max-w-2xl">
           <I18nSlot
             k="mate-hero-desc"
             fallback="디베이트메이트는 디베이트코드의 문제를 직접 출제하고, 토론·학습 커뮤니티의 성장에 함께하는 파트너 프로그램입니다. 활동에 따라 디베이트포인트가 지급되며, 적립한 포인트는 다양한 기프티콘으로 교환할 수 있습니다. 디베이트메이트만을 위한 다양한 혜택과 프로그램도 준비하고 있습니다."
@@ -58,11 +58,11 @@ export default async function DebateMatePage() {
       {/* 혜택 소개 */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {perks.map((p, idx) => (
-          <div key={p.title} className="rounded-2xl border border-ink/10 bg-white p-5">
+          <div key={p.title} className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
             <p className="font-bold text-ink">
               <I18nSlot k={`mate-perk-${idx + 1}-title`} fallback={p.title} />
             </p>
-            <p className="mt-1.5 text-sm text-ink-soft/60 leading-relaxed">
+            <p className="mt-1.5 text-sm text-fg-secondary leading-relaxed">
               <I18nSlot k={`mate-perk-${idx + 1}-desc`} fallback={p.desc} />
             </p>
           </div>
@@ -72,7 +72,7 @@ export default async function DebateMatePage() {
       {/* 활동 약관 — 신청 전/후 모두 확인할 수 있도록 상시 노출 */}
       <Link
         href="/legal/mate-terms"
-        className="mt-6 flex items-center gap-3 rounded-2xl border border-ink/10 bg-white px-5 py-4 transition-colors hover:border-brand-300 hover:bg-brand-50/40"
+        className="mt-6 flex items-center gap-3 rounded-[var(--radius-panel)] border border-hairline bg-white px-5 py-4 transition-colors hover:border-brand-300 hover:bg-brand-50/40"
       >
         <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
           <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.6]">
@@ -84,26 +84,26 @@ export default async function DebateMatePage() {
           <span className="block text-sm font-semibold text-ink">
             <I18nSlot k="mate-terms-cta" fallback="디베이트메이트 활동 약관 보기" />
           </span>
-          <span className="mt-0.5 block text-xs text-ink-soft/55">
+          <span className="mt-0.5 block text-xs text-fg-muted">
             <I18nSlot
               k="mate-terms-desc"
               fallback="저작권·포인트 지급 기준·디베이트샵 교환 규정을 확인하세요."
             />
           </span>
         </span>
-        <span aria-hidden className="shrink-0 text-ink-soft/30">→</span>
+        <span aria-hidden className="shrink-0 text-fg-quiet">→</span>
       </Link>
 
       {/* 디베이트메이트 신청 */}
       {isMateOrAdmin ? (
-        <div className="mt-6 rounded-2xl border border-brand-300 bg-gradient-to-br from-brand-900 to-brand-700 p-6 text-white">
+        <div className="mt-6 rounded-[var(--radius-panel)] border border-brand-300 bg-gradient-to-br from-brand-900 to-brand-700 p-6 text-white">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="font-mono text-[11px] tracking-wider text-brand-200">MATE CONSOLE</p>
               <p className="mt-1 text-xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                 <I18nSlot k="mate-console-title" fallback="활동 콘솔이 열려 있습니다" />
               </p>
-              <p className="mt-1.5 text-xs text-white/70">
+              <p className="mt-1.5 text-xs text-fg-on-dark-secondary">
                 <I18nSlot
                   k="mate-console-desc"
                   fallback="출제·검토 현황과 디베이트포인트, 디베이트샵을 한곳에서 관리하세요."
@@ -116,13 +116,13 @@ export default async function DebateMatePage() {
           </div>
         </div>
       ) : (
-        <div className="mt-6 rounded-2xl border border-ink/10 bg-white p-6">
+        <div className="mt-6 rounded-[var(--radius-panel)] border border-hairline bg-white p-6">
           <h3 className="text-sm font-bold text-ink mb-1">
             <I18nSlot k="mate-apply-title" fallback="디베이트메이트 신청" />
           </h3>
           {session ? (
             <>
-              <p className="mb-4 text-xs text-ink-soft/55">
+              <p className="mb-4 text-xs text-fg-muted">
                 <I18nSlot k="mate-apply-desc" fallback="지원을 위해 아래 파일을 작성 후 파일을 제출해주세요.   " /> 
                 <a href="/docs/디베이트메이트_신청서.docx" download className="text-brand-600 hover:underline">
                   <I18nSlot k="mate-apply-download" fallback="지원서 다운로드" />
@@ -132,7 +132,7 @@ export default async function DebateMatePage() {
             </>
           ) : (
             <>
-              <p className="mb-4 text-sm text-ink-soft/60">
+              <p className="mb-4 text-sm text-fg-secondary">
                 <I18nSlot k="mate-apply-login-required" fallback="디베이트메이트 신청은 로그인 후 가능합니다." />
               </p>
               <Link href="/login" className="inline-block rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-500">

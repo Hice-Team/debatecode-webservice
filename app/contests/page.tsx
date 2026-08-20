@@ -137,7 +137,7 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
           className={`shrink-0 rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
             !activeKind
               ? 'border-signal bg-signal text-white'
-              : 'border-ink/10 bg-white text-ink-soft/70 hover:border-brand-300 hover:text-signal'
+              : 'border-hairline bg-white text-fg-secondary hover:border-brand-300 hover:text-signal'
           }`}
         >
           <I18nSlot k="set-kind-all" fallback="전체" />
@@ -150,7 +150,7 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
             className={`shrink-0 rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
               activeKind === k
                 ? 'border-signal bg-signal text-white'
-                : 'border-ink/10 bg-white text-ink-soft/70 hover:border-brand-300 hover:text-signal'
+                : 'border-hairline bg-white text-fg-secondary hover:border-brand-300 hover:text-signal'
             }`}
           >
             <I18nSlot k={`set-kind-${k}`} fallback={SET_KIND_LABELS[k]} />
@@ -170,7 +170,7 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
       </div>
 
       {sets.length === 0 ? (
-        <div className="rounded-2xl border border-ink/10 bg-white p-16 text-center text-ink-soft/40">
+        <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-16 text-center text-fg-quiet">
           <I18nSlot k="no-matched-contests" fallback="조건에 맞는 문제집 세트가 없습니다." />
         </div>
       ) : (
@@ -182,16 +182,16 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
               <Link
                 key={set.id}
                 href={`/contests/${set.slug}`}
-                className="group flex flex-col rounded-2xl border border-ink/10 bg-white p-5 transition hover:-translate-y-0.5 hover:border-brand-400/60 hover:shadow-lg hover:shadow-brand-500/10"
+                className="group flex flex-col rounded-[var(--radius-panel)] border border-hairline bg-white p-5 transition hover:-translate-y-0.5 hover:border-brand-400/60 hover:shadow-lg hover:shadow-brand-500/10"
               >
                 <div className="mb-3 flex items-center gap-2">
                   <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${SET_KIND_BADGE[kindKey]}`}>
                     <I18nSlot k={`set-kind-${kindKey}`} fallback={SET_KIND_LABELS[kindKey]} />
                   </span>
                   {set.examYear && (
-                    <span className="font-mono text-[11px] text-ink-soft/40">{set.examYear}</span>
+                    <span className="font-mono text-[11px] text-fg-quiet">{set.examYear}</span>
                   )}
-                  <span className="ml-auto font-mono text-[11px] text-ink-soft/40">
+                  <span className="ml-auto font-mono text-[11px] text-fg-quiet">
                     <I18nSlot
                       k={`difficulty-${set.difficulty}`}
                       fallback={DIFFICULTY_LABELS[set.difficulty] ?? ''}
@@ -200,11 +200,11 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
                 </div>
 
                 <h2 className="font-bold text-ink transition-colors group-hover:text-signal">{set.title}</h2>
-                <p className="mt-1.5 line-clamp-2 text-sm text-ink-soft/55">{set.description}</p>
+                <p className="mt-1.5 line-clamp-2 text-sm text-fg-muted">{set.description}</p>
 
                 <ul className="mt-3 space-y-1">
                   {set.items.map((item) => (
-                    <li key={item.problem.id} className="flex items-center gap-2 text-xs text-ink-soft/60">
+                    <li key={item.problem.id} className="flex items-center gap-2 text-xs text-fg-secondary">
                       <span
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${
                           solvedIds.has(item.problem.id) ? 'bg-emerald-500' : 'bg-ink/15'
@@ -215,13 +215,13 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
                     </li>
                   ))}
                   {set._count.items > set.items.length && (
-                    <li className="pl-3.5 font-mono text-[11px] text-ink-soft/35">
+                    <li className="pl-3.5 font-mono text-[11px] text-fg-quiet">
                       + {set._count.items - set.items.length} <I18nSlot k="more-problems" fallback="문제 더" />
                     </li>
                   )}
                 </ul>
 
-                <div className="mt-auto flex items-center gap-3 border-t border-ink/[0.07] pt-3 text-[11px] text-ink-soft/45">
+                <div className="mt-auto flex items-center gap-3 border-t border-hairline pt-3 text-[11px] text-fg-muted">
                   <span className="font-mono">
                     {set._count.items} <I18nSlot k="problems-unit" fallback="문제" />
                   </span>
@@ -247,12 +247,12 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
         hrefFor={(p) => buildHref({ page: p === 1 ? undefined : String(p) })}
       />
 
-      <div className="mt-12 flex flex-col items-start gap-6 rounded-2xl bg-ink p-8 text-white sm:flex-row sm:items-center">
+      <div className="mt-12 flex flex-col items-start gap-6 rounded-[var(--radius-panel)] bg-ink p-8 text-white sm:flex-row sm:items-center">
         <div className="space-y-1.5">
           <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             <I18nSlot k="mock-contest-title" fallback="실전 모의 코딩테스트" />
           </h3>
-          <p className="text-sm text-white/60">
+          <p className="text-sm text-fg-on-dark-secondary">
             <I18nSlot
               k="mock-contest-desc"
               fallback={

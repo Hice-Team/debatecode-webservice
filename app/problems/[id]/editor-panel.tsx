@@ -6,7 +6,7 @@ import type { Language } from '@/app/lib/types';
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
   loading: () => (
-    <div className="h-full flex items-center justify-center font-mono text-xs text-white/30">
+    <div className="h-full flex items-center justify-center font-mono text-xs text-fg-on-dark-quiet">
       에디터 로딩 중…
     </div>
   ),

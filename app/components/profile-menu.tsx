@@ -23,7 +23,7 @@ interface ProfileMenuProps {
   role?: string;
 }
 
-const ITEM = 'block px-4 py-2 text-sm text-ink-soft/75 transition-colors hover:bg-ink/5';
+const ITEM = 'block px-4 py-2 text-sm text-fg transition-colors hover:bg-ink/5';
 
 export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMenuProps) {
   const { language } = useLanguage();
@@ -66,12 +66,12 @@ export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMen
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-56 animate-in rounded-xl border border-ink/10 bg-white py-2 shadow-xl shadow-ink/10 duration-200 fade-in zoom-in-95">
-          <div className="border-b border-ink/10 px-4 py-3">
+        <div className="absolute right-0 z-50 mt-2 w-56 animate-in rounded-xl border border-hairline bg-white py-2 shadow-xl shadow-ink/10 duration-200 fade-in zoom-in-95">
+          <div className="border-b border-hairline px-4 py-3">
             <p data-no-translate className="text-sm font-semibold text-ink-soft">
               {name}
             </p>
-            <p data-no-translate className="truncate text-xs text-ink-soft/55">
+            <p data-no-translate className="truncate text-xs text-fg-muted">
               {email}
             </p>
           </div>
@@ -99,7 +99,7 @@ export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMen
             </Link>
           </div>
 
-          <div className="border-t border-ink/10 py-2">
+          <div className="border-t border-hairline py-2">
             <form action={logout} className="px-4 py-0">
               <button
                 type="submit"

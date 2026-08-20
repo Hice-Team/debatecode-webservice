@@ -68,7 +68,13 @@ export async function loadSession(sessionId: string) {
   const { userId } = await verifySession();
   const session = await prisma.aiSession.findFirst({
     where: { id: sessionId, userId },
-    include: { messages: { orderBy: { createdAt: 'asc' } } },
+    include: {
+      messages: {
+        orderBy: { createdAt: 'asc' },
+        // 내가 남긴 평가를 함께 싣는다 — 없으면 빈 배열이라 메시지가 누락되지는 않는다
+        include: { feedback: { where: { userId }, select: { rating: true, reasons: true, comment: true } } },
+      },
+    },
   });
   return session;
 }
@@ -111,7 +117,11 @@ export async function ensureSession(): Promise<{ sessionId: string }> {
 /**
  * 답변 하나를 시작점으로 새 대화를 연다 — 응답 툴바의 "새 채팅에서 브랜치 생성".
  *
- * 답변만 옮기면 무엇에 대한 답인지 알 수 없으므로, 그 답변을 부른 질문과 짝으로 복사한다.
+ * 예전에는 그 답변과 바로 앞 질문 **한 쌍만** 옮겼다. 그러면 새 대화에서 이어 물을 때
+ * 앞선 맥락이 통째로 빠져 있어, 모델이 이미 정리한 전제를 처음부터 다시 설명해야 했다.
+ * 분기의 목적은 "여기까지는 그대로 두고 여기서부터 다르게 가 보기"이므로,
+ * 그 답변까지의 대화 전체를 복사한다.
+ *
  * 원본 세션은 그대로 남아 두 갈래가 각자 이어진다.
  */
 export async function branchFromMessage(messageId: string): Promise<{ sessionId?: string; error?: string }> {
@@ -119,28 +129,45 @@ export async function branchFromMessage(messageId: string): Promise<{ sessionId?
 
   const answer = await prisma.aiMessage.findFirst({
     where: { id: messageId, role: 'assistant', session: { userId } },
-    select: { id: true, sessionId: true, content: true, sources: true, model: true, createdAt: true },
+    select: { id: true, sessionId: true, createdAt: true, model: true, session: { select: { title: true, effort: true } } },
   });
   if (!answer) return { error: '브랜치할 답변을 찾지 못했습니다.' };
 
-  const question = await prisma.aiMessage.findFirst({
-    where: { sessionId: answer.sessionId, role: 'user', createdAt: { lt: answer.createdAt } },
-    orderBy: { createdAt: 'desc' },
-    select: { content: true, attachments: true },
+  // 그 답변까지의 모든 메시지 — 분기 지점 이후는 가져오지 않는다
+  const history = await prisma.aiMessage.findMany({
+    where: { sessionId: answer.sessionId, createdAt: { lte: answer.createdAt } },
+    orderBy: { createdAt: 'asc' },
+    select: { role: true, content: true, attachments: true, sources: true, model: true, effort: true },
   });
+  if (history.length === 0) return { error: '브랜치할 대화를 찾지 못했습니다.' };
+
+  const firstQuestion = history.find((m) => m.role === 'user');
+  const copiedAt = Date.now();
 
   const created = await prisma.aiSession.create({
     data: {
       userId,
       model: answer.model ?? DEFAULT_SEARCH_MODEL_ID,
-      title: question ? titleFrom(question.content) : '브랜치된 대화',
+      effort: answer.session.effort,
+      title: firstQuestion ? titleFrom(firstQuestion.content) : (answer.session.title ?? '브랜치된 대화'),
+      branchedFrom: {
+        sessionId: answer.sessionId,
+        title: answer.session.title ?? null,
+        messageId: answer.id,
+        at: new Date().toISOString(),
+      },
       messages: {
-        create: [
-          ...(question
-            ? [{ role: 'user', content: question.content, attachments: question.attachments as never }]
-            : []),
-          { role: 'assistant', content: answer.content, sources: answer.sources as never, model: answer.model },
-        ],
+        // createdAt을 기본값(now())에 맡기면 한 트랜잭션 안에서 전부 같은 시각이 되어
+        // 복원할 때(orderBy createdAt) 순서가 뒤섞인다. 1ms씩 벌려 순서를 고정한다.
+        create: history.map((m, i) => ({
+          role: m.role,
+          content: m.content,
+          attachments: m.attachments as never,
+          sources: m.sources as never,
+          model: m.model,
+          effort: m.effort,
+          createdAt: new Date(copiedAt + i),
+        })),
       },
     },
     select: { id: true },

@@ -9,8 +9,18 @@ import { createClient } from '../supabase/server';
 import { sanctionMessage } from '../moderation';
 import { featureBlockMessage } from '../settings';
 import { safeStorageKey } from '../storage';
-import { forcedSecret, supportsVerifiedOnly } from '../board-rules';
+import {
+  canWriteToBoard,
+  clampBounty,
+  forcedSecret,
+  supportsBounty,
+  supportsPinning,
+  supportsSecret,
+  supportsVerifiedOnly,
+} from '../board-rules';
 import { ensureAnonymousTag } from '../identity';
+import { can } from '../permissions-server';
+import { audit } from '../audit';
 
 export interface PostFormState {
   errors?: {
@@ -177,6 +187,20 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
 
   const { board, title, content, url, snsPlatform, anonymous, verifiedOnlyReplies } = parsed.data;
 
+  // 공지사항은 관리자만 — 게시판 규칙이 판단한다(app/lib/board-rules.ts)
+  const author = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { role: true },
+  });
+  if (!canWriteToBoard(board, author?.role ?? 'user')) {
+    return { errors: { form: ['이 게시판에는 글을 쓸 수 없습니다.'] } };
+  }
+  // 상단 고정은 공지사항에서만, 그리고 그 게시판에 쓸 수 있는 사람만 켤 수 있다
+  const pinned = supportsPinning(board) && formData.get('pinned') === 'on';
+  // 문의게시판 — 질문자가 공개/비밀과 채택 포인트를 직접 고른다
+  const secret = forcedSecret(board) || (supportsSecret(board) && formData.get('secret') === 'on');
+  const bounty = supportsBounty(board) ? clampBounty(formData.get('bounty')) : null;
+
   // 익명 글이면 표시용 식별자를 미리 확보해 둔다(없으면 생성)
   if (anonymous) await ensureAnonymousTag(session.userId);
 
@@ -197,10 +221,12 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
         url: board === 'sns' ? url : null,
         snsPlatform: board === 'sns' ? snsPlatform || null : null,
         anonymous: !!anonymous,
-        // 문의게시판은 게시판 규칙상 항상 비밀글
-        secret: forcedSecret(board),
+        secret,
+        bounty,
         // '인증된 사용자에게만 답변 받기'는 멘토게시판에서만 의미가 있다
         verifiedOnlyReplies: supportsVerifiedOnly(board) ? !!verifiedOnlyReplies : false,
+        pinned,
+        pinnedAt: pinned ? new Date() : null,
       },
     });
     if (attachments.length > 0) {
@@ -339,4 +365,44 @@ export async function togglePostLike(formData: FormData): Promise<void> {
     await prisma.postLike.create({ data: { postId, userId: session.userId } }).catch(() => {});
   }
   revalidatePath(`/community/${postId}`);
+}
+
+/**
+ * 공지 상단 고정 토글.
+ *
+ * 커뮤니티 글 화면과 관리 콘솔이 같은 액션을 쓴다. 고정은 운영 판단이라 `announcement.manage`
+ * 권한을 본다 — 글을 쓴 사람이라고 해서 전체 게시판 상단을 차지할 수 있으면 안 된다.
+ */
+export async function togglePostPin(formData: FormData): Promise<{ ok?: boolean; error?: string }> {
+  const session = await verifySession();
+  const actor = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { id: true, name: true, role: true },
+  });
+  if (!actor) return { error: '계정을 찾지 못했습니다.' };
+  if (!(await can(actor, 'announcement.manage'))) return { error: '고정할 권한이 없습니다.' };
+
+  const postId = String(formData.get('postId') ?? '');
+  if (!postId) return { error: '대상을 찾지 못했습니다.' };
+
+  const post = await prisma.post.findUnique({ where: { id: postId }, select: { pinned: true, title: true } });
+  if (!post) return { error: '글을 찾지 못했습니다.' };
+
+  const next = !post.pinned;
+  await prisma.post.update({
+    where: { id: postId },
+    data: { pinned: next, pinnedAt: next ? new Date() : null },
+  });
+
+  await audit({
+    actor,
+    action: next ? 'post.pin' : 'post.unpin',
+    targetType: 'post',
+    targetId: postId,
+    summary: `${next ? '공지 고정' : '고정 해제'} — ${post.title}`,
+  });
+
+  revalidatePath('/community');
+  revalidatePath(`/community/${postId}`);
+  return { ok: true };
 }

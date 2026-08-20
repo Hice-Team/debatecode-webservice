@@ -56,13 +56,13 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
 
       <div className="grid gap-3 sm:grid-cols-[1fr_7rem_9rem]">
         <div>
-          <label htmlFor={`t-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-ink-soft/55">
+          <label htmlFor={`t-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-fg-muted">
             제목
           </label>
           <input id={`t-${draft.id}`} name="title" defaultValue={draft.title} required className={FIELD} />
         </div>
         <div>
-          <label htmlFor={`d-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-ink-soft/55">
+          <label htmlFor={`d-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-fg-muted">
             난이도
           </label>
           <select id={`d-${draft.id}`} name="difficulty" defaultValue={draft.difficulty} className={FIELD}>
@@ -74,7 +74,7 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
           </select>
         </div>
         <div>
-          <label htmlFor={`c-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-ink-soft/55">
+          <label htmlFor={`c-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-fg-muted">
             카테고리
           </label>
           <select id={`c-${draft.id}`} name="category" defaultValue={draft.category} className={FIELD}>
@@ -91,7 +91,7 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
       </div>
 
       <div>
-        <label htmlFor={`desc-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-ink-soft/55">
+        <label htmlFor={`desc-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-fg-muted">
           문제 지문 (마크다운)
         </label>
         <textarea
@@ -105,7 +105,7 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
       </div>
 
       <div>
-        <label htmlFor={`p-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-ink-soft/55">
+        <label htmlFor={`p-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-fg-muted">
           payload — tags · timeLimitMs · starterCodes · keywords · testCases
         </label>
         <textarea
@@ -119,7 +119,7 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
         {payloadError ? (
           <p className="mt-1 text-[11px] text-rose-600">JSON 오류: {payloadError}</p>
         ) : (
-          <p className="mt-1 text-[11px] text-ink-soft/50">
+          <p className="mt-1 text-[11px] text-fg-muted">
             testCases의 input은 <strong>인자 배열</strong>입니다. 예:{' '}
             <code className="rounded bg-white px-1">{'{"input": [[2,7,11,15], 9], "expected": [0,1]}'}</code>
           </p>

@@ -1,0 +1,22 @@
+{
+  "reference_id": "linear.app",
+  "description": "debateCode — 알고리즘 학습 + 코드 에디터 + 커뮤니티가 결합된 한국어 교육 플랫폼. 기존 팔레트는 네이비 잉크 다크 크롬 + 쿨 페이퍼 콘텐츠 + 일렉트릭 인디고(#1800AC) 액센트.",
+  "mode": "inspired",
+  "delta_set": {
+    "axes": {
+      "color.hue_deg": 27,
+      "color.saturation_pct": 18,
+      "density.shift": 1,
+      "radius.delta_px": 0,
+      "tracking.shift": 0
+    },
+    "voiceHints": ["ko-KR 존댓말", "동작 중심 라벨", "과장 금지", "결과 먼저"],
+    "matchedKeywords": ["technical", "minimal", "serious", "premium", "elegant"],
+    "warnings": [
+      "레퍼런스는 단일 다크 캔버스지만 debateCode는 크롬(다크)/콘텐츠(페이퍼) 이중 캔버스 — 의도적 델타로 문서화함",
+      "레퍼런스는 정체색을 CTA에 쓰지 않으나 debateCode는 학습 서비스 행동 유도를 위해 인디고 CTA 유지 — 대신 '한 화면 한 개' 절제 규칙으로 보완",
+      "§11-13의 설립 시점·이용자 수·성과 지표는 미확정이라 비워 둠(지어내지 않음)"
+    ]
+  },
+  "bootstrapped_at": "2026-08-20"
+}

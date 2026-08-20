@@ -12,7 +12,7 @@ import { CONTACT_TYPES, type ContactType } from '@/app/lib/shop-scope';
 const initialState: MateActionState = {};
 
 const INPUT =
-  'w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-ink-soft/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
+  'w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 
 export default function PurchaseForm({
   productId,
@@ -64,7 +64,7 @@ export default function PurchaseForm({
 
       {/* 수령 방법 */}
       <fieldset disabled={disabled}>
-        <legend className="mb-1.5 font-mono text-[11px] tracking-wider text-ink-soft/55">받을 방법</legend>
+        <legend className="mb-1.5 font-mono text-[11px] tracking-wider text-fg-muted">받을 방법</legend>
         <div className="flex gap-1.5">
           {CONTACT_TYPES.map((c) => (
             <button
@@ -77,7 +77,7 @@ export default function PurchaseForm({
               className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
                 contactType === c.value
                   ? 'border-signal bg-brand-50 text-brand-700'
-                  : 'border-ink/15 text-ink-soft/65 hover:border-ink/30'
+                  : 'border-ink/15 text-fg-secondary hover:border-ink/30'
               }`}
             >
               {c.label}
@@ -92,12 +92,12 @@ export default function PurchaseForm({
           aria-label={meta.label}
           className={`${INPUT} mt-2`}
         />
-        <p className="mt-1 text-[11px] text-ink-soft/50">{meta.hint}</p>
+        <p className="mt-1 text-[11px] text-fg-muted">{meta.hint}</p>
       </fieldset>
 
       {confirming ? (
         <div className="rounded-lg border border-ink/15 bg-paper/60 p-3">
-          <p className="text-[13px] leading-relaxed text-ink-soft/75">
+          <p className="text-[13px] leading-relaxed text-fg">
             <strong className="text-ink">{productLabel}</strong>을(를) 신청합니다. 포인트가 즉시 차감되고,
             승인 후 <strong className="text-ink">{contact}</strong>(으)로 발송됩니다.
           </p>
@@ -112,7 +112,7 @@ export default function PurchaseForm({
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-soft/55 transition-colors hover:text-ink"
+              className="rounded-lg px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors hover:text-ink"
             >
               취소
             </button>
@@ -123,7 +123,7 @@ export default function PurchaseForm({
           type="button"
           onClick={() => setConfirming(true)}
           disabled={disabled || contact.trim().length === 0}
-          className="w-full rounded-lg bg-signal py-3 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-ink/15 disabled:text-ink-soft/40"
+          className="w-full rounded-lg bg-signal py-3 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-ink/15 disabled:text-fg-quiet"
         >
           {disabled ? '신청할 수 없습니다' : contact.trim() ? '교환 신청하기' : '받을 연락처를 입력하세요'}
         </button>

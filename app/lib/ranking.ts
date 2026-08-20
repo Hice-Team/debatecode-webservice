@@ -11,6 +11,7 @@ import { unstable_cache } from 'next/cache';
 import { prisma } from '@/app/lib/prisma';
 import { RANKS, rankForScore, type RankName } from '@/app/lib/star-score';
 import { rankingDisplayName } from '@/app/lib/display-name';
+import { getSetting } from '@/app/lib/settings';
 
 export const RANKING_CATEGORIES = ['overall', 'solving', 'community', 'activity'] as const;
 export type RankingCategory = (typeof RANKING_CATEGORIES)[number];
@@ -145,11 +146,25 @@ const collectScoreboard = cache(async (sinceMs: number, untilMs: number) => {
     : [];
   const postAuthorById = new Map(postAuthors.map((p) => [p.id, p.authorId]));
 
+  // 개인 랭킹 초기화 — 부정행위로 이 구간 안에서 초기화된 계정은 순위에서 뺀다.
+  // 기록 자체는 지우지 않으므로(신고 처리의 근거) 집계 단계에서 제외하는 방식이다.
+  const resets = await prisma.rankingReset
+    .findMany({
+      where: sinceMs ? { resetAt: { gte: new Date(sinceMs) } } : {},
+      select: { userId: true },
+      distinct: ['userId'],
+    })
+    .catch(() => []);
+  const excluded = new Set(resets.map((r) => r.userId));
+
   const rows = new Map<string, RankedUser>();
   const timestamps = new Map<string, Date[]>();
   const interviewScores = new Map<string, number[]>();
 
   for (const u of users) {
+    // 이 구간에서 랭킹이 초기화된 계정은 아예 넣지 않는다 —
+    // 0점으로 남겨 두면 목록 맨 아래에 이름이 계속 노출된다.
+    if (excluded.has(u.id)) continue;
     rows.set(u.id, {
       userId: u.id,
       name: rankingDisplayName(u),
@@ -279,6 +294,21 @@ function windowKey(window?: RankingWindow): [number, number] {
 }
 
 /** 한 부문의 상위 랭킹. */
+/**
+ * 집계 구간에 "랭킹 집계 시작 시각"을 겹쳐 준다.
+ *
+ * 전체 랭킹 초기화는 기록을 지우는 것이 아니라 "언제부터 세는가"를 옮기는 일이다.
+ * 시즌 구간이 그보다 앞서 시작했다면 초기화 시각으로 잘라 낸다.
+ */
+export async function withRankingFloor(window?: RankingWindow): Promise<RankingWindow | undefined> {
+  const raw = (await getSetting<string>('ranking.reset_at')).trim();
+  if (!raw) return window;
+  const floor = new Date(raw);
+  if (Number.isNaN(floor.getTime())) return window;
+  if (!window) return { since: floor };
+  return { ...window, since: window.since && window.since > floor ? window.since : floor };
+}
+
 export async function getRankings(category: RankingCategory = 'overall', limit = 100, window?: RankingWindow) {
   const boards = await collectScoreboard(...windowKey(window));
   return boards[category].slice(0, limit);

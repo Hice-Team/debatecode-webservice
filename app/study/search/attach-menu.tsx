@@ -209,14 +209,18 @@ export default function AttachMenu({
     closeMenu();
     onNotice(null);
     if (!isDriveConfigured()) {
-      onNotice('Google Drive 연동이 아직 설정되지 않았습니다. (NEXT_PUBLIC_GOOGLE_CLIENT_ID · NEXT_PUBLIC_GOOGLE_API_KEY)');
+      onNotice(
+        'Google Drive 연동이 아직 설정되지 않았습니다. (NEXT_PUBLIC_GOOGLE_CLIENT_ID · NEXT_PUBLIC_GOOGLE_API_KEY · NEXT_PUBLIC_GOOGLE_APP_ID)',
+      );
       return;
     }
     setBusy(true);
     try {
-      const files = await pickFromDrive();
-      if (files.length === 0) return;
-      await uploadMany(files.map((file) => ({ file })), 'drive');
+      const { files, failed } = await pickFromDrive();
+      if (files.length > 0) await uploadMany(files.map((file) => ({ file })), 'drive');
+      // 일부만 실패해도 조용히 사라지지 않도록 알린다(권한 회수·내보내기 불가 등).
+      // uploadMany가 시작할 때 안내를 지우므로 반드시 그 뒤에 띄운다.
+      if (failed > 0) onNotice(`${failed}개 파일을 Drive에서 가져오지 못했습니다.`);
     } catch (error) {
       if ((error as Error).message !== 'cancelled') onNotice('Google Drive에서 파일을 가져오지 못했습니다.');
     } finally {
@@ -239,9 +243,25 @@ export default function AttachMenu({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode, url: value }),
       });
-      const data = (await res.json()) as PendingAttachment & { error?: string };
+      // 저장소 주소를 넣으면 파일 여러 개가, 파일·URL 하나면 첨부 하나가 온다
+      const data = (await res.json()) as PendingAttachment & {
+        error?: string;
+        files?: PendingAttachment[];
+        repo?: string;
+        limited?: boolean;
+        limit?: number;
+      };
       if (!res.ok) {
         onNotice(data.error ?? '가져오지 못했습니다.');
+        return;
+      }
+      if (data.files) {
+        onAdd(data.files);
+        onNotice(
+          data.limited
+            ? `${data.repo}에서 ${data.files.length}개 파일을 가져왔습니다. (한 번에 최대 ${data.limit ?? data.files.length}개)`
+            : `${data.repo}에서 ${data.files.length}개 파일을 가져왔습니다.`,
+        );
         return;
       }
       onAdd([data]);
@@ -253,8 +273,8 @@ export default function AttachMenu({
   }
 
   const itemClass =
-    'flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-[13px] text-ink-soft/80 transition-colors hover:bg-paper disabled:opacity-40';
-  const panelClass = `absolute left-0 z-50 w-[15rem] max-w-[calc(100vw-2rem)] overflow-visible rounded-2xl border border-ink/10 bg-white py-1.5 shadow-xl shadow-ink/10 animate-in fade-in duration-150 ${
+    'flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-[13px] text-fg transition-colors hover:bg-paper disabled:opacity-40';
+  const panelClass = `absolute left-0 z-50 w-[15rem] max-w-[calc(100vw-2rem)] overflow-visible rounded-[var(--radius-panel)] border border-hairline bg-white py-1.5 shadow-xl shadow-ink/10 animate-in fade-in duration-150 ${
     placement === 'top' ? 'bottom-full mb-2 slide-in-from-bottom-1' : 'top-full mt-2 slide-in-from-top-1'
   }`;
 
@@ -312,7 +332,7 @@ export default function AttachMenu({
         aria-expanded={open}
         aria-label={t('ai-attach', language)}
         title={t('ai-attach', language)}
-        className="grid h-9 w-9 place-items-center rounded-full text-ink-soft/50 transition hover:bg-paper hover:text-signal disabled:opacity-40"
+        className="grid h-9 w-9 place-items-center rounded-full text-fg-muted transition hover:bg-paper hover:text-signal disabled:opacity-40"
       >
         {busy ? (
           <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-ink/15 border-t-signal motion-reduce:animate-none" />
@@ -363,7 +383,7 @@ export default function AttachMenu({
                     placement === 'top' ? 'bottom-0' : 'top-0'
                   }`}
                 >
-                  <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white py-1.5 shadow-xl shadow-ink/10">
+                  <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white py-1.5 shadow-xl shadow-ink/10">
                     {subItems}
                   </div>
                 </div>
@@ -387,11 +407,11 @@ export default function AttachMenu({
             onClick={() => setDialog(null)}
             className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
           />
-          <div className="relative z-10 w-full max-w-md rounded-2xl border border-ink/10 bg-white p-5 shadow-2xl shadow-ink/25">
+          <div className="relative z-10 w-full max-w-md rounded-[var(--radius-panel)] border border-hairline bg-white p-5 shadow-2xl shadow-ink/25">
             <p className="text-sm font-bold text-ink">
               {dialog === 'github' ? t('ai-attach-github', language) : t('ai-attach-url', language)}
             </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-ink-soft/50">
+            <p className="mt-1 text-[11px] leading-relaxed text-fg-muted">
               {dialog === 'github' ? t('ai-attach-github-hint', language) : t('ai-attach-url-hint', language)}
             </p>
             <input
@@ -405,14 +425,14 @@ export default function AttachMenu({
                 }
                 if (e.key === 'Escape') setDialog(null);
               }}
-              placeholder={dialog === 'github' ? 'https://github.com/owner/repo/blob/main/src/index.ts' : 'https://…'}
-              className="mt-3 w-full rounded-xl border border-ink/12 bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/35 focus:border-signal focus:outline-none"
+              placeholder={dialog === 'github' ? 'https://github.com/owner/repo' : 'https://…'}
+              className="mt-3 w-full rounded-xl border border-hairline bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-fg-quiet focus:border-signal focus:outline-none"
             />
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setDialog(null)}
-                className="rounded-xl border border-ink/12 px-4 py-2 text-sm font-medium text-ink-soft/70 transition hover:border-ink/25"
+                className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-fg-secondary transition hover:border-ink/25"
               >
                 {t('cancel', language)}
               </button>

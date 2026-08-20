@@ -169,7 +169,7 @@ export default async function ConsoleOverviewPage() {
           <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             관리 콘솔
           </h1>
-          <p className="mt-1 text-sm text-ink-soft/60">
+          <p className="mt-1 text-sm text-fg-secondary">
             {user.name}님 · {roleLabel(user.role)} 권한으로 접속 중
             {extraAllows.length > 0 && (
               <span className="ml-1.5 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-mono text-[10px] text-emerald-700">
@@ -209,8 +209,8 @@ export default async function ConsoleOverviewPage() {
       {/* ② 처리 대기 큐 */}
       {queue.length > 0 && (
         <section
-          className={`mt-5 overflow-hidden rounded-2xl border ${
-            queueTotal > 0 ? 'border-rose-300 bg-rose-50/60' : 'border-ink/10 bg-white'
+          className={`mt-5 overflow-hidden rounded-[var(--radius-panel)] border ${
+            queueTotal > 0 ? 'border-rose-300 bg-rose-50/60' : 'border-hairline bg-white'
           }`}
           aria-label="처리 대기 작업"
         >
@@ -218,19 +218,19 @@ export default async function ConsoleOverviewPage() {
             <p className={`text-sm font-bold ${queueTotal > 0 ? 'text-rose-700' : 'text-ink'}`}>
               {queueTotal > 0 ? `처리 대기 ${queueTotal}건` : '처리 대기 없음'}
             </p>
-            <p className="text-xs text-ink-soft/55">
+            <p className="text-xs text-fg-muted">
               {queueTotal > 0 ? '지금 확인이 필요한 항목입니다.' : '모든 운영 큐가 비어 있습니다.'}
             </p>
           </div>
-          <div className="grid grid-cols-2 divide-x divide-y divide-ink/[0.07] border-t border-ink/[0.07] sm:grid-cols-3 lg:grid-cols-6 lg:divide-y-0">
+          <div className="grid grid-cols-2 divide-x divide-y divide-hairline border-t border-hairline sm:grid-cols-3 lg:grid-cols-6 lg:divide-y-0">
             {queue.map((q) => (
               <Link
                 key={q.href}
                 href={q.href}
                 className="bg-white/70 px-4 py-3 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal"
               >
-                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">{q.label}</p>
-                <p className={`mt-0.5 font-display text-2xl font-bold ${q.count > 0 ? 'text-rose-600' : 'text-ink-soft/35'}`}>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">{q.label}</p>
+                <p className={`mt-0.5 font-display text-2xl font-bold ${q.count > 0 ? 'text-rose-600' : 'text-fg-quiet'}`}>
                   {q.count}
                 </p>
               </Link>
@@ -242,22 +242,22 @@ export default async function ConsoleOverviewPage() {
       {/* ③ KPI */}
       <div className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
         {kpis.map((c) => (
-          <div key={c.label} className="rounded-2xl border border-ink/10 bg-white p-5">
+          <div key={c.label} className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
             <div className="flex items-center justify-between gap-2">
-              <p className="font-mono text-[11px] tracking-wider text-ink-soft/55">{c.label}</p>
+              <p className="font-mono text-[11px] tracking-wider text-fg-muted">{c.label}</p>
               <DeltaBadge delta={c.delta} />
             </div>
             <p className="mt-1.5 text-3xl font-bold text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
               {c.value}
             </p>
-            <p className="mt-1 text-xs text-ink-soft/60">{c.sub}</p>
+            <p className="mt-1 text-xs text-fg-secondary">{c.sub}</p>
           </div>
         ))}
       </div>
 
       {/* ④ 추세 + 운영 활동 */}
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <div className="rounded-2xl border border-ink/10 bg-white p-5">
+        <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-lg font-bold text-ink">사용자 트래픽 · 최근 {DAYS}일</h3>
             <span className="font-mono text-[10px] text-brand-600">일별 활동</span>
@@ -265,8 +265,8 @@ export default async function ConsoleOverviewPage() {
           <AreaChart series={traffic} labels={labels} />
         </div>
 
-        <section className="overflow-hidden rounded-2xl border border-ink/10 bg-white" aria-labelledby="feed-title">
-          <div className="flex items-center justify-between border-b border-ink/[0.07] px-5 py-3">
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white" aria-labelledby="feed-title">
+          <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
             <h3 id="feed-title" className="text-sm font-bold text-ink">최근 운영 활동</h3>
             {recentAudit.length > 0 && (
               <Link href="/console/access/audit" className="font-mono text-[11px] text-brand-600 hover:underline">
@@ -275,7 +275,7 @@ export default async function ConsoleOverviewPage() {
             )}
           </div>
           {recentAudit.length === 0 ? (
-            <p className="px-5 py-10 text-center text-sm text-ink-soft/45">
+            <p className="px-5 py-10 text-center text-sm text-fg-muted">
               {has('audit.read') ? '아직 기록된 운영 활동이 없습니다.' : '감사 로그 열람 권한이 없습니다.'}
             </p>
           ) : (
@@ -286,10 +286,10 @@ export default async function ConsoleOverviewPage() {
                     href="/console/access/audit"
                     className="flex items-center gap-2.5 px-5 py-2.5 transition-colors hover:bg-brand-50/40"
                   >
-                    <span className="shrink-0 rounded bg-ink/[0.06] px-1.5 py-0.5 font-mono text-[9px] font-bold text-ink-soft/55">
+                    <span className="shrink-0 rounded bg-ink/[0.06] px-1.5 py-0.5 font-mono text-[9px] font-bold text-fg-muted">
                       {auditActionLabel(entry.action)}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-xs text-ink-soft/75">{entry.summary}</span>
+                    <span className="min-w-0 flex-1 truncate text-xs text-fg">{entry.summary}</span>
                     <SlaBadge since={entry.createdAt} done />
                   </Link>
                 </li>

@@ -47,22 +47,22 @@ export default async function AdminProblemsPage({ searchParams }: PageProps<'/da
         <p className="mb-4 text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-4 py-2.5">{error}</p>
       )}
 
-      <div className="bg-white rounded-xl border border-ink/10 divide-y divide-ink/5">
+      <div className="bg-white rounded-xl border border-hairline divide-y divide-ink/5">
         {problems.map((p) => (
           <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 text-sm">
-            <span className="font-mono text-[11px] text-ink-soft/30 w-8 shrink-0">#{p.id}</span>
+            <span className="font-mono text-[11px] text-fg-quiet w-8 shrink-0">#{p.id}</span>
             <Link href={`/problems/${p.id}`} className="font-semibold hover:text-brand-600 transition-colors truncate">
               {p.title}
             </Link>
-            <span className="font-mono text-xs text-ink-soft/50 shrink-0">{p.category}</span>
-            <span className="text-[11px] text-ink-soft/40 shrink-0">{DIFFICULTY_LABELS[p.difficulty]}</span>
+            <span className="font-mono text-xs text-fg-muted shrink-0">{p.category}</span>
+            <span className="text-[11px] text-fg-quiet shrink-0">{DIFFICULTY_LABELS[p.difficulty]}</span>
             {p.company && <span className="text-[11px] text-indigo-600 shrink-0">{p.company} 기출</span>}
-            <span className="ml-auto font-mono text-[11px] text-ink-soft/40 shrink-0 hidden sm:inline">
+            <span className="ml-auto font-mono text-[11px] text-fg-quiet shrink-0 hidden sm:inline">
               TC {p._count.testCases} · 제출 {p._count.submissions}
             </span>
             <Link
               href={`/problems/${p.id}/edit`}
-              className="shrink-0 font-mono text-[11px] text-ink-soft/60 hover:text-signal underline underline-offset-2"
+              className="shrink-0 font-mono text-[11px] text-fg-secondary hover:text-signal underline underline-offset-2"
             >
               수정
             </Link>
@@ -83,7 +83,7 @@ export default async function AdminProblemsPage({ searchParams }: PageProps<'/da
           </div>
         ))}
         {problems.length === 0 && (
-          <div className="px-6 py-16 text-center text-sm text-ink-soft/40">등록된 문제가 없습니다.</div>
+          <div className="px-6 py-16 text-center text-sm text-fg-quiet">등록된 문제가 없습니다.</div>
         )}
       </div>
     </PageShell>

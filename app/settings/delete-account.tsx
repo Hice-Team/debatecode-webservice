@@ -79,7 +79,7 @@ export default function DeleteAccount({ email }: { email: string }) {
               setOpen(false);
               setTyped('');
             }}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft/60 transition-colors hover:text-ink"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-fg-secondary transition-colors hover:text-ink"
           >
             취소
           </button>

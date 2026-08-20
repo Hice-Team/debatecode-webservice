@@ -4,6 +4,7 @@ import Providers from "./providers";
 import AnnouncementGate from "./components/announcement-gate";
 import MaintenanceGate from "./components/maintenance-gate";
 import GlobalBanner from "./components/global-banner";
+import BannerSlot from '@/app/components/banner-slot';
 import AutoTranslate from "./components/auto-translate";
 import ChannelTalk from "./components/channel-talk";
 
@@ -94,8 +95,11 @@ export default async function RootLayout({
         <Providers>
           {/* 점검 모드가 켜져 있으면 일반 방문자에게는 안내 화면만 보인다 */}
           <MaintenanceGate>
-            {/* 콘솔에서 설정한 상시 안내 한 줄 — 비어 있으면 아무것도 렌더하지 않는다 */}
-            <GlobalBanner />
+            {/* 콘솔에서 설정한 상시 안내 한 줄 — 비어 있으면 아무것도 렌더하지 않는다.
+                문제 풀이 화면에서는 작업 공간을 밀어내지 않도록 BannerSlot이 통째로 뺀다. */}
+            <BannerSlot>
+              <GlobalBanner />
+            </BannerSlot>
             {children}
           </MaintenanceGate>
           {/* EN 모드에서 화면의 한국어 텍스트(DB 콘텐츠 포함)를 자동 번역 */}

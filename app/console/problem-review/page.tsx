@@ -79,7 +79,7 @@ export default async function ProblemReviewPage() {
         />
       </div>
 
-      <div className="divide-y divide-ink/5 overflow-hidden rounded-2xl border border-ink/10 bg-white">
+      <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
         {withMeta.length === 0 && (
           <EmptyState
             title="검토 대기 중인 문제가 없습니다"
@@ -100,7 +100,7 @@ export default async function ProblemReviewPage() {
                   <span className="mr-1.5 hidden font-mono text-[10px] text-brand-600 group-open:inline">▼</span>
                   {d.title}
                 </p>
-                <p className="font-mono text-[11px] text-ink-soft/55">
+                <p className="font-mono text-[11px] text-fg-muted">
                   {maskName(d.author.name)} · 난이도 {d.difficulty} · {d.category} ·{' '}
                   {d.createdAt.toLocaleDateString('ko-KR')}
                 </p>
@@ -119,13 +119,13 @@ export default async function ProblemReviewPage() {
               </div>
             </summary>
 
-            <div className="mt-3 rounded-xl border border-ink/10 bg-paper/40 p-4">
-              <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">문제 설명</p>
-              <p className="max-h-72 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-ink-soft/80">
+            <div className="mt-3 rounded-xl border border-hairline bg-paper/40 p-4">
+              <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-fg-muted">문제 설명</p>
+              <p className="max-h-72 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-fg">
                 {d.description}
               </p>
 
-              <div className="mt-3 flex flex-wrap gap-3 font-mono text-[11px] text-ink-soft/50">
+              <div className="mt-3 flex flex-wrap gap-3 font-mono text-[11px] text-fg-muted">
                 <span>제한 {payload.timeLimitMs ?? 3000}ms</span>
                 <span>태그 {payload.tags?.length ?? 0}</span>
                 <span>키워드 {payload.keywords?.length ?? 0}</span>
@@ -140,7 +140,7 @@ export default async function ProblemReviewPage() {
                     {cd.agreedAt ? new Date(cd.agreedAt).toLocaleDateString('ko-KR') : ''}
                   </p>
                 ) : (
-                  <p className="mt-3 font-mono text-[11px] text-ink-soft/45">저작권: 창작자 보유 (위임서 미제출)</p>
+                  <p className="mt-3 font-mono text-[11px] text-fg-muted">저작권: 창작자 보유 (위임서 미제출)</p>
                 );
               })()}
             </div>
@@ -168,7 +168,7 @@ export default async function ProblemReviewPage() {
                 <input
                   name="note"
                   placeholder="반려 사유 (선택 — 출제자에게 표시됩니다)"
-                  className="w-full flex-1 rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-xs placeholder:text-ink-soft/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                  className="w-full flex-1 rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                 />
                 <button className={BTN_REJECT}>반려</button>
               </form>
@@ -185,9 +185,9 @@ export default async function ProblemReviewPage() {
       {/* 최근 처리 이력 */}
       <div className="mt-10">
         <SectionHeader title="최근 처리 이력" sub="최근 승인/반려된 초안 15건입니다." />
-        <div className="divide-y divide-ink/5 rounded-2xl border border-ink/10 bg-white">
+        <div className="divide-y divide-ink/5 rounded-[var(--radius-panel)] border border-hairline bg-white">
           {processed.length === 0 && (
-            <p className="px-5 py-8 text-center text-sm text-ink-soft/55">처리한 초안이 아직 없습니다.</p>
+            <p className="px-5 py-8 text-center text-sm text-fg-muted">처리한 초안이 아직 없습니다.</p>
           )}
           {processed.map((d) => {
             const st = STATUS_BADGE[d.status] ?? STATUS_BADGE.rejected;
@@ -197,11 +197,11 @@ export default async function ProblemReviewPage() {
                   {st.label}
                 </span>
                 <span className="truncate font-medium text-ink">{d.title}</span>
-                <span className="font-mono text-[11px] text-ink-soft/45">
+                <span className="font-mono text-[11px] text-fg-muted">
                   {maskName(d.author.name)} · {d.category}
                 </span>
-                {d.reviewNote && <span className="truncate text-xs text-ink-soft/55">— {d.reviewNote}</span>}
-                <span className="ml-auto shrink-0 font-mono text-[11px] text-ink-soft/45">
+                {d.reviewNote && <span className="truncate text-xs text-fg-muted">— {d.reviewNote}</span>}
+                <span className="ml-auto shrink-0 font-mono text-[11px] text-fg-muted">
                   {d.reviewedAt?.toLocaleDateString('ko-KR')}
                 </span>
               </div>

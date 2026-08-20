@@ -42,12 +42,12 @@ export default function SolveResumePrompt({
 
   return (
     <div className="grid flex-grow place-items-center bg-ink px-6 py-10">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#12141C] p-6">
+      <div className="w-full max-w-md rounded-[var(--radius-panel)] border border-white/10 bg-[#12141C] p-6">
         <p className="font-mono text-[11px] tracking-wider text-brand-300">MOCK EXAM IN PROGRESS</p>
         <h2 className="mt-1 text-xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           {t('resume-title', uiLang)}
         </h2>
-        <p className="mt-1.5 text-sm text-white/55">{problemTitle}</p>
+        <p className="mt-1.5 text-sm text-fg-on-dark-muted">{problemTitle}</p>
 
         {/* 지금 어떤 상태로 남아 있는지 — 고른 조건과 시계를 그대로 보여 준다 */}
         <dl className="mt-5 space-y-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[13px]">
@@ -66,7 +66,7 @@ export default function SolveResumePrompt({
           <Row
             label={strict ? t('rank-season-remaining', uiLang) : t('elapsed-time', uiLang)}
             value={
-              <span className={expired ? 'text-rose-300' : strict && left <= 60_000 ? 'text-rose-300' : 'text-white/80'}>
+              <span className={expired ? 'text-rose-300' : strict && left <= 60_000 ? 'text-rose-300' : 'text-fg-on-dark'}>
                 {expired ? t('time-over', uiLang) : formatClock(strict ? left : elapsedMs(setup))}
               </span>
             }
@@ -86,13 +86,13 @@ export default function SolveResumePrompt({
           <button
             type="button"
             onClick={onRestart}
-            className="w-full rounded-xl border border-white/15 py-3 text-sm font-medium text-white/70 transition hover:border-white/35 hover:text-white"
+            className="w-full rounded-xl border border-white/15 py-3 text-sm font-medium text-fg-on-dark-secondary transition hover:border-white/35 hover:text-white"
           >
             {t('resume-restart', uiLang)}
           </button>
         </div>
 
-        <p className="mt-3 text-center text-[11px] leading-relaxed text-white/35">
+        <p className="mt-3 text-center text-[11px] leading-relaxed text-fg-on-dark-quiet">
           {expired ? t('resume-expired', uiLang) : t('resume-hint', uiLang)}
         </p>
       </div>
@@ -103,8 +103,8 @@ export default function SolveResumePrompt({
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <dt className="text-white/40">{label}</dt>
-      <dd className="font-mono text-white/80">{value}</dd>
+      <dt className="text-fg-on-dark-quiet">{label}</dt>
+      <dd className="font-mono text-fg-on-dark">{value}</dd>
     </div>
   );
 }

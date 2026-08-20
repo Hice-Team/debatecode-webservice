@@ -36,7 +36,7 @@ const RADAR_CATEGORIES = ['해시', '스택', 'DP', '그래프', '그리디', '�
 const DIST_COLORS = { language: '#0369a1', domain: '#047857' };
 
 // 벤토 타일 공용 스타일
-const TILE = 'rounded-2xl border border-ink/10 bg-white p-5';
+const TILE = 'rounded-[var(--radius-panel)] border border-hairline bg-white p-5';
 
 // 연속 학습일(스트릭) — 활동한 날짜 집합에서 오늘(또는 어제)부터 이어지는 연속 일수.
 function computeStreak(dates: Date[]): number {
@@ -150,7 +150,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
       {/* ---- 벤토 그리드 ---- */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* 히어로: 웰컴 + 스트릭 + 퀵네비 (대형) */}
-        <div className="lg:col-span-8 rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-6 sm:p-8">
+        <div className="lg:col-span-8 rounded-[var(--radius-panel)] border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-6 sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600">
@@ -160,7 +160,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
                 {name}
                 <I18nSlot k="dash-title-suffix" fallback="님의 디베이트 현황" />
               </h1>
-              <p className="mt-2 text-sm text-ink-soft/60">
+              <p className="mt-2 text-sm text-fg-secondary">
                 {streak > 0 ? (
                   <>
                     {streak}
@@ -173,7 +173,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
             </div>
             <div className="shrink-0 text-center" role="status">
               <p className="text-5xl font-bold text-signal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{streak}</p>
-              <p className="mt-1 font-mono text-[11px] text-ink-soft/60 tracking-wider">
+              <p className="mt-1 font-mono text-[11px] text-fg-secondary tracking-wider">
                 <I18nSlot k="dash-streak-unit" fallback="DAY STREAK" />
               </p>
             </div>
@@ -188,12 +188,12 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
               <Link
                 key={a.k}
                 href={a.href}
-                className="rounded-xl border border-ink/10 bg-white/80 p-3.5 transition-colors hover:border-brand-300 hover:bg-brand-50/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                className="rounded-xl border border-hairline bg-white/80 p-3.5 transition-colors hover:border-brand-300 hover:bg-brand-50/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
               >
                 <p className="text-sm font-bold text-ink">
                   <I18nSlot k={`dash-nav-${a.k}`} fallback={a.label} />
                 </p>
-                <p className="mt-0.5 text-[11px] text-ink-soft/60">
+                <p className="mt-0.5 text-[11px] text-fg-secondary">
                   <I18nSlot k={`dash-nav-${a.k}-desc`} fallback={a.desc} />
                 </p>
               </Link>
@@ -209,13 +209,13 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
             { k: 'response', label: '면접 응답률', value: responseRate != null ? `${responseRate}%` : '—', sub: '방어 성공' },
             { k: 'defense', label: '평균 방어율', value: avgDefense != null ? `${avgDefense}%` : '—', sub: null },
           ].map((c) => (
-            <div key={c.k} className="relative overflow-hidden rounded-2xl border border-ink/10 bg-white p-4 flex flex-col justify-between">
+            <div key={c.k} className="relative overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white p-4 flex flex-col justify-between">
               <span aria-hidden className="absolute left-0 top-0 h-full w-1 bg-signal/70" />
-              <p className="font-mono text-[10px] text-ink-soft/55 tracking-wider">
+              <p className="font-mono text-[10px] text-fg-muted tracking-wider">
                 <I18nSlot k={`dash-kpi-${c.k}`} fallback={c.label} />
               </p>
               <p className="mt-1 text-2xl font-bold text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{c.value}</p>
-              <p className="mt-0.5 text-[10px] text-ink-soft/55">
+              <p className="mt-0.5 text-[10px] text-fg-muted">
                 {c.sub ? (
                   <I18nSlot k={`dash-kpi-${c.k}-sub`} fallback={c.sub} />
                 ) : (
@@ -231,8 +231,8 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
         </div>
 
         {/* Star 점수 · 티어 · 명예의 전당 순위 (풀폭 스트립) */}
-        <section className="lg:col-span-12 overflow-hidden rounded-2xl border border-ink/10 bg-white" aria-labelledby="rank-title">
-          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:divide-x lg:divide-ink/[0.07]">
+        <section className="lg:col-span-12 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white" aria-labelledby="rank-title">
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:divide-x lg:divide-hairline">
             {/* 좌: Star 점수 + 티어 진행도 */}
             <div className="p-5 sm:p-6">
               <div className="flex items-start justify-between gap-4">
@@ -240,7 +240,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
                   <h3 id="rank-title" className="text-sm font-bold text-ink">
                     <I18nSlot k="dash-star-title" fallback="Star 점수 · 티어" />
                   </h3>
-                  <p className="mt-0.5 text-xs text-ink-soft/55">
+                  <p className="mt-0.5 text-xs text-fg-muted">
                     <I18nSlot k="dash-star-desc" fallback="문제 해결과 방어 성과로 쌓이는 누적 점수입니다." />
                   </p>
                 </div>
@@ -251,17 +251,17 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
 
               <p className="mt-4 font-display text-4xl font-bold tracking-tight text-signal">
                 {starScore.toLocaleString()}
-                <span className="ml-1.5 text-sm font-semibold text-ink-soft/35">star</span>
+                <span className="ml-1.5 text-sm font-semibold text-fg-quiet">star</span>
               </p>
 
               <div className="mt-4">
                 <div className="h-2 w-full overflow-hidden rounded-full bg-ink/[0.07]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
+                    className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-colors"
                     style={{ width: `${tierProgress}%` }}
                   />
                 </div>
-                <p className="mt-1.5 font-mono text-[11px] text-ink-soft/45">
+                <p className="mt-1.5 font-mono text-[11px] text-fg-muted">
                   {nextRank ? (
                     <>
                       {nextRank.name}
@@ -277,7 +277,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
             </div>
 
             {/* 우: 명예의 전당 부문별 내 순위 */}
-            <div className="border-t border-ink/[0.07] p-5 sm:p-6 lg:border-t-0">
+            <div className="border-t border-hairline p-5 sm:p-6 lg:border-t-0">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h3 className="text-sm font-bold text-ink">
                   <I18nSlot k="dash-rank-title" fallback="명예의 전당 · 내 순위" />
@@ -293,16 +293,16 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
                     <Link
                       key={tile.key}
                       href={tile.key === 'overall' ? '/hall-of-fame' : `/hall-of-fame?tab=${tile.key}`}
-                      className="rounded-xl border border-ink/10 bg-paper/40 p-3 text-center transition-colors hover:border-brand-300 hover:bg-brand-50/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                      className="rounded-xl border border-hairline bg-paper/40 p-3 text-center transition-colors hover:border-brand-300 hover:bg-brand-50/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                     >
                       <p className="font-display text-xl font-bold text-ink">
                         {entry.rank != null ? `#${entry.rank}` : '—'}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-ink-soft/55">
+                      <p className="mt-0.5 text-[10px] text-fg-muted">
                         <I18nSlot k={`rank-tab-${tile.key}`} fallback={tile.label} />
                       </p>
                       {entry.rank != null && (
-                        <p className="mt-0.5 font-mono text-[9px] text-ink-soft/35">
+                        <p className="mt-0.5 font-mono text-[9px] text-fg-quiet">
                           / {entry.total}
                           <I18nSlot k="rank-unit-people" fallback="명" />
                         </p>
@@ -311,7 +311,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
                   );
                 })}
               </div>
-              <p className="mt-3 text-[11px] text-ink-soft/40">
+              <p className="mt-3 text-[11px] text-fg-quiet">
                 {myRanks.overall.rank == null ? (
                   <I18nSlot k="dash-rank-none" fallback="아직 집계된 활동이 없습니다. 문제를 풀거나 글을 남기면 순위에 오릅니다." />
                 ) : profile?.rankBadgeVisible ? (
@@ -362,9 +362,9 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
                 { k: 'my-comments', label: '내 답글', value: myComments, highlight: false },
                 { k: 'new-replies', label: '새 댓글', value: newReplies, highlight: newReplies > 0 },
               ].map((s) => (
-                <Link key={s.k} href="/community" className="rounded-xl border border-ink/10 bg-paper/40 p-3 hover:bg-brand-50/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal">
+                <Link key={s.k} href="/community" className="rounded-xl border border-hairline bg-paper/40 p-3 hover:bg-brand-50/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal">
                   <p className={`text-xl font-bold ${s.highlight ? 'text-rose-600' : 'text-ink'}`} style={{ fontFamily: 'var(--font-space-grotesk)' }}>{s.value}</p>
-                  <p className="mt-0.5 text-[10px] text-ink-soft/55">
+                  <p className="mt-0.5 text-[10px] text-fg-muted">
                     <I18nSlot k={`dash-${s.k}`} fallback={s.label} />
                   </p>
                 </Link>
@@ -375,7 +375,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
           {/* 디베이트포인트 · 상점 — 포인트는 이제 전 회원이 쓴다 */}
           <Link
             href="/shop"
-            className="group flex items-center gap-4 rounded-2xl border border-ink/10 bg-white p-5 transition-colors hover:border-brand-300 hover:bg-brand-50/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+            className="group flex items-center gap-4 rounded-[var(--radius-panel)] border border-hairline bg-white p-5 transition-colors hover:border-brand-300 hover:bg-brand-50/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
           >
             <span
               aria-hidden
@@ -384,12 +384,12 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
               🎁
             </span>
             <div className="min-w-0 flex-1">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">DEBATE POINT</p>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">DEBATE POINT</p>
               <p className="mt-0.5 font-display text-2xl font-bold text-ink">
                 {points.balance.toLocaleString()}
-                <span className="ml-0.5 text-base font-semibold text-ink-soft/50">P</span>
+                <span className="ml-0.5 text-base font-semibold text-fg-muted">P</span>
               </p>
-              <p className="mt-0.5 text-xs text-ink-soft/55">
+              <p className="mt-0.5 text-xs text-fg-muted">
                 {points.reserved > 0
                   ? `발급 대기 ${points.reserved.toLocaleString()}P · 상점에서 교환하기 →`
                   : '문제를 풀면 난이도에 비례해 쌓입니다. 상점에서 교환하기 →'}
@@ -401,11 +401,11 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
             /* debateQ 타일 — 디베이트메이트 전용 */
             <Link
               href="/debate-mate/console"
-              className="group flex-1 rounded-2xl border border-brand-300 bg-gradient-to-br from-brand-900 to-brand-700 p-5 text-white transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+              className="group flex-1 rounded-[var(--radius-panel)] border border-brand-300 bg-gradient-to-br from-brand-900 to-brand-700 p-5 text-white transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
             >
               <p className="font-mono text-[11px] tracking-wider text-brand-200">MATE EXCLUSIVE</p>
               <p className="mt-1.5 text-xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>debateQ</p>
-              <p className="mt-1.5 text-xs text-white/70 leading-relaxed">
+              <p className="mt-1.5 text-xs text-fg-on-dark-secondary leading-relaxed">
                 <I18nSlot k="dash-debateq-desc" fallback="AI가 만든 결함 코드를 수정하며 변론하는 심화 모드." />
                 {debateQCount > 0 && (
                   <>
@@ -425,7 +425,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
               <h3 className="text-sm font-bold text-ink mb-1">
                 <I18nSlot k="debate-mate" fallback="디베이트메이트" />
               </h3>
-              <p className="mb-3 text-xs text-ink-soft/55">
+              <p className="mb-3 text-xs text-fg-muted">
                 <I18nSlot k="dash-mate-desc" fallback="직접 문제를 출제하고 debateQ 모드를 여는 파트너 프로그램입니다." />
               </p>
               <MateApply status={mateStatus} />
@@ -439,7 +439,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
             <I18nSlot k="dash-weak-title" fallback="오답노트 · 약점 키워드" />
           </h3>
           {weakKeywords.length === 0 ? (
-            <p className="py-8 text-center text-sm text-ink-soft/55">
+            <p className="py-8 text-center text-sm text-fg-muted">
               <I18nSlot k="dash-weak-empty" fallback="아직 약점 데이터가 없습니다. 면접에서 방어에 실패한 개념이 여기에 쌓입니다." />
             </p>
           ) : (
@@ -449,7 +449,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
                 return (
                   <div key={kw} className="flex items-center gap-3 py-3">
                     <span className="px-2.5 py-1 rounded-full border border-rose-200 bg-rose-50 text-rose-700 text-xs font-medium">{kw}</span>
-                    <span className="text-xs text-ink-soft/55 truncate">
+                    <span className="text-xs text-fg-muted truncate">
                       {[...info.problems].slice(0, 2).join(', ')}
                       <I18nSlot k="dash-weak-in" fallback="에서 " />
                       {info.count}
@@ -472,7 +472,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
             <I18nSlot k="dash-recent-title" fallback="최근 제출 · 다시보기" />
           </h3>
           {recentSubmissions.length === 0 ? (
-            <p className="py-8 text-center text-sm text-ink-soft/55">
+            <p className="py-8 text-center text-sm text-fg-muted">
               <I18nSlot k="dash-recent-empty" fallback="아직 제출 기록이 없습니다." />{' '}
               <Link href="/problems" className="text-brand-600 underline underline-offset-2">
                 <I18nSlot k="dash-recent-empty-cta" fallback="첫 문제에 도전" />
@@ -484,7 +484,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
                 <div key={s.id} className="flex items-center gap-3 py-3 text-sm">
                   <span className={`font-mono text-[10px] px-2 py-0.5 rounded border ${s.status === 'PASS' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>{s.status}</span>
                   <Link href={`/problems/${s.problemId}`} className="font-medium truncate hover:text-brand-600">{s.problem.title}</Link>
-                  <span className="ml-auto font-mono text-[11px] text-ink-soft/50 whitespace-nowrap">
+                  <span className="ml-auto font-mono text-[11px] text-fg-muted whitespace-nowrap">
                     {LANGUAGE_LABELS[s.language as Language] ?? s.language} · {DIFFICULTY_LABELS[s.problem.difficulty]}
                   </span>
                 </div>
@@ -499,44 +499,44 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
             <h3 id="replays-title" className="text-lg font-bold text-ink">
               <I18nSlot k="dash-replays-title" fallback="면접 분석 · 다시보기" />
             </h3>
-            <Link href="/settings" className="font-mono text-[11px] text-ink-soft/55 hover:text-signal">
+            <Link href="/settings" className="font-mono text-[11px] text-fg-muted hover:text-signal">
               <I18nSlot k="settings" fallback="설정" /> →
             </Link>
           </div>
           {reports.length === 0 ? (
-            <div className={`${TILE} py-8 text-center text-sm text-ink-soft/55`}>
+            <div className={`${TILE} py-8 text-center text-sm text-fg-muted`}>
               <I18nSlot k="dash-replays-empty" fallback="완료된 면접이 없습니다. 문제를 전부 통과하면 AI 면접관이 기다립니다." />
             </div>
           ) : (
             <div className="space-y-3">
               {reports.map(({ interview: iv, report }) => (
-                <details key={iv.id} className="group bg-white rounded-2xl border border-ink/10 overflow-hidden">
+                <details key={iv.id} className="group bg-white rounded-[var(--radius-panel)] border border-hairline overflow-hidden">
                   <summary className="flex items-center gap-4 px-5 py-4 cursor-pointer list-none hover:bg-paper/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal">
                     <span className={`text-2xl font-bold w-16 text-center ${(iv.defenseScore ?? 0) >= 70 ? 'text-emerald-600' : (iv.defenseScore ?? 0) >= 50 ? 'text-brand-600' : 'text-rose-600'}`} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                       {iv.defenseScore}%
                     </span>
                     <div className="min-w-0">
                       <p className="font-semibold truncate">{iv.submission.problem.title}</p>
-                      <p className="font-mono text-[11px] text-ink-soft/50">{iv.submission.problem.category} · {new Date(iv.createdAt).toLocaleDateString('ko-KR')}</p>
+                      <p className="font-mono text-[11px] text-fg-muted">{iv.submission.problem.category} · {new Date(iv.createdAt).toLocaleDateString('ko-KR')}</p>
                     </div>
-                    <span className="ml-auto font-mono text-xs text-ink-soft/40 group-open:rotate-90 transition-transform" aria-hidden>▶</span>
+                    <span className="ml-auto font-mono text-xs text-fg-quiet group-open:rotate-90 transition-transform" aria-hidden>▶</span>
                   </summary>
                   {report && (
                     <div className="px-5 pb-5 pt-1 border-t border-ink/5 space-y-4">
-                      <p className="text-sm text-ink-soft/70 leading-relaxed">{report.summary}</p>
+                      <p className="text-sm text-fg-secondary leading-relaxed">{report.summary}</p>
                       <div className="space-y-3">
                         {report.rounds.map((r) => (
                           <div key={r.round} className="rounded-lg bg-paper/60 border border-ink/5 p-4 text-sm">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="font-mono text-[11px] text-ink-soft/50">ROUND {r.round}</span>
+                              <span className="font-mono text-[11px] text-fg-muted">ROUND {r.round}</span>
                               <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${VERDICT_BADGE[r.verdict]}`}>
                                 <I18nSlot k={VERDICT_KEY[r.verdict]} fallback={VERDICT_LABEL[r.verdict]} /> · {r.score}
                                 <I18nSlot k="score-unit" fallback="점" />
                               </span>
                             </div>
-                            <p className="text-ink-soft/80 mb-1.5"><span className="font-mono text-[11px] text-rose-500 mr-1.5">Q.</span>{r.question}</p>
-                            <p className="text-ink-soft/60 mb-1.5"><span className="font-mono text-[11px] text-emerald-600 mr-1.5">A.</span>{r.answer}</p>
-                            <p className="text-xs text-ink-soft/50">{r.feedback}</p>
+                            <p className="text-fg mb-1.5"><span className="font-mono text-[11px] text-rose-500 mr-1.5">Q.</span>{r.question}</p>
+                            <p className="text-fg-secondary mb-1.5"><span className="font-mono text-[11px] text-emerald-600 mr-1.5">A.</span>{r.answer}</p>
+                            <p className="text-xs text-fg-muted">{r.feedback}</p>
                           </div>
                         ))}
                       </div>

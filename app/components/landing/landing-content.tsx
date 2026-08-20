@@ -261,9 +261,33 @@ const TINTS: Record<string, string> = {
   sky: 'bg-sky-50 text-sky-600',
 };
 
-function Eyebrow({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+/**
+ * 섹션 표식.
+ *
+ * 예전에는 섹션마다 같은 크기의 대문자 아이브로우가 붙었다. 여섯 번 반복되면
+ * 그 라벨은 더 이상 정보가 아니라 장식이고, "AI가 만든 랜딩"의 대표적인 티가 된다.
+ * 지금은 번호를 앞세운 얇은 표식으로 바꿔, 몇 번째 이야기인지만 조용히 알린다.
+ */
+function Eyebrow({
+  children,
+  index,
+  className = '',
+}: {
+  children: React.ReactNode;
+  /** 01, 02 … 없으면 번호 없이 라벨만 */
+  index?: number;
+  className?: string;
+}) {
   return (
-    <p className={`text-sm font-bold uppercase tracking-wider text-brand-600 ${className}`}>{children}</p>
+    <p className={`flex items-center gap-2 text-[12px] font-semibold tracking-wide text-fg-muted ${className}`}>
+      {index !== undefined && (
+        <span aria-hidden className="dc-num font-mono text-[11px] text-brand-600">
+          {String(index).padStart(2, '0')}
+        </span>
+      )}
+      <span aria-hidden className="h-px w-6 bg-hairline" />
+      {children}
+    </p>
   );
 }
 
@@ -277,21 +301,21 @@ export default function LandingContent() {
       {/* ============================================================= */}
       {/* 토픽 타일 — 핵심 기능 4종 */}
       {/* ============================================================= */}
-      <section className="py-20 sm:py-24 bg-white">
+      <section className="py-24 sm:py-32 bg-white">
         <div className="max-w-6xl mx-auto px-6 sm:px-8">
           <div className="max-w-2xl mx-auto text-center mb-12">
-            <Eyebrow>{c.whyEyebrow}</Eyebrow>
+            <Eyebrow className="justify-center">{c.whyEyebrow}</Eyebrow>
             <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
               {c.whyTitle}
             </h2>
-            <p className="mt-4 text-ink-soft/60 leading-relaxed">{c.whyDesc}</p>
+            <p className="mt-4 text-fg-secondary leading-relaxed">{c.whyDesc}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {c.features.map((card) => (
               <div
                 key={card.title}
-                className="group rounded-2xl border border-ink/[0.08] bg-white p-6 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-12px_rgba(20,21,43,0.18)] hover:border-brand-200"
+                className="group rounded-[var(--radius-panel)] border border-hairline bg-white p-6 transition-[color,background-color,border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-12px_rgba(20,21,43,0.18)] hover:border-brand-200"
               >
                 <div
                   aria-hidden
@@ -300,7 +324,7 @@ export default function LandingContent() {
                   {card.icon}
                 </div>
                 <h3 className="text-base font-bold text-ink-soft mb-2">{card.title}</h3>
-                <p className="text-sm text-ink-soft/60 leading-relaxed">{card.desc}</p>
+                <p className="text-sm text-fg-secondary leading-relaxed">{card.desc}</p>
               </div>
             ))}
           </div>
@@ -310,37 +334,37 @@ export default function LandingContent() {
       {/* ============================================================= */}
       {/* Feature 01 — DebateAI */}
       {/* ============================================================= */}
-      <section className="py-20 sm:py-24 bg-paper">
+      <section className="py-16 sm:py-20 bg-paper">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="space-y-4">
-            <Eyebrow>{c.f1Eyebrow}</Eyebrow>
+            <Eyebrow index={1}>{c.f1Eyebrow}</Eyebrow>
             <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
               {c.f1Title}
             </h2>
-            <p className="text-ink-soft/65 leading-relaxed">{c.f1Desc}</p>
+            <p className="text-fg-secondary leading-relaxed">{c.f1Desc}</p>
           </div>
 
           <div className="space-y-4">
-            <div className="bg-ink rounded-2xl p-6 font-mono text-sm shadow-[0_16px_40px_-16px_rgba(20,21,43,0.35)]">
+            <div className="bg-ink rounded-[var(--radius-panel)] p-6 font-mono text-sm shadow-[0_16px_40px_-16px_rgba(20,21,43,0.35)]">
               <div className="text-brand-300 text-xs mb-3">DebateAI</div>
-              <p className="text-white/70 leading-relaxed border-l-2 border-brand-400/50 pl-4">{c.f1Quote}</p>
+              <p className="text-fg-on-dark-secondary leading-relaxed border-l-2 border-brand-400/50 pl-4">{c.f1Quote}</p>
             </div>
 
             {/* AI 제공자 선택 */}
-            <div className="rounded-2xl border border-ink/[0.08] bg-white p-5">
-              <p className="text-xs font-semibold text-ink-soft/50 mb-3">{c.f1ProvLabel}</p>
+            <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+              <p className="text-xs font-semibold text-fg-muted mb-3">{c.f1ProvLabel}</p>
               <div className="grid sm:grid-cols-3 gap-2.5">
                 {c.f1Providers.map((p) => (
-                  <div key={p.tag} className="rounded-xl border border-ink/[0.08] bg-paper p-3.5">
+                  <div key={p.tag} className="rounded-xl border border-hairline bg-paper p-3.5">
                     <span className="inline-block font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 mb-2">
                       {p.tag}
                     </span>
                     <p className="text-sm font-bold text-ink-soft">{p.title}</p>
-                    <p className="mt-1 text-xs text-ink-soft/55 leading-relaxed">{p.desc}</p>
+                    <p className="mt-1 text-xs text-fg-muted leading-relaxed">{p.desc}</p>
                   </div>
                 ))}
               </div>
-              <p className="mt-3 flex items-center gap-2 text-xs text-ink-soft/60">
+              <p className="mt-3 flex items-center gap-2 text-xs text-fg-secondary">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 {c.f1AiOptional}
               </p>
@@ -355,11 +379,11 @@ export default function LandingContent() {
       <section className="py-20 sm:py-24 bg-white">
         <div className="max-w-6xl mx-auto px-6 sm:px-8">
           <div className="max-w-2xl mx-auto text-center mb-12">
-            <Eyebrow>{c.f2Eyebrow}</Eyebrow>
+            <Eyebrow index={2}>{c.f2Eyebrow}</Eyebrow>
             <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
               {c.f2Title}
             </h2>
-            <p className="mt-4 text-ink-soft/65 leading-relaxed">{c.f2Desc}</p>
+            <p className="mt-4 text-fg-secondary leading-relaxed">{c.f2Desc}</p>
           </div>
           <div className="max-w-5xl mx-auto">
             <EditorShowcase />
@@ -373,14 +397,14 @@ export default function LandingContent() {
       <section className="py-20 sm:py-24 bg-paper">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="space-y-4">
-            <Eyebrow>{c.f3Eyebrow}</Eyebrow>
+            <Eyebrow index={3}>{c.f3Eyebrow}</Eyebrow>
             <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
               {c.f3Title}
             </h2>
-            <p className="text-ink-soft/65 leading-relaxed">{c.f3Desc}</p>
+            <p className="text-fg-secondary leading-relaxed">{c.f3Desc}</p>
           </div>
-          <div className="bg-white border border-ink/[0.08] rounded-2xl p-6 font-mono text-xs space-y-1 shadow-[0_12px_32px_-16px_rgba(20,21,43,0.15)]">
-            <div className="flex justify-between font-bold border-b border-ink/10 pb-2 text-ink-soft/40 text-[11px]">
+          <div className="bg-white border border-hairline rounded-[var(--radius-panel)] p-6 font-mono text-xs space-y-1 shadow-[0_12px_32px_-16px_rgba(20,21,43,0.15)]">
+            <div className="flex justify-between font-bold border-b border-hairline pb-2 text-fg-quiet text-[11px]">
               {c.caseHeader.map((h) => (
                 <span key={h}>{h}</span>
               ))}
@@ -404,17 +428,17 @@ export default function LandingContent() {
       <section className="py-20 sm:py-24 bg-white">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="lg:order-2 space-y-4">
-            <Eyebrow>{c.f4Eyebrow}</Eyebrow>
+            <Eyebrow index={4}>{c.f4Eyebrow}</Eyebrow>
             <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
               {c.f4Title}
             </h2>
-            <p className="text-ink-soft/65 leading-relaxed">{c.f4Desc}</p>
+            <p className="text-fg-secondary leading-relaxed">{c.f4Desc}</p>
           </div>
 
           <div className="lg:order-1 space-y-5">
             {/* 지원 언어 */}
-            <div className="rounded-2xl border border-ink/[0.08] bg-paper p-5">
-              <p className="text-xs font-semibold text-ink-soft/50 mb-3">Languages</p>
+            <div className="rounded-[var(--radius-panel)] border border-hairline bg-paper p-5">
+              <p className="text-xs font-semibold text-fg-muted mb-3">Languages</p>
               <div className="flex flex-wrap gap-2">
                 {LANGS_NOW.map((l) => (
                   <span
@@ -425,7 +449,7 @@ export default function LandingContent() {
                     {l}
                   </span>
                 ))}
-                <span className="inline-flex items-center px-2 py-1.5 text-[11px] font-semibold text-ink-soft/40">
+                <span className="inline-flex items-center px-2 py-1.5 text-[11px] font-semibold text-fg-quiet">
                   {c.supported}
                 </span>
               </div>
@@ -433,7 +457,7 @@ export default function LandingContent() {
                 {LANGS_SOON.map((l) => (
                   <span
                     key={l}
-                    className="font-mono px-3 py-1.5 rounded-full bg-white border border-ink/10 text-ink-soft/45 text-sm"
+                    className="font-mono px-3 py-1.5 rounded-full bg-white border border-hairline text-fg-muted text-sm"
                   >
                     {l}
                   </span>
@@ -444,17 +468,17 @@ export default function LandingContent() {
                   {c.allLangs}
                 </span>
               </div>
-              <p className="mt-3 text-xs text-ink-soft/45">{c.allLangsNote}</p>
+              <p className="mt-3 text-xs text-fg-muted">{c.allLangsNote}</p>
             </div>
 
             {/* 기업 변형문제 */}
-            <div className="rounded-2xl border border-ink/[0.08] bg-paper p-5">
-              <p className="text-xs font-semibold text-ink-soft/50 mb-3">{c.companiesLabel}</p>
+            <div className="rounded-[var(--radius-panel)] border border-hairline bg-paper p-5">
+              <p className="text-xs font-semibold text-fg-muted mb-3">{c.companiesLabel}</p>
               <div className="flex flex-wrap gap-2">
                 {companies.map((name) => (
                   <span
                     key={name}
-                    className="px-3 py-1.5 rounded-full bg-white border border-ink/10 text-ink-soft/70 text-sm font-medium"
+                    className="px-3 py-1.5 rounded-full bg-white border border-hairline text-fg-secondary text-sm font-medium"
                   >
                     {name}
                   </span>
@@ -463,7 +487,7 @@ export default function LandingContent() {
                   {c.comingSoon} +
                 </span>
               </div>
-              <p className="mt-3 text-xs text-ink-soft/50 leading-relaxed">{c.f4CompaniesNote}</p>
+              <p className="mt-3 text-xs text-fg-muted leading-relaxed">{c.f4CompaniesNote}</p>
               <p className="mt-2 text-xs font-semibold text-brand-600/80">{c.f4Mou}</p>
             </div>
           </div>
@@ -476,26 +500,26 @@ export default function LandingContent() {
       <section className="py-20 sm:py-24 bg-paper">
         <div className="max-w-6xl mx-auto px-6 sm:px-8">
           <div className="max-w-2xl mx-auto text-center">
-            <Eyebrow>{c.osEyebrow}</Eyebrow>
+            <Eyebrow index={5} className="justify-center">{c.osEyebrow}</Eyebrow>
             <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
               {c.osTitle}
             </h2>
-            <p className="mt-4 text-ink-soft/65 leading-relaxed">{c.osDesc}</p>
+            <p className="mt-4 text-fg-secondary leading-relaxed">{c.osDesc}</p>
           </div>
 
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
             {c.osPoints.map((p, i) => (
-              <div key={i} className="rounded-2xl border border-ink/[0.08] bg-white p-6">
+              <div key={i} className="rounded-[var(--radius-panel)] border border-hairline bg-white p-6">
                 <div className="w-8 h-8 rounded-full bg-brand-50 text-brand-600 text-sm font-bold flex items-center justify-center mb-4">
                   {i + 1}
                 </div>
                 <h3 className="text-base font-bold text-ink-soft mb-1.5">{p.title}</h3>
-                <p className="text-sm text-ink-soft/60 leading-relaxed">{p.desc}</p>
+                <p className="text-sm text-fg-secondary leading-relaxed">{p.desc}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-5 flex items-start gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-5">
+          <div className="mt-5 flex items-start gap-3 rounded-[var(--radius-panel)] border border-brand-200 bg-brand-50 p-5">
             <span className="mt-0.5 font-mono text-[11px] font-bold text-brand-700 whitespace-nowrap">NEW</span>
             <p className="text-sm text-brand-900/80 leading-relaxed">{c.osWeekly}</p>
           </div>
@@ -505,12 +529,12 @@ export default function LandingContent() {
       {/* ============================================================= */}
       {/* 통계 밴드 — 브릴리언트식 신뢰 지표 */}
       {/* ============================================================= */}
-      <section className="py-16 sm:py-20 bg-white border-y border-ink/[0.06]">
+      <section className="py-16 sm:py-20 bg-white border-y border-hairline">
         <div className="max-w-5xl mx-auto px-6 sm:px-8 grid grid-cols-1 sm:grid-cols-3 gap-10 text-center">
           {c.stats.map((s) => (
             <div key={s.label}>
-              <p className="font-display text-4xl sm:text-5xl font-bold text-brand-600">{s.value}</p>
-              <p className="mt-2 text-sm text-ink-soft/55">{s.label}</p>
+              <p className="dc-num font-display text-4xl sm:text-5xl font-bold text-brand-600">{s.value}</p>
+              <p className="mt-2 text-sm text-fg-muted">{s.label}</p>
             </div>
           ))}
         </div>
@@ -524,21 +548,21 @@ export default function LandingContent() {
           <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft text-center mb-10">
             {c.faqTitle}
           </h2>
-          <div className="divide-y divide-ink/[0.08] border-y border-ink/[0.08]">
+          <div className="divide-y divide-hairline border-y border-hairline">
             {c.faqs.map((f) => (
               <details key={f.q} className="group py-1">
                 <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none text-base font-semibold text-ink-soft hover:text-brand-600 transition-colors [&::-webkit-details-marker]:hidden">
                   {f.q}
                   <svg
                     viewBox="0 0 20 20"
-                    className="w-5 h-5 shrink-0 text-ink-soft/40 transition-transform group-open:rotate-45"
+                    className="w-5 h-5 shrink-0 text-fg-quiet transition-transform group-open:rotate-45"
                     fill="none"
                     aria-hidden
                   >
                     <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   </svg>
                 </summary>
-                <p className="pb-5 pr-9 text-[15px] text-ink-soft/60 leading-relaxed">{f.a}</p>
+                <p className="pb-5 pr-9 text-[15px] text-fg-secondary leading-relaxed">{f.a}</p>
               </details>
             ))}
           </div>

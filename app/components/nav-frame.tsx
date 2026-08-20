@@ -19,14 +19,14 @@ export default function NavFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="sticky top-0 z-50">
       <nav
-        className={`mx-auto border transition-all duration-300 ease-out ${
+        className={`mx-auto border transition-colors duration-300 ease-out ${
           pill
-            ? 'mt-3 max-w-4xl rounded-full bg-white/85 backdrop-blur-xl border-ink/10 shadow-xl shadow-ink/[0.08]'
+            ? 'mt-3 max-w-4xl rounded-full bg-white/85 backdrop-blur-xl border-hairline shadow-xl shadow-ink/[0.08]'
             : 'mt-0 max-w-full rounded-none bg-white/90 backdrop-blur border-x-transparent border-t-transparent border-b-ink/[0.06]'
         }`}
       >
         <div
-          className={`flex items-center justify-between transition-all duration-300 ease-out ${
+          className={`flex items-center justify-between transition-colors duration-300 ease-out ${
             pill ? 'h-13 px-5 sm:px-6' : 'h-16 px-6 sm:px-8 max-w-7xl mx-auto'
           }`}
         >

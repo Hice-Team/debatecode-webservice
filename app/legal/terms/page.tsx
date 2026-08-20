@@ -6,7 +6,7 @@ export default function TermsPage() {
   return (
     <>
       <h1>서비스 이용약관</h1>
-      <p className="text-sm text-ink-soft/50">시행일: 2026년 8월 11일 · 이전 개정일: 2026년 8월 10일</p>
+      <p className="text-sm text-fg-muted">시행일: 2026년 8월 11일 · 이전 개정일: 2026년 8월 10일</p>
 
       <h2>제1조 (목적)</h2>
       <p>

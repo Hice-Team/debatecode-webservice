@@ -17,8 +17,8 @@ export default function PollCard({ poll, currentUserId }: { poll: PollData; curr
   const myVote = currentUserId ? (poll.votes.find((v) => v.userId === currentUserId)?.optionIndex ?? null) : null;
 
   return (
-    <div className="mt-5 rounded-xl border border-ink/10 bg-paper p-5">
-      <p className="font-mono text-[11px] text-ink-soft/40 tracking-wider mb-1">
+    <div className="mt-5 rounded-xl border border-hairline bg-paper p-5">
+      <p className="font-mono text-[11px] text-fg-quiet tracking-wider mb-1">
         📊 <I18nSlot k="poll-title" fallback="투표 · 총" /> {total}
         <I18nSlot k="poll-votes-unit" fallback="표" />
       </p>
@@ -37,7 +37,7 @@ export default function PollCard({ poll, currentUserId }: { poll: PollData; curr
                 disabled={!currentUserId}
                 title={option}
                 className={`relative w-full overflow-hidden rounded-lg border px-4 py-2.5 text-left text-sm transition-colors disabled:cursor-not-allowed ${
-                  mine ? 'border-signal bg-white font-semibold text-ink-soft' : 'border-ink/15 bg-white text-ink-soft/70 hover:border-ink/40'
+                  mine ? 'border-signal bg-white font-semibold text-ink-soft' : 'border-ink/15 bg-white text-fg-secondary hover:border-ink/40'
                 }`}
               >
                 {/* 득표 비율 바 */}
@@ -51,7 +51,7 @@ export default function PollCard({ poll, currentUserId }: { poll: PollData; curr
                     {mine && <span className="mr-1.5 text-signal">✓</span>}
                     {option}
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] text-ink-soft/50">
+                  <span className="shrink-0 font-mono text-[11px] text-fg-muted">
                     {count}
                     <I18nSlot k="poll-votes-unit" fallback="표" /> · {pct}%
                   </span>
@@ -62,7 +62,7 @@ export default function PollCard({ poll, currentUserId }: { poll: PollData; curr
         })}
       </div>
       {!currentUserId && (
-        <p className="mt-3 text-xs text-ink-soft/40">
+        <p className="mt-3 text-xs text-fg-quiet">
           <Link href="/login" className="underline underline-offset-2 hover:text-ink-soft">
             <I18nSlot k="login" fallback="로그인" />
           </Link>

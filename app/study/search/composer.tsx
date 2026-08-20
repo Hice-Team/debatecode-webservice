@@ -101,13 +101,13 @@ export default function Composer({
         {messages.length > 0 && (
           <div className="mb-2 flex items-center justify-end gap-2">
             {/* 전체 대화 내보내기 — 개별 답변만 내보내려면 그 답변의 툴바를 쓴다 */}
-            <span className="text-[11px] text-ink-soft/45">{t('ai-export-hint', language)}</span>
+            <span className="text-[11px] text-fg-muted">{t('ai-export-hint', language)}</span>
             <button
               type="button"
               onClick={() => exportConversation(messages)}
               disabled={disabled}
               title={t('ai-export-all-hint', language)}
-              className="rounded-lg border border-ink/12 bg-white px-3 py-1.5 text-[11px] font-semibold text-ink-soft/70 transition hover:border-brand-300 hover:text-signal disabled:opacity-40 disabled:hover:border-ink/12 disabled:hover:text-ink-soft/70"
+              className="rounded-lg border border-hairline bg-white px-3 py-1.5 text-[11px] font-semibold text-fg-secondary transition hover:border-brand-300 hover:text-signal disabled:opacity-40 disabled:hover:border-hairline disabled:hover:text-fg-secondary"
             >
               {t('ai-export-all', language)}
             </button>
@@ -125,7 +125,7 @@ export default function Composer({
         {/* 알약 입력 — 첨부 · 입력 · 모델(강도 포함) · 음성 · 전송.
             넓은 화면은 한 줄, 좁은 화면(스마트폰)은 컨트롤 묶음이 아랫줄로 내려간다.
             여섯 개를 360px 안에 억지로 우겨넣으면 입력창이 손톱만 해지기 때문이다. */}
-        <div className="flex flex-wrap items-end gap-0.5 rounded-[1.75rem] border border-ink/[0.08] bg-white p-1.5 sm:flex-nowrap sm:gap-1 sm:p-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.12)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.18)]">
+        <div className="flex flex-wrap items-end gap-0.5 rounded-[1.75rem] border border-hairline bg-white p-1.5 sm:flex-nowrap sm:gap-1 sm:p-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.12)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.18)]">
           <AttachMenu
             placement="top"
             disabled={disabled}
@@ -157,7 +157,7 @@ export default function Composer({
               disabled={disabled}
               placeholder={t('ai-search-followup-placeholder', language)}
               aria-label={t('ai-search-followup-placeholder', language)}
-              className="dc-scroll min-w-0 flex-1 resize-none self-center bg-transparent px-2 py-2 text-[15px] leading-6 text-ink placeholder:text-ink-soft/35 focus:outline-none disabled:cursor-not-allowed disabled:text-ink-soft/40"
+              className="dc-scroll min-w-0 flex-1 resize-none self-center bg-transparent px-2 py-2 text-[15px] leading-6 text-ink placeholder:text-fg-quiet focus:outline-none disabled:cursor-not-allowed disabled:text-fg-quiet"
             />
           )}
 
@@ -205,7 +205,7 @@ export default function Composer({
                 disabled={!text.trim() || busy}
                 aria-label={t('ai-search-submit', language)}
                 title={t('ai-search-submit', language)}
-                className="group/send grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.28)] transition-all hover:shadow-[0_3px_12px_rgba(24,0,172,0.4)] active:scale-95 disabled:bg-none disabled:bg-ink/[0.07] disabled:text-ink-soft/30 disabled:shadow-none"
+                className="group/send grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.28)] transition-[color,background-color,border-color,box-shadow,transform] hover:shadow-[0_3px_12px_rgba(24,0,172,0.4)] active:scale-95 disabled:bg-none disabled:bg-ink/[0.07] disabled:text-fg-quiet disabled:shadow-none"
               >
                 {busy ? (
                   <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none" />
@@ -228,7 +228,7 @@ export default function Composer({
           </div>
         </div>
 
-        <p className="mt-2 text-center text-[11px] text-ink-soft/35">
+        <p className="mt-2 text-center text-[11px] text-fg-quiet">
           {disabled ? (
             t('ai-generating-hint', language)
           ) : (

@@ -155,6 +155,19 @@ export const PERMISSIONS = {
     sensitive: true,
   },
 
+  'ranking.manage': {
+    label: '시즌 · 랭킹 운영',
+    group: 'system',
+    description: '시즌 번호를 다시 매기고, 전체 또는 특정 계정의 랭킹을 초기화한다.',
+    sensitive: true,
+  },
+
+  'feedback.read': {
+    label: 'AI 피드백 열람',
+    group: 'system',
+    description: 'AI Search 답변에 이용자가 남긴 평가와 사유를 집계해서 본다.',
+  },
+
   'setting.read': {
     label: '시스템 상태 열람',
     group: 'system',
@@ -221,6 +234,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'sanction.issue',
     'sanction.lift',
     'audit.read',
+    'feedback.read',
+    'ranking.manage',
     'setting.read',
   ],
 

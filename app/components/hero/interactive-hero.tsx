@@ -300,7 +300,7 @@ export default function InteractiveHero() {
           {copy.titleC}
         </h1>
 
-        <p className="mt-6 mx-auto max-w-2xl text-base sm:text-lg text-ink-soft/60 leading-relaxed">
+        <p className="mt-6 mx-auto max-w-2xl text-base sm:text-lg text-fg-secondary leading-relaxed">
           {copy.desc}
         </p>
 
@@ -320,7 +320,7 @@ export default function InteractiveHero() {
         </div>
 
         {/* 신뢰 지표 스트립 */}
-        <ul className="mt-8 flex flex-wrap justify-center gap-x-7 gap-y-2 text-sm text-ink-soft/55">
+        <ul className="mt-8 flex flex-wrap justify-center gap-x-7 gap-y-2 text-sm text-fg-muted">
           {copy.proofs.map((p) => (
             <li key={p} className="inline-flex items-center gap-2">
               <svg viewBox="0 0 16 16" className="w-4 h-4 text-emerald-500" fill="none" aria-hidden>
@@ -334,14 +334,14 @@ export default function InteractiveHero() {
 
       {/* ---- 자동 재생 디베이트 패널 (히어로 비주얼) ---- */}
       <div className="relative max-w-3xl mx-auto px-6 sm:px-8 mt-14">
-        <div className="rounded-3xl border border-ink/10 bg-paper p-2.5 shadow-[0_24px_60px_-24px_rgba(20,21,43,0.25)]">
-          <div className="relative bg-ink border border-ink/40 rounded-2xl overflow-hidden font-mono text-[12.5px]">
+        <div className="rounded-[var(--radius-panel)] border border-hairline bg-paper p-2.5 shadow-[0_24px_60px_-24px_rgba(20,21,43,0.25)]">
+          <div className="relative bg-ink border border-ink/40 rounded-[var(--radius-panel)] overflow-hidden font-mono text-[12.5px]">
             {/* 타이틀바 */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-white/[0.02]">
-              <span className="text-white/40 text-[11px]">{sc.file}</span>
+              <span className="text-fg-on-dark-quiet text-[11px]">{sc.file}</span>
               <span className="flex items-center gap-3">
                 {displayScore !== null && (
-                  <span className="text-[10px] text-white/50">
+                  <span className="text-[10px] text-fg-on-dark-muted">
                     {copy.defenseRate}{' '}
                     <span className={displayScore >= 85 ? 'text-emerald-400 font-bold' : 'text-brand-300 font-bold'}>
                       {displayScore}%
@@ -356,8 +356,8 @@ export default function InteractiveHero() {
             <div className="min-h-[168px] py-2 text-left">
               {displayLines.map((line, i) => (
                 <div key={i} className={`flex ${refactored && !reduced ? 'animate-[dc-blink_0.6s_1]' : ''}`}>
-                  <span className="w-10 shrink-0 text-right pr-3 py-0.5 text-white/20 select-none">{i + 1}</span>
-                  <pre className={`py-0.5 pr-4 whitespace-pre ${refactored || reduced ? 'text-emerald-100/90' : 'text-white/80'}`}>
+                  <span className="w-10 shrink-0 text-right pr-3 py-0.5 text-fg-on-dark-quiet select-none">{i + 1}</span>
+                  <pre className={`py-0.5 pr-4 whitespace-pre ${refactored || reduced ? 'text-emerald-100/90' : 'text-fg-on-dark'}`}>
                     <CodeLine text={line} />
                     {!reduced && phase === 'typing' && i === displayLines.length - 1 && (
                       <span className="inline-block w-2 h-3.5 bg-brand-400/80 align-middle ml-0.5 animate-pulse" />
@@ -372,7 +372,7 @@ export default function InteractiveHero() {
               {(reduced || phase !== 'typing') &&
                 [1, 2, 3].map((n) => (
                   <span key={n} className={`transition-opacity ${n <= visibleCases ? 'opacity-100' : 'opacity-0'}`}>
-                    <span className="text-white/40">CASE #{n}</span> <span className="text-emerald-400">✓</span>
+                    <span className="text-fg-on-dark-quiet">CASE #{n}</span> <span className="text-emerald-400">✓</span>
                   </span>
                 ))}
               {(reduced || visibleCases === 3) && (
@@ -384,7 +384,7 @@ export default function InteractiveHero() {
             <div className="border-t border-white/10 min-h-[76px] text-left">
               {showAi && (
                 <div className="flex bg-rose-500/[0.07] border-l-2 border-rose-500/50">
-                  <span className="w-10 shrink-0 text-right pr-3 py-2 text-white/20 select-none">−</span>
+                  <span className="w-10 shrink-0 text-right pr-3 py-2 text-fg-on-dark-quiet select-none">−</span>
                   <p className="py-2 pr-4 text-rose-300/90">
                     {aiText}
                     {!reduced && phase === 'question' && aiChars < sc.aiLine.length && (
@@ -395,7 +395,7 @@ export default function InteractiveHero() {
               )}
               {showUser && (
                 <div className="flex bg-emerald-500/[0.07] border-l-2 border-emerald-500/50">
-                  <span className="w-10 shrink-0 text-right pr-3 py-2 text-white/20 select-none">+</span>
+                  <span className="w-10 shrink-0 text-right pr-3 py-2 text-fg-on-dark-quiet select-none">+</span>
                   <p className="py-2 pr-4 text-emerald-300/90">
                     {userText}
                     {!reduced && phase === 'answer' && userChars < sc.userLine.length && (
@@ -408,7 +408,7 @@ export default function InteractiveHero() {
           </div>
         </div>
 
-        <p className="mt-5 text-center text-[13px] text-ink-soft/45">
+        <p className="mt-5 text-center text-[13px] text-fg-muted">
           {copy.replayNote}
           <Link href="/problems" className="font-semibold text-brand-600 hover:text-brand-500 underline underline-offset-2">
             {copy.replayLink}

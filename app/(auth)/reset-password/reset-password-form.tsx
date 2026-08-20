@@ -11,7 +11,7 @@ export default function ResetPasswordForm() {
   return (
     <form action={formAction} className="space-y-5">
       <div>
-        <label htmlFor="password" className="block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5">
+        <label htmlFor="password" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">
           NEW PASSWORD
         </label>
         <input
@@ -21,7 +21,7 @@ export default function ResetPasswordForm() {
           autoComplete="new-password"
           required
           placeholder="영문 + 숫자, 8자 이상"
-          className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
+          className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
         />
         {state.errors?.password && <p className="mt-1.5 text-xs text-rose-600">{state.errors.password[0]}</p>}
       </div>

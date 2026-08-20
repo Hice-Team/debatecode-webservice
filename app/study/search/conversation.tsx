@@ -37,6 +37,8 @@ export interface ConversationMessage {
   /** 공급자가 usage를 주지 않아 추정한 값인지 */
   tokensEstimated?: boolean;
   effort?: string | null;
+  /** 이 답변에 내가 남긴 평가 — 새로고침해도 버튼 상태가 유지되도록 서버에서 함께 싣는다 */
+  feedback?: { rating: 'up' | 'down'; reasons: string[]; comment?: string | null } | null;
 }
 
 type StepStatus = 'running' | 'done';
@@ -55,7 +57,7 @@ type StreamEvent =
   | { type: 'error'; message: string };
 
 const PROSE =
-  'prose-sm max-w-none text-[15px] leading-[1.85] text-ink-soft/85 [&_a]:text-signal [&_code]:rounded [&_code]:bg-ink/[0.06] [&_code]:px-1 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_li]:my-1 [&_p]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-ink [&_pre]:p-4 [&_pre]:text-white [&_ul]:list-disc [&_ul]:pl-5';
+  'prose-sm max-w-none text-[15px] leading-[1.85] text-fg [&_a]:text-signal [&_code]:rounded [&_code]:bg-ink/[0.06] [&_code]:px-1 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_li]:my-1 [&_p]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-ink [&_pre]:p-4 [&_pre]:text-white [&_ul]:list-disc [&_ul]:pl-5';
 
 export default function Conversation({
   sessionId,
@@ -64,6 +66,7 @@ export default function Conversation({
   initialModel,
   initialEffort,
   importedFrom,
+  branchedFrom,
   liveModel,
 }: {
   sessionId: string;
@@ -72,6 +75,7 @@ export default function Conversation({
   initialModel: string;
   initialEffort: Effort;
   importedFrom: { fileName?: string; messageCount?: number } | null;
+  branchedFrom: { sessionId?: string; title?: string | null } | null;
   liveModel: boolean;
 }) {
   const { language } = useLanguage();
@@ -263,7 +267,12 @@ export default function Conversation({
         return;
 
       case 'done':
+        // 저장된 답변을 목록에 넣는 것과 흘려보내던 초안을 지우는 것을 **같은 배치**로 처리한다.
+        // 나눠 두면 한 프레임 동안 초안과 최종 답변이 같이 떠서 화면이 한 번 튄다.
         setMessages((prev) => [...prev, event.message]);
+        setDraft('');
+        setReasoning('');
+        setSteps({});
         return;
 
       case 'error':
@@ -302,6 +311,8 @@ export default function Conversation({
 
   const empty = messages.length === 0 && !pendingQuestion && !streaming;
   const busy = streaming;
+  /** 본문이 한 글자라도 나오기 시작했는가 — 사고 과정을 접는 기준 */
+  const answering = draft.length > 0;
 
   return (
     <main className="flex-grow pb-40 sm:pb-44">
@@ -310,7 +321,7 @@ export default function Conversation({
           <div className="mb-6 flex items-center gap-3">
             <Link
               href="/study"
-              className="inline-flex items-center gap-1.5 text-xs text-ink-soft/45 transition-colors hover:text-signal"
+              className="inline-flex items-center gap-1.5 text-xs text-fg-muted transition-colors hover:text-signal"
             >
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-2" aria-hidden>
                 <path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -318,25 +329,50 @@ export default function Conversation({
               {t('ai-search-back', language)}
             </Link>
             {!liveModel && (
-              <span className="ml-auto rounded-full border border-ink/10 bg-white px-2.5 py-1 font-mono text-[10px] text-ink-soft/45">
+              <span className="ml-auto rounded-full border border-hairline bg-white px-2.5 py-1 font-mono text-[10px] text-fg-muted">
                 {t('ai-search-offline-badge', language)}
               </span>
             )}
           </div>
 
+          {/* 분기된 대화 — 어디서 갈라져 나왔는지 한 줄로 밝히고 원본으로 돌아갈 길을 준다.
+              이 표시가 없으면 목록에 비슷한 대화가 둘 생긴 이유를 알 수 없다. */}
+          {branchedFrom?.sessionId && (
+            <div className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[var(--radius-panel)] border border-hairline bg-white px-4 py-3 text-[12px] text-fg-muted">
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-none stroke-current stroke-[1.6]" aria-hidden>
+                <circle cx="6" cy="6" r="2.5" />
+                <circle cx="6" cy="18" r="2.5" />
+                <circle cx="18" cy="9" r="2.5" />
+                <path d="M6 8.5v7M8.5 6.5h5a2 2 0 0 1 2 2v.5" strokeLinecap="round" />
+              </svg>
+              <span>{t('ai-branch-banner', language)}</span>
+              {branchedFrom.title && (
+                <span className="min-w-0 max-w-[18rem] truncate font-semibold text-fg">
+                  {branchedFrom.title}
+                </span>
+              )}
+              <Link
+                href={`/study/search?session=${branchedFrom.sessionId}`}
+                className="ml-auto shrink-0 font-semibold text-signal hover:underline"
+              >
+                {t('ai-branch-open-origin', language)}
+              </Link>
+            </div>
+          )}
+
           {/* 가져온 세션 카드 — 최초 대화 지점에만 한 번 표시한다 */}
           {importedFrom?.fileName && (
-            <div className="mb-6 rounded-2xl border border-ink/10 bg-white px-5 py-4">
+            <div className="mb-6 rounded-[var(--radius-panel)] border border-hairline bg-white px-5 py-4">
               <p className="font-mono text-[10px] uppercase tracking-wider text-brand-600">Imported Session</p>
               <p className="mt-1 truncate font-semibold text-ink">{importedFrom.fileName}</p>
-              <p className="mt-0.5 font-mono text-[11px] text-ink-soft/40">
+              <p className="mt-0.5 font-mono text-[11px] text-fg-quiet">
                 {importedFrom.messageCount ?? messages.length} messages
               </p>
             </div>
           )}
 
           {empty && (
-            <p className="rounded-2xl border border-dashed border-ink/12 px-5 py-16 text-center text-sm text-ink-soft/45">
+            <p className="rounded-[var(--radius-panel)] border border-dashed border-hairline px-5 py-16 text-center text-sm text-fg-muted">
               {t('ai-search-conversation-empty', language)}
             </p>
           )}
@@ -346,7 +382,7 @@ export default function Conversation({
               message.role === 'user' ? (
                 <div key={message.id} className="flex justify-end">
                   <div className="max-w-[92%] sm:max-w-[85%]">
-                    <p className="whitespace-pre-wrap break-words rounded-2xl bg-brand-50 px-4 py-3 text-[15px] font-medium text-ink sm:px-5">{message.content}</p>
+                    <p className="whitespace-pre-wrap break-words rounded-[var(--radius-panel)] bg-brand-50 px-4 py-3 text-[15px] font-medium text-ink sm:px-5">{message.content}</p>
                     <AttachmentChips files={message.attachments} align="end" className="mt-2" />
                   </div>
                 </div>
@@ -357,7 +393,7 @@ export default function Conversation({
                   </div>
 
                   {message.model && (
-                    <p className="mt-3 font-mono text-[10px] text-ink-soft/35">
+                    <p className="mt-3 font-mono text-[10px] text-fg-quiet">
                       {findSearchModel(message.model).label} · {findSearchModel(message.model).vendor}
                     </p>
                   )}
@@ -380,7 +416,7 @@ export default function Conversation({
             {/* 전송 중 — 낙관적 말풍선 → 진행 단계 → 흘러나오는 답변 */}
             {pendingQuestion && (
               <div className="flex justify-end">
-                <p className="max-w-[92%] rounded-2xl bg-brand-50 px-4 py-3 sm:max-w-[85%] sm:px-5 text-[15px] font-medium text-ink">
+                <p className="max-w-[92%] rounded-[var(--radius-panel)] bg-brand-50 px-4 py-3 sm:max-w-[85%] sm:px-5 text-[15px] font-medium text-ink">
                   {pendingQuestion}
                 </p>
               </div>
@@ -388,25 +424,45 @@ export default function Conversation({
 
             {streaming && (
               <div>
-                <ProcessingStepper steps={steps} />
+                {/* 사고 과정 → 답변.
+                    답변이 흘러나오기 시작하면 진행 단계는 더 볼 이유가 없다. 그렇다고 그냥
+                    지우면 화면이 훅 줄어들며 읽던 위치가 어긋나므로, 높이를 0fr로 접으면서
+                    한 줄 요약으로 바꿔 준다. */}
+                <div
+                  aria-hidden={answering}
+                  className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-500 ease-out motion-reduce:transition-none ${
+                    answering ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'
+                  }`}
+                >
+                  <div className="min-h-0">
+                    <ProcessingStepper steps={steps} />
+                  </div>
+                </div>
+
+                {answering && (
+                  <p className="flex items-center gap-1.5 text-[11px] text-fg-quiet animate-in fade-in duration-300">
+                    <span aria-hidden className="text-emerald-600">✓</span>
+                    {t('ai-thinking-done', language)}
+                  </p>
+                )}
 
                 {reasoning && (
                   <details
                     open={reasoningOpen}
                     onToggle={(e) => setReasoningOpen((e.currentTarget as HTMLDetailsElement).open)}
-                    className="mt-4 rounded-2xl border border-ink/10 bg-white/70 px-4 py-3"
+                    className="mt-4 rounded-[var(--radius-panel)] border border-hairline bg-white/70 px-4 py-3"
                   >
-                    <summary className="cursor-pointer select-none text-[11px] font-semibold text-ink-soft/55">
+                    <summary className="cursor-pointer select-none text-[11px] font-semibold text-fg-muted">
                       {t('ai-reasoning-trace', language)} · {reasoning.length.toLocaleString()}자
                     </summary>
-                    <p className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-ink-soft/45">
+                    <p className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-fg-muted">
                       {reasoning}
                     </p>
                   </details>
                 )}
 
                 {draft && (
-                  <div className={`mt-5 ${PROSE}`}>
+                  <div className={`mt-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ${PROSE}`}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{draft}</ReactMarkdown>
                     <span
                       aria-hidden
@@ -425,12 +481,12 @@ export default function Conversation({
           )}
 
           {stopped && !streaming && (
-            <p role="status" className="mt-6 rounded-xl bg-ink/[0.04] px-4 py-3 text-sm text-ink-soft/70">
+            <p role="status" className="mt-6 rounded-xl bg-ink/[0.04] px-4 py-3 text-sm text-fg-secondary">
               {t('ai-stopped', language)}
             </p>
           )}
 
-          <p className="mt-8 flex items-start gap-1.5 text-[11px] leading-relaxed text-ink-soft/45">
+          <p className="mt-8 flex items-start gap-1.5 text-[11px] leading-relaxed text-fg-muted">
             <span aria-hidden className="mt-px shrink-0">⚠</span>
             {t('ai-search-disclaimer', language)}
           </p>
@@ -476,17 +532,17 @@ function ProcessingStepper({ steps }: { steps: Record<string, StepState> }) {
                   ? 'bg-emerald-100 text-emerald-700'
                   : status === 'running'
                     ? 'animate-pulse bg-signal text-white motion-reduce:animate-none'
-                    : 'bg-ink/[0.07] text-ink-soft/35'
+                    : 'bg-ink/[0.07] text-fg-quiet'
               }`}
             >
               {status === 'done' ? '✓' : i + 1}
             </span>
             <span className="min-w-0">
-              <span className={`block text-xs font-semibold ${status === 'idle' ? 'text-ink-soft/35' : 'text-ink'}`}>
+              <span className={`block text-xs font-semibold ${status === 'idle' ? 'text-fg-quiet' : 'text-ink'}`}>
                 {step.label}
-                {state?.meta && <span className="ml-1.5 font-mono text-[10px] font-normal text-ink-soft/40">{state.meta}</span>}
+                {state?.meta && <span className="ml-1.5 font-mono text-[10px] font-normal text-fg-quiet">{state.meta}</span>}
               </span>
-              <span className={`block text-[11px] ${status === 'idle' ? 'text-ink-soft/25' : 'text-ink-soft/50'}`}>
+              <span className={`block text-[11px] ${status === 'idle' ? 'text-fg-quiet' : 'text-fg-muted'}`}>
                 {step.detail}
               </span>
             </span>

@@ -32,25 +32,25 @@ export default function AppSettingsForm({
 
         {/* 앱 표시 언어 — 저장 버튼 없이 즉시 적용된다 (이 브라우저에 저장) */}
         <div>
-          <label htmlFor="uiLanguage" className="block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5">
+          <label htmlFor="uiLanguage" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">
             {t('settings-app-language', uiLanguage)}
           </label>
           <select
             id="uiLanguage"
             value={uiLanguage}
             onChange={(e) => setUiLanguage(e.target.value as 'ko' | 'en')}
-            className="w-full rounded-lg border border-ink/10 bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
+            className="w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
           >
             <option value="ko">한국어</option>
             <option value="en">English</option>
           </select>
-          <p className="mt-1 text-xs text-ink-soft/50">{t('settings-language-note', uiLanguage)}</p>
+          <p className="mt-1 text-xs text-fg-muted">{t('settings-language-note', uiLanguage)}</p>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label htmlFor="preferredLanguage" className="block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5">
+          <label htmlFor="preferredLanguage" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">
             DEFAULT CODE LANGUAGE
           </label>
           <select
@@ -70,7 +70,7 @@ export default function AppSettingsForm({
 
         {/* 면접·리팩토링 기본 모델 */}
         <div>
-          <label htmlFor="aiCodeModel" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+          <label htmlFor="aiCodeModel" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
             면접 · 리팩토링 기본 모델
           </label>
           <select
@@ -92,7 +92,7 @@ export default function AppSettingsForm({
               </optgroup>
             ))}
           </select>
-          <p className="mt-1 text-xs text-ink-soft/50">
+          <p className="mt-1 text-xs text-fg-muted">
             디베이트모드의 AI 면접관과 리팩토링모드가 이 모델을 씁니다. BYOK·Local 모델은 AI 제공자 설정에서 키 또는
             엔드포인트를 등록해야 동작합니다.
           </p>
@@ -102,7 +102,7 @@ export default function AppSettingsForm({
       {/* 면접·리팩토링 모드의 기본 모델 — 두 모드 모두 "이미 쓰인 코드"를 읽고 따지는 일이라
           코드 특화 모델을 기본으로 둔다. 문제 풀이 중 질문(debateAI 탭)은 채팅바에서 따로 고른다. */}
       <div>
-        <label htmlFor="aiCodeModel" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+        <label htmlFor="aiCodeModel" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
           면접 · 리팩토링 기본 모델
         </label>
         <select
@@ -124,7 +124,7 @@ export default function AppSettingsForm({
             </optgroup>
           ))}
         </select>
-        <p className="mt-1 text-xs text-ink-soft/50">
+        <p className="mt-1 text-xs text-fg-muted">
           디베이트모드의 AI 면접관과 리팩토링모드가 이 모델을 씁니다. BYOK·Local 모델은 AI 제공자 설정에서 키 또는
           엔드포인트를 등록해야 동작합니다.
         </p>

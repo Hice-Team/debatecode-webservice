@@ -31,7 +31,7 @@ export default function SendButton({
 
       {confirming ? (
         <div className="flex items-center gap-2">
-          <span className="text-[12px] text-ink-soft/70">
+          <span className="text-[12px] text-fg-secondary">
             {recipientCount.toLocaleString()}명에게 «{subject}» 발송할까요?
           </span>
           <button
@@ -44,7 +44,7 @@ export default function SendButton({
           <button
             type="button"
             onClick={() => setConfirming(false)}
-            className="text-xs font-medium text-ink-soft/50 transition-colors hover:text-ink"
+            className="text-xs font-medium text-fg-muted transition-colors hover:text-ink"
           >
             취소
           </button>

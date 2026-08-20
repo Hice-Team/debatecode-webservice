@@ -42,11 +42,11 @@ export default async function StudyAdminPage({ searchParams }: PageProps<'/dashb
 
       <div className="space-y-6">
         {courses.map((course) => (
-          <section key={course.id} className="bg-white rounded-xl border border-ink/10 overflow-hidden">
+          <section key={course.id} className="bg-white rounded-xl border border-hairline overflow-hidden">
             <div className="flex items-center gap-3 border-b border-ink/5 px-5 py-4">
               <div className="min-w-0">
                 <h3 className="font-bold truncate">{course.title}</h3>
-                <p className="font-mono text-[11px] text-ink-soft/40">
+                <p className="font-mono text-[11px] text-fg-quiet">
                   /study/{course.slug} · {course.language} · 강의 {course.lessons.length}개
                 </p>
               </div>
@@ -69,15 +69,15 @@ export default async function StudyAdminPage({ searchParams }: PageProps<'/dashb
             <div className="divide-y divide-ink/5">
               {course.lessons.map((lesson) => (
                 <div key={lesson.id} className="flex items-center gap-3 px-5 py-3 text-sm">
-                  <span className="font-mono text-[11px] text-ink-soft/30 w-6 shrink-0">{lesson.order}</span>
+                  <span className="font-mono text-[11px] text-fg-quiet w-6 shrink-0">{lesson.order}</span>
                   <span className="font-medium truncate">{lesson.title}</span>
-                  <span className="font-mono text-[11px] text-ink-soft/40 truncate hidden sm:inline">{lesson.slug}</span>
-                  <span className="ml-auto font-mono text-[11px] text-ink-soft/40 shrink-0">
+                  <span className="font-mono text-[11px] text-fg-quiet truncate hidden sm:inline">{lesson.slug}</span>
+                  <span className="ml-auto font-mono text-[11px] text-fg-quiet shrink-0">
                     수강 {lesson._count.progress}
                   </span>
                   <Link
                     href={`/dashboard/study/lesson/${lesson.id}`}
-                    className="shrink-0 font-mono text-[11px] text-ink-soft/60 hover:text-signal underline underline-offset-2"
+                    className="shrink-0 font-mono text-[11px] text-fg-secondary hover:text-signal underline underline-offset-2"
                   >
                     수정
                   </Link>
@@ -93,13 +93,13 @@ export default async function StudyAdminPage({ searchParams }: PageProps<'/dashb
                 </div>
               ))}
               {course.lessons.length === 0 && (
-                <p className="px-5 py-4 text-sm text-ink-soft/40">아직 강의가 없습니다.</p>
+                <p className="px-5 py-4 text-sm text-fg-quiet">아직 강의가 없습니다.</p>
               )}
             </div>
           </section>
         ))}
         {courses.length === 0 && (
-          <p className="rounded-xl border border-ink/10 bg-white px-6 py-16 text-center text-sm text-ink-soft/40">
+          <p className="rounded-xl border border-hairline bg-white px-6 py-16 text-center text-sm text-fg-quiet">
             코스가 없습니다. 위에서 첫 코스를 추가해 보세요.
           </p>
         )}

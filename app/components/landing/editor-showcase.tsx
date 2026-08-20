@@ -84,7 +84,7 @@ const COPY: Record<Lang, {
   },
 };
 
-const TONE_CLASS = { ok: 'text-emerald-400', warn: 'text-rose-400', plain: 'text-white/70' } as const;
+const TONE_CLASS = { ok: 'text-emerald-400', warn: 'text-rose-400', plain: 'text-fg-on-dark-secondary' } as const;
 
 export default function EditorShowcase() {
   const [tab, setTab] = useState<Tab>('problem');
@@ -93,11 +93,11 @@ export default function EditorShowcase() {
   const tabs = Object.entries(c.tabs) as [Tab, string][];
 
   return (
-    <div className="rounded-3xl border border-ink/10 bg-paper p-2.5 shadow-[0_24px_60px_-24px_rgba(20,21,43,0.25)]">
+    <div className="rounded-[var(--radius-panel)] border border-hairline bg-paper p-2.5 shadow-[0_24px_60px_-24px_rgba(20,21,43,0.25)]">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 md:aspect-[16/9] font-sans">
         {/* 좌측: 클릭 가능한 탭 패널 */}
-        <div className="md:col-span-5 bg-[#12141C] rounded-2xl border border-white/10 flex flex-col overflow-hidden">
-          <div className="flex border-b border-white/10 text-[10px] sm:text-[11px] font-medium text-white/40 overflow-x-auto" role="tablist">
+        <div className="md:col-span-5 bg-[#12141C] rounded-[var(--radius-panel)] border border-white/10 flex flex-col overflow-hidden">
+          <div className="flex border-b border-white/10 text-[10px] sm:text-[11px] font-medium text-fg-on-dark-quiet overflow-x-auto" role="tablist">
             {tabs.map(([key, label]) => (
               <button
                 key={key}
@@ -107,7 +107,7 @@ export default function EditorShowcase() {
                 className={`px-2.5 py-2.5 whitespace-nowrap cursor-pointer transition-colors flex items-center gap-1 ${
                   tab === key
                     ? 'border-b-2 border-brand-400 text-brand-400 font-bold'
-                    : 'hover:text-white/70'
+                    : 'hover:text-fg-on-dark-secondary'
                 }`}
               >
                 {label}
@@ -118,15 +118,15 @@ export default function EditorShowcase() {
             ))}
           </div>
 
-          <div className="p-4 flex-grow text-xs text-white/60 leading-relaxed overflow-y-auto dc-scroll min-h-[180px]">
+          <div className="p-4 flex-grow text-xs text-fg-on-dark-secondary leading-relaxed overflow-y-auto dc-scroll min-h-[180px]">
             {tab === 'problem' && (
               <div className="space-y-2">
                 <p className="font-bold text-white text-sm">{c.problemTitle}</p>
-                <p className="text-white/30 text-[10px]">{c.problemLimits}</p>
+                <p className="text-fg-on-dark-quiet text-[10px]">{c.problemLimits}</p>
                 <p>{c.problemDesc}</p>
                 <div className="pt-1 flex flex-wrap gap-1.5">
                   {c.problemTags.map((t) => (
-                    <span key={t} className="font-mono text-[9px] text-white/40 bg-white/5 border border-white/10 rounded-full px-2 py-0.5">
+                    <span key={t} className="font-mono text-[9px] text-fg-on-dark-quiet bg-white/5 border border-white/10 rounded-full px-2 py-0.5">
                       {t}
                     </span>
                   ))}
@@ -140,7 +140,7 @@ export default function EditorShowcase() {
                 <div className="space-y-1.5 font-mono text-[10.5px]">
                   {c.analysisRows.map((r) => (
                     <p key={r.label} className="flex justify-between">
-                      <span className="text-white/40">{r.label}</span>
+                      <span className="text-fg-on-dark-quiet">{r.label}</span>
                       <span className={TONE_CLASS[r.tone]}>{r.value}</span>
                     </p>
                   ))}
@@ -155,12 +155,12 @@ export default function EditorShowcase() {
                 <div className="space-y-1 font-mono text-[10.5px]">
                   {c.attempts.map((a) => (
                     <p key={a.label} className="flex justify-between items-center">
-                      <span className="text-white/40">{a.label}</span>
+                      <span className="text-fg-on-dark-quiet">{a.label}</span>
                       <span className={a.pass ? 'text-emerald-400' : 'text-rose-400'}>{a.result}</span>
                     </p>
                   ))}
                 </div>
-                <p className="text-[10px] text-white/30 pt-1">{c.attemptsNote}</p>
+                <p className="text-[10px] text-fg-on-dark-quiet pt-1">{c.attemptsNote}</p>
               </div>
             )}
 
@@ -172,7 +172,7 @@ export default function EditorShowcase() {
                 <div className="bg-emerald-500/[0.07] border-l-2 border-emerald-500/50 rounded-r px-2.5 py-2 text-emerald-300/90">
                   {c.debateUser}
                 </div>
-                <div className="flex items-center gap-1.5 text-white/30 font-mono text-[10px] pl-1 pt-0.5">
+                <div className="flex items-center gap-1.5 text-fg-on-dark-quiet font-mono text-[10px] pl-1 pt-0.5">
                   {c.debateTyping}
                   <span className="inline-block w-1.5 h-3 bg-brand-500/80 animate-pulse motion-reduce:animate-none" />
                 </div>
@@ -189,14 +189,14 @@ export default function EditorShowcase() {
         </div>
 
         {/* 우측: 에디터 목업 */}
-        <div className="md:col-span-7 bg-ink rounded-2xl border border-white/10 flex flex-col overflow-hidden text-xs font-mono text-gray-300">
+        <div className="md:col-span-7 bg-ink rounded-[var(--radius-panel)] border border-white/10 flex flex-col overflow-hidden text-xs font-mono text-gray-300">
           <div className="flex justify-between items-center px-4 py-2 border-b border-white/10">
-            <span className="text-white/40 text-[10px]">solution.py</span>
-            <span className="text-white/20 text-[9px] uppercase tracking-wider">sandbox</span>
+            <span className="text-fg-on-dark-quiet text-[10px]">solution.py</span>
+            <span className="text-fg-on-dark-quiet text-[9px] uppercase tracking-wider">sandbox</span>
           </div>
           <div className="p-4 flex-grow space-y-1.5 text-[11px] leading-relaxed">
             <p><span className="text-brand-400">def</span> <span className="text-sky-400">twoSum</span>(nums, target):</p>
-            <p className="pl-4 text-white/30">{c.codeComment}</p>
+            <p className="pl-4 text-fg-on-dark-quiet">{c.codeComment}</p>
             <p className={`pl-4 ${tab === 'analysis' ? 'bg-brand-500/10 -mx-1 px-1 rounded' : ''}`}>seen = &#123;&#125;</p>
             <p className="pl-4"><span className="text-brand-400">for</span> i, num <span className="text-brand-400">in</span> <span className="text-sky-400">enumerate</span>(nums):</p>
             <p className="pl-8">diff = target - num</p>
@@ -208,9 +208,9 @@ export default function EditorShowcase() {
           </div>
           {tab === 'attempts' && (
             <div className="border-t border-white/10 px-4 py-2 text-[10px] flex gap-4">
-              <span className="text-white/40">CASE #1-5</span>
+              <span className="text-fg-on-dark-quiet">CASE #1-5</span>
               <span className="text-emerald-400">ALL PASSED ✓</span>
-              <span className="text-white/30 ml-auto">3ms</span>
+              <span className="text-fg-on-dark-quiet ml-auto">3ms</span>
             </div>
           )}
         </div>

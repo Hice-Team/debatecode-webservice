@@ -38,9 +38,19 @@ export default async function AiSearchPage({ searchParams }: PageProps<'/study/s
     completionTokens: m.completionTokens,
     tokensEstimated: m.tokensEstimated,
     effort: m.effort,
+    // 내 평가만 싣는다 — loadSession이 현재 사용자 세션만 돌려주므로 feedback도 한 건 이하다
+    feedback: m.feedback[0]
+      ? {
+          rating: m.feedback[0].rating as 'up' | 'down',
+          reasons: (m.feedback[0].reasons as unknown as string[]) ?? [],
+          comment: m.feedback[0].comment,
+        }
+      : null,
   }));
 
   const importedFrom = (restored?.importedFrom as { fileName?: string; messageCount?: number } | null) ?? null;
+  const branchedFrom =
+    (restored?.branchedFrom as { sessionId?: string; title?: string | null } | null) ?? null;
 
   return (
     <div className="flex min-h-screen flex-col bg-paper text-ink-soft">
@@ -56,6 +66,7 @@ export default async function AiSearchPage({ searchParams }: PageProps<'/study/s
         }
         initialEffort={asEffort(effortParam ?? restored?.effort)}
         importedFrom={importedFrom}
+        branchedFrom={branchedFrom}
         liveModel={hasModelCatalogAccess()}
       />
     </div>

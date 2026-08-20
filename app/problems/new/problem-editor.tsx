@@ -25,11 +25,11 @@ export interface ProblemInitial {
 
 const initialState: ProblemFormState = {};
 
-const LABEL = 'block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5';
+const LABEL = 'block font-mono text-xs text-fg-secondary tracking-wider mb-1.5';
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60';
+  'w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
 const CODE_FIELD =
-  'w-full rounded-lg border border-ink/15 bg-ink text-emerald-100 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-signal/60';
+  'w-full rounded-lg border border-ink/15 bg-ink text-emerald-100 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-fg-on-dark-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
 
 const CATEGORIES = ['해시', '스택', 'DP', '그리디', '그래프', '자료구조'];
 
@@ -120,7 +120,7 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
           required
           defaultValue={initial?.description}
           placeholder={'문제 설명을 마크다운으로 작성하세요.\n\n### 입력\n- nums: 정수 배열\n\n### 출력\n- 두 수의 인덱스 배열'}
-          className="w-full rounded-b-lg border border-ink/15 bg-paper/50 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60"
+          className="w-full rounded-b-lg border border-ink/15 bg-paper/50 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
         />
         {err(state.errors?.description)}
       </div>
@@ -128,7 +128,7 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
       <div>
         <label htmlFor="keywords" className={LABEL}>KEYWORDS — 면접 평가 기대 키워드 (쉼표 구분, 필수)</label>
         <input id="keywords" name="keywords" required defaultValue={initial?.keywords.join(', ')} placeholder="시간복잡도, 해시맵, 공간 트레이드오프" className={FIELD} />
-        <p className="mt-1.5 text-xs text-ink-soft/40">DebateAI가 면접에서 이 키워드들을 짚었는지 평가합니다.</p>
+        <p className="mt-1.5 text-xs text-fg-quiet">DebateAI가 면접에서 이 키워드들을 짚었는지 평가합니다.</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -161,7 +161,7 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
       </div>
 
       {/* ---- 테스트케이스 ---- */}
-      <div className="rounded-xl border border-ink/10 bg-paper/40 p-4">
+      <div className="rounded-xl border border-hairline bg-paper/40 p-4">
         <div className="mb-3 flex items-center justify-between">
           <span className={`${LABEL} mb-0`}>테스트케이스 — 입력은 인자 배열(JSON), 기대값은 JSON</span>
           <button
@@ -174,11 +174,11 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
         </div>
         <div className="space-y-3">
           {tcRows.map((row, i) => (
-            <div key={row.key} className="rounded-lg border border-ink/10 bg-white p-3">
+            <div key={row.key} className="rounded-lg border border-hairline bg-white p-3">
               <div className="mb-2 flex items-center justify-between">
-                <span className="font-mono text-[11px] text-ink-soft/40">CASE {i + 1}</span>
+                <span className="font-mono text-[11px] text-fg-quiet">CASE {i + 1}</span>
                 <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-1.5 text-xs text-ink-soft/60 cursor-pointer">
+                  <label className="flex items-center gap-1.5 text-xs text-fg-secondary cursor-pointer">
                     <input
                       type="checkbox"
                       checked={row.hidden}
@@ -193,7 +193,7 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
                     <button
                       type="button"
                       onClick={() => setTcRows((rows) => rows.filter((r) => r.key !== row.key))}
-                      className="text-xs text-ink-soft/40 hover:text-rose-500"
+                      className="text-xs text-fg-quiet hover:text-rose-500"
                     >
                       삭제
                     </button>

@@ -694,3 +694,131 @@ ALTER TABLE public."LaunchNotify" ENABLE ROW LEVEL SECURITY;
 -- BackupCode/WebauthnKey(2차 보안), MarketingContact/EmailCampaign(홍보 메일).
 -- 이 표들이 없어서 해당 기능이 런타임에 전부 실패하고 있었다. 정의는 schema.prisma 참조.
 -- (실제 DDL은 Supabase 마이그레이션 create_missing_schema_tables 로 적용됨)
+
+-- 2026-08-20: AI Search 답변 피드백 (👍/👎 + 사유)
+-- 예전에는 버튼 상태가 화면에만 남고 아무 데도 저장되지 않았다.
+CREATE TABLE IF NOT EXISTS "AiFeedback" (
+  "id"        TEXT NOT NULL PRIMARY KEY,
+  "messageId" TEXT NOT NULL,
+  "userId"    UUID NOT NULL,
+  "rating"    TEXT NOT NULL,
+  "reasons"   JSONB NOT NULL DEFAULT '[]',
+  "comment"   TEXT,
+  "model"     TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "AiFeedback_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "AiMessage"("id") ON DELETE CASCADE,
+  CONSTRAINT "AiFeedback_userId_fkey"    FOREIGN KEY ("userId")    REFERENCES "User"("id")      ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "AiFeedback_messageId_userId_key" ON "AiFeedback"("messageId", "userId");
+CREATE INDEX IF NOT EXISTS "AiFeedback_rating_createdAt_idx" ON "AiFeedback"("rating", "createdAt" DESC);
+CREATE INDEX IF NOT EXISTS "AiFeedback_createdAt_idx" ON "AiFeedback"("createdAt" DESC);
+-- 앱은 Prisma(서버)로만 접근한다 — anon 키로 뚫리지 않도록 RLS만 켠다.
+ALTER TABLE public."AiFeedback" ENABLE ROW LEVEL SECURITY;
+
+-- 2026-08-20b: AI Search 대화 분기 — 원본 대화 정보
+ALTER TABLE "AiSession" ADD COLUMN IF NOT EXISTS "branchedFrom" JSONB;
+
+-- 2026-08-20c: 개인 랭킹 초기화 기록
+CREATE TABLE IF NOT EXISTS "RankingReset" (
+  "id"        TEXT NOT NULL PRIMARY KEY,
+  "userId"    UUID NOT NULL,
+  "resetAt"   TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "reason"    TEXT NOT NULL,
+  "byId"      UUID,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "RankingReset_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "RankingReset_userId_resetAt_idx" ON "RankingReset"("userId", "resetAt" DESC);
+CREATE INDEX IF NOT EXISTS "RankingReset_resetAt_idx" ON "RankingReset"("resetAt" DESC);
+ALTER TABLE public."RankingReset" ENABLE ROW LEVEL SECURITY;
+
+-- 2026-08-20d: AI Search 첨부를 비공개 버킷으로 분리
+--
+-- community-uploads는 public 버킷이다. 커뮤니티 글의 이미지는 어차피 공개 글에 붙는 것이라
+-- 그래도 되지만, AI Search 첨부는 다르다 — 이용자가 Drive에서 가져온 개인 문서나 자기
+-- 컴퓨터의 소스 코드가 URL만 알면 누구나 열리는 자리에 놓여 있었다.
+-- 새 첨부는 이 비공개 버킷으로 가고, 앱은 서명 URL로만 내보낸다(app/api/ai-search/file).
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('ai-attachments', 'ai-attachments', false)
+ON CONFLICT (id) DO UPDATE SET public = false;
+
+-- 키가 "{userId}/..." 형태이므로(app/lib/storage.ts safeStorageKey) 첫 폴더로 소유자를 가른다.
+DROP POLICY IF EXISTS "ai-attachments own read" ON storage.objects;
+CREATE POLICY "ai-attachments own read" ON storage.objects FOR SELECT
+  USING (bucket_id = 'ai-attachments' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+DROP POLICY IF EXISTS "ai-attachments own insert" ON storage.objects;
+CREATE POLICY "ai-attachments own insert" ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'ai-attachments' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+DROP POLICY IF EXISTS "ai-attachments own delete" ON storage.objects;
+CREATE POLICY "ai-attachments own delete" ON storage.objects FOR DELETE
+  USING (bucket_id = 'ai-attachments' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+-- 2026-08-20e: 커뮤니티 공지 상단 고정
+ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "pinned"   BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "pinnedAt" TIMESTAMP(3);
+CREATE INDEX IF NOT EXISTS "Post_pinned_pinnedAt_idx" ON "Post"("pinned", "pinnedAt" DESC);
+
+-- 2026-08-20f: 문의게시판 채택 포인트(현상금)
+ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "bounty" INTEGER;
+
+-- 2026-08-20g: 중고 거래 — 매물 · 1:1 대화 · 메시지
+CREATE TABLE IF NOT EXISTS "MarketListing" (
+  "id"             TEXT NOT NULL PRIMARY KEY,
+  "postId"         TEXT NOT NULL UNIQUE,
+  "sellerId"       UUID NOT NULL,
+  "price"          INTEGER NOT NULL,
+  "status"         TEXT NOT NULL DEFAULT 'selling',
+  "condition"      TEXT NOT NULL DEFAULT 'used',
+  "conditionNote"  TEXT,
+  "region"         TEXT,
+  "shipping"       BOOLEAN NOT NULL DEFAULT false,
+  "shippingFee"    INTEGER,
+  "sellerVerified" BOOLEAN NOT NULL DEFAULT false,
+  "createdAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "soldAt"         TIMESTAMP(3),
+  CONSTRAINT "MarketListing_postId_fkey"   FOREIGN KEY ("postId")   REFERENCES "Post"("id") ON DELETE CASCADE,
+  CONSTRAINT "MarketListing_sellerId_fkey" FOREIGN KEY ("sellerId") REFERENCES "User"("id") ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "MarketListing_status_createdAt_idx" ON "MarketListing"("status", "createdAt" DESC);
+CREATE INDEX IF NOT EXISTS "MarketListing_sellerId_idx" ON "MarketListing"("sellerId");
+
+CREATE TABLE IF NOT EXISTS "MarketChat" (
+  "id"             TEXT NOT NULL PRIMARY KEY,
+  "listingId"      TEXT NOT NULL,
+  "buyerId"        UUID NOT NULL,
+  "sellerId"       UUID NOT NULL,
+  "buyerHiddenAt"  TIMESTAMP(3),
+  "sellerHiddenAt" TIMESTAMP(3),
+  "lastMessageAt"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "createdAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "MarketChat_listingId_fkey" FOREIGN KEY ("listingId") REFERENCES "MarketListing"("id") ON DELETE CASCADE,
+  CONSTRAINT "MarketChat_buyerId_fkey"   FOREIGN KEY ("buyerId")   REFERENCES "User"("id") ON DELETE CASCADE,
+  CONSTRAINT "MarketChat_sellerId_fkey"  FOREIGN KEY ("sellerId")  REFERENCES "User"("id") ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "MarketChat_listingId_buyerId_key" ON "MarketChat"("listingId", "buyerId");
+CREATE INDEX IF NOT EXISTS "MarketChat_buyerId_lastMessageAt_idx"  ON "MarketChat"("buyerId", "lastMessageAt" DESC);
+CREATE INDEX IF NOT EXISTS "MarketChat_sellerId_lastMessageAt_idx" ON "MarketChat"("sellerId", "lastMessageAt" DESC);
+
+CREATE TABLE IF NOT EXISTS "MarketMessage" (
+  "id"         TEXT NOT NULL PRIMARY KEY,
+  "chatId"     TEXT NOT NULL,
+  "senderId"   UUID NOT NULL,
+  "content"    TEXT NOT NULL,
+  "systemKind" TEXT,
+  "createdAt"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "editedAt"   TIMESTAMP(3),
+  "deletedAt"  TIMESTAMP(3),
+  "readAt"     TIMESTAMP(3),
+  CONSTRAINT "MarketMessage_chatId_fkey"   FOREIGN KEY ("chatId")   REFERENCES "MarketChat"("id") ON DELETE CASCADE,
+  CONSTRAINT "MarketMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User"("id") ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "MarketMessage_chatId_createdAt_idx" ON "MarketMessage"("chatId", "createdAt");
+
+-- 앱은 Prisma(서버)로만 접근한다 — anon 키로 뚫리지 않도록 RLS만 켠다.
+ALTER TABLE public."MarketListing" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."MarketChat"    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."MarketMessage" ENABLE ROW LEVEL SECURITY;

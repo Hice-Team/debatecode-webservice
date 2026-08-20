@@ -135,10 +135,10 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
           activeQuery={queryStr}
         />
 
-        <div className="mt-6 bg-white rounded-2xl border border-ink/10 overflow-hidden overflow-x-auto">
+        <div className="mt-6 bg-white rounded-[var(--radius-panel)] border border-hairline overflow-hidden overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b border-ink/10 font-mono text-[11px] text-ink-soft/50 tracking-wider">
+              <tr className="border-b border-hairline font-mono text-[11px] text-fg-muted tracking-wider">
                 <th className="text-left px-6 py-3 font-medium">STATUS</th>
                 {session && <th className="text-left px-2 py-3 font-medium w-8" />}
                 <th className="text-left px-4 py-3 font-medium w-full">TITLE</th>
@@ -185,7 +185,7 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-4 font-mono text-xs text-ink-soft/60 whitespace-nowrap">{p.category}</td>
+                    <td className="px-4 py-4 font-mono text-xs text-fg-secondary whitespace-nowrap">{p.category}</td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span className={`inline-block px-2 py-0.5 rounded-full border text-[11px] font-medium ${DIFFICULTY_BADGE[p.difficulty]}`}>
                         <I18nSlot k={p.difficulty === 1 ? 'beginner' : p.difficulty === 2 ? 'easy' : p.difficulty === 3 ? 'medium' : 'hard'} fallback={DIFFICULTY_LABELS[p.difficulty]} />
@@ -197,7 +197,7 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
                           {solved.bestScore}%
                         </span>
                       ) : (
-                        <span className="text-ink-soft/25">—</span>
+                        <span className="text-fg-quiet">—</span>
                       )}
                     </td>
                   </tr>
@@ -205,7 +205,7 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
               })}
               {problems.length === 0 && (
                 <tr>
-                  <td colSpan={session ? 6 : 5} className="px-6 py-16 text-center text-ink-soft/40">
+                  <td colSpan={session ? 6 : 5} className="px-6 py-16 text-center text-fg-quiet">
                     <I18nSlot k="no-matched-problems" fallback="조건에 맞는 문제가 없습니다." />
                   </td>
                 </tr>

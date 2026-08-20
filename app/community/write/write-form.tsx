@@ -12,7 +12,16 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { createPost, type PostFormState } from '@/app/lib/actions/community';
 import { BOARDS, SNS_PLATFORMS, boardDesc } from '../boards';
-import { forcedSecret, supportsVerifiedOnly } from '@/app/lib/board-rules';
+import {
+  BOUNTY_DEFAULT,
+  BOUNTY_MAX,
+  BOUNTY_MIN,
+  canWriteToBoard,
+  supportsBounty,
+  supportsPinning,
+  supportsSecret,
+  supportsVerifiedOnly,
+} from '@/app/lib/board-rules';
 import { useLanguage } from '@/app/context/language-context';
 import { t } from '@/app/lib/i18n';
 import MarkdownToolbar from './markdown-toolbar';
@@ -23,13 +32,13 @@ const initialState: PostFormState = {};
 const TITLE_MAX = 100;
 const CONTENT_MAX = 10_000;
 
-const LABEL = 'block font-mono text-[11px] uppercase tracking-wider text-ink-soft/50 mb-1.5';
+const LABEL = 'block font-mono text-[11px] uppercase tracking-wider text-fg-muted mb-1.5';
 // 미리보기 본문 서식 — 수정 폼과 같은 규칙
 const PREVIEW =
-  'min-h-[18rem] break-words px-4 py-4 text-[15px] leading-relaxed text-ink-soft/85 [&_p]:my-2 [&_p]:whitespace-pre-wrap [&_li]:whitespace-pre-wrap [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:font-display [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-ink [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:font-bold [&_h3]:text-ink [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:border-brand-300 [&_blockquote]:pl-3 [&_blockquote]:text-ink-soft/60 [&_code]:rounded [&_code]:bg-ink/[0.06] [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-ink/[0.04] [&_pre]:p-3 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_a]:text-signal [&_a]:underline sm:px-5';
+  'min-h-[18rem] break-words px-4 py-4 text-[15px] leading-relaxed text-fg [&_p]:my-2 [&_p]:whitespace-pre-wrap [&_li]:whitespace-pre-wrap [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:font-display [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-ink [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:font-bold [&_h3]:text-ink [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:border-brand-300 [&_blockquote]:pl-3 [&_blockquote]:text-fg-secondary [&_code]:rounded [&_code]:bg-ink/[0.06] [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-ink/[0.04] [&_pre]:p-3 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_a]:text-signal [&_a]:underline sm:px-5';
 
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-white px-3.5 py-2.5 text-sm placeholder:text-ink-soft/30 focus:outline-none focus:border-signal/40 focus:ring-2 focus:ring-signal/40';
+  'w-full rounded-lg border border-ink/15 bg-white px-3.5 py-2.5 text-sm placeholder:text-fg-quiet focus:outline-none focus:border-signal/40 focus:ring-2 focus:ring-signal/40';
 
 /** 임시저장 — 작성 중 이탈해도 제목·본문이 남는다. 등록에 성공하면 지운다. */
 const DRAFT_KEY = 'dc:community:draft';
@@ -58,7 +67,7 @@ function readDraft(): Draft | null {
   }
 }
 
-export default function WriteForm({ initialBoard }: { initialBoard: string }) {
+export default function WriteForm({ initialBoard, role }: { initialBoard: string; role: string }) {
   const [state, formAction, pending] = useActionState(createPost, initialState);
   const [board, setBoard] = useState(initialBoard);
   const [title, setTitle] = useState('');
@@ -72,8 +81,12 @@ export default function WriteForm({ initialBoard }: { initialBoard: string }) {
   const { language } = useLanguage();
 
   const isSns = board === 'sns';
-  const isSecretBoard = forcedSecret(board); // 문의게시판 — 자동 비밀글
+  const canSecret = supportsSecret(board); // 문의게시판 — 비밀글 선택
+  const canBounty = supportsBounty(board); // 문의게시판 — 채택 포인트
   const canVerifiedOnly = supportsVerifiedOnly(board); // 멘토게시판 — 인증 답변 전용 옵션
+  // 쓸 수 없는 게시판은 목록에서 아예 뺀다 — 고르고 나서 거절당하는 것보다 낫다
+  const writableBoards = BOARDS.filter((b) => canWriteToBoard(b.key, role));
+  const canPin = supportsPinning(board); // 공지사항 — 모든 게시판 상단 고정 옵션
 
   // 저장된 임시글 확인 — localStorage는 하이드레이션 후에만 읽을 수 있다
   useEffect(() => {
@@ -144,7 +157,7 @@ export default function WriteForm({ initialBoard }: { initialBoard: string }) {
           </div>
         )}
 
-        <div className="overflow-hidden rounded-xl border border-ink/10 bg-white">
+        <div className="overflow-hidden rounded-xl border border-hairline bg-white">
           {/* 제목 */}
           <div className="px-4 pt-4 sm:px-5">
             <label htmlFor="title" className="sr-only">
@@ -159,14 +172,14 @@ export default function WriteForm({ initialBoard }: { initialBoard: string }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('post-title-placeholder', language)}
-              className="w-full border-0 bg-transparent p-0 pb-3 font-display text-xl font-bold tracking-tight text-ink placeholder:font-normal placeholder:text-ink-soft/25 focus:outline-none"
+              className="w-full border-0 bg-transparent p-0 pb-3 font-display text-xl font-bold tracking-tight text-ink placeholder:font-normal placeholder:text-fg-quiet focus:outline-none"
             />
             {state.errors?.title && <p className="pb-2 text-xs text-rose-600">{state.errors.title[0]}</p>}
           </div>
 
           {/* SNS 게시판 — 외부 링크가 본체라 본문보다 먼저 받는다 */}
           {isSns && (
-            <div className="grid gap-3 border-t border-ink/[0.07] px-4 py-3 sm:grid-cols-[150px_minmax(0,1fr)] sm:px-5">
+            <div className="grid gap-3 border-t border-hairline px-4 py-3 sm:grid-cols-[150px_minmax(0,1fr)] sm:px-5">
               <div>
                 <label htmlFor="snsPlatform" className={LABEL}>
                   Platform
@@ -191,14 +204,14 @@ export default function WriteForm({ initialBoard }: { initialBoard: string }) {
 
           {/* 본문 — 편집/미리보기 전환. 마크다운으로 저장되므로 올린 그대로가 미리보기다 */}
           {!isSns && (
-            <div className="flex items-center border-t border-ink/[0.07] px-3 py-1.5">
+            <div className="flex items-center border-t border-hairline px-3 py-1.5">
               <div className="ml-auto flex items-center gap-0.5 text-[11px] font-medium">
                 <button
                   type="button"
                   onClick={() => setPreview(false)}
                   aria-pressed={!preview}
                   className={`rounded-md px-2.5 py-1 transition-colors ${
-                    !preview ? 'font-semibold text-signal' : 'text-ink-soft/45 hover:text-ink'
+                    !preview ? 'font-semibold text-signal' : 'text-fg-muted hover:text-ink'
                   }`}
                 >
                   {t('write-tab-edit', language)}
@@ -208,7 +221,7 @@ export default function WriteForm({ initialBoard }: { initialBoard: string }) {
                   onClick={() => setPreview(true)}
                   aria-pressed={preview}
                   className={`rounded-md px-2.5 py-1 transition-colors ${
-                    preview ? 'font-semibold text-signal' : 'text-ink-soft/45 hover:text-ink'
+                    preview ? 'font-semibold text-signal' : 'text-fg-muted hover:text-ink'
                   }`}
                 >
                   {t('write-tab-preview', language)}
@@ -222,7 +235,7 @@ export default function WriteForm({ initialBoard }: { initialBoard: string }) {
               {content.trim() ? (
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
               ) : (
-                <p className="text-sm text-ink-soft/30">{t('write-preview-empty', language)}</p>
+                <p className="text-sm text-fg-quiet">{t('write-preview-empty', language)}</p>
               )}
             </div>
           )}
@@ -254,7 +267,7 @@ export default function WriteForm({ initialBoard }: { initialBoard: string }) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={isSns ? t('post-intro-placeholder', language) : t('post-content-placeholder', language)}
-              className={`w-full resize-y border-0 bg-transparent px-4 py-3 text-sm leading-relaxed placeholder:text-ink-soft/30 focus:outline-none focus:ring-0 sm:px-5 ${
+              className={`w-full resize-y border-0 bg-transparent px-4 py-3 text-sm leading-relaxed placeholder:text-fg-quiet focus:outline-none focus:ring-0 sm:px-5 ${
                 isSns ? '' : 'font-mono'
               }`}
             />
@@ -267,8 +280,8 @@ export default function WriteForm({ initialBoard }: { initialBoard: string }) {
             </div>
           )}
 
-          <div className="flex border-t border-ink/[0.07] px-4 py-1.5 sm:px-5">
-            <span className={`ml-auto font-mono text-[10px] ${content.length >= CONTENT_MAX ? 'text-rose-500' : 'text-ink-soft/30'}`}>
+          <div className="flex border-t border-hairline px-4 py-1.5 sm:px-5">
+            <span className={`ml-auto font-mono text-[10px] ${content.length >= CONTENT_MAX ? 'text-rose-500' : 'text-fg-quiet'}`}>
               {content.length.toLocaleString()}/{CONTENT_MAX.toLocaleString()}
             </span>
           </div>
@@ -278,44 +291,87 @@ export default function WriteForm({ initialBoard }: { initialBoard: string }) {
 
       {/* ==================== 우: 게시 설정 ====================
            한 번 정하고 마는 값들이라 별도 상자로 띄우지 않고 여백으로만 구분한다. */}
-      <aside className="space-y-5 border-t border-ink/10 pt-5 lg:sticky lg:top-6 lg:border-t-0 lg:pt-0">
+      <aside className="space-y-5 border-t border-hairline pt-5 lg:sticky lg:top-6 lg:border-t-0 lg:pt-0">
         <div>
           <label htmlFor="board" className={LABEL}>
             {t('board', language)}
           </label>
           <select id="board" name="board" value={board} onChange={(e) => setBoard(e.target.value)} className={FIELD}>
-            {BOARDS.map((b) => (
+            {writableBoards.map((b) => (
               <option key={b.key} value={b.key}>
                 {b.label}
               </option>
             ))}
           </select>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-ink-soft/45">{boardDesc(board)}</p>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-fg-muted">{boardDesc(board)}</p>
         </div>
 
         <div className="space-y-2.5">
           <p className={LABEL}>{t('post-options', language)}</p>
 
-          {isSecretBoard && (
-            <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-ink-soft/55">
-              <span aria-hidden className="mt-px">🔒</span>
-              {t('qna-secret-notice', language)}
-            </p>
+          {canBounty && (
+            <div>
+              <label htmlFor="bounty" className="block text-sm text-fg">
+                채택 포인트
+              </label>
+              <div className="mt-1.5 flex items-center gap-2">
+                <input
+                  id="bounty"
+                  name="bounty"
+                  type="number"
+                  min={BOUNTY_MIN}
+                  max={BOUNTY_MAX}
+                  step={5}
+                  defaultValue={BOUNTY_DEFAULT}
+                  className={`${FIELD} w-24`}
+                />
+                <span className="font-mono text-xs text-fg-muted">
+                  P ({BOUNTY_MIN}~{BOUNTY_MAX})
+                </span>
+              </div>
+              <p className="mt-1 text-[11px] leading-relaxed text-fg-muted">
+                답변을 채택하면 답변자에게 지급됩니다. 운영진·협력사가 채택된 경우에는 지급되지 않습니다.
+              </p>
+            </div>
+          )}
+
+          {canSecret && (
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm text-fg">
+              <input type="checkbox" name="secret" className="mt-0.5 h-4 w-4 accent-[var(--color-signal)]" />
+              <span>
+                비밀글로 작성
+                <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">
+                  나와 운영진만 볼 수 있고, 답글도 운영진만 달 수 있습니다.
+                </span>
+              </span>
+            </label>
+          )}
+
+          {canPin && (
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm text-fg">
+              <input type="checkbox" name="pinned" className="mt-0.5 h-4 w-4 accent-[var(--color-signal)]" />
+              <span>
+                공지사항으로 등록
+                <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">
+                  모든 게시판 목록 맨 위에 고정됩니다. 나중에 글 화면에서 해제할 수 있습니다.
+                </span>
+              </span>
+            </label>
           )}
 
           {canVerifiedOnly && (
-            <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-soft/80">
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm text-fg">
               <input type="checkbox" name="verifiedOnlyReplies" className="mt-0.5 h-4 w-4 accent-[var(--color-signal)]" />
               <span>
                 {t('verified-only-replies', language)}
-                <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-soft/50">
+                <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">
                   {t('verified-only-replies-desc', language)}
                 </span>
               </span>
             </label>
           )}
 
-          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-ink-soft/80">
+          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-fg">
             <input type="checkbox" name="anonymous" className="h-4 w-4 accent-[var(--color-signal)]" />
             {t('post-anonymous', language)}
           </label>

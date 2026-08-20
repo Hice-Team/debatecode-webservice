@@ -348,7 +348,7 @@ export default function DebateQPanel({
         className="flex min-h-[320px] w-full lg:min-h-0 lg:w-[var(--left-w)] lg:shrink-0 flex-col overflow-hidden rounded-lg border border-white/10 bg-[#12141C]"
         aria-label="debateQ 패널"
       >
-        <div className="dc-scroll-none flex items-center border-b border-white/10 text-[11px] font-medium text-white/40 overflow-x-auto" role="tablist">
+        <div className="dc-scroll-none flex items-center border-b border-white/10 text-[11px] font-medium text-fg-on-dark-quiet overflow-x-auto" role="tablist">
           {TABS.map((t) => (
             <button
               key={t.key}
@@ -360,7 +360,7 @@ export default function DebateQPanel({
                   ? 'border-b-2 border-brand-400 font-bold text-brand-400'
                   : t.accent
                     ? 'font-semibold text-brand-300/80 hover:text-brand-200'
-                    : 'hover:text-white/70'
+                    : 'hover:text-fg-on-dark-secondary'
               }`}
             >
               {t.accent && (
@@ -375,7 +375,7 @@ export default function DebateQPanel({
               )}
             </button>
           ))}
-          <span className="ml-auto shrink-0 px-3 font-mono text-[10px] text-white/30">
+          <span className="ml-auto shrink-0 px-3 font-mono text-[10px] text-fg-on-dark-quiet">
             {done
               ? 'COMPLETED'
               : phase === 'INTERVIEW'
@@ -389,9 +389,9 @@ export default function DebateQPanel({
         <div className={sidebarTab === 'debateai' ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
           {/* 실모델이 없으면 Copilot에서 코드를 고칠 방법이 사라진다 — 막힌 채로 두지 않고 밝힌다 */}
           {refactorMode === 'copilot' && phase === 'BUILD' && !builtinLive && (
-            <p className="border-b border-white/10 bg-white/5 px-4 py-2.5 text-[11px] leading-relaxed text-white/50">
+            <p className="border-b border-white/10 bg-white/5 px-4 py-2.5 text-[11px] leading-relaxed text-fg-on-dark-muted">
               실모델(debateAI)이 설정되지 않아 코드 명령을 실행할 수 없습니다. 질문은 그대로 할 수 있고, 직접 고치려면
-              상단에서 <strong className="text-white/75">Editor</strong>로 바꿔 주세요.
+              상단에서 <strong className="text-fg-on-dark">Editor</strong>로 바꿔 주세요.
             </p>
           )}
           <DebateAiChat
@@ -432,12 +432,12 @@ export default function DebateQPanel({
                 return (
                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                      className={`max-w-[85%] rounded-[var(--radius-panel)] px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                         m.role === 'user'
                           ? isCommand
                             ? 'bg-white/10 text-white border border-brand-400/30'
                             : 'bg-signal text-white'
-                          : 'bg-white/[0.06] text-white/90 border border-white/10'
+                          : 'bg-white/[0.06] text-fg-on-dark border border-white/10'
                       }`}
                     >
                       {m.role === 'ai' && <p className="mb-1 font-mono text-[10px] text-brand-300">DebateAI</p>}
@@ -449,23 +449,23 @@ export default function DebateQPanel({
               })}
               {lastEval && (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs">
+                  <div className="rounded-[var(--radius-panel)] border border-white/10 bg-white/5 px-4 py-3 text-xs">
                     <span className={`mr-2 rounded-full border px-2 py-0.5 text-[10px] font-medium ${VERDICT_STYLE[lastEval.verdict]}`}>
                       {VERDICT_LABEL[lastEval.verdict]} · {lastEval.score}점
                     </span>
-                    <span className="text-white/60">{lastEval.feedback}</span>
+                    <span className="text-fg-on-dark-secondary">{lastEval.feedback}</span>
                   </div>
                 </div>
               )}
               {report && (
-                <div className="rounded-2xl border border-brand-400/30 bg-brand-900/30 p-5">
+                <div className="rounded-[var(--radius-panel)] border border-brand-400/30 bg-brand-900/30 p-5">
                   <p className="mb-1 font-mono text-[11px] text-brand-300">FINAL REPORT</p>
                   <p className="text-3xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                     {report.defenseScore}%
                   </p>
-                  <p className="mt-2 text-sm text-white/70 leading-relaxed">{report.summary}</p>
+                  <p className="mt-2 text-sm text-fg-on-dark-secondary leading-relaxed">{report.summary}</p>
                   {report.weakKeywords.length > 0 && (
-                    <p className="mt-2 text-xs text-white/50">보완할 개념: {report.weakKeywords.join(', ')}</p>
+                    <p className="mt-2 text-xs text-fg-on-dark-muted">보완할 개념: {report.weakKeywords.join(', ')}</p>
                   )}
                 </div>
               )}
@@ -490,13 +490,13 @@ export default function DebateQPanel({
                   onChange={(e) => setInput(e.target.value)}
                   rows={1}
                   placeholder="왜 이 프롬프트를 이렇게 구사했는지 설명하세요"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-signal/60 dc-scroll"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-fg-on-dark-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 dc-scroll"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit();
                   }}
                 />
                 <div className="mt-2 flex items-center justify-between gap-3">
-                  <p className="text-[10px] text-white/35">
+                  <p className="text-[10px] text-fg-on-dark-quiet">
                     답변은 라운드를 소모합니다 — 프롬프트 구사력·설명 능력을 종합 평가합니다 · Ctrl+Enter
                   </p>
                   <button
@@ -515,12 +515,12 @@ export default function DebateQPanel({
         {/* 문제사항 */}
         {sidebarTab === 'problem' && (
           <div className="dc-scroll flex-1 overflow-y-auto px-5 py-4">
-            <article className="prose-invert max-w-none text-sm leading-relaxed [&_h2]:text-base [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:text-brand-300 [&_h2:first-child]:mt-0 [&_p]:my-2 [&_p]:text-white/80 [&_li]:text-white/80 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_code]:font-mono [&_code]:text-[12px] [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_pre]:bg-white/5 [&_pre]:border [&_pre]:border-white/10 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre_code]:bg-transparent [&_pre_code]:p-0">
+            <article className="prose-invert max-w-none text-sm leading-relaxed [&_h2]:text-base [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:text-brand-300 [&_h2:first-child]:mt-0 [&_p]:my-2 [&_p]:text-fg-on-dark [&_li]:text-fg-on-dark [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_code]:font-mono [&_code]:text-[12px] [&_code]:bg-white/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_pre]:bg-white/5 [&_pre]:border [&_pre]:border-white/10 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre_code]:bg-transparent [&_pre_code]:p-0">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{problem.description}</ReactMarkdown>
             </article>
             <div className="mt-5 flex flex-wrap gap-1.5">
               {problem.tags.map((t) => (
-                <span key={t} className="font-mono text-[10px] text-white/40 bg-white/5 border border-white/10 rounded-full px-2 py-0.5">
+                <span key={t} className="font-mono text-[10px] text-fg-on-dark-quiet bg-white/5 border border-white/10 rounded-full px-2 py-0.5">
                   #{t}
                 </span>
               ))}
@@ -546,8 +546,8 @@ export default function DebateQPanel({
                     ] as const
                   ).map(([k, v]) => (
                     <p key={k} className="flex justify-between">
-                      <span className="text-white/40">{k}</span>
-                      <span className="text-white/70">{v}</span>
+                      <span className="text-fg-on-dark-quiet">{k}</span>
+                      <span className="text-fg-on-dark-secondary">{v}</span>
                     </p>
                   ))}
                 </div>
@@ -556,21 +556,21 @@ export default function DebateQPanel({
                 <p className="font-bold text-white text-sm mb-2">AI가 작성한 코드 실시간 분석</p>
                 <div className="space-y-1.5 font-mono text-[11px]">
                   <p className="flex justify-between">
-                    <span className="text-white/40">예상 시간 복잡도</span>
+                    <span className="text-fg-on-dark-quiet">예상 시간 복잡도</span>
                     <span className={a.hasNestedLoops ? 'text-rose-400' : 'text-emerald-400'}>{a.complexityGuess}</span>
                   </p>
                   <p className="flex justify-between">
-                    <span className="text-white/40">중첩 반복문</span>
+                    <span className="text-fg-on-dark-quiet">중첩 반복문</span>
                     <span className={a.hasNestedLoops ? 'text-rose-400' : 'text-emerald-400'}>
                       {a.hasNestedLoops ? `${a.maxLoopDepth}중첩 감지` : '없음'}
                     </span>
                   </p>
                   <p className="flex justify-between">
-                    <span className="text-white/40">감지된 자료구조</span>
-                    <span className="text-white/70">{a.structures.length ? a.structures.join(', ') : '없음'}</span>
+                    <span className="text-fg-on-dark-quiet">감지된 자료구조</span>
+                    <span className="text-fg-on-dark-secondary">{a.structures.length ? a.structures.join(', ') : '없음'}</span>
                   </p>
                   <p className="flex justify-between">
-                    <span className="text-white/40">엣지 케이스 가드</span>
+                    <span className="text-fg-on-dark-quiet">엣지 케이스 가드</span>
                     <span className={a.hasEdgeGuard ? 'text-emerald-400' : 'text-rose-400'}>
                       {a.hasEdgeGuard ? '감지' : '미탐지'}
                     </span>
@@ -590,14 +590,14 @@ export default function DebateQPanel({
           <div className="dc-scroll flex-1 space-y-3 overflow-y-auto px-5 py-4">
             <div className="flex items-baseline justify-between">
               <p className="font-bold text-white text-sm">실행 기록 ({attempts}회)</p>
-              <span className="font-mono text-[10px] text-white/35">
+              <span className="font-mono text-[10px] text-fg-on-dark-quiet">
                 {results.length > 0
                   ? `마지막 실행 ${results.filter((r) => r.status === 'pass').length}/${results.length} 통과`
                   : '이번 접속 실행 없음'}
               </span>
             </div>
             <div>
-              <p className="mb-2 font-mono text-[10px] text-white/35">코드 버전 {history.length}개 — 누르면 에디터에 불러옵니다</p>
+              <p className="mb-2 font-mono text-[10px] text-fg-on-dark-quiet">코드 버전 {history.length}개 — 누르면 에디터에 불러옵니다</p>
               <ul className="space-y-1.5">
                 {[...history].reverse().map((rec, i) => {
                   const index = history.length - 1 - i;
@@ -616,8 +616,8 @@ export default function DebateQPanel({
                       >
                         <span className="flex items-center gap-2 font-mono text-[10.5px]">
                           <span className="text-brand-300">#{index + 1}</span>
-                          <span className="text-white/40 truncate">{rec.note || '코드 수정'}</span>
-                          <span className="ml-auto shrink-0 text-white/30">
+                          <span className="text-fg-on-dark-quiet truncate">{rec.note || '코드 수정'}</span>
+                          <span className="ml-auto shrink-0 text-fg-on-dark-quiet">
                             {isCurrent ? '현재' : active ? '열람 중' : new Date(rec.ts).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </span>
@@ -637,9 +637,9 @@ export default function DebateQPanel({
       {/* ---------- 우: 검정 에디터 카드 (데모와 동일한 크롬) ---------- */}
       <div className="relative flex min-h-[380px] lg:min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10 bg-[#0B0D12]">
         <div className="flex items-center gap-3 border-b border-white/10 px-4 py-2">
-          <span className="font-mono text-[10px] text-white/40">solution.{language === 'python' ? 'py' : 'js'}</span>
-          <span className="text-[9px] uppercase tracking-wider text-white/20">debateQ sandbox</span>
-          <span className="font-mono text-[10px] text-white/30 hidden sm:inline">
+          <span className="font-mono text-[10px] text-fg-on-dark-quiet">solution.{language === 'python' ? 'py' : 'js'}</span>
+          <span className="text-[9px] uppercase tracking-wider text-fg-on-dark-quiet">debateQ sandbox</span>
+          <span className="font-mono text-[10px] text-fg-on-dark-quiet hidden sm:inline">
             읽기 전용 — 코드는 AI 명령으로만 수정됩니다
           </span>
           <div className="ml-auto flex items-center gap-2">
@@ -649,7 +649,7 @@ export default function DebateQPanel({
               onChange={(e) => switchLanguage(e.target.value as Language)}
               disabled={judging || switchingLang || done}
               aria-label="언어 변경"
-              className="bg-ink border border-white/15 rounded-lg px-2.5 py-1 font-mono text-[11px] text-white/80 focus:outline-none focus:border-signal disabled:opacity-50"
+              className="bg-ink border border-white/15 rounded-lg px-2.5 py-1 font-mono text-[11px] text-fg-on-dark focus:outline-none focus:border-signal disabled:opacity-50"
             >
               {(Object.keys(LANGUAGE_LABELS) as Language[]).map((l) => (
                 <option key={l} value={l}>
@@ -660,7 +660,7 @@ export default function DebateQPanel({
             <button
               onClick={() => handleRun(false)}
               disabled={judging || switchingLang}
-              className="px-4 py-1.5 border border-white/15 rounded-lg text-[11px] font-semibold text-white/85 hover:bg-white/10 transition-colors disabled:opacity-40"
+              className="px-4 py-1.5 border border-white/15 rounded-lg text-[11px] font-semibold text-fg-on-dark hover:bg-white/10 transition-colors disabled:opacity-40"
             >
               {judging ? '실행 중…' : '▶ 실행'}
             </button>
@@ -737,7 +737,7 @@ export default function DebateQPanel({
               <p className="text-2xl font-bold text-emerald-400" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                 ALL TESTS PASSED
               </p>
-              <p className="font-mono text-sm text-white/60">면접 모드로 전환합니다…</p>
+              <p className="font-mono text-sm text-fg-on-dark-secondary">면접 모드로 전환합니다…</p>
             </div>
           </div>
         )}

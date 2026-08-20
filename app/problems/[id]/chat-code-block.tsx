@@ -42,12 +42,12 @@ export default function ChatCodeBlock({
   return (
     <div className="my-2 overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <div className="flex items-center gap-1 border-b border-white/10 bg-white/[0.03] px-2 py-1">
-        <span className="font-mono text-[9px] uppercase tracking-wider text-white/25">code</span>
+        <span className="font-mono text-[9px] uppercase tracking-wider text-fg-on-dark-quiet">code</span>
         <div className="ml-auto flex items-center gap-1">
           <button
             type="button"
             onClick={copy}
-            className="rounded-md px-1.5 py-0.5 text-[10px] font-medium text-white/45 transition-colors hover:bg-white/10 hover:text-white"
+            className="rounded-md px-1.5 py-0.5 text-[10px] font-medium text-fg-on-dark-muted transition-colors hover:bg-white/10 hover:text-white"
           >
             {copied ? '복사됨' : '복사'}
           </button>
@@ -63,7 +63,7 @@ export default function ChatCodeBlock({
           )}
         </div>
       </div>
-      <pre className="dc-scroll overflow-x-auto p-3 font-mono text-[12px] leading-relaxed text-white/85">{children}</pre>
+      <pre className="dc-scroll overflow-x-auto p-3 font-mono text-[12px] leading-relaxed text-fg-on-dark">{children}</pre>
     </div>
   );
 }

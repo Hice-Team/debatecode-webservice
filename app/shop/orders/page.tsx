@@ -41,14 +41,14 @@ export default async function ShopOrdersPage() {
           <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">교환 내역</h1>
         </div>
         <div className="shrink-0 text-right">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">보유 포인트</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">보유 포인트</p>
           <p className="font-display text-xl font-bold text-signal">{summary.balance.toLocaleString()}P</p>
         </div>
       </header>
 
       {orders.length === 0 ? (
-        <div className="mt-8 border-t border-ink/10 py-20 text-center">
-          <p className="text-sm text-ink-soft/45">아직 교환한 상품이 없습니다.</p>
+        <div className="mt-8 border-t border-hairline py-20 text-center">
+          <p className="text-sm text-fg-muted">아직 교환한 상품이 없습니다.</p>
           <Link
             href="/shop"
             className="mt-4 inline-block rounded-lg bg-signal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600"
@@ -57,15 +57,15 @@ export default async function ShopOrdersPage() {
           </Link>
         </div>
       ) : (
-        <ul className="mt-6 border-t border-ink/10">
+        <ul className="mt-6 border-t border-hairline">
           {orders.map((order) => (
-            <li key={order.id} className="border-b border-ink/[0.07] py-4">
+            <li key={order.id} className="border-b border-hairline py-4">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink">
                     {order.product.brand} {order.product.name}
                   </p>
-                  <p className="mt-0.5 font-mono text-[11px] text-ink-soft/40">
+                  <p className="mt-0.5 font-mono text-[11px] text-fg-quiet">
                     {order.createdAt.toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' })} ·{' '}
                     {order.pointsSpent.toLocaleString()}P
                   </p>
@@ -73,7 +73,7 @@ export default async function ShopOrdersPage() {
 
                 <span
                   className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
-                    ORDER_STATUS_TONES[order.status] ?? 'border-ink/15 bg-paper text-ink-soft/55'
+                    ORDER_STATUS_TONES[order.status] ?? 'border-ink/15 bg-paper text-fg-muted'
                   }`}
                 >
                   {ORDER_STATUS_LABELS[order.status] ?? order.status}
@@ -83,7 +83,7 @@ export default async function ShopOrdersPage() {
                 {order.status === 'requested' && (
                   <form action={cancelShopOrder} className="shrink-0">
                     <input type="hidden" name="orderId" value={order.id} />
-                    <button className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-ink-soft/70 transition-colors hover:border-rose-300 hover:text-rose-600">
+                    <button className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-600">
                       취소
                     </button>
                   </form>

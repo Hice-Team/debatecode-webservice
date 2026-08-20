@@ -29,7 +29,7 @@ function Btn({
       title={title}
       aria-label={title}
       className={`inline-grid h-8 w-8 place-items-center rounded-md transition-colors ${
-        accent ? 'text-brand-600 hover:bg-brand-50' : 'text-ink-soft/60 hover:bg-ink/5 hover:text-ink-soft'
+        accent ? 'text-brand-600 hover:bg-brand-50' : 'text-fg-secondary hover:bg-ink/5 hover:text-ink-soft'
       }`}
     >
       {children}
@@ -127,7 +127,7 @@ export default function MarkdownToolbar({
   return (
     <div
       className={`flex flex-wrap items-center gap-0.5 bg-paper/60 px-2 py-1.5 ${
-        variant === 'flat' ? 'border-b border-ink/[0.07]' : 'rounded-t-lg border border-b-0 border-ink/15'
+        variant === 'flat' ? 'border-b border-hairline' : 'rounded-t-lg border border-b-0 border-ink/15'
       }`}
       role="toolbar"
       aria-label="서식"
@@ -142,7 +142,7 @@ export default function MarkdownToolbar({
           if (v) linePrefix(v);
           e.target.value = '';
         }}
-        className="h-8 rounded-md bg-transparent px-1.5 text-xs text-ink-soft/60 hover:bg-ink/5 focus:outline-none"
+        className="h-8 rounded-md bg-transparent px-1.5 text-xs text-fg-secondary hover:bg-ink/5 focus:outline-none"
       >
         <option value="" disabled>
           제목

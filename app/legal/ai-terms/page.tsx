@@ -11,7 +11,7 @@ export default function AiTermsPage() {
   return (
     <>
       <h1>debateAI 이용약관</h1>
-      <p className="text-sm text-ink-soft/50">시행일: 2026년 8월 11일 · 이전 개정일: 2026년 8월 10일</p>
+      <p className="text-sm text-fg-muted">시행일: 2026년 8월 11일 · 이전 개정일: 2026년 8월 10일</p>
 
       <p>
         이 약관은 Debate Code(이하 &quot;서비스&quot;)가 제공하는 생성형 AI 기능(이하
@@ -214,9 +214,9 @@ export default function AiTermsPage() {
           폴더를 고르더라도 의존성·빌드 산출물 폴더는 제외되며, 실제로 올라간 파일은 첨부 목록에서 확인·삭제할 수 있습니다.
         </li>
         <li>
-          <strong>Drive에서 파일 추가</strong> — Google 계정으로 <strong>읽기 전용</strong> 권한을 1회 요청하고, 이용자가
-          Picker에서 직접 고른 파일만 내려받아 서비스 스토리지에 사본을 만듭니다. 서비스는 Drive 전체를 조회하지 않으며
-          권한은 Google 계정 설정에서 언제든 철회할 수 있습니다.
+          <strong>Drive에서 파일 추가</strong> — Google 계정으로 <strong>이용자가 Picker에서 고른 파일에 한정된</strong>
+          권한(drive.file)을 1회 요청하고, 그 파일만 내려받아 서비스 스토리지에 사본을 만듭니다. 서비스는 Drive 목록이나
+          고르지 않은 파일에 접근할 수 없으며, 권한은 Google 계정 설정에서 언제든 철회할 수 있습니다.
         </li>
         <li>
           <strong>GitHub에서 코드 가져오기 · URL 첨부</strong> — 이용자가 입력한 주소를 <strong>서비스 서버가 대신
@@ -372,7 +372,7 @@ export default function AiTermsPage() {
         고지하고 필요한 경우 <strong>재동의</strong>를 받습니다.
       </p>
 
-      <p className="mt-8 text-sm text-ink-soft/50">
+      <p className="mt-8 text-sm text-fg-muted">
         문의: <Link href="/community?board=qna">문의게시판</Link>
       </p>
     </>

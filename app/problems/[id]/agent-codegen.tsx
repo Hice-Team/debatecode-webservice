@@ -80,11 +80,11 @@ export default function AgentCodegen({
           aria-hidden
           className="h-2 w-2 shrink-0 rounded-full bg-brand-400 shadow-[0_0_10px_rgba(69,49,217,0.9)] motion-safe:animate-pulse"
         />
-        <p className="min-w-0 truncate text-[12px] text-white/75" role="status" aria-live="polite">
+        <p className="min-w-0 truncate text-[12px] text-fg-on-dark" role="status" aria-live="polite">
           {writing ? (
             <>
               Agent가 코드를 작성하고 있습니다
-              <span className="ml-1.5 font-mono text-[10px] text-white/35">
+              <span className="ml-1.5 font-mono text-[10px] text-fg-on-dark-quiet">
                 {shown}/{lines.length} lines
               </span>
             </>
@@ -95,7 +95,7 @@ export default function AgentCodegen({
             </>
           )}
         </p>
-        <span className="ml-auto shrink-0 font-mono text-[10px] text-white/30">
+        <span className="ml-auto shrink-0 font-mono text-[10px] text-fg-on-dark-quiet">
           solution.{language === 'python' ? 'py' : 'js'}
         </span>
       </div>
@@ -113,11 +113,11 @@ export default function AgentCodegen({
         {writing ? (
           <pre
             ref={bodyRef}
-            className="dc-scroll h-full overflow-auto px-4 py-3 font-mono text-[12.5px] leading-[1.55] text-white/80"
+            className="dc-scroll h-full overflow-auto px-4 py-3 font-mono text-[12.5px] leading-[1.55] text-fg-on-dark"
           >
             {lines.slice(0, shown).map((line, i) => (
               <div key={i} className="flex motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-1 motion-safe:duration-200">
-                <span aria-hidden className="mr-3 w-7 shrink-0 select-none text-right text-white/20">
+                <span aria-hidden className="mr-3 w-7 shrink-0 select-none text-right text-fg-on-dark-quiet">
                   {i + 1}
                 </span>
                 <span className="whitespace-pre-wrap break-words">{line || ' '}</span>
@@ -125,7 +125,7 @@ export default function AgentCodegen({
             ))}
             {shown < lines.length && (
               <div className="flex">
-                <span aria-hidden className="mr-3 w-7 shrink-0 select-none text-right text-white/20">
+                <span aria-hidden className="mr-3 w-7 shrink-0 select-none text-right text-fg-on-dark-quiet">
                   {shown + 1}
                 </span>
                 <span aria-hidden className="inline-block h-[1.1em] w-[7px] translate-y-[2px] bg-brand-300 motion-safe:animate-pulse" />
@@ -139,7 +139,7 @@ export default function AgentCodegen({
               (text, i) => (
                 <p
                   key={text}
-                  className="flex items-center gap-2.5 text-[12px] text-white/40 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1"
+                  className="flex items-center gap-2.5 text-[12px] text-fg-on-dark-quiet motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1"
                   style={{ animationDelay: `${i * 260}ms`, animationFillMode: 'backwards' }}
                 >
                   <span aria-hidden className="h-1 w-1 rounded-full bg-brand-400/70" />

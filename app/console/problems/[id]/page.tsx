@@ -81,7 +81,7 @@ export default async function EditProblemPage({ params }: { params: Promise<{ id
         }}
       />
 
-      <div className="mt-10 rounded-2xl border border-rose-200 bg-rose-50/40 p-5">
+      <div className="mt-10 rounded-[var(--radius-panel)] border border-rose-200 bg-rose-50/40 p-5">
         <h3 className="text-sm font-bold text-rose-900">문제 삭제</h3>
         <p className="mt-1 text-xs leading-relaxed text-rose-800/80">
           {usage > 0

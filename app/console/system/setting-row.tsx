@@ -46,8 +46,8 @@ export default function SettingRow({
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs leading-relaxed text-ink-soft/60">{def.description}</p>
-          <p className="mt-1 font-mono text-[10px] text-ink-soft/35">
+          <p className="mt-1 text-xs leading-relaxed text-fg-secondary">{def.description}</p>
+          <p className="mt-1 font-mono text-[10px] text-fg-quiet">
             {def.key} · 기본값 {formatValue(def, def.default)}
           </p>
         </div>
@@ -74,12 +74,12 @@ export default function SettingRow({
               >
                 <span
                   aria-hidden
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-colors ${
                     draft === 'true' ? 'left-[1.375rem]' : 'left-0.5'
                   }`}
                 />
               </button>
-              <span className="w-8 font-mono text-[11px] text-ink-soft/60">{draft === 'true' ? '켬' : '끔'}</span>
+              <span className="w-8 font-mono text-[11px] text-fg-secondary">{draft === 'true' ? '켬' : '끔'}</span>
             </>
           ) : def.valueType === 'enum' ? (
             <select
@@ -146,7 +146,7 @@ export default function SettingRow({
                 setConfirming(false);
                 setDraft(current);
               }}
-              className="shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs text-ink-soft/70"
+              className="shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs text-fg-secondary"
             >
               취소
             </button>

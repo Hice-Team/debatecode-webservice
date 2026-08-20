@@ -34,7 +34,7 @@ export default function ShareButton({ title }: { title: string }) {
       type="button"
       onClick={share}
       className={`inline-flex h-10 items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-medium transition active:scale-[0.96] ${
-        copied ? 'border-emerald-200 text-emerald-600' : 'border-ink/15 text-ink-soft/60 hover:border-brand-200 hover:text-brand-600'
+        copied ? 'border-emerald-200 text-emerald-600' : 'border-ink/15 text-fg-secondary hover:border-brand-200 hover:text-brand-600'
       }`}
     >
       {copied ? (

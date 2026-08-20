@@ -66,7 +66,7 @@ export default function SanctionDialog({
   return (
     <Shell title={`제재 발급 — ${target.name}`} onClose={onClose}>
       {/* 단계 표시 */}
-      <div className="flex items-center gap-1 border-b border-ink/10 bg-paper/40 px-6 py-2.5">
+      <div className="flex items-center gap-1 border-b border-hairline bg-paper/40 px-6 py-2.5">
         {['근거', '조치', '확인'].map((label, i) => (
           <div key={label} className="flex items-center gap-1">
             {i > 0 && <span aria-hidden className="mx-1 h-px w-4 bg-ink/15" />}
@@ -76,7 +76,7 @@ export default function SanctionDialog({
                   ? 'bg-signal text-white'
                   : step > i + 1
                     ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-ink/[0.06] text-ink-soft/45'
+                    : 'bg-ink/[0.06] text-fg-muted'
               }`}
             >
               {i + 1}. {label}
@@ -97,7 +97,7 @@ export default function SanctionDialog({
           {/* ① 근거 */}
           {step === 1 && (
             <>
-              <p className="text-xs leading-relaxed text-ink-soft/65">
+              <p className="text-xs leading-relaxed text-fg-secondary">
                 무엇을 보고 제재하는지 남깁니다. 이의제기가 들어왔을 때 답할 수 있는 유일한 재료입니다.
               </p>
               {presetReportIds.length > 0 && (
@@ -112,7 +112,7 @@ export default function SanctionDialog({
                 </div>
               )}
               <div>
-                <label htmlFor="evidence-note" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+                <label htmlFor="evidence-note" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
                   근거 메모 {presetReportIds.length === 0 && '(권장)'}
                 </label>
                 <textarea
@@ -131,13 +131,13 @@ export default function SanctionDialog({
           {step === 2 && (
             <>
               <fieldset>
-                <legend className="mb-2 font-mono text-xs tracking-wider text-ink-soft/60">제한할 기능</legend>
+                <legend className="mb-2 font-mono text-xs tracking-wider text-fg-secondary">제한할 기능</legend>
                 <div className="space-y-1.5">
                   {SANCTION_TYPES.map((t) => (
                     <label
                       key={t}
                       className={`flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 transition-colors ${
-                        type === t ? 'border-rose-400 bg-rose-50/50' : 'border-ink/10 hover:border-ink/25'
+                        type === t ? 'border-rose-400 bg-rose-50/50' : 'border-hairline hover:border-ink/25'
                       }`}
                     >
                       <input
@@ -148,7 +148,7 @@ export default function SanctionDialog({
                       />
                       <span className="min-w-0">
                         <span className="block text-sm font-semibold text-ink">{SANCTION_TYPE_LABEL[t]} 제한</span>
-                        <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-soft/55">
+                        <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">
                           {SANCTION_TYPE_DESC[t]}
                         </span>
                       </span>
@@ -158,7 +158,7 @@ export default function SanctionDialog({
               </fieldset>
 
               <fieldset>
-                <legend className="mb-2 font-mono text-xs tracking-wider text-ink-soft/60">기간</legend>
+                <legend className="mb-2 font-mono text-xs tracking-wider text-fg-secondary">기간</legend>
                 <div className="flex flex-wrap gap-1.5">
                   {SANCTION_PRESETS.map((p) => (
                     <button
@@ -170,7 +170,7 @@ export default function SanctionDialog({
                           ? p.days === 0
                             ? 'border-rose-500 bg-rose-600 text-white'
                             : 'border-signal bg-signal text-white'
-                          : 'border-ink/15 text-ink-soft/70 hover:border-ink/40'
+                          : 'border-ink/15 text-fg-secondary hover:border-ink/40'
                       }`}
                     >
                       {p.label}
@@ -185,7 +185,7 @@ export default function SanctionDialog({
               </fieldset>
 
               <div>
-                <label htmlFor="sanction-reason" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+                <label htmlFor="sanction-reason" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
                   사유 (필수 · 이용자에게 그대로 표시됩니다)
                 </label>
                 <input
@@ -203,7 +203,7 @@ export default function SanctionDialog({
           {/* ③ 확인 */}
           {step === 3 && (
             <>
-              <div className="rounded-xl border border-ink/10 bg-paper/40 p-3.5 text-xs">
+              <div className="rounded-xl border border-hairline bg-paper/40 p-3.5 text-xs">
                 <dl className="space-y-1.5">
                   <Row label="대상" value={target.name} />
                   <Row label="조치" value={`${SANCTION_TYPE_LABEL[type]} 제한`} />
@@ -213,10 +213,10 @@ export default function SanctionDialog({
               </div>
 
               <div>
-                <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+                <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                   이용자에게 표시되는 문구
                 </p>
-                <pre className="whitespace-pre-wrap rounded-xl border border-ink/15 bg-white px-3.5 py-3 font-sans text-xs leading-relaxed text-ink-soft/80">
+                <pre className="whitespace-pre-wrap rounded-xl border border-ink/15 bg-white px-3.5 py-3 font-sans text-xs leading-relaxed text-fg">
                   {sanctionNotice(type, days, reason)}
                 </pre>
               </div>
@@ -233,12 +233,12 @@ export default function SanctionDialog({
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className={`mr-auto rounded-xl border border-ink/15 px-4 py-2 text-sm text-ink-soft/70 ${FOCUS}`}
+              className={`mr-auto rounded-xl border border-ink/15 px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}
             >
               ← 이전
             </button>
           )}
-          <button type="button" onClick={onClose} className={`rounded-xl border border-ink/15 px-4 py-2 text-sm text-ink-soft/70 ${FOCUS}`}>
+          <button type="button" onClick={onClose} className={`rounded-xl border border-ink/15 px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}>
             취소
           </button>
           {step < 3 ? (
@@ -268,8 +268,8 @@ export default function SanctionDialog({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-3">
-      <dt className="w-12 shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">{label}</dt>
-      <dd className="min-w-0 flex-1 break-words text-ink-soft/80">{value}</dd>
+      <dt className="w-12 shrink-0 font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{label}</dt>
+      <dd className="min-w-0 flex-1 break-words text-fg">{value}</dd>
     </div>
   );
 }

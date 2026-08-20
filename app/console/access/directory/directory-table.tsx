@@ -82,7 +82,7 @@ export default function DirectoryTable({
   return (
     <section>
       {/* 필터 바 */}
-      <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-ink/10 bg-white p-4 lg:flex-row lg:items-center">
+      <div className="mb-4 flex flex-col gap-3 rounded-[var(--radius-panel)] border border-hairline bg-white p-4 lg:flex-row lg:items-center">
         <div role="search" className="flex-1">
           <label htmlFor={searchId} className="sr-only">
             이름·로그인 방식으로 회원 검색
@@ -132,14 +132,14 @@ export default function DirectoryTable({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
+      <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-sm">
             <caption className="sr-only">
               회원 목록 — 마스킹된 이름, 로그인 방식, 역할, 활동량, 제재 상태
             </caption>
             <thead>
-              <tr className="border-b border-ink/10 bg-paper/50 font-mono text-[11px] uppercase tracking-wider text-ink-soft/60">
+              <tr className="border-b border-hairline bg-paper/50 font-mono text-[11px] uppercase tracking-wider text-fg-secondary">
                 <th scope="col" className="px-3 py-3 text-left font-medium">
                   <input
                     type="checkbox"
@@ -192,14 +192,14 @@ export default function DirectoryTable({
                             {u.name}
                             {isSelf && <span className="ml-1.5 font-mono text-[10px] text-brand-600">(나)</span>}
                           </p>
-                          <p className="truncate font-mono text-[11px] text-ink-soft/45">
+                          <p className="truncate font-mono text-[11px] text-fg-muted">
                             가입 {new Date(u.createdAt).toLocaleDateString('ko-KR')}
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex rounded-full border border-ink/10 bg-paper px-2 py-0.5 text-[11px] text-ink-soft/70">
+                      <span className="inline-flex rounded-full border border-hairline bg-paper px-2 py-0.5 text-[11px] text-fg-secondary">
                         {u.provider}
                       </span>
                     </td>
@@ -222,7 +222,7 @@ export default function DirectoryTable({
                     </td>
                     <td className="px-4 py-3">
                       {u.activeSanctions.length === 0 ? (
-                        <span className="font-mono text-[11px] text-ink-soft/35">
+                        <span className="font-mono text-[11px] text-fg-quiet">
                           {u.pastSanctionCount > 0 ? `과거 ${u.pastSanctionCount}건` : '—'}
                         </span>
                       ) : (
@@ -239,14 +239,14 @@ export default function DirectoryTable({
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-[11px] text-ink-soft/60">
+                    <td className="px-4 py-3 text-right font-mono text-[11px] text-fg-secondary">
                       제출 {u.submissions.toLocaleString()}
                       <br />
                       글 {u.posts.toLocaleString()}
                     </td>
                     <td className="px-4 py-3">
                       {isSelf ? (
-                        <span className="block text-right font-mono text-[11px] text-ink-soft/35">본인 제외</span>
+                        <span className="block text-right font-mono text-[11px] text-fg-quiet">본인 제외</span>
                       ) : (
                         <div className="flex justify-end gap-1.5">
                           {canGrantRole && (
@@ -267,7 +267,7 @@ export default function DirectoryTable({
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-ink-soft/50">
+                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-fg-muted">
                     조건에 맞는 회원이 없습니다.
                   </td>
                 </tr>
@@ -278,8 +278,8 @@ export default function DirectoryTable({
 
         {/* 선택 시 나타나는 일괄 작업 바 */}
         {selectedUsers.length > 0 && (
-          <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 border-t border-ink/10 bg-white px-4 py-3">
-            <p className="font-mono text-sm text-ink-soft/70">선택 {selectedUsers.length}명</p>
+          <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 border-t border-hairline bg-white px-4 py-3">
+            <p className="font-mono text-sm text-fg-secondary">선택 {selectedUsers.length}명</p>
             <div className="ml-auto flex items-center gap-2">
               {canGrantRole && (
                 <button type="button" onClick={() => setRoleTarget(selectedUsers)} className={BTN_NEUTRAL}>
@@ -293,8 +293,8 @@ export default function DirectoryTable({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink/10 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-ink-soft/60">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-fg-secondary">
             <label htmlFor="per-page" className="font-mono text-[11px]">
               페이지당
             </label>

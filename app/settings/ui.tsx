@@ -19,13 +19,13 @@ export function SettingRow({
 }) {
   return (
     <div
-      className={`border-b border-ink/[0.07] py-4 last:border-b-0 ${
+      className={`border-b border-hairline py-4 last:border-b-0 ${
         stacked ? '' : 'flex flex-wrap items-center gap-x-6 gap-y-2'
       }`}
     >
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-ink">{label}</p>
-        {desc && <p className="mt-0.5 max-w-prose text-[13px] leading-relaxed text-ink-soft/55">{desc}</p>}
+        {desc && <p className="mt-0.5 max-w-prose text-[13px] leading-relaxed text-fg-muted">{desc}</p>}
       </div>
       {control && <div className={stacked ? 'mt-3' : 'shrink-0'}>{control}</div>}
     </div>
@@ -37,7 +37,7 @@ export function SettingGroup({ title, children }: { title?: string; children: Re
   return (
     <div className="mt-6 first:mt-0">
       {title && (
-        <p className="mb-1 mt-2 font-mono text-[11px] uppercase tracking-wider text-ink-soft/40">{title}</p>
+        <p className="mb-1 mt-2 font-mono text-[11px] uppercase tracking-wider text-fg-quiet">{title}</p>
       )}
       {children}
     </div>
@@ -46,5 +46,5 @@ export function SettingGroup({ title, children }: { title?: string; children: Re
 
 /** 값만 보여 주는 오른쪽 칸 (읽기 전용) */
 export function SettingValue({ children }: { children: ReactNode }) {
-  return <span className="text-sm text-ink-soft/70">{children}</span>;
+  return <span className="text-sm text-fg-secondary">{children}</span>;
 }

@@ -20,7 +20,7 @@ export default function ResetPasswordPage() {
           </h1>
         </div>
 
-        <div className="bg-white rounded-xl border border-ink/10 shadow-sm p-8">
+        <div className="bg-white rounded-xl border border-hairline shadow-sm p-8">
           <ResetPasswordForm />
         </div>
       </div>

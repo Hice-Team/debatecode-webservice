@@ -35,7 +35,7 @@ export default function OutputPanel({
             aria-selected={tab === t}
             onClick={() => setTab(t)}
             className={`px-3 py-1.5 transition-colors ${
-              tab === t ? 'border-b-2 border-brand-400 text-brand-400' : 'text-white/40 hover:text-white/70'
+              tab === t ? 'border-b-2 border-brand-400 text-brand-400' : 'text-fg-on-dark-quiet hover:text-fg-on-dark-secondary'
             }`}
           >
             {TAB_LABELS[t]}

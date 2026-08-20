@@ -41,7 +41,7 @@ export default function PasswordForm({ email }: { email: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="current" className="block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5">현재 비밀번호</label>
+        <label htmlFor="current" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">현재 비밀번호</label>
         <input id="current" name="current" type="password" autoComplete="current-password" required placeholder="현재 비밀번호" className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60" />
         {error && <p className="mt-1.5 text-xs text-rose-600">{error}</p>}
       </div>

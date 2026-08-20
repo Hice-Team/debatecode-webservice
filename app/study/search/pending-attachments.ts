@@ -37,6 +37,33 @@ export function detectKind(name: string, mime?: string): AttachmentKind {
   return 'file';
 }
 
+/* ---------- 미리보기 ---------- */
+
+const VIDEO_EXT = /\.(mp4|webm|ogv|mov|m4v)$/i;
+const AUDIO_EXT = /\.(mp3|wav|ogg|oga|m4a|aac|flac)$/i;
+const TEXT_EXT = /\.(txt|log|csv|tsv|ini|env|gitignore)$/i;
+
+/** 미리보기 창에서 어떤 형태로 열 것인가 — null이면 열지 않는다. */
+export type PreviewKind = 'image' | 'video' | 'audio' | 'pdf' | 'text';
+
+/**
+ * 브라우저가 그대로 보여 줄 수 있는 첨부인지 판별한다.
+ *
+ * MIME을 먼저 믿되, 스토리지가 `application/octet-stream`으로 올려 주는 경우가 흔해
+ * 확장자로 한 번 더 본다. 판별에 실패하면 미리보기를 열지 않고 내려받기만 제공한다.
+ */
+export function previewKindOf(file: { name: string; mime?: string; kind?: AttachmentKind }): PreviewKind | null {
+  const mime = file.mime ?? '';
+  const name = file.name;
+
+  if (mime.startsWith('image/') || IMAGE_EXT.test(name)) return 'image';
+  if (mime.startsWith('video/') || VIDEO_EXT.test(name)) return 'video';
+  if (mime.startsWith('audio/') || AUDIO_EXT.test(name)) return 'audio';
+  if (mime === 'application/pdf' || /\.pdf$/i.test(name)) return 'pdf';
+  if (mime.startsWith('text/') || TEXT_EXT.test(name) || CODE_EXT.test(name)) return 'text';
+  return null;
+}
+
 /** 확장자 라벨 — 썸네일 타일에 크게 찍는다. */
 export function extLabel(name: string): string {
   const dot = name.lastIndexOf('.');

@@ -53,7 +53,7 @@ export default async function CommunityAdminPage() {
             {suspended.map((u) => (
               <li key={u.id} className="flex items-center gap-3 text-sm">
                 <span className="font-medium">{u.name}</span>
-                <span className="font-mono text-[11px] text-ink-soft/40">{u.email}</span>
+                <span className="font-mono text-[11px] text-fg-quiet">{u.email}</span>
                 <span className="ml-auto font-mono text-[11px] text-rose-600">
                   {u.suspendedUntil!.toLocaleString('ko-KR')} 까지
                 </span>
@@ -68,22 +68,22 @@ export default async function CommunityAdminPage() {
         </section>
       )}
 
-      <div className="bg-white rounded-xl border border-ink/10 divide-y divide-ink/5">
+      <div className="bg-white rounded-xl border border-hairline divide-y divide-ink/5">
         {posts.map((p) => {
           const isSuspended = p.author.suspendedUntil && p.author.suspendedUntil > new Date();
           return (
             <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 text-sm">
-              <span className="shrink-0 font-mono text-[10px] text-ink-soft/40 rounded border border-ink/10 bg-paper px-1.5 py-0.5">
+              <span className="shrink-0 font-mono text-[10px] text-fg-quiet rounded border border-hairline bg-paper px-1.5 py-0.5">
                 {boardLabel(p.board)}
               </span>
               <Link href={`/community/${p.id}`} className="font-medium truncate hover:text-brand-600 transition-colors">
                 {p.title}
               </Link>
-              <span className={`shrink-0 font-mono text-[11px] ${isSuspended ? 'text-rose-500' : 'text-ink-soft/40'}`}>
+              <span className={`shrink-0 font-mono text-[11px] ${isSuspended ? 'text-rose-500' : 'text-fg-quiet'}`}>
                 {p.author.name}
                 {isSuspended && ' (제재중)'}
               </span>
-              <span className="ml-auto shrink-0 font-mono text-[11px] text-ink-soft/30 hidden md:inline">
+              <span className="ml-auto shrink-0 font-mono text-[11px] text-fg-quiet hidden md:inline">
                 {p.createdAt.toLocaleDateString('ko-KR')} · 댓글 {p._count.comments} · 좋아요 {p._count.likes}
               </span>
               <form action={suspendUser.bind(null, p.author.id, 7)} className="shrink-0">
@@ -108,7 +108,7 @@ export default async function CommunityAdminPage() {
           );
         })}
         {posts.length === 0 && (
-          <div className="px-6 py-16 text-center text-sm text-ink-soft/40">게시글이 없습니다.</div>
+          <div className="px-6 py-16 text-center text-sm text-fg-quiet">게시글이 없습니다.</div>
         )}
       </div>
     </PageShell>

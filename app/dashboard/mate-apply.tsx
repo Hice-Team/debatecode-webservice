@@ -14,7 +14,7 @@ export default function MateApply({ status }: { status: 'none' | 'pending' | 'ap
     return <p className="text-sm text-emerald-700">이미 디베이트메이트로 활동 중입니다. 문제를 출제해 보세요.</p>;
   }
   if (state.saved || status === 'pending') {
-    return <p className="text-sm text-ink-soft/60">신청이 접수되었습니다. 검토 결과를 기다려 주세요.</p>;
+    return <p className="text-sm text-fg-secondary">신청이 접수되었습니다. 검토 결과를 기다려 주세요.</p>;
   }
   if (status === 'approved') {
     return <p className="text-sm text-emerald-700">신청이 승인되었습니다. 곧 디베이트메이트 권한이 반영됩니다.</p>;
@@ -47,7 +47,7 @@ export default function MateApply({ status }: { status: 'none' | 'pending' | 'ap
               className="block w-full rounded-lg border border-ink/15 bg-paper/40 px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700"
             />
 
-            <p className="mt-1 text-[11px] text-ink-soft/50">
+            <p className="mt-1 text-[11px] text-fg-muted">
               PDF만 제출 가능합니다. 다른 파일 형식 첨부시 반려될 수 있습니다.
             </p>
 
@@ -68,7 +68,7 @@ export default function MateApply({ status }: { status: 'none' | 'pending' | 'ap
                 required
                 className="mt-0.5 h-4 w-4 rounded border-ink/20"
               />
-              <span className="text-xs leading-relaxed text-ink-soft/70">
+              <span className="text-xs leading-relaxed text-fg-secondary">
                 <span className="font-medium text-ink">[필수]</span>{" "}
                 작성한 신청서의 내용을 확인했으며,
                 디베이트메이트 신청을 위해 본 신청서를 제출하는 것에 동의합니다.
@@ -95,7 +95,7 @@ export default function MateApply({ status }: { status: 'none' | 'pending' | 'ap
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-xl border border-ink/15 px-4 py-2 text-sm text-ink-soft/60 hover:border-ink/40"
+              className="rounded-xl border border-ink/15 px-4 py-2 text-sm text-fg-secondary hover:border-ink/40"
             >
               취소
             </button>

@@ -133,27 +133,27 @@ export default async function ProblemUploadPage({
             {search && (
               <Link
                 href="/console/problems?tab=bank"
-                className="rounded-xl border border-ink/15 px-3 py-2 text-xs text-ink-soft/70"
+                className="rounded-xl border border-ink/15 px-3 py-2 text-xs text-fg-secondary"
               >
                 초기화
               </Link>
             )}
           </form>
 
-          <div className="divide-y divide-ink/5 overflow-hidden rounded-2xl border border-ink/10 bg-white">
+          <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
             {bankRows.length === 0 && (
               <EmptyRow text={search ? '검색 결과가 없습니다.' : '등록된 문제가 없습니다.'} />
             )}
             {bankRows.map((p) => (
               <div key={p.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
-                <span className="shrink-0 font-mono text-[11px] text-ink-soft/35">#{p.id}</span>
+                <span className="shrink-0 font-mono text-[11px] text-fg-quiet">#{p.id}</span>
                 <Link
                   href={`/problems/${p.id}`}
                   className="min-w-0 flex-1 truncate font-medium text-ink hover:text-signal"
                 >
                   {p.title}
                 </Link>
-                <span className="shrink-0 font-mono text-[11px] text-ink-soft/50">
+                <span className="shrink-0 font-mono text-[11px] text-fg-muted">
                   {p.category} · 난이도 {p.difficulty}
                   {p.company ? ` · ${p.company}` : ''}
                 </span>
@@ -161,15 +161,15 @@ export default async function ProblemUploadPage({
                   className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10px] ${
                     p._count.testCases === 0
                       ? 'border-rose-200 bg-rose-50 text-rose-700'
-                      : 'border-ink/10 bg-paper text-ink-soft/55'
+                      : 'border-hairline bg-paper text-fg-muted'
                   }`}
                 >
                   케이스 {p._count.testCases}
                 </span>
-                <span className="shrink-0 font-mono text-[10px] text-ink-soft/35">제출 {p._count.submissions}</span>
+                <span className="shrink-0 font-mono text-[10px] text-fg-quiet">제출 {p._count.submissions}</span>
                 <Link
                   href={`/console/problems/${p.id}`}
-                  className="shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs font-medium text-ink-soft/80 hover:border-ink/40"
+                  className="shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg hover:border-ink/40"
                 >
                   수정·삭제
                 </Link>
@@ -178,7 +178,7 @@ export default async function ProblemUploadPage({
           </div>
 
           {bankRows.length >= BANK_LIMIT && (
-            <p className="mt-2 font-mono text-[11px] text-ink-soft/45">
+            <p className="mt-2 font-mono text-[11px] text-fg-muted">
               최근 {BANK_LIMIT}개까지 표시합니다. 검색으로 좁혀 보세요.
             </p>
           )}
@@ -189,25 +189,25 @@ export default async function ProblemUploadPage({
       {active !== 'bank' && (
         <div className="mt-10">
           <h3 className="mb-3 text-lg font-bold text-ink">최근 등록된 문제</h3>
-          <div className="divide-y divide-ink/5 overflow-hidden rounded-2xl border border-ink/10 bg-white">
+          <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
             {recent.length === 0 && <EmptyRow text="등록된 문제가 없습니다." />}
             {recent.map((p) => (
               <div key={p.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
-                <span className="shrink-0 font-mono text-[11px] text-ink-soft/35">#{p.id}</span>
+                <span className="shrink-0 font-mono text-[11px] text-fg-quiet">#{p.id}</span>
                 <Link
                   href={`/problems/${p.id}`}
                   className="min-w-0 flex-1 truncate font-medium text-ink hover:text-signal"
                 >
                   {p.title}
                 </Link>
-                <span className="shrink-0 font-mono text-[11px] text-ink-soft/50">
+                <span className="shrink-0 font-mono text-[11px] text-fg-muted">
                   {p.category} · 난이도 {p.difficulty}
                 </span>
                 <span
                   className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10px] ${
                     p._count.testCases === 0
                       ? 'border-rose-200 bg-rose-50 text-rose-700'
-                      : 'border-ink/10 bg-paper text-ink-soft/55'
+                      : 'border-hairline bg-paper text-fg-muted'
                   }`}
                 >
                   케이스 {p._count.testCases}

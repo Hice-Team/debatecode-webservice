@@ -75,7 +75,7 @@ export default function PromptSuggestions({
           type="button"
           onClick={toggle}
           aria-expanded={open}
-          className="flex items-center gap-1 font-mono text-[10px] tracking-wider text-white/35 transition-colors hover:text-white/60"
+          className="flex items-center gap-1 font-mono text-[10px] tracking-wider text-fg-on-dark-quiet transition-colors hover:text-fg-on-dark-secondary"
         >
           <svg
             viewBox="0 0 24 24"
@@ -85,7 +85,7 @@ export default function PromptSuggestions({
             <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           추천 질문
-          <span className="text-white/20">{items.length}</span>
+          <span className="text-fg-on-dark-quiet">{items.length}</span>
         </button>
       </div>
 
@@ -104,7 +104,7 @@ export default function PromptSuggestions({
               type="button"
               onClick={() => nudge(-1)}
               aria-label="이전 추천 질문"
-              className="absolute left-0 top-1/2 z-20 hidden h-6 w-6 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#12141C] text-white/50 transition-colors hover:text-white sm:grid"
+              className="absolute left-0 top-1/2 z-20 hidden h-6 w-6 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#12141C] text-fg-on-dark-muted transition-colors hover:text-white sm:grid"
             >
               <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current stroke-2" aria-hidden>
                 <path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -116,7 +116,7 @@ export default function PromptSuggestions({
               type="button"
               onClick={() => nudge(1)}
               aria-label="다음 추천 질문"
-              className="absolute right-0 top-1/2 z-20 hidden h-6 w-6 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#12141C] text-white/50 transition-colors hover:text-white sm:grid"
+              className="absolute right-0 top-1/2 z-20 hidden h-6 w-6 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#12141C] text-fg-on-dark-muted transition-colors hover:text-white sm:grid"
             >
               <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current stroke-2" aria-hidden>
                 <path d="m9 6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
@@ -136,7 +136,7 @@ export default function PromptSuggestions({
                 disabled={disabled}
                 onClick={() => onPick(prompt)}
                 title={prompt}
-                className="shrink-0 whitespace-nowrap rounded-full border border-white/12 bg-white/[0.04] px-3 py-1.5 text-[11px] text-white/60 transition-colors hover:border-brand-400/50 hover:bg-brand-600/15 hover:text-white disabled:opacity-40"
+                className="shrink-0 whitespace-nowrap rounded-full border border-white/12 bg-white/[0.04] px-3 py-1.5 text-[11px] text-fg-on-dark-secondary transition-colors hover:border-brand-400/50 hover:bg-brand-600/15 hover:text-white disabled:opacity-40"
               >
                 {prompt}
               </button>

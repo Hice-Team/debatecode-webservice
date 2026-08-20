@@ -7,8 +7,9 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { verifySession } from '@/app/lib/dal';
 import { createClient } from '@/app/lib/supabase/server';
-import { safeStorageKey } from '@/app/lib/storage';
+import { AI_ATTACHMENT_BUCKET, attachmentProxyUrl, safeStorageKey } from '@/app/lib/storage';
 import { rateLimit } from '@/app/lib/rate-limit';
+import { MAX_REPO_FILES, fetchRepoFiles, parseRepoUrl } from '@/app/lib/github-import';
 
 const MAX_BYTES = 2 * 1024 * 1024; // 원격 원문은 2MB까지만 받는다
 const PREVIEW_CHARS = 1200;
@@ -125,6 +126,60 @@ async function fetchRemote(target: string, maxHops = 4): Promise<Response | null
   return null; // 리다이렉트가 너무 많다
 }
 
+/**
+ * 저장소 전체 가져오기 — 고른 파일들을 스토리지에 올려 첨부 배열로 돌려준다.
+ *
+ * 개별 파일 업로드가 하나 실패해도 나머지는 살린다. 전부 실패했을 때만 오류로 본다.
+ */
+async function importRepository(
+  target: ReturnType<typeof parseRepoUrl> & object,
+  userId: string,
+): Promise<Response> {
+  const result = await fetchRepoFiles(target);
+  if ('error' in result) return NextResponse.json({ error: result.error }, { status: 502 });
+
+  const supabase = await createClient();
+  const label = `${result.owner}/${result.repo}`;
+
+  const uploaded = await Promise.all(
+    result.files.map(async (file) => {
+      const bytes = new TextEncoder().encode(file.text);
+      const path = safeStorageKey(userId, file.path);
+      const { error } = await supabase.storage
+        .from(AI_ATTACHMENT_BUCKET)
+        .upload(path, new Blob([bytes], { type: 'text/plain; charset=utf-8' }), {
+          contentType: 'text/plain; charset=utf-8',
+        });
+      if (error) return null;
+      return {
+        kind: 'code' as const,
+        source: 'github' as const,
+        // 저장소 안 경로를 그대로 이름으로 쓴다 — 같은 파일명이 여러 폴더에 있어도 구분된다
+        name: `${label}/${file.path}`,
+        url: attachmentProxyUrl(path),
+        mime: 'text/plain',
+        size: bytes.byteLength,
+        preview: file.text.slice(0, PREVIEW_CHARS),
+      };
+    }),
+  );
+
+  const files = uploaded.filter((file) => file !== null);
+  if (files.length === 0) {
+    return NextResponse.json({ error: '가져온 파일을 저장하지 못했습니다.' }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    files,
+    repo: label,
+    ref: result.ref,
+    skipped: result.skipped,
+    // 상한에 걸렸는지 이용자에게 알려 준다 — 조용히 잘라 내면 왜 일부만 왔는지 알 수 없다
+    limited: result.skipped > 0 || result.treeTruncated,
+    limit: MAX_REPO_FILES,
+  });
+}
+
 export async function POST(request: Request) {
   const { userId } = await verifySession();
 
@@ -140,10 +195,15 @@ export async function POST(request: Request) {
 
   /* ---------- GitHub 코드 ---------- */
   if (parsed.data.mode === 'github') {
+    // 파일 주소(/blob/)가 아니면 저장소 전체로 본다.
+    // 이용자는 보통 주소창의 저장소 주소를 그대로 붙여 넣지, 파일 하나를 골라 오지 않는다.
+    const repo = parseRepoUrl(url);
+    if (repo) return importRepository(repo, userId);
+
     const target = toRawGithub(url);
     if (!target) {
       return NextResponse.json(
-        { error: 'GitHub 파일 주소를 넣어 주세요. (예: github.com/owner/repo/blob/main/src/index.ts)' },
+        { error: 'GitHub 저장소나 파일 주소를 넣어 주세요. (예: github.com/owner/repo)' },
         { status: 400 },
       );
     }
@@ -161,18 +221,17 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const path = safeStorageKey(userId, target.name);
     const { error } = await supabase.storage
-      .from('community-uploads')
+      .from(AI_ATTACHMENT_BUCKET)
       .upload(path, new Blob([buffer], { type: 'text/plain; charset=utf-8' }), {
         contentType: 'text/plain; charset=utf-8',
       });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    const { data } = supabase.storage.from('community-uploads').getPublicUrl(path);
 
     return NextResponse.json({
       kind: 'code',
       source: 'github',
       name: target.name,
-      url: data.publicUrl,
+      url: attachmentProxyUrl(path),
       mime: 'text/plain',
       size: buffer.byteLength,
       preview: text.slice(0, PREVIEW_CHARS),

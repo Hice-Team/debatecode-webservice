@@ -79,10 +79,10 @@ export default function OAuthButtons({
     <div>
       <div className="flex items-center gap-3 pb-4">
         <span className="h-px flex-1 bg-ink/10" />
-        <span className="font-mono text-[11px] text-ink-soft/40">OR</span>
+        <span className="font-mono text-[11px] text-fg-quiet">OR</span>
         <span className="h-px flex-1 bg-ink/10" />
       </div>
-      <p className="text-center font-mono text-[11px] text-ink-soft/40 tracking-wider mb-3">{heading}</p>
+      <p className="text-center font-mono text-[11px] text-fg-quiet tracking-wider mb-3">{heading}</p>
       <div className="flex flex-wrap items-center justify-center gap-4">
         {PROVIDERS.map((p) => (
           <form key={p.key} action={startOAuth.bind(null, p.key)}>

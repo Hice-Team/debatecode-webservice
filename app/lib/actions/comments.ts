@@ -146,13 +146,19 @@ export async function adoptAnswer(formData: FormData): Promise<void> {
 
   const post = await prisma.post.findUnique({
     where: { id: postId },
-    select: { id: true, board: true, secret: true, verifiedOnlyReplies: true, authorId: true, adoptedCommentId: true },
+    select: {
+      id: true, board: true, secret: true, verifiedOnlyReplies: true,
+      authorId: true, adoptedCommentId: true, bounty: true,
+    },
   });
   if (!post || !supportsAdoption(post.board)) return;
   if (!canAdoptAnswer(post, { userId: session.userId, role: 'user' })) return;
 
   // 채택 대상은 이 글에 달린 답글이어야 한다
-  const comment = await prisma.comment.findUnique({ where: { id: commentId }, select: { postId: true, authorId: true } });
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: { postId: true, authorId: true, author: { select: { role: true } } },
+  });
   if (!comment || comment.postId !== postId) return;
   if (comment.authorId === session.userId) return; // 자기 답변은 채택할 수 없다
 
@@ -162,7 +168,13 @@ export async function adoptAnswer(formData: FormData): Promise<void> {
   });
 
   // 채택 보상 — 답변자에게 지급. 중복 채택 시도는 원장 유니크가 막는다.
-  await grantAdoptionPoints({ board: post.board, commentId, answererId: comment.authorId });
+  await grantAdoptionPoints({
+    board: post.board,
+    commentId,
+    answererId: comment.authorId,
+    answererRole: comment.author.role,
+    bounty: post.bounty,
+  });
 
   revalidatePath(`/community/${postId}`);
 }

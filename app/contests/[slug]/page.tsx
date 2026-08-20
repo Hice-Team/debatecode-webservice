@@ -65,7 +65,7 @@ export default async function ProblemSetPage({ params }: PageProps<'/contests/[s
     <PageShell width="4xl">
       <Link
         href="/contests"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-soft/50 transition-colors hover:text-signal"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-fg-muted transition-colors hover:text-signal"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2" aria-hidden>
           <path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -74,28 +74,28 @@ export default async function ProblemSetPage({ params }: PageProps<'/contests/[s
       </Link>
 
       {/* 세트 헤더 */}
-      <header className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
+      <header className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
         <div className="bg-gradient-to-r from-brand-900 via-brand-700 to-brand-500 px-6 py-6 text-white sm:px-8">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-semibold">
               <I18nSlot k={`set-kind-${kindKey}`} fallback={SET_KIND_LABELS[kindKey]} />
             </span>
-            {set.company && <span className="font-mono text-[11px] text-white/70">{set.company}</span>}
-            {set.examYear && <span className="font-mono text-[11px] text-white/50">{set.examYear}</span>}
+            {set.company && <span className="font-mono text-[11px] text-fg-on-dark-secondary">{set.company}</span>}
+            {set.examYear && <span className="font-mono text-[11px] text-fg-on-dark-muted">{set.examYear}</span>}
           </div>
           <h1 className="mt-2 font-display text-2xl font-bold tracking-tight sm:text-3xl">{set.title}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-white/70">{set.description}</p>
+          <p className="mt-2 max-w-2xl text-sm text-fg-on-dark-secondary">{set.description}</p>
         </div>
 
-        <div className="grid grid-cols-2 divide-x divide-ink/[0.07] border-t border-ink/[0.07] sm:grid-cols-4">
+        <div className="grid grid-cols-2 divide-x divide-hairline border-t border-hairline sm:grid-cols-4">
           <div className="px-5 py-4">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">
               <I18nSlot k="set-stat-problems" fallback="문제 수" />
             </p>
             <p className="mt-1 font-display text-xl font-bold text-ink">{total}</p>
           </div>
           <div className="px-5 py-4">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">
               <I18nSlot k="set-stat-difficulty" fallback="난이도" />
             </p>
             <p className="mt-1 font-display text-xl font-bold text-ink">
@@ -103,7 +103,7 @@ export default async function ProblemSetPage({ params }: PageProps<'/contests/[s
             </p>
           </div>
           <div className="px-5 py-4">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">
               <I18nSlot k="set-stat-time" fallback="권장 시간" />
             </p>
             <p className="mt-1 font-display text-xl font-bold text-ink">
@@ -111,7 +111,7 @@ export default async function ProblemSetPage({ params }: PageProps<'/contests/[s
             </p>
           </div>
           <div className="px-5 py-4">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">
               <I18nSlot k="set-stat-progress" fallback="내 진행률" />
             </p>
             <p className="mt-1 font-display text-xl font-bold text-signal">{session ? `${percent}%` : '—'}</p>
@@ -122,11 +122,11 @@ export default async function ProblemSetPage({ params }: PageProps<'/contests/[s
           <div className="px-5 pb-5">
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.07]">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
+                className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-colors"
                 style={{ width: `${percent}%` }}
               />
             </div>
-            <p className="mt-1.5 font-mono text-[11px] text-ink-soft/45">
+            <p className="mt-1.5 font-mono text-[11px] text-fg-muted">
               {solvedCount} / {total} <I18nSlot k="solved-label" fallback="해결" />
             </p>
           </div>
@@ -134,7 +134,7 @@ export default async function ProblemSetPage({ params }: PageProps<'/contests/[s
       </header>
 
       {nextItem && (
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4">
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[var(--radius-panel)] border border-brand-200 bg-brand-50/60 px-5 py-4">
           <div className="min-w-0">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-brand-600">
               {solvedCount > 0 ? (
@@ -155,8 +155,8 @@ export default async function ProblemSetPage({ params }: PageProps<'/contests/[s
       )}
 
       {/* 문제 목록 */}
-      <section className="mt-6 overflow-hidden rounded-2xl border border-ink/10 bg-white">
-        <div className="border-b border-ink/[0.07] px-5 py-3">
+      <section className="mt-6 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="border-b border-hairline px-5 py-3">
           <h2 className="font-semibold text-ink">
             <I18nSlot k="set-problem-list" fallback="세트 구성 문제" />
           </h2>
@@ -172,14 +172,14 @@ export default async function ProblemSetPage({ params }: PageProps<'/contests/[s
                 >
                   <span
                     className={`grid h-7 w-7 shrink-0 place-items-center rounded-full font-mono text-[11px] font-bold ${
-                      done ? 'bg-emerald-100 text-emerald-700' : 'bg-ink/[0.06] text-ink-soft/45'
+                      done ? 'bg-emerald-100 text-emerald-700' : 'bg-ink/[0.06] text-fg-muted'
                     }`}
                   >
                     {done ? '✓' : index + 1}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium text-ink">{item.problem.title}</span>
-                    <span className="font-mono text-[11px] text-ink-soft/40">{item.problem.category}</span>
+                    <span className="font-mono text-[11px] text-fg-quiet">{item.problem.category}</span>
                   </span>
                   <span
                     className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${
@@ -196,7 +196,7 @@ export default async function ProblemSetPage({ params }: PageProps<'/contests/[s
             );
           })}
           {total === 0 && (
-            <li className="px-5 py-14 text-center text-sm text-ink-soft/40">
+            <li className="px-5 py-14 text-center text-sm text-fg-quiet">
               <I18nSlot k="set-empty" fallback="아직 이 세트에 편성된 문제가 없습니다." />
             </li>
           )}

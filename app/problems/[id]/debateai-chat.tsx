@@ -29,6 +29,43 @@ import ChatCodeBlock from './chat-code-block';
 import AnswerToolbar, { type AnswerUsage } from './answer-toolbar';
 import { DEFAULT_EFFORT, type Effort } from '@/app/lib/ai/effort';
 
+/** `/api/debateai`가 흘려보내는 NDJSON 이벤트. */
+type DebateAiEvent =
+  | { type: 'delta'; text: string }
+  | { type: 'reasoning'; text: string }
+  | { type: 'done'; reply: string; model: string; code: string | null; usage: AnswerUsage }
+  | { type: 'error'; message: string };
+
+/**
+ * NDJSON 스트림을 줄 단위로 읽어 이벤트로 넘긴다.
+ *
+ * 청크 경계가 줄 가운데를 자를 수 있으므로 마지막 조각은 버퍼에 남겨 다음 청크와 잇는다.
+ */
+async function readEvents(body: ReadableStream<Uint8Array>, onEvent: (event: DebateAiEvent) => void) {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    let newline = buffer.indexOf('\n');
+    while (newline !== -1) {
+      const line = buffer.slice(0, newline).trim();
+      buffer = buffer.slice(newline + 1);
+      newline = buffer.indexOf('\n');
+      if (!line) continue;
+      try {
+        onEvent(JSON.parse(line) as DebateAiEvent);
+      } catch {
+        // 깨진 줄은 건너뛴다 — 다음 줄이 정상이면 대화는 이어진다
+      }
+    }
+  }
+}
+
 interface ChatTurn {
   role: 'user' | 'assistant';
   content: string;
@@ -122,6 +159,14 @@ export default function DebateAiChat({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string>();
   const [analyzing, setAnalyzing] = useState(false);
+  // 흘러들어오는 답변 — 완성되면 turns로 옮기고 비운다.
+  // 중단했을 때 "여기까지 받은 글"을 읽어야 해서 ref에도 같이 담는다(핸들러에서 state는 낡아 있다).
+  const [draft, setDraft] = useState('');
+  const draftRef = useRef('');
+  const pushDraft = useCallback((text: string) => {
+    draftRef.current = text;
+    setDraft(text);
+  }, []);
   // 저장된 대화를 불러오기 전에는 자동 분석을 돌리지 않는다 — 두 번 말하게 된다.
   // 새로 시작하는 자리(restart)는 불러올 것이 없으므로 처음부터 준비된 상태다.
   const [loaded, setLoaded] = useState(restart);
@@ -212,13 +257,36 @@ export default function DebateAiChat({
           messages: [],
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? '분석을 받지 못했습니다.');
-      const next: ChatTurn[] = [
-        { role: 'assistant', content: data.reply as string, usage: data.usage as AnswerUsage, ts: Date.now() },
-      ];
-      setTurns(next);
-      persist(next);
+      if (!res.ok || !res.body) {
+        const failure = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(failure?.error ?? '분석을 받지 못했습니다.');
+      }
+
+      pushDraft('');
+      let streamed = '';
+      let finished: ChatTurn | null = null;
+      let failure: string | null = null;
+
+      await readEvents(res.body, (event) => {
+        if (event.type === 'delta') {
+          streamed += event.text;
+          pushDraft(streamed);
+          scrollDown();
+        } else if (event.type === 'done') {
+          finished = { role: 'assistant', content: event.reply, usage: event.usage, ts: Date.now() };
+        } else if (event.type === 'error') {
+          failure = event.message;
+        }
+      });
+
+      // 초안을 지우는 것과 최종 답변을 넣는 것을 같은 배치로 — 나누면 한 프레임 겹쳐 보인다
+      pushDraft('');
+      if (failure) throw new Error(failure);
+      if (finished) {
+        const next: ChatTurn[] = [finished];
+        setTurns(next);
+        persist(next);
+      }
       scrollDown();
     } catch (e) {
       // 이용자가 중단한 것은 오류가 아니다
@@ -227,9 +295,10 @@ export default function DebateAiChat({
       }
     } finally {
       abortRef.current = null;
+      pushDraft('');
       setAnalyzing(false);
     }
-  }, [problemId, model, language, effort, getCode, persist]);
+  }, [problemId, model, language, effort, getCode, persist, pushDraft]);
 
   // 자동 분석은 "이어서 볼 대화가 없을 때"만 — 저장된 대화가 있으면 그 자리를 덮지 않는다
   useEffect(() => {
@@ -302,22 +371,55 @@ export default function DebateAiChat({
           messages: nextTurns.slice(-20).map((t) => ({ role: t.role, content: t.content })),
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'AI 호출에 실패했습니다.');
+      if (!res.ok || !res.body) {
+        const failure = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(failure?.error ?? 'AI 호출에 실패했습니다.');
+      }
 
-      const done: ChatTurn[] = [
-        ...nextTurns,
-        { role: 'assistant', content: data.reply as string, usage: data.usage as AnswerUsage, ts: Date.now() },
-      ];
-      setTurns(done);
-      persist(done);
-      // Agent 모드에서 코드가 나왔으면 곧바로 에디터에 반영한다 — 그게 이 모드를 고른 이유다
-      if (asAgent && typeof data.code === 'string' && data.code.trim()) onApplyCode?.(data.code, 'agent');
+      pushDraft('');
+      let streamed = '';
+      let finished: { turn: ChatTurn; code: string | null } | null = null;
+      let failure: string | null = null;
+
+      await readEvents(res.body, (event) => {
+        if (event.type === 'delta') {
+          streamed += event.text;
+          pushDraft(streamed);
+          scrollDown();
+        } else if (event.type === 'done') {
+          finished = {
+            turn: { role: 'assistant', content: event.reply, usage: event.usage, ts: Date.now() },
+            code: event.code,
+          };
+        } else if (event.type === 'error') {
+          failure = event.message;
+        }
+      });
+
+      pushDraft('');
+      if (failure) throw new Error(failure);
+      if (finished) {
+        const { turn, code: generated } = finished as { turn: ChatTurn; code: string | null };
+        const done: ChatTurn[] = [...nextTurns, turn];
+        setTurns(done);
+        persist(done);
+        // Agent 모드에서 코드가 나왔으면 곧바로 에디터에 반영한다 — 그게 이 모드를 고른 이유다
+        if (asAgent && generated && generated.trim()) onApplyCode?.(generated, 'agent');
+      }
       scrollDown();
     } catch (e) {
       // 중단은 오류가 아니다 — 어디서 멈췄는지만 대화에 남긴다
       if (e instanceof DOMException && e.name === 'AbortError') {
-        const stopped: ChatTurn[] = [...nextTurns, { role: 'assistant', content: '_(생성을 중단했습니다.)_', ts: Date.now() }];
+        // 중단해도 여기까지 받은 글은 버리지 않는다 — 대부분 그 내용을 보려고 멈춘다
+        const partial = draftRef.current.trim();
+        const stopped: ChatTurn[] = [
+          ...nextTurns,
+          {
+            role: 'assistant',
+            content: partial ? `${partial}\n\n_(생성을 중단했습니다.)_` : '_(생성을 중단했습니다.)_',
+            ts: Date.now(),
+          },
+        ];
         setTurns(stopped);
         persist(stopped);
       } else {
@@ -325,6 +427,7 @@ export default function DebateAiChat({
       }
     } finally {
       abortRef.current = null;
+      pushDraft('');
       setSending(false);
     }
   }
@@ -340,10 +443,10 @@ export default function DebateAiChat({
         <div className="max-w-sm space-y-3 rounded-xl border border-white/10 bg-white/5 p-5 text-center">
           <p className="text-2xl">🔒</p>
           <p className="text-sm font-semibold text-white">debateAI는 쉬움 난이도에서만 쓸 수 있습니다</p>
-          <p className="text-xs leading-relaxed text-white/50">
-            <strong className="text-white/70">쉬움</strong>은 debateAI에게 물어보며 코드를 작성하는 난이도입니다.
-            <strong className="text-white/70"> 보통</strong>은 같은 시작 코드를 혼자 완성하고,
-            <strong className="text-white/70"> 어려움</strong>은 빈 코드에서 전부 직접 작성합니다.
+          <p className="text-xs leading-relaxed text-fg-on-dark-muted">
+            <strong className="text-fg-on-dark-secondary">쉬움</strong>은 debateAI에게 물어보며 코드를 작성하는 난이도입니다.
+            <strong className="text-fg-on-dark-secondary"> 보통</strong>은 같은 시작 코드를 혼자 완성하고,
+            <strong className="text-fg-on-dark-secondary"> 어려움</strong>은 빈 코드에서 전부 직접 작성합니다.
             {!onRequestEasy && ' 여기서는 난이도를 바꿀 수 없습니다.'}
           </p>
           {onRequestEasy && (
@@ -395,22 +498,22 @@ export default function DebateAiChat({
       {/* 대화 목록 */}
       <div className="dc-scroll flex-1 space-y-4 overflow-y-auto p-4">
         {turns.length === 0 && !analyzing && (
-          <div className="rounded-xl border border-signal/20 bg-signal/10 p-4 text-xs leading-relaxed text-white/70">
+          <div className="rounded-xl border border-signal/20 bg-signal/10 p-4 text-xs leading-relaxed text-fg-on-dark-secondary">
             <p className="mb-1 font-semibold text-brand-300">debateAI</p>
             문제 설명과 에디터의 현재 코드를 보고 있어요. 문제 이해나 접근법에 대해 무엇이든 질문해 주세요. 정답
             대신 스스로 풀 수 있는 힌트를 드립니다.
             {agentAvailable && (
-              <p className="mt-2 text-white/45">
+              <p className="mt-2 text-fg-on-dark-muted">
                 코드를 직접 고쳐 주길 원하면 입력창에서 <strong className="text-brand-300">Agent</strong>로 바꿔 주세요.
               </p>
             )}
           </div>
         )}
 
-        {analyzing && (
+        {analyzing && !draft && (
           <div className="rounded-xl border border-brand-400/25 bg-signal/10 p-4">
             <p className="mb-1.5 font-mono text-[10px] text-brand-300">ANALYZING</p>
-            <p className="text-xs text-white/60">
+            <p className="text-xs text-fg-on-dark-secondary">
               {current.label}이(가) 이 문제와 방금 작성한 코드를 분석하고 있습니다
               <span className="animate-pulse">…</span>
             </p>
@@ -420,12 +523,12 @@ export default function DebateAiChat({
         {turns.map((t, i) => (
           <div key={i} className={`flex ${t.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+              className={`max-w-[85%] rounded-[var(--radius-panel)] px-4 py-3 text-sm leading-relaxed ${
                 t.role === 'user'
                   ? t.command
                     ? 'border border-brand-400/40 bg-white/10 text-white whitespace-pre-wrap'
                     : 'bg-signal text-white whitespace-pre-wrap'
-                  : 'min-w-0 border border-white/10 bg-white/[0.06] text-white/90'
+                  : 'min-w-0 border border-white/10 bg-white/[0.06] text-fg-on-dark'
               }`}
             >
               {t.command && <p className="mb-1 font-mono text-[10px] text-brand-200">Agent</p>}
@@ -464,9 +567,26 @@ export default function DebateAiChat({
           </div>
         ))}
 
-        {sending && (
+        {/* 흘러들어오는 답변 — 첫 글자가 나오기 전까지만 "생각 중"을 보여 준다.
+            예전에는 답이 다 만들어질 때까지 점 세 개만 돌아, 긴 답변에서는 멈춘 것처럼 보였다. */}
+        {draft && (
           <div className="flex justify-start">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 font-mono text-xs text-white/50">
+            <div className="min-w-0 max-w-[85%] rounded-[var(--radius-panel)] border border-white/10 bg-white/[0.06] px-4 py-3 text-sm leading-relaxed text-fg-on-dark">
+              <p className="mb-1 font-mono text-[10px] text-brand-300">{current.label}</p>
+              <div className="[&_code]:font-mono [&_code]:text-[12px] [&_code]:bg-white/10 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{draft}</ReactMarkdown>
+              </div>
+              <span
+                aria-hidden
+                className="ml-0.5 inline-block h-3.5 w-[2px] animate-pulse bg-brand-300 align-text-bottom motion-reduce:animate-none"
+              />
+            </div>
+          </div>
+        )}
+
+        {(sending || analyzing) && !draft && (
+          <div className="flex justify-start">
+            <div className="rounded-[var(--radius-panel)] border border-white/10 bg-white/[0.06] px-4 py-3 font-mono text-xs text-fg-on-dark-muted">
               {agenting ? '코드를 고치는 중' : '생각 중'}
               <span className="animate-pulse">…</span>
             </div>
@@ -484,7 +604,7 @@ export default function DebateAiChat({
         )}
 
         {readOnly ? (
-          <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs leading-relaxed text-white/50">
+          <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs leading-relaxed text-fg-on-dark-muted">
             {readOnlyNotice ?? 'AI 도움 없이 직접 수정하는 모드입니다. 위 분석만 참고해 주세요.'}
           </p>
         ) : (
@@ -497,7 +617,7 @@ export default function DebateAiChat({
             />
 
             <div
-              className={`rounded-2xl border bg-white/5 transition-colors focus-within:border-signal/60 ${
+              className={`rounded-[var(--radius-panel)] border bg-white/5 transition-colors focus-within:border-signal/60 ${
                 agenting ? 'border-brand-400/35' : 'border-white/10'
               }`}
             >
@@ -523,7 +643,7 @@ export default function DebateAiChat({
                       : '문제나 코드에 대해 무엇이든 물어보세요'
                   }
                   aria-label="debateAI에게 보낼 메시지"
-                  className="dc-scroll max-h-28 w-full resize-none bg-transparent px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none disabled:cursor-not-allowed"
+                  className="dc-scroll max-h-28 w-full resize-none bg-transparent px-4 py-2.5 text-sm text-white placeholder:text-fg-on-dark-quiet focus:outline-none disabled:cursor-not-allowed"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                       e.preventDefault();
@@ -572,7 +692,7 @@ export default function DebateAiChat({
                               : '답변과 함께 에디터의 코드를 고칩니다'
                           }
                           className={`rounded-full px-2 py-0.5 transition-colors disabled:opacity-40 ${
-                            sendMode === key ? 'bg-signal text-white' : 'text-white/45 hover:text-white/75'
+                            sendMode === key ? 'bg-signal text-white' : 'text-fg-on-dark-muted hover:text-fg-on-dark'
                           }`}
                         >
                           {label}
@@ -609,7 +729,7 @@ export default function DebateAiChat({
                       disabled={!input.trim()}
                       title="전송"
                       aria-label="전송"
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.35)] transition-all hover:shadow-[0_3px_12px_rgba(24,0,172,0.5)] active:scale-95 disabled:bg-none disabled:bg-white/10 disabled:text-white/25 disabled:shadow-none"
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.35)] transition-[color,background-color,border-color,box-shadow,transform] hover:shadow-[0_3px_12px_rgba(24,0,172,0.5)] active:scale-95 disabled:bg-none disabled:bg-white/10 disabled:text-fg-on-dark-quiet disabled:shadow-none"
                     >
                       {/* 오른쪽을 향한 종이비행기 — 뾰족한 끝이 진행 방향(전송)을 가리킨다.
                           가로로 누운 도형이라 시각 중심이 왼쪽으로 쏠려, viewBox를 살짝 밀어(-0.8) 맞춘다. */}
@@ -623,7 +743,7 @@ export default function DebateAiChat({
               </div>
             </div>
 
-            <p className={`mt-1.5 text-[10px] ${busy ? 'text-white/40' : agenting ? 'text-brand-300/70' : 'text-white/30'}`}>
+            <p className={`mt-1.5 text-[10px] ${busy ? 'text-fg-on-dark-quiet' : agenting ? 'text-brand-300/70' : 'text-fg-on-dark-quiet'}`}>
               {busy
                 ? '생성 중입니다 — 멈추려면 중단 버튼을 눌러 주세요'
                 : agenting

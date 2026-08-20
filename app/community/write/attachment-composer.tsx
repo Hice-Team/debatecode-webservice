@@ -30,14 +30,14 @@ function isYoutubeUrl(value: string): boolean {
 
 function Chip({ icon, label, onRemove }: { icon: string; label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-ink/15 bg-white px-3 py-1 text-xs text-ink-soft/70">
+    <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-ink/15 bg-white px-3 py-1 text-xs text-fg-secondary">
       <span aria-hidden>{icon}</span>
       <span className="truncate max-w-56">{label}</span>
       <button
         type="button"
         onClick={onRemove}
         title="첨부 제거"
-        className="text-ink-soft/40 hover:text-rose-500 transition-colors"
+        className="text-fg-quiet hover:text-rose-500 transition-colors"
       >
         ✕
       </button>
@@ -133,7 +133,7 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
               <img
                 src={URL.createObjectURL(f)}
                 alt={f.name}
-                className="h-20 w-20 rounded-lg border border-ink/10 object-cover"
+                className="h-20 w-20 rounded-lg border border-hairline object-cover"
               />
               <button
                 type="button"
@@ -165,13 +165,13 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
 
       {/* 투표 작성 */}
       {showPoll && (
-        <div className="rounded-xl border border-ink/10 bg-paper/40 p-4 space-y-3">
+        <div className="rounded-xl border border-hairline bg-paper/40 p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-xs text-ink-soft/60 tracking-wider">📊 투표 만들기</span>
+            <span className="font-mono text-xs text-fg-secondary tracking-wider">📊 투표 만들기</span>
             <button
               type="button"
               onClick={() => setShowPoll(false)}
-              className="text-xs text-ink-soft/40 hover:text-rose-500 transition-colors"
+              className="text-xs text-fg-quiet hover:text-rose-500 transition-colors"
             >
               투표 제거
             </button>
@@ -181,7 +181,7 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
             type="text"
             maxLength={100}
             placeholder="투표 질문 (선택)"
-            className="w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60"
+            className="w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
           />
           <div className="space-y-2">
             {pollOptions.map((opt, i) => (
@@ -193,14 +193,14 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
                   maxLength={50}
                   onChange={(e) => setPollOptions((prev) => prev.map((v, idx) => (idx === i ? e.target.value : v)))}
                   placeholder={`선택지 ${i + 1}`}
-                  className="w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60"
+                  className="w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
                 />
                 {pollOptions.length > MIN_POLL_OPTIONS && (
                   <button
                     type="button"
                     onClick={() => setPollOptions((prev) => prev.filter((_, idx) => idx !== i))}
                     title="선택지 제거"
-                    className="shrink-0 h-9 w-9 rounded-lg border border-ink/15 text-ink-soft/50 hover:border-rose-300 hover:text-rose-500 transition-colors"
+                    className="shrink-0 h-9 w-9 rounded-lg border border-ink/15 text-fg-muted hover:border-rose-300 hover:text-rose-500 transition-colors"
                   >
                     ✕
                   </button>

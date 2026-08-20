@@ -103,7 +103,7 @@ export default async function AccessOverviewPage() {
             <Link
               key={role}
               href={`/console/access/directory?role=${role}`}
-              className="flex items-center gap-3 rounded-2xl border border-ink/10 bg-white px-4 py-3.5 transition-colors hover:border-brand-300 hover:bg-brand-50/30"
+              className="flex items-center gap-3 rounded-[var(--radius-panel)] border border-hairline bg-white px-4 py-3.5 transition-colors hover:border-brand-300 hover:bg-brand-50/30"
             >
               <span className={`shrink-0 rounded-full border px-2.5 py-1 font-mono text-[11px] ${ROLE_BADGE[role as Role]}`}>
                 {ROLE_LABELS[role as Role]}
@@ -116,8 +116,8 @@ export default async function AccessOverviewPage() {
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         {/* 개별 권한 오버라이드 */}
-        <section className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
-          <div className="flex items-center justify-between border-b border-ink/[0.07] px-5 py-3">
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+          <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
             <h3 className="text-sm font-bold text-ink">개별 권한 오버라이드</h3>
             <Link href="/console/access/roles" className="font-mono text-[11px] text-brand-600 hover:underline">
               관리 →
@@ -136,10 +136,10 @@ export default async function AccessOverviewPage() {
                   >
                     {g.effect === 'allow' ? '허용' : '차단'}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-xs text-ink-soft/75">
+                  <span className="min-w-0 flex-1 truncate text-xs text-fg">
                     {maskName(g.user.name)} · {permissionLabel(g.permission)}
                   </span>
-                  <span className="shrink-0 font-mono text-[10px] text-ink-soft/35">
+                  <span className="shrink-0 font-mono text-[10px] text-fg-quiet">
                     {g.expiresAt ? `~${g.expiresAt.toLocaleDateString('ko-KR')}` : '무기한'}
                   </span>
                 </li>
@@ -149,8 +149,8 @@ export default async function AccessOverviewPage() {
         </section>
 
         {/* 만료 임박 제재 */}
-        <section className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
-          <div className="flex items-center justify-between border-b border-ink/[0.07] px-5 py-3">
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+          <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
             <h3 className="text-sm font-bold text-ink">3일 내 만료되는 제재</h3>
             <Link href="/console/access/sanctions" className="font-mono text-[11px] text-brand-600 hover:underline">
               제재 센터 →
@@ -165,8 +165,8 @@ export default async function AccessOverviewPage() {
                   <span className="shrink-0 rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 font-mono text-[9px] text-rose-700">
                     {sanctionTypeLabel(s.type)}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-xs text-ink-soft/75">{maskName(s.user.name)}</span>
-                  <span className="shrink-0 font-mono text-[10px] text-ink-soft/45">
+                  <span className="min-w-0 flex-1 truncate text-xs text-fg">{maskName(s.user.name)}</span>
+                  <span className="shrink-0 font-mono text-[10px] text-fg-muted">
                     {s.expiresAt?.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit' })}
                   </span>
                 </li>
@@ -177,8 +177,8 @@ export default async function AccessOverviewPage() {
       </div>
 
       {/* 최근 권한 변경 */}
-      <section className="mt-4 overflow-hidden rounded-2xl border border-ink/10 bg-white">
-        <div className="flex items-center justify-between border-b border-ink/[0.07] px-5 py-3">
+      <section className="mt-4 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
           <h3 className="text-sm font-bold text-ink">최근 역할 변경</h3>
           <Link href="/console/access/audit" className="font-mono text-[11px] text-brand-600 hover:underline">
             감사 로그 전체 →
@@ -190,11 +190,11 @@ export default async function AccessOverviewPage() {
           <ul className="divide-y divide-ink/5">
             {recentAccessAudit.map((entry) => (
               <li key={entry.id} className="flex items-center gap-2.5 px-5 py-2.5">
-                <span className="shrink-0 rounded bg-ink/[0.06] px-1.5 py-0.5 font-mono text-[9px] font-bold text-ink-soft/55">
+                <span className="shrink-0 rounded bg-ink/[0.06] px-1.5 py-0.5 font-mono text-[9px] font-bold text-fg-muted">
                   {auditActionLabel(entry.action)}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-xs text-ink-soft/75">{entry.summary}</span>
-                <span className="shrink-0 font-mono text-[10px] text-ink-soft/35">{entry.actorName}</span>
+                <span className="min-w-0 flex-1 truncate text-xs text-fg">{entry.summary}</span>
+                <span className="shrink-0 font-mono text-[10px] text-fg-quiet">{entry.actorName}</span>
                 <SlaBadge since={entry.createdAt} done />
               </li>
             ))}

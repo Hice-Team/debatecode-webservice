@@ -36,6 +36,44 @@
   --color-signal: #4531d9;
   --color-signal-soft: #5b4cf0;
 
+  /* ── 명도 계단 (DESIGN.md §2) ───────────────────────────────
+     화면마다 text-ink-soft/45, /55, /65 …를 눈대중으로 골라 쓰던 것을 네 단계로 묶는다.
+     임의 불투명도는 화면마다 조금씩 다른 회색을 만들고, 그 차이가 쌓이면
+     "무엇이 더 중요한지"를 색이 더 이상 말해 주지 않는다.
+
+       fg           제목, 본문 핵심 — 지금 읽어야 할 것
+       fg-secondary 본문, 설명문
+       fg-muted     메타데이터, 라벨, 보조 정보
+       fg-quiet     비활성, placeholder, 타임스탬프 (본문에는 쓰지 않는다)
+
+     다크 표면(에디터·네비·히어로)에서는 -on-dark 짝을 쓴다. */
+  --color-fg: #08091a;
+  --color-fg-secondary: #3b3f57;
+  --color-fg-muted: #6b7086;
+  --color-fg-quiet: #868ca2;
+
+  --color-fg-on-dark: #f7f8fa;
+  --color-fg-on-dark-secondary: #c8ccd8;
+  --color-fg-on-dark-muted: #8a8f9e;
+  --color-fg-on-dark-quiet: #6e727a;
+
+  /* 경계선 — 위계는 테두리보다 명도로 만든다. 그래도 모호할 때만 이 실선. */
+  --color-hairline: rgba(8, 9, 26, 0.08);
+  --color-hairline-on-dark: rgba(255, 255, 255, 0.08);
+
+  /* ── 반경 (DESIGN.md §4) ────────────────────────────────────
+     세 단계 + pill. 화면마다 lg/xl/2xl/3xl을 다르게 고르던 것을 여기서 끊는다. */
+  --radius-control: 6px;
+  --radius-card: 8px;
+  --radius-panel: 12px;
+
+  /* ── 모션 (DESIGN.md §7) ────────────────────────────────────
+     easing 하나로 통일한다. 상태 150 / 진입·퇴장 200 / 레이아웃 300ms. */
+  --ease-dc: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-state: 150ms;
+  --duration-enter: 200ms;
+  --duration-layout: 300ms;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: "Pretendard Variable", "Pretendard", var(--font-plex-sans), var(--font-geist-sans), ui-sans-serif, sans-serif;
@@ -53,16 +91,16 @@ body {
 /* 공유 컴포넌트 클래스 — 서버/클라이언트 어디서든 동일한 스타일을 쓴다 */
 @layer components {
   .dc-card {
-    @apply bg-white rounded-2xl border border-ink/[0.06] shadow-[0_1px_3px_rgba(20,21,43,0.05)];
+    @apply bg-white rounded-[var(--radius-panel)] border border-hairline shadow-[0_1px_3px_rgba(8,9,26,0.05)];
   }
   .dc-btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-3 bg-signal text-white text-sm font-semibold rounded-xl hover:bg-brand-600 active:scale-[0.98] transition disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 bg-signal text-white text-sm font-semibold rounded-full hover:bg-brand-600 active:scale-[0.98] transition-colors disabled:opacity-50 disabled:pointer-events-none;
   }
   .dc-btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-ink/10 bg-white text-sm font-medium text-ink-soft/75 hover:bg-paper hover:text-ink active:scale-[0.98] transition disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-hairline bg-white text-sm font-medium text-fg-secondary hover:bg-paper hover:text-fg active:scale-[0.98] transition-colors disabled:opacity-50 disabled:pointer-events-none;
   }
   .dc-input {
-    @apply w-full rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-sm text-ink-soft placeholder:text-ink-soft/35 focus:outline-none focus:ring-2 focus:ring-signal/50 focus:border-signal/40;
+    @apply w-full rounded-[var(--radius-card)] border border-hairline bg-white px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/50 focus:border-signal/40;
   }
   /* 리스트 행 — 테이블 대신 쓰는 터치 친화 행 (토스식 리스트) */
   .dc-row {
@@ -70,8 +108,37 @@ body {
   }
   /* 메타 칩 — 카테고리/상태 등 보조 정보 */
   .dc-chip {
-    @apply inline-flex items-center rounded-full border border-ink/[0.08] bg-paper px-2.5 py-0.5 text-[11px] font-medium text-ink-soft/70;
+    @apply inline-flex items-center rounded-full border border-hairline bg-paper px-2.5 py-0.5 text-[11px] font-medium text-fg-muted;
   }
+}
+
+/* ═══ 조판 (DESIGN.md §3) ═══════════════════════════════════
+   한글 규칙 — Linear의 라틴 조판을 그대로 옮기면 한글이 깨지는 지점들.
+
+   1) 제목이 줄바꿈될 때 단어 중간에서 끊기지 않게 한다. 영문은 공백에서만 끊기지만
+      한글은 어절 중간에서도 끊겨서 "알고리즘 문제 풀 / 이"처럼 읽힌다.
+   2) 음수 자간은 큰 글자에만. 48px에서 벌어져 보이는 것을 좁히는 값이라,
+      15px 본문에 같은 비율을 주면 한글이 뭉친다.
+   3) 아주 긴 단어(URL·식별자)는 제목 안에서 넘치기 전에 끊는다. */
+h1, h2, h3, h4, h5, h6 {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  font-style: normal; /* 이탤릭 제목 금지 — 가장 흔한 AI 티 중 하나다 */
+  letter-spacing: -0.012em;
+}
+h1 {
+  letter-spacing: -0.022em;
+  line-height: 1.08;
+}
+
+/* 숫자 자리 고정 — 포인트·순위·토큰 수·시간처럼 갱신되는 숫자가
+   자릿수 때문에 좌우로 흔들리지 않게 한다. */
+.dc-num,
+time,
+[data-num] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
 }
 
 /* 인풋 박스 — 사용자가 드래그로 크기를 조절할 수 없다.
@@ -137,4 +204,44 @@ textarea {
 }
 .dc-scroll-none::-webkit-scrollbar {
   display: none;
+}
+
+/* ═══ 진입 애니메이션 ═══════════════════════════════════════
+   메뉴·다이얼로그·토스트가 `animate-in fade-in slide-in-from-top-1 duration-150` 같은
+   클래스를 쓰고 있었는데, 이 유틸리티는 tailwindcss-animate 플러그인이 주는 것이라
+   플러그인 없이는 **전부 무효**였다 — 화면이 툭툭 나타나던 원인.
+   의존성을 하나 더 늘리는 대신 쓰는 조합만 직접 정의한다.
+
+   duration-*(Tailwind v4)는 `--tw-duration`을 세팅하므로 그대로 받아 쓴다. */
+@layer utilities {
+  .animate-in {
+    animation-name: dc-enter;
+    animation-duration: var(--tw-duration, 150ms);
+    animation-timing-function: var(--tw-ease, cubic-bezier(0.16, 1, 0.3, 1));
+    animation-fill-mode: both;
+  }
+
+  .fade-in { --dc-enter-opacity: 0; }
+  .zoom-in-95 { --dc-enter-scale: 0.95; }
+  .slide-in-from-top-1 { --dc-enter-y: -0.25rem; }
+  .slide-in-from-top-2 { --dc-enter-y: -0.5rem; }
+  .slide-in-from-bottom-1 { --dc-enter-y: 0.25rem; }
+  .slide-in-from-bottom-2 { --dc-enter-y: 0.5rem; }
+  .slide-in-from-left-1 { --dc-enter-x: -0.25rem; }
+  .slide-in-from-right-1 { --dc-enter-x: 0.25rem; }
+}
+
+@keyframes dc-enter {
+  from {
+    opacity: var(--dc-enter-opacity, 1);
+    transform: translate3d(var(--dc-enter-x, 0), var(--dc-enter-y, 0), 0)
+      scale3d(var(--dc-enter-scale, 1), var(--dc-enter-scale, 1), 1);
+  }
+}
+
+/* 움직임을 줄이도록 설정한 이용자에게는 위치 이동 없이 페이드만 남긴다 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    animation-duration: 1ms;
+  }
 }

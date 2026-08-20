@@ -189,12 +189,36 @@ export async function cancelShopOrder(formData: FormData): Promise<void> {
 
 /* ---------- 채택 시 포인트 적립 (댓글 채택 액션에서 호출) ---------- */
 
-/** 답변 채택 보상 — 게시판에 따라 지급액이 다르다. 중복 지급은 원장 유니크가 막는다. */
-export async function grantAdoptionPoints(input: { board: string; commentId: string; answererId: string }) {
-  const kind = input.board === 'mentor' ? POINT_KINDS.mentorAdopted : POINT_KINDS.qnaAdopted;
+/**
+ * 답변 채택 보상. 중복 지급은 원장 유니크가 막는다.
+ *
+ * 두 가지를 판단한다.
+ *
+ *   얼마를  문의게시판은 질문자가 건 채택 포인트(10~50P)를 그대로 준다. 값이 없는 옛 글은
+ *           기본 지급액으로 떨어진다. 멘토게시판은 종전대로 고정액이다.
+ *   누구에게 운영진(관리자)이 채택받은 경우에는 지급하지 않는다. 운영진의 답변은 업무이지
+ *           보상 대상이 아니고, 스스로 답하고 스스로 받는 구조가 되면 원장이 신뢰를 잃는다.
+ *           협력사 역시 제휴 관계에서 답하는 것이라 포인트 대상이 아니다.
+ *           즉 실제로 쌓이는 쪽은 디베이트메이트다.
+ */
+export async function grantAdoptionPoints(input: {
+  board: string;
+  commentId: string;
+  answererId: string;
+  answererRole?: string;
+  /** 문의게시판에서 질문자가 건 채택 포인트 */
+  bounty?: number | null;
+}) {
+  const isMentor = input.board === 'mentor';
+  const kind = isMentor ? POINT_KINDS.mentorAdopted : POINT_KINDS.qnaAdopted;
+
+  // 지급 대상이 아닌 역할 — 채택 자체는 그대로 남고 포인트만 쌓이지 않는다
+  if (input.answererRole && input.answererRole !== 'debate_mate') return;
+
+  const amount = isMentor ? POINT_AMOUNTS[kind] : (input.bounty ?? POINT_AMOUNTS[kind]);
   await grantPoints({
     userId: input.answererId,
-    amount: POINT_AMOUNTS[kind],
+    amount,
     kind,
     refType: 'comment',
     refId: input.commentId,

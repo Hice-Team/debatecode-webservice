@@ -4,7 +4,7 @@ import { prisma } from '@/app/lib/prisma';
 import { createClient } from '@/app/lib/supabase/server';
 import { decryptSecret } from '@/app/lib/crypto';
 import { rateLimit } from '@/app/lib/rate-limit';
-import { llmChat, type LlmConfig, type LlmUsage } from '@/app/lib/ai/llm-interviewer';
+import { llmChatStream, type LlmConfig, type LlmUsage } from '@/app/lib/ai/llm-interviewer';
 import { EFFORTS, asEffort, effortDirective, effortMaxTokens } from '@/app/lib/ai/effort';
 import { DEBATEAI_MODEL_IDS, findDebateAiModel } from '@/app/lib/ai/debateai-models';
 import { resolveDebateAiUpstream } from '@/app/lib/ai/debateai-upstream';
@@ -159,64 +159,111 @@ export async function POST(request: Request) {
   const system = SYSTEM + effortDirective(effort);
   const maxTokens = effortMaxTokens(effort);
 
-  try {
-    let usage: LlmUsage | null = null;
-    let usedRepo = (resolved.config as Extract<LlmConfig, { kind: 'openai-compatible' }>).model ?? null;
-    let replaced = false;
+  /* ---------- 스트리밍 응답 ----------
+     예전에는 답이 다 만들어질 때까지 "생성 중…" 점 세 개만 돌았다. 긴 답변은 20초 넘게
+     아무 일도 일어나지 않는 것처럼 보여, 멈춘 줄 알고 다시 누르는 일이 잦았다.
+     AI Search와 같은 NDJSON 스트림으로 바꿔 만들어지는 대로 흘려보낸다.
 
-    const call = (config: LlmConfig) =>
-      llmChat(config, system, prompt, {
-        timeoutMs: 30_000,
-        maxTokens,
-        onUsage: (u) => {
-          usage = u;
-        },
-      });
+     Agent 모드의 코드 추출은 전문이 모여야 가능하므로 done 이벤트에서 한 번에 준다. */
+  const encoder = new TextEncoder();
 
-    let reply: string;
-    try {
-      reply = await call(resolved.config);
-    } catch (error) {
-      // Free Tier는 라우터에서 모델이 내려가 있는 일이 잦다. 오류를 띄우기 전에 한 번 더.
-      if (!resolved.fallbackModel) throw error;
-      reply = await call({ ...resolved.config, model: resolved.fallbackModel } as LlmConfig);
-      usedRepo = resolved.fallbackModel;
-      replaced = true;
-    }
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (event: unknown) => {
+        controller.enqueue(encoder.encode(`${JSON.stringify(event)}
+`));
+      };
 
-    const trimmed = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-    if (!trimmed) throw new Error('empty reply');
+      let usage: LlmUsage | null = null;
+      let usedRepo = (resolved.config as Extract<LlmConfig, { kind: 'openai-compatible' }>).model ?? null;
+      let replaced = false;
+      let reply = '';
 
-    // 토큰 — 공급자가 준 값이 있으면 그대로, 없으면 추정치를 넣고 그렇다고 표시한다
-    const measured: LlmUsage | null = usage;
-    const tokens = measured ?? {
-      promptTokens: estimateTokens(context, ...messages.map((m) => m.content)),
-      completionTokens: estimateTokens(trimmed),
-    };
+      /** 한 번의 생성 시도 — 흘려보낸 글자 수를 돌려준다. */
+      const run = async (config: LlmConfig): Promise<number> => {
+        let emitted = 0;
+        for await (const chunk of llmChatStream(config, system, prompt, {
+          timeoutMs: 60_000,
+          maxTokens,
+          signal: request.signal,
+          onUsage: (u) => {
+            usage = u;
+          },
+        })) {
+          if (chunk.kind === 'reasoning') {
+            send({ type: 'reasoning', text: chunk.text });
+            continue;
+          }
+          reply += chunk.text;
+          emitted += chunk.text.length;
+          send({ type: 'delta', text: chunk.text });
+        }
+        return emitted;
+      };
 
-    // 일일 쿠터 누적 — 응답을 막지 않는다
-    if (user && serviceFunded) {
-      addFreeAiUsage(user.id, (tokens.promptTokens ?? 0) + (tokens.completionTokens ?? 0), modelId).catch(() => {});
-    }
+      try {
+        try {
+          await run(resolved.config);
+        } catch (error) {
+          // Free Tier는 라우터에서 모델이 내려가 있는 일이 잦다. 오류를 띄우기 전에 한 번 더.
+          // 단, 이미 글자를 흘려보낸 뒤라면 다시 시도할 수 없다 — 화면에 두 번 이어 붙는다.
+          if (!resolved.fallbackModel || reply.length > 0) throw error;
+          await run({ ...resolved.config, model: resolved.fallbackModel } as LlmConfig);
+          usedRepo = resolved.fallbackModel;
+          replaced = true;
+        }
 
-    // Agent 모드는 코드 블록을 따로 뽑아 준다 — 화면이 마크다운을 다시 파싱하지 않아도 되고,
-    // 무엇을 에디터에 넣을지 서버와 화면의 판단이 갈리지 않는다.
-    const generated = mode === 'agent' ? extractCodeBlock(trimmed, language) : null;
-    return NextResponse.json({
-      reply: trimmed,
-      model: model.id,
-      code: generated,
-      usage: {
-        promptTokens: tokens.promptTokens ?? null,
-        completionTokens: tokens.completionTokens ?? null,
-        estimated: measured === null,
-        effort,
-        repo: usedRepo,
-        // 고른 모델이 막혀 대체 모델로 답한 경우 — 화면이 이를 밝힌다
-        replaced,
-      },
-    });
-  } catch {
-    return NextResponse.json({ error: 'AI 호출에 실패했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 502 });
-  }
+        const trimmed = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        if (!trimmed) throw new Error('empty reply');
+
+        // 토큰 — 공급자가 준 값이 있으면 그대로, 없으면 추정치를 넣고 그렇다고 표시한다
+        const measured: LlmUsage | null = usage;
+        const tokens = measured ?? {
+          promptTokens: estimateTokens(context, ...messages.map((m) => m.content)),
+          completionTokens: estimateTokens(trimmed),
+        };
+
+        // 일일 쿠터 누적 — 응답을 막지 않는다
+        if (user && serviceFunded) {
+          addFreeAiUsage(user.id, (tokens.promptTokens ?? 0) + (tokens.completionTokens ?? 0), modelId).catch(() => {});
+        }
+
+        // Agent 모드는 코드 블록을 따로 뽑아 준다 — 화면이 마크다운을 다시 파싱하지 않아도 되고,
+        // 무엇을 에디터에 넣을지 서버와 화면의 판단이 갈리지 않는다.
+        const generated = mode === 'agent' ? extractCodeBlock(trimmed, language) : null;
+
+        send({
+          type: 'done',
+          reply: trimmed,
+          model: model.id,
+          code: generated,
+          usage: {
+            promptTokens: tokens.promptTokens ?? null,
+            completionTokens: tokens.completionTokens ?? null,
+            estimated: measured === null,
+            effort,
+            repo: usedRepo,
+            // 고른 모델이 막혀 대체 모델로 답한 경우 — 화면이 이를 밝힌다
+            replaced,
+          },
+        });
+      } catch {
+        // 이용자가 창을 닫거나 중단을 누른 경우는 알릴 대상이 없다
+        if (!request.signal.aborted) {
+          send({ type: 'error', message: 'AI 호출에 실패했습니다. 잠시 후 다시 시도해 주세요.' });
+        }
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
+      'Cache-Control': 'no-store, no-transform',
+      // 프록시가 버퍼링하면 스트리밍의 의미가 없다
+      'X-Accel-Buffering': 'no',
+    },
+  });
 }

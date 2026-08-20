@@ -68,18 +68,18 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-      <form action={formAction} className="space-y-4 rounded-2xl border border-ink/10 bg-white p-5">
+      <form action={formAction} className="space-y-4 rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
         {draft && <input type="hidden" name="id" value={draft.id} />}
         <input type="hidden" name="existingImageUrl" value={draft?.imageUrl ?? ''} />
 
         <fieldset>
-          <legend className="mb-1.5 font-mono text-xs tracking-wider text-ink-soft/60">형식</legend>
+          <legend className="mb-1.5 font-mono text-xs tracking-wider text-fg-secondary">형식</legend>
           <div className="flex gap-2">
             {VARIANTS.map(([value, label, desc]) => (
               <label
                 key={value}
                 className={`flex flex-1 cursor-pointer items-start gap-2 rounded-xl border px-3 py-2.5 transition-colors ${
-                  variant === value ? 'border-signal bg-brand-50/50' : 'border-ink/10 hover:border-ink/25'
+                  variant === value ? 'border-signal bg-brand-50/50' : 'border-hairline hover:border-ink/25'
                 }`}
               >
                 <input
@@ -92,7 +92,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
                 />
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-ink">{label}</span>
-                  <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-soft/55">{desc}</span>
+                  <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">{desc}</span>
                 </span>
               </label>
             ))}
@@ -100,7 +100,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
         </fieldset>
 
         <div>
-          <label htmlFor="pop-title" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+          <label htmlFor="pop-title" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
             제목
           </label>
           <input
@@ -116,8 +116,8 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
         </div>
 
         <div>
-          <label htmlFor="pop-content" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
-            내용 {variant === 'poster' && <span className="text-ink-soft/40">(포스터형은 선택)</span>}
+          <label htmlFor="pop-content" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
+            내용 {variant === 'poster' && <span className="text-fg-quiet">(포스터형은 선택)</span>}
           </label>
           <textarea
             id="pop-content"
@@ -131,7 +131,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
         </div>
 
         <div>
-          <label htmlFor="pop-image" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+          <label htmlFor="pop-image" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
             포스터 이미지 (선택 · 5MB 이하)
           </label>
           <input
@@ -144,10 +144,10 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
               setPreview(f ? URL.createObjectURL(f) : (draft?.imageUrl ?? null));
               setRemoveImage(false);
             }}
-            className="w-full text-xs text-ink-soft/70 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700"
+            className="w-full text-xs text-fg-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700"
           />
           {draft?.imageUrl && (
-            <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-[11px] text-ink-soft/65">
+            <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-[11px] text-fg-secondary">
               <input
                 type="checkbox"
                 name="removeImage"
@@ -163,8 +163,8 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
           )}
         </div>
 
-        <fieldset className="rounded-xl border border-ink/10 bg-paper/30 p-3.5">
-          <legend className="px-1 font-mono text-xs tracking-wider text-ink-soft/60">클릭 동작</legend>
+        <fieldset className="rounded-xl border border-hairline bg-paper/30 p-3.5">
+          <legend className="px-1 font-mono text-xs tracking-wider text-fg-secondary">클릭 동작</legend>
           <select
             name="linkType"
             aria-label="클릭 동작"
@@ -178,7 +178,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
               </option>
             ))}
           </select>
-          <p className="mt-1 text-[11px] text-ink-soft/50">{POPUP_LINK_HINTS[linkType]}</p>
+          <p className="mt-1 text-[11px] text-fg-muted">{POPUP_LINK_HINTS[linkType]}</p>
 
           {linkType !== 'none' && (
             <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
@@ -204,7 +204,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <label htmlFor="pop-start" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="pop-start" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               시작 (선택)
             </label>
             <input
@@ -216,7 +216,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
             />
           </div>
           <div>
-            <label htmlFor="pop-end" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="pop-end" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               종료 (선택)
             </label>
             <input
@@ -228,7 +228,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
             />
           </div>
           <div>
-            <label htmlFor="pop-order" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="pop-order" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               순서
             </label>
             <input id="pop-order" name="order" type="number" min={0} max={999} defaultValue={draft?.order ?? 0} className={FIELD} />
@@ -255,8 +255,8 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
 
       {/* 미리보기 — 실제 팝업과 같은 배치 */}
       <div>
-        <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">방문자에게 보이는 모습</p>
-        <div className="overflow-hidden rounded-2xl border border-ink/15 bg-white shadow-sm">
+        <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">방문자에게 보이는 모습</p>
+        <div className="overflow-hidden rounded-[var(--radius-panel)] border border-ink/15 bg-white shadow-sm">
           {preview && (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
@@ -273,12 +273,12 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
           )}
           <div className="px-5 py-4">
             {variant === 'poster' && <p className="mb-1.5 text-base font-bold text-ink">{title || '(제목)'}</p>}
-            <p className="whitespace-pre-line text-xs leading-relaxed text-ink-soft/75">
+            <p className="whitespace-pre-line text-xs leading-relaxed text-fg">
               {content || (variant === 'poster' ? '' : '(내용)')}
             </p>
           </div>
-          <div className="flex items-center gap-2 border-t border-ink/10 bg-paper/60 px-5 py-3">
-            <span className="text-[11px] text-ink-soft/55">오늘 하루 보지 않기</span>
+          <div className="flex items-center gap-2 border-t border-hairline bg-paper/60 px-5 py-3">
+            <span className="text-[11px] text-fg-muted">오늘 하루 보지 않기</span>
             <span className="ml-auto flex gap-1.5">
               {linkType !== 'none' && linkTarget && (
                 <span className="rounded-lg border border-brand-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-brand-700">

@@ -69,7 +69,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
 
       {/* ---------- 내장 면접관 ---------- */}
       <section>
-        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft/50">내장 면접관</p>
+        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wider text-fg-muted">내장 면접관</p>
         <label
           className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors ${
             provider === 'builtin_ai' ? 'border-signal bg-signal/10 font-semibold' : 'border-ink/15 hover:border-ink/40'
@@ -85,7 +85,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
           />
           <span className="flex-1">
             DebateAI Free Tier
-            <span className="block text-[11px] font-normal text-ink-soft/55">
+            <span className="block text-[11px] font-normal text-fg-muted">
               키 없이 바로 사용 · 하루 {FREE_AI_DAILY_LIMIT.toLocaleString()} 토큰
             </span>
           </span>
@@ -101,14 +101,14 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
       {/* ---------- 네이티브 API (BYOK → Pro Tier) ---------- */}
       <section>
         <div className="mb-1.5 flex flex-wrap items-center gap-2">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-ink-soft/50">네이티브 API — Pro Tier</p>
+          <p className="font-mono text-[11px] uppercase tracking-wider text-fg-muted">네이티브 API — Pro Tier</p>
           {initial.hasKey && (
             <span className="rounded-full border border-brand-300/60 bg-brand-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-signal">
               PRO 활성
             </span>
           )}
         </div>
-        <p className="mb-2 text-[11px] leading-relaxed text-ink-soft/55">
+        <p className="mb-2 text-[11px] leading-relaxed text-fg-muted">
           본인 API 키를 등록하면 ChatGPT · Claude · Gemini · Grok · Perplexity를 debateAI 탭과 면접·리팩토링에서
           쓸 수 있습니다. 요금은 등록한 키의 계정으로 청구됩니다.
         </p>
@@ -118,7 +118,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
             <label
               key={p.key}
               className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors ${
-                provider === p.key ? 'border-signal bg-brand-50/40 text-ink' : 'border-ink/10 hover:border-ink/30'
+                provider === p.key ? 'border-signal bg-brand-50/40 text-ink' : 'border-hairline hover:border-ink/30'
               }`}
             >
               <input
@@ -131,7 +131,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
               />
               <span className="flex-1">
                 {p.label}
-                <span className="block font-mono text-[10px] font-normal text-ink-soft/45">{KEY_HINTS[p.key]}</span>
+                <span className="block font-mono text-[10px] font-normal text-fg-muted">{KEY_HINTS[p.key]}</span>
               </span>
             </label>
           ))}
@@ -139,8 +139,8 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
 
         {/* 키 입력 — 고른 제공사가 있을 때만. 값은 서버에서 이중 암호화되어 저장된다. */}
         {usingNative && (
-          <div className="mt-3 rounded-xl border border-ink/10 bg-paper/40 p-4">
-            <label htmlFor="aiApiKey" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+          <div className="mt-3 rounded-xl border border-hairline bg-paper/40 p-4">
+            <label htmlFor="aiApiKey" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               API KEY
             </label>
             <input
@@ -150,9 +150,9 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
               autoComplete="off"
               spellCheck={false}
               placeholder={initial.hasKey ? '등록됨 — 바꿀 때만 입력' : KEY_HINTS[provider]}
-              className="w-full rounded-lg border border-ink/15 bg-white px-4 py-2.5 font-mono text-sm placeholder:text-ink-soft/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+              className="w-full rounded-lg border border-ink/15 bg-white px-4 py-2.5 font-mono text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
             />
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-ink-soft/55">
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-fg-muted">
               <span>
                 {initial.hasKey
                   ? `현재 등록된 키: ${initial.keyHint ?? '****'} · 비워 두고 저장하면 그대로 유지됩니다.`
@@ -175,17 +175,17 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
 
       {/* ---------- 내 컴퓨터에서 실행 (잠금) ---------- */}
       <section>
-        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-soft/50">내 컴퓨터에서 실행</p>
+        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wider text-fg-muted">내 컴퓨터에서 실행</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {lockedProviders.map((p) => (
             <div
               key={p.key}
-              className="flex cursor-not-allowed items-center gap-3 rounded-lg border border-ink/10 bg-paper/60 px-4 py-3 text-sm text-ink-soft/40"
+              className="flex cursor-not-allowed items-center gap-3 rounded-lg border border-hairline bg-paper/60 px-4 py-3 text-sm text-fg-quiet"
               title="아직 지원 준비 중입니다"
             >
               <input type="radio" disabled className="accent-[#4531d9]" />
               <span className="flex-1">{p.label}</span>
-              <span className="shrink-0 rounded-full border border-ink/10 bg-white px-2 py-0.5 font-mono text-[10px] text-ink-soft/50">
+              <span className="shrink-0 rounded-full border border-hairline bg-white px-2 py-0.5 font-mono text-[10px] text-fg-muted">
                 준비중
               </span>
             </div>
@@ -229,13 +229,13 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
           <button
             formAction={testAction}
             disabled={pending || testPending}
-            className="rounded-lg border border-ink/15 px-6 py-3 font-medium text-ink-soft/70 transition hover:border-ink/40 active:scale-[0.98] disabled:opacity-50"
+            className="rounded-lg border border-ink/15 px-6 py-3 font-medium text-fg-secondary transition hover:border-ink/40 active:scale-[0.98] disabled:opacity-50"
           >
             {testPending ? '테스트 중…' : '연결 테스트'}
           </button>
         )}
         {showSkip && (
-          <button formAction={skipAiOnboarding} className="px-6 py-3 font-medium text-ink-soft/60 transition-colors hover:text-ink-soft">
+          <button formAction={skipAiOnboarding} className="px-6 py-3 font-medium text-fg-secondary transition-colors hover:text-ink-soft">
             나중에 하기 (건너뛰기)
           </button>
         )}
@@ -283,7 +283,7 @@ function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
             {group.models.map((m) => (
               <li key={m.id}>
                 <div className="flex items-baseline gap-2 text-[12px]">
-                  <span className={`truncate ${m.selected ? 'font-semibold text-ink' : 'text-ink-soft/65'}`}>
+                  <span className={`truncate ${m.selected ? 'font-semibold text-ink' : 'text-fg-secondary'}`}>
                     {m.label}
                   </span>
                   {m.selected && (
@@ -291,7 +291,7 @@ function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
                       선택됨
                     </span>
                   )}
-                  <span className="ml-auto shrink-0 font-mono text-[11px] text-ink-soft/50">
+                  <span className="ml-auto shrink-0 font-mono text-[11px] text-fg-muted">
                     {m.used.toLocaleString()} 토큰
                   </span>
                 </div>

@@ -141,7 +141,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="email" className="block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5">
+          <label htmlFor="email" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">
             EMAIL
           </label>
           <input
@@ -153,17 +153,17 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
             value={email}
             onChange={(e) => setEmailInput(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
+            className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
           />
           {errors.email && <p className="mt-1.5 text-xs text-rose-600">{errors.email[0]}</p>}
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="password" className="block font-mono text-xs text-ink-soft/60 tracking-wider">
+            <label htmlFor="password" className="block font-mono text-xs text-fg-secondary tracking-wider">
               PASSWORD
             </label>
-            <Link href="/forgot-password" className="text-xs text-ink-soft/50 hover:text-signal transition-colors">
+            <Link href="/forgot-password" className="text-xs text-fg-muted hover:text-signal transition-colors">
               비밀번호를 잊으셨나요?
             </Link>
           </div>
@@ -174,12 +174,12 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
               placeholder="••••••••"
-              className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 pr-16 text-sm text-ink-soft placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
+              className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 pr-16 text-sm text-ink-soft placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-ink-soft/50 hover:text-ink-soft"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-fg-muted hover:text-ink-soft"
             >
               {showPassword ? '숨기기' : '보기'}
             </button>
@@ -188,7 +188,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
         </div>
 
         {/* 아이디 저장 — 체크 시 브라우저에 이메일 저장(+ 지원 시 자격증명/패스키) */}
-        <label className="flex items-center gap-2 text-sm text-ink-soft/70 select-none cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-fg-secondary select-none cursor-pointer">
           <input
             type="checkbox"
             checked={remember}
@@ -212,7 +212,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
           {pending ? '확인 중…' : '로그인'}
         </button>
 
-        <p className="text-center text-[11px] text-ink-soft/40">
+        <p className="text-center text-[11px] text-fg-quiet">
           회사 SSO 계정은 회사 이메일만 입력하고 로그인하면 자동으로 연결됩니다.
         </p>
       </form>

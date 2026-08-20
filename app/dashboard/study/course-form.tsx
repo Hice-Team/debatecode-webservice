@@ -6,14 +6,14 @@ import { createCourse, type CourseFormState } from '@/app/lib/actions/study-admi
 
 const initialState: CourseFormState = {};
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-paper/50 px-3 py-2 text-sm placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60';
+  'w-full rounded-lg border border-ink/15 bg-paper/50 px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
 
 export default function CourseForm() {
   const [state, formAction, pending] = useActionState(createCourse, initialState);
 
   return (
-    <form action={formAction} className="rounded-xl border border-ink/10 bg-paper/40 p-4 space-y-3">
-      <p className="font-mono text-xs text-ink-soft/60 tracking-wider">+ 새 코스 추가</p>
+    <form action={formAction} className="rounded-xl border border-hairline bg-paper/40 p-4 space-y-3">
+      <p className="font-mono text-xs text-fg-secondary tracking-wider">+ 새 코스 추가</p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <input name="title" required placeholder="코스 제목 (예: 파이썬 기초)" className={FIELD} />
         <input name="slug" required placeholder="slug (예: python-basics)" className={FIELD} />

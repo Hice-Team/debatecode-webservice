@@ -111,7 +111,7 @@ export default async function StudyPage() {
 
         {/* 진도 요약 — 로그인 + 수강신청 코스가 있을 때만 */}
         {/*{session && totalLessons > 0 && courses.length > 0 && (
-          <section className="mb-12 rounded-2xl border border-ink/10 bg-white p-6 shadow-sm">
+          <section className="mb-12 rounded-[var(--radius-panel)] border border-hairline bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex-1">
                 <p className="text-xs font-bold uppercase tracking-wider text-brand-600">MY PROGRESS</p>
@@ -119,12 +119,12 @@ export default async function StudyPage() {
                   <span className="text-3xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                     {overallPct}%
                   </span>
-                  <span className="text-sm text-ink-soft/50">
+                  <span className="text-sm text-fg-muted">
                     {doneLessons}/{totalLessons} <I18nSlot k="lessons-completed" fallback="강 완료" />
                   </span>
                 </div>
                 <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-ink/5">
-                  <div className="h-full rounded-full bg-signal transition-all" style={{ width: `${overallPct}%` }} />
+                  <div className="h-full rounded-full bg-signal transition-colors" style={{ width: `${overallPct}%` }} />
                 </div>
               </div>
               {nextLesson ? (
@@ -156,19 +156,19 @@ export default async function StudyPage() {
                   <Link
                     key={c.slug}
                     href={`/study/${c.slug}`}
-                    className="group bg-white rounded-2xl border border-ink/10 p-6 hover:border-brand-400 hover:-translate-y-0.5 hover:shadow-md transition"
+                    className="group bg-white rounded-[var(--radius-panel)] border border-hairline p-6 hover:border-brand-400 hover:-translate-y-0.5 hover:shadow-md transition"
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <span className="font-mono text-xs px-2 py-1 rounded border border-ink/15 bg-paper text-ink-soft uppercase">
                         {c.language}
                       </span>
                       <h3 className="text-lg font-bold">{c.title}</h3>
-                      <span className="ml-auto font-mono text-[11px] text-ink-soft/40">{total} <I18nSlot k="lesson-unit" fallback="강" /></span>
+                      <span className="ml-auto font-mono text-[11px] text-fg-quiet">{total} <I18nSlot k="lesson-unit" fallback="강" /></span>
                     </div>
-                    <p className="text-sm text-ink-soft/60 leading-relaxed">{c.description}</p>
+                    <p className="text-sm text-fg-secondary leading-relaxed">{c.description}</p>
                     {session && total > 0 && (
                       <div className="mt-4">
-                        <div className="flex items-center justify-between font-mono text-[11px] text-ink-soft/40 mb-1.5">
+                        <div className="flex items-center justify-between font-mono text-[11px] text-fg-quiet mb-1.5">
                           <span>{done}/{total} <I18nSlot k="lessons-completed" fallback="강 완료" /></span>
                           <span>{pct}%</span>
                         </div>
@@ -205,22 +205,22 @@ export default async function StudyPage() {
         {/* 문서 사이트맵 — 카드 대신 계층형 링크 트리 */}
         <section className="mb-14">
           <h2 className="text-xs font-bold uppercase tracking-wider text-brand-600 mb-4">DOCS SITEMAP</h2>
-          <div className="rounded-2xl border border-ink/10 bg-white p-6 sm:p-8">
+          <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-6 sm:p-8">
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
               {DOCS_SITEMAP.map((section) => (
                 <div key={section.group}>
-                  <p className="mb-3 border-b border-ink/10 pb-2 text-sm font-bold text-ink">
+                  <p className="mb-3 border-b border-hairline pb-2 text-sm font-bold text-ink">
                     <I18nSlot k={section.groupKey} fallback={section.group} />
                   </p>
-                  <ul className="space-y-0.5 border-l border-ink/10">
+                  <ul className="space-y-0.5 border-l border-hairline">
                     {section.links.map((link) => {
                       const inner = (
                         <>
-                          <span className="font-medium text-ink-soft/80 group-hover:text-brand-600 transition-colors">
+                          <span className="font-medium text-fg group-hover:text-brand-600 transition-colors">
                             {link.titleKey ? <I18nSlot k={link.titleKey} fallback={link.title} /> : link.title}
-                            {link.external && <span className="ml-1 text-[10px] text-ink-soft/35">↗</span>}
+                            {link.external && <span className="ml-1 text-[10px] text-fg-quiet">↗</span>}
                           </span>
-                          <span className="block text-xs text-ink-soft/45">
+                          <span className="block text-xs text-fg-muted">
                             {link.descKey ? <I18nSlot k={link.descKey} fallback={link.desc} /> : link.desc}
                           </span>
                         </>
@@ -251,7 +251,7 @@ export default async function StudyPage() {
               type="button"
               disabled
               aria-disabled="true"
-              className="inline-flex items-center gap-2 rounded-lg border border-ink/12 bg-paper px-4 py-2.5 text-sm font-medium text-ink-soft/45 cursor-not-allowed"
+              className="inline-flex items-center gap-2 rounded-lg border border-hairline bg-paper px-4 py-2.5 text-sm font-medium text-fg-muted cursor-not-allowed"
             >
               <I18nSlot k="ko-docs-link" fallback="한국어 번역본 준비 중" />
             </button>

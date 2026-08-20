@@ -20,7 +20,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_TONES: Record<string, string> = {
-  draft: 'border-ink/15 bg-paper text-ink-soft/60',
+  draft: 'border-ink/15 bg-paper text-fg-secondary',
   sending: 'border-sky-200 bg-sky-50 text-sky-700',
   sent: 'border-emerald-200 bg-emerald-50 text-emerald-700',
   failed: 'border-rose-200 bg-rose-50 text-rose-700',
@@ -86,16 +86,16 @@ export default async function ConsoleMarketingPage() {
           발송 목록
         </h2>
         {campaigns.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-ink/15 px-4 py-12 text-center text-sm text-ink-soft/45">
+          <p className="rounded-xl border border-dashed border-ink/15 px-4 py-12 text-center text-sm text-fg-muted">
             아직 작성한 메일이 없습니다.
           </p>
         ) : (
-          <ul className="overflow-hidden rounded-xl border border-ink/10 bg-white">
+          <ul className="overflow-hidden rounded-xl border border-hairline bg-white">
             {campaigns.map((campaign) => (
-              <li key={campaign.id} className="flex flex-wrap items-center gap-3 border-b border-ink/[0.07] px-4 py-3 last:border-b-0">
+              <li key={campaign.id} className="flex flex-wrap items-center gap-3 border-b border-hairline px-4 py-3 last:border-b-0">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink">{campaign.subject}</p>
-                  <p className="font-mono text-[11px] text-ink-soft/45">
+                  <p className="font-mono text-[11px] text-fg-muted">
                     {AUDIENCE_LABELS[(campaign.audience as Audience) ?? 'all']} · 대상{' '}
                     {campaign.recipientCount.toLocaleString()}명
                     {campaign.status === 'sent' && ` · 성공 ${campaign.sentCount.toLocaleString()}`}
@@ -125,7 +125,7 @@ export default async function ConsoleMarketingPage() {
                     />
                     <form action={deleteCampaign}>
                       <input type="hidden" name="id" value={campaign.id} />
-                      <button className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-ink-soft/60 transition-colors hover:border-rose-300 hover:text-rose-600">
+                      <button className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-600">
                         삭제
                       </button>
                     </form>
@@ -143,20 +143,20 @@ export default async function ConsoleMarketingPage() {
           최근 수신 동의
         </h2>
         {recent.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-ink/15 px-4 py-12 text-center text-sm text-ink-soft/45">
+          <p className="rounded-xl border border-dashed border-ink/15 px-4 py-12 text-center text-sm text-fg-muted">
             아직 수신 동의자가 없습니다.
           </p>
         ) : (
-          <ul className="overflow-hidden rounded-xl border border-ink/10 bg-white">
+          <ul className="overflow-hidden rounded-xl border border-hairline bg-white">
             {recent.map((contact) => (
-              <li key={contact.id} className="flex items-center gap-3 border-b border-ink/[0.07] px-4 py-2.5 last:border-b-0">
-                <span data-no-translate className="min-w-0 flex-1 truncate font-mono text-[13px] text-ink-soft/75">
+              <li key={contact.id} className="flex items-center gap-3 border-b border-hairline px-4 py-2.5 last:border-b-0">
+                <span data-no-translate className="min-w-0 flex-1 truncate font-mono text-[13px] text-fg">
                   {contact.email}
                 </span>
-                <span className="shrink-0 rounded bg-paper px-1.5 py-0.5 font-mono text-[10px] text-ink-soft/50">
+                <span className="shrink-0 rounded bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted">
                   {contact.userId ? '회원' : '비회원'}
                 </span>
-                <span className="shrink-0 font-mono text-[11px] text-ink-soft/40">
+                <span className="shrink-0 font-mono text-[11px] text-fg-quiet">
                   {contact.consentedAt.toLocaleDateString('ko-KR')}
                 </span>
               </li>

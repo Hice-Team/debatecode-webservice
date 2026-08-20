@@ -24,6 +24,9 @@ const STATIC_ROUTES: Array<{ path: string; priority: number; changeFrequency: Me
   { path: '/legal/terms', priority: 0.2, changeFrequency: 'yearly' },
   { path: '/legal/privacy', priority: 0.2, changeFrequency: 'yearly' },
   { path: '/legal/ai-terms', priority: 0.2, changeFrequency: 'yearly' },
+  { path: '/legal/mate-terms', priority: 0.2, changeFrequency: 'yearly' },
+  { path: '/legal/point-terms', priority: 0.2, changeFrequency: 'yearly' },
+  { path: '/legal/consent', priority: 0.2, changeFrequency: 'yearly' },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

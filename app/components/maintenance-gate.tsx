@@ -55,13 +55,13 @@ export default async function MaintenanceGate({ children }: { children: React.Re
         >
           점검 중입니다
         </h1>
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft/70">{state.message}</p>
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">{state.message}</p>
         {state.eta && (
-          <p className="mt-4 inline-block rounded-full border border-ink/10 bg-white px-3 py-1 font-mono text-xs text-ink-soft/60">
+          <p className="mt-4 inline-block rounded-full border border-hairline bg-white px-3 py-1 font-mono text-xs text-fg-secondary">
             종료 예정 · {state.eta}
           </p>
         )}
-        <p className="mt-8 text-xs text-ink-soft/45">
+        <p className="mt-8 text-xs text-fg-muted">
           문의가 필요하시면{' '}
           <Link href="/legal/terms" className="underline underline-offset-2">
             이용약관

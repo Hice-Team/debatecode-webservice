@@ -13,7 +13,7 @@ export default function ProblemLoading() {
         </div>
         <div className="flex-grow flex flex-col">
           <div className="h-11 border-b border-white/10 bg-white/[0.02]" />
-          <div className="flex-grow flex items-center justify-center font-mono text-xs text-white/30">
+          <div className="flex-grow flex items-center justify-center font-mono text-xs text-fg-on-dark-quiet">
             워크스페이스 준비 중…
           </div>
           <div className="h-48 border-t border-white/10 bg-ink-soft/60" />

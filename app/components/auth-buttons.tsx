@@ -10,7 +10,7 @@ export default function AuthButtons() {
 
   return (
     <>
-      <Link href="/login" className="px-4 py-2 text-ink-soft/65 hover:text-ink-soft transition-colors text-center">
+      <Link href="/login" className="px-4 py-2 text-fg-secondary hover:text-ink-soft transition-colors text-center">
         {t('login', language)}
       </Link>
       <Link

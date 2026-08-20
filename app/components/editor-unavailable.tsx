@@ -27,7 +27,7 @@ export default function EditorUnavailable({
     <div className="flex min-h-screen flex-col bg-paper text-ink-soft">
       <Nav />
       <main className="mx-auto w-full max-w-md flex-grow px-5 py-14">
-        <span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-signal shadow-sm">
+        <span aria-hidden className="grid h-12 w-12 place-items-center rounded-[var(--radius-panel)] bg-white text-signal shadow-sm">
           <svg viewBox="0 0 24 24" className="h-6 w-6 fill-none stroke-current stroke-[1.6]">
             <rect x="6" y="2.5" width="12" height="19" rx="2.5" />
             <path d="M10.5 18.5h3" strokeLinecap="round" />
@@ -35,9 +35,9 @@ export default function EditorUnavailable({
         </span>
 
         <h1 className="mt-4 font-display text-xl font-bold text-ink">{title}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-ink-soft/65">{detail}</p>
+        <p className="mt-2 text-sm leading-relaxed text-fg-secondary">{detail}</p>
 
-        <p className="mt-7 font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">
+        <p className="mt-7 font-mono text-[10px] uppercase tracking-wider text-fg-quiet">
           스마트폰에서 이용할 수 있는 곳
         </p>
         <ul className="mt-2 space-y-2">
@@ -45,13 +45,13 @@ export default function EditorUnavailable({
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex items-center gap-3 rounded-2xl border border-ink/10 bg-white px-4 py-3 transition hover:border-brand-300"
+                className="flex items-center gap-3 rounded-[var(--radius-panel)] border border-hairline bg-white px-4 py-3 transition hover:border-brand-300"
               >
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold text-ink">{item.label}</span>
-                  <span className="block truncate text-[11px] text-ink-soft/50">{item.desc}</span>
+                  <span className="block truncate text-[11px] text-fg-muted">{item.desc}</span>
                 </span>
-                <span aria-hidden className="text-ink-soft/30">›</span>
+                <span aria-hidden className="text-fg-quiet">›</span>
               </Link>
             </li>
           ))}
@@ -59,7 +59,7 @@ export default function EditorUnavailable({
 
         <Link
           href={backHref}
-          className="mt-6 inline-flex items-center gap-1.5 text-xs text-ink-soft/45 transition-colors hover:text-signal"
+          className="mt-6 inline-flex items-center gap-1.5 text-xs text-fg-muted transition-colors hover:text-signal"
         >
           <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-2" aria-hidden>
             <path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />

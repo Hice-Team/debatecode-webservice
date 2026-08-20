@@ -19,7 +19,9 @@ const documentCsp = [
   "font-src 'self' data: https://cdn.jsdelivr.net https://cdn.channel.io",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://*.channel.io wss://*.channel.io https://www.googleapis.com https://accounts.google.com",
   "worker-src 'self' blob:",
-  "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://*.channel.io https://docs.google.com https://accounts.google.com https://content.googleapis.com",
+  // supabase.co — 첨부 미리보기의 PDF는 <iframe>으로 연다. 프록시(/api/ai-search/file)가
+  // 서명 URL로 302를 보내므로, 최종 목적지인 스토리지 도메인이 여기 있어야 프레임이 뜬다.
+  "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://*.channel.io https://docs.google.com https://accounts.google.com https://content.googleapis.com https://*.supabase.co",
   "media-src 'self' blob: https:",
   "object-src 'none'",
   "base-uri 'self'",

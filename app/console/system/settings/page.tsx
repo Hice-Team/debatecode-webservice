@@ -66,7 +66,7 @@ export default async function RuntimeSettingsPage({
       />
 
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-ink-soft/60">{TAB_HINTS[active]}</p>
+        <p className="text-xs text-fg-secondary">{TAB_HINTS[active]}</p>
         {overriddenHere > 0 && (
           <form action={resetSettingCategory}>
             <input type="hidden" name="category" value={active} />
@@ -75,13 +75,13 @@ export default async function RuntimeSettingsPage({
         )}
       </div>
 
-      <div className="divide-y divide-ink/5 overflow-hidden rounded-2xl border border-ink/10 bg-white">
+      <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
         {rows.map((row) => (
           <SettingRow key={row.def.key} def={row.def} value={row.value} overridden={row.overridden} />
         ))}
       </div>
 
-      <p className="mt-3 font-mono text-[11px] text-ink-soft/45">
+      <p className="mt-3 font-mono text-[11px] text-fg-muted">
         노란 배경 = 기본값에서 변경된 항목 · 총 {rows.length}개 중 {overriddenHere}개 변경됨
       </p>
     </div>

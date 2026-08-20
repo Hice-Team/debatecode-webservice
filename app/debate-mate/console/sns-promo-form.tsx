@@ -19,7 +19,7 @@ export default function SnsPromoForm({ posts }: { posts: SelectablePost[] }) {
 
   if (posts.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-ink/15 px-4 py-6 text-center text-sm text-ink-soft/45">
+      <p className="rounded-xl border border-dashed border-ink/15 px-4 py-6 text-center text-sm text-fg-muted">
         신청할 수 있는 SNS 글이 없습니다. SNS 게시판에 홍보 글을 먼저 올려 주세요.
       </p>
     );
@@ -28,7 +28,7 @@ export default function SnsPromoForm({ posts }: { posts: SelectablePost[] }) {
   return (
     <form action={formAction} className="space-y-3">
       <div>
-        <label htmlFor="sns-post" className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+        <label htmlFor="sns-post" className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-fg-muted">
           인증할 게시글
         </label>
         <select
@@ -50,7 +50,7 @@ export default function SnsPromoForm({ posts }: { posts: SelectablePost[] }) {
       </div>
 
       <div>
-        <label htmlFor="sns-desc" className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+        <label htmlFor="sns-desc" className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-fg-muted">
           간단 설명 (선택)
         </label>
         <textarea
@@ -59,7 +59,7 @@ export default function SnsPromoForm({ posts }: { posts: SelectablePost[] }) {
           rows={2}
           maxLength={500}
           placeholder="어떤 내용으로 홍보했는지 짧게 적어주세요."
-          className="w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-ink-soft/30 focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25"
+          className="w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-fg-quiet focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25"
         />
       </div>
 

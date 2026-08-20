@@ -52,7 +52,7 @@ export function PageHeader({
           <I18nSlot k={`page-${slug}-title`} fallback={title} />
         </h1>
         {desc && (
-          <p className="mt-2 text-ink-soft/60">
+          <p className="mt-2 text-fg-secondary">
             <I18nSlot k={`page-${slug}-desc`} fallback={desc} />
           </p>
         )}

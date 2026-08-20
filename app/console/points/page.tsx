@@ -77,16 +77,16 @@ export default async function ConsolePointsPage() {
           { label: '발급 대기', value: pendingOrders.length, warn: pendingOrders.length > 0 },
           { label: '최근 원장', value: recentLedger.length },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-ink/10 bg-white px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">{stat.label}</p>
+          <div key={stat.label} className="rounded-xl border border-hairline bg-white px-4 py-3">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
             <p className={`mt-1 font-display text-2xl font-bold ${stat.warn ? 'text-rose-600' : 'text-ink'}`}>{stat.value}</p>
           </div>
         ))}
       </div>
 
       {/* 활동 인증 심사 */}
-      <section className="mb-8 overflow-hidden rounded-2xl border border-ink/10 bg-white">
-        <div className="border-b border-ink/[0.07] px-5 py-3">
+      <section className="mb-8 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="border-b border-hairline px-5 py-3">
           <h3 className="font-bold text-ink">활동 인증 신청</h3>
         </div>
         {pendingRequests.length === 0 ? (
@@ -99,15 +99,15 @@ export default async function ConsolePointsPage() {
                 <li key={request.id} className="px-5 py-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold text-ink">{request.user.name}</span>
-                    <span className="font-mono text-[11px] text-ink-soft/40">{request.user.email}</span>
+                    <span className="font-mono text-[11px] text-fg-quiet">{request.user.email}</span>
                     <span className="ml-auto rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 font-mono text-[11px] font-semibold text-brand-700">
                       +{request.amount}P
                     </span>
                   </div>
 
-                  <div className="mt-2 rounded-xl border border-ink/10 bg-paper/50 p-3 text-sm">
+                  <div className="mt-2 rounded-xl border border-hairline bg-paper/50 p-3 text-sm">
                     <p className="font-medium text-ink">{payload?.title ?? '제목 없음'}</p>
-                    <p className="mt-0.5 font-mono text-[11px] text-ink-soft/45">{platformLabel(payload?.platform)}</p>
+                    <p className="mt-0.5 font-mono text-[11px] text-fg-muted">{platformLabel(payload?.platform)}</p>
                     {payload?.url && (
                       <a
                         href={payload.url}
@@ -119,7 +119,7 @@ export default async function ConsolePointsPage() {
                       </a>
                     )}
                     {payload?.description && (
-                      <p className="mt-2 whitespace-pre-wrap text-xs text-ink-soft/70">{payload.description}</p>
+                      <p className="mt-2 whitespace-pre-wrap text-xs text-fg-secondary">{payload.description}</p>
                     )}
                   </div>
 
@@ -152,10 +152,10 @@ export default async function ConsolePointsPage() {
       </section>
 
       {/* 디베이트샵 발급 대기 */}
-      <section className="mb-8 overflow-hidden rounded-2xl border border-ink/10 bg-white">
-        <div className="border-b border-ink/[0.07] px-5 py-3">
+      <section className="mb-8 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="border-b border-hairline px-5 py-3">
           <h3 className="font-bold text-ink">디베이트샵 발급 대기</h3>
-          <p className="mt-0.5 text-xs text-ink-soft/55">
+          <p className="mt-0.5 text-xs text-fg-muted">
             발급 채널 연동 전에는 쿠폰 코드를 직접 입력해 확정합니다. 실패 처리 시 포인트가 자동 환불됩니다.
           </p>
         </div>
@@ -167,17 +167,17 @@ export default async function ConsolePointsPage() {
               <li key={order.id} className="px-5 py-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-ink">{order.user.name}</span>
-                  <span className="font-mono text-[11px] text-ink-soft/40">{order.user.email}</span>
-                  <span className="ml-auto font-mono text-[11px] text-ink-soft/50">
+                  <span className="font-mono text-[11px] text-fg-quiet">{order.user.email}</span>
+                  <span className="ml-auto font-mono text-[11px] text-fg-muted">
                     −{order.pointsSpent.toLocaleString()}P
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-ink-soft/80">
+                <p className="mt-1 text-sm text-fg">
                   {order.product.brand} {order.product.name}
-                  <span className="ml-2 rounded border border-ink/10 bg-paper px-1.5 py-0.5 font-mono text-[10px] text-ink-soft/45">
+                  <span className="ml-2 rounded border border-hairline bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted">
                     {SHOP_SCOPE_LABELS[order.product.scope as ShopScope] ?? order.product.scope}
                   </span>
-                  <span className="ml-1.5 rounded border border-ink/10 bg-paper px-1.5 py-0.5 font-mono text-[10px] text-ink-soft/45">
+                  <span className="ml-1.5 rounded border border-hairline bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted">
                     {order.product.provider}
                   </span>
                 </p>
@@ -226,8 +226,8 @@ export default async function ConsolePointsPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* 최근 심사 결과 */}
-        <section className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
-          <div className="border-b border-ink/[0.07] px-5 py-3">
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+          <div className="border-b border-hairline px-5 py-3">
             <h3 className="font-bold text-ink">최근 심사</h3>
           </div>
           {reviewedRequests.length === 0 ? (
@@ -236,7 +236,7 @@ export default async function ConsolePointsPage() {
             <ul className="divide-y divide-ink/5">
               {reviewedRequests.map((request) => (
                 <li key={request.id} className="flex items-center gap-3 px-5 py-2.5">
-                  <span className="min-w-0 flex-1 truncate text-sm text-ink-soft/75">
+                  <span className="min-w-0 flex-1 truncate text-sm text-fg">
                     {request.user.name} · {(request.payload as { title?: string })?.title ?? 'SNS 홍보'}
                   </span>
                   <span
@@ -253,8 +253,8 @@ export default async function ConsolePointsPage() {
         </section>
 
         {/* 원장 최근 기록 */}
-        <section className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
-          <div className="border-b border-ink/[0.07] px-5 py-3">
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+          <div className="border-b border-hairline px-5 py-3">
             <h3 className="font-bold text-ink">최근 포인트 원장</h3>
           </div>
           {recentLedger.length === 0 ? (
@@ -263,13 +263,13 @@ export default async function ConsolePointsPage() {
             <ul className="divide-y divide-ink/5">
               {recentLedger.map((entry) => (
                 <li key={entry.id} className="flex items-center gap-3 px-5 py-2.5">
-                  <span className="w-12 shrink-0 font-mono text-[11px] text-ink-soft/40">
+                  <span className="w-12 shrink-0 font-mono text-[11px] text-fg-quiet">
                     {new Date(entry.createdAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-ink-soft/75">
+                  <span className="min-w-0 flex-1 truncate text-sm text-fg">
                     {entry.user.name} · {entry.memo ?? POINT_KIND_LABELS[entry.kind] ?? entry.kind}
                   </span>
-                  <span className={`shrink-0 font-mono text-sm font-semibold ${entry.amount > 0 ? 'text-emerald-600' : 'text-ink-soft/60'}`}>
+                  <span className={`shrink-0 font-mono text-sm font-semibold ${entry.amount > 0 ? 'text-emerald-600' : 'text-fg-secondary'}`}>
                     {entry.amount > 0 ? '+' : ''}
                     {entry.amount.toLocaleString()}P
                   </span>

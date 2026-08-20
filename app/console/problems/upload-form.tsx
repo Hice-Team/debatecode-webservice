@@ -81,7 +81,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
 
   if (state.saved) {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+      <div className="rounded-[var(--radius-panel)] border border-emerald-200 bg-emerald-50 p-5">
         <p className="text-sm font-semibold text-emerald-900">{state.saved}</p>
         <button onClick={() => window.location.reload()} className={`mt-3 ${BTN_PRIMARY}`}>
           {defaults ? '새로고침' : '새 문제 계속 등록'}
@@ -96,17 +96,17 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
       {defaults && <input type="hidden" name="id" value={defaults.id} />}
 
       {/* 기본 정보 */}
-      <section className="rounded-2xl border border-ink/10 bg-white p-5">
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
         <h3 className="mb-4 text-sm font-bold text-ink">기본 정보</h3>
         <div className="grid gap-4 sm:grid-cols-[1fr_8rem_10rem]">
           <div>
-            <label htmlFor="p-title" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="p-title" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               제목
             </label>
             <input id="p-title" name="title" required minLength={2} defaultValue={defaults?.title} placeholder="예: 두 수의 합" className={FIELD} />
           </div>
           <div>
-            <label htmlFor="p-diff" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="p-diff" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               난이도
             </label>
             <select id="p-diff" name="difficulty" defaultValue={String(defaults?.difficulty ?? 2)} className={FIELD}>
@@ -118,7 +118,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
             </select>
           </div>
           <div>
-            <label htmlFor="p-cat" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="p-cat" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               카테고리
             </label>
             <select id="p-cat" name="category" defaultValue={defaults?.category} className={FIELD}>
@@ -133,19 +133,19 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
 
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <div>
-            <label htmlFor="p-company" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="p-company" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               출제 기업 (선택)
             </label>
             <input id="p-company" name="company" defaultValue={defaults?.company} placeholder="예: 카카오" className={FIELD} />
           </div>
           <div>
-            <label htmlFor="p-year" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="p-year" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               기출 연도 (선택)
             </label>
             <input id="p-year" name="examYear" defaultValue={defaults?.examYear} placeholder="예: 2024" className={FIELD} />
           </div>
           <div>
-            <label htmlFor="p-time" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="p-time" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               제한 시간 (ms)
             </label>
             <input id="p-time" name="timeLimitMs" type="number" defaultValue={defaults?.timeLimitMs ?? 3000} min={500} max={20000} className={FIELD} />
@@ -154,23 +154,23 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="p-tags" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="p-tags" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               태그 (쉼표 구분)
             </label>
             <input id="p-tags" name="tags" defaultValue={defaults?.tags} placeholder="배열, 해시맵" className={FIELD} />
           </div>
           <div>
-            <label htmlFor="p-keywords" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="p-keywords" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               면접 기대 키워드 (쉼표 구분)
             </label>
             <input id="p-keywords" name="keywords" defaultValue={defaults?.keywords} placeholder="해시맵, 시간복잡도" className={FIELD} />
-            <p className="mt-1 text-[11px] text-ink-soft/50">AI 면접이 답변에서 확인할 개념입니다.</p>
+            <p className="mt-1 text-[11px] text-fg-muted">AI 면접이 답변에서 확인할 개념입니다.</p>
           </div>
         </div>
       </section>
 
       {/* 지문 */}
-      <section className="rounded-2xl border border-ink/10 bg-white p-5">
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-bold text-ink">문제 지문 (마크다운)</h3>
           <button type="button" onClick={() => setShowPreview((v) => !v)} className={BTN_NEUTRAL}>
@@ -178,7 +178,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
           </button>
         </div>
         {showPreview ? (
-          <div className="prose prose-sm max-w-none rounded-xl border border-ink/10 bg-paper/40 px-4 py-3">
+          <div className="prose prose-sm max-w-none rounded-xl border border-hairline bg-paper/40 px-4 py-3">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{description || '_(내용 없음)_'}</ReactMarkdown>
           </div>
         ) : (
@@ -195,15 +195,15 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
       </section>
 
       {/* 스타터 코드 */}
-      <section className="rounded-2xl border border-ink/10 bg-white p-5">
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
         <h3 className="mb-1 text-sm font-bold text-ink">스타터 코드</h3>
-        <p className="mb-3 text-xs text-ink-soft/55">
+        <p className="mb-3 text-xs text-fg-muted">
           이용자가 에디터를 열었을 때 처음 보이는 코드입니다. 함수명은 테스트케이스가 호출하는 이름과
           같아야 합니다.
         </p>
         <div className="grid gap-4 lg:grid-cols-2">
           <div>
-            <label htmlFor="p-js" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="p-js" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               JavaScript
             </label>
             <textarea
@@ -215,7 +215,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
             />
           </div>
           <div>
-            <label htmlFor="p-py" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="p-py" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               Python
             </label>
             <textarea
@@ -230,7 +230,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
       </section>
 
       {/* 테스트케이스 */}
-      <section className="rounded-2xl border border-ink/10 bg-white p-5">
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
         <h3 className="mb-1 text-sm font-bold text-ink">테스트케이스</h3>
         <div className="mb-3">
           <Callout tone="info" title="입력은 인자 배열입니다">
@@ -242,10 +242,10 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
 
         <div className="space-y-2">
           {cases.map((c, i) => (
-            <div key={i} className="rounded-xl border border-ink/10 bg-paper/30 p-3">
+            <div key={i} className="rounded-xl border border-hairline bg-paper/30 p-3">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">#{i + 1}</span>
-                <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-ink-soft/65">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">#{i + 1}</span>
+                <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-fg-secondary">
                   <input
                     type="checkbox"
                     checked={c.isHidden}
@@ -260,7 +260,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
                   <button
                     type="button"
                     onClick={() => setCases((prev) => prev.filter((_, j) => j !== i))}
-                    className={`ml-auto rounded-lg px-2 py-0.5 text-[11px] text-ink-soft/50 hover:text-rose-600 ${FOCUS}`}
+                    className={`ml-auto rounded-lg px-2 py-0.5 text-[11px] text-fg-muted hover:text-rose-600 ${FOCUS}`}
                   >
                     삭제
                   </button>
@@ -268,7 +268,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
               </div>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block font-mono text-[10px] text-ink-soft/45">입력 (인자 배열 JSON)</label>
+                  <label className="mb-1 block font-mono text-[10px] text-fg-muted">입력 (인자 배열 JSON)</label>
                   <input
                     value={c.input}
                     onChange={(e) => setCases((prev) => prev.map((x, j) => (j === i ? { ...x, input: e.target.value } : x)))}
@@ -276,7 +276,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block font-mono text-[10px] text-ink-soft/45">기대 반환값 (JSON)</label>
+                  <label className="mb-1 block font-mono text-[10px] text-fg-muted">기대 반환값 (JSON)</label>
                   <input
                     value={c.expected}
                     onChange={(e) =>

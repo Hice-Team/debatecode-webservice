@@ -20,6 +20,13 @@ const eslintConfig = defineConfig([
     "app/generated/**",
     // OpenNext 빌드 산출물
     ".open-next/**",
+
+    // AI 코딩 도구 설치물 — 우리가 작성한 코드가 아니고 앱 번들에도 들어가지 않는다.
+    // (oh-my-design 훅/스크립트, hallmark 스킬 문서, Cursor 룰)
+    ".claude/**",
+    ".agents/**",
+    ".cursor/**",
+    ".codex/**",
   ]),
 ]);
 

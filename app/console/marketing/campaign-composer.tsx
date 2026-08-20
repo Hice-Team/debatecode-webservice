@@ -9,8 +9,8 @@ import { AUDIENCE_LABELS, type Audience } from '@/app/lib/marketing-audience';
 const initialState: CampaignState = {};
 
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-ink-soft/30 focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/30';
-const LABEL = 'block font-mono text-[11px] uppercase tracking-wider text-ink-soft/55 mb-1.5';
+  'w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/30';
+const LABEL = 'block font-mono text-[11px] uppercase tracking-wider text-fg-muted mb-1.5';
 
 const SAMPLE = `# 이번 주 새 기출 세트가 열렸습니다
 
@@ -65,7 +65,7 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
                   className="sr-only"
                 />
                 {AUDIENCE_LABELS[key]}
-                <span className="mt-0.5 block font-mono text-[11px] font-normal text-ink-soft/50">
+                <span className="mt-0.5 block font-mono text-[11px] font-normal text-fg-muted">
                   {counts[key].toLocaleString()}명
                 </span>
               </label>
@@ -97,7 +97,7 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
             placeholder="# 제목&#10;&#10;내용을 입력하세요.&#10;&#10;- 목록&#10;[링크](https://…)"
             className={`${FIELD} resize-y font-mono leading-relaxed`}
           />
-          <p className="mt-1 text-[11px] text-ink-soft/45">
+          <p className="mt-1 text-[11px] text-fg-muted">
             제목(#), 굵게(**), 목록(-), 링크([글자](https://…))만 적용됩니다. 그 밖의 HTML은 글자로 나갑니다.
           </p>
         </div>
@@ -122,7 +122,7 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
         >
           {pending ? '저장 중…' : '초안 저장'}
         </button>
-        <p className="text-[11px] text-ink-soft/45">
+        <p className="text-[11px] text-fg-muted">
           저장하면 아래 목록에 쌓입니다. 발송은 목록에서 다시 한 번 확인한 뒤 진행합니다.
         </p>
       </div>
@@ -130,18 +130,18 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
       {/* ---------- 미리보기 ---------- */}
       <div className="lg:sticky lg:top-6">
         <p className={LABEL}>미리보기</p>
-        <div className="overflow-hidden rounded-xl border border-ink/10 bg-[#f6f6f7] p-4">
-          <div className="overflow-hidden rounded-xl border border-ink/10 bg-white">
-            <div className="border-b border-ink/[0.07] px-5 py-3">
+        <div className="overflow-hidden rounded-xl border border-hairline bg-[#f6f6f7] p-4">
+          <div className="overflow-hidden rounded-xl border border-hairline bg-white">
+            <div className="border-b border-hairline px-5 py-3">
               <span className="font-mono text-[11px] font-bold tracking-[0.12em] text-signal">DEBATECODE</span>
             </div>
             <div className="px-5 py-4">
-              <p className="mb-3 border-b border-ink/[0.07] pb-2 text-sm font-semibold text-ink">
+              <p className="mb-3 border-b border-hairline pb-2 text-sm font-semibold text-ink">
                 {subject || '(제목 없음)'}
               </p>
               <MarkdownPreview source={body} />
             </div>
-            <div className="border-t border-ink/[0.07] bg-paper/60 px-5 py-3 text-[11px] leading-relaxed text-ink-soft/45">
+            <div className="border-t border-hairline bg-paper/60 px-5 py-3 text-[11px] leading-relaxed text-fg-muted">
               <p>이 메일은 광고성 정보 수신에 동의하신 분께 발송되었습니다.</p>
               <p className="underline">수신거부</p>
             </div>
@@ -157,7 +157,7 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
  * 미리보기가 아니라 거짓말이 된다. 여기서는 React 노드로 그린다(HTML 주입 없음).
  */
 function MarkdownPreview({ source }: { source: string }) {
-  if (!source.trim()) return <p className="text-sm text-ink-soft/30">본문을 입력하면 여기에 표시됩니다.</p>;
+  if (!source.trim()) return <p className="text-sm text-fg-quiet">본문을 입력하면 여기에 표시됩니다.</p>;
 
   const blocks: React.ReactNode[] = [];
   let list: string[] = [];
@@ -165,7 +165,7 @@ function MarkdownPreview({ source }: { source: string }) {
   const flushList = (key: string) => {
     if (list.length === 0) return;
     blocks.push(
-      <ul key={key} className="my-2 list-disc pl-5 text-[13px] leading-relaxed text-ink-soft/80">
+      <ul key={key} className="my-2 list-disc pl-5 text-[13px] leading-relaxed text-fg">
         {list.map((item, i) => (
           <li key={i}>{inline(item)}</li>
         ))}
@@ -193,7 +193,7 @@ function MarkdownPreview({ source }: { source: string }) {
       list.push(line.replace(/^[-*]\s+/, ''));
     } else {
       flushList(`l-${index}`);
-      blocks.push(<p key={index} className="my-1.5 text-[13px] leading-relaxed text-ink-soft/80">{inline(line)}</p>);
+      blocks.push(<p key={index} className="my-1.5 text-[13px] leading-relaxed text-fg">{inline(line)}</p>);
     }
   });
   flushList('l-end');

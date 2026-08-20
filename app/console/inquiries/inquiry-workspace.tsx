@@ -105,8 +105,8 @@ export default function InquiryWorkspace({
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
       {/* ---------- 좌: 큐 ---------- */}
-      <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white lg:sticky lg:top-6 lg:max-h-[calc(100vh-9rem)]">
-        <div className="border-b border-ink/[0.07] p-3">
+      <aside className="flex min-h-0 flex-col overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white lg:sticky lg:top-6 lg:max-h-[calc(100vh-9rem)]">
+        <div className="border-b border-hairline p-3">
           <div className="grid grid-cols-2 gap-1">
             {(
               [
@@ -121,7 +121,7 @@ export default function InquiryWorkspace({
                 type="button"
                 onClick={() => setFilter(key)}
                 className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${FOCUS} ${
-                  filter === key ? 'bg-signal text-white' : 'text-ink-soft/60 hover:bg-paper'
+                  filter === key ? 'bg-signal text-white' : 'text-fg-secondary hover:bg-paper'
                 }`}
               >
                 {label} {n > 0 && <span className="font-mono">{n}</span>}
@@ -144,7 +144,7 @@ export default function InquiryWorkspace({
                 <div className="flex items-center gap-1.5">
                   <PriorityBadge priority={q.priority} />
                   {q.category && (
-                    <span className="rounded border border-ink/10 bg-paper px-1 py-0.5 font-mono text-[9px] text-ink-soft/50">
+                    <span className="rounded border border-hairline bg-paper px-1 py-0.5 font-mono text-[9px] text-fg-muted">
                       {CATEGORY_LABEL[q.category] ?? q.category}
                     </span>
                   )}
@@ -153,7 +153,7 @@ export default function InquiryWorkspace({
                   </span>
                 </div>
                 <p className="mt-1 truncate text-xs font-medium text-ink">{q.subject}</p>
-                <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-ink-soft/55">{q.body}</p>
+                <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-fg-muted">{q.body}</p>
                 {q.assigneeName && <p className="mt-1 font-mono text-[9px] text-brand-600">@{q.assigneeName}</p>}
               </button>
             );
@@ -171,7 +171,7 @@ export default function InquiryWorkspace({
             currentUserId={currentUserId}
           />
         ) : (
-          <div className="rounded-2xl border border-ink/10 bg-white">
+          <div className="rounded-[var(--radius-panel)] border border-hairline bg-white">
             <EmptyState title="문의가 없습니다" sub="새 문의가 들어오면 왼쪽 목록에 나타납니다." />
           </div>
         )}
@@ -199,7 +199,7 @@ function InquiryDetail({
   return (
     <div className="space-y-4">
       {/* 헤더 + 트리아지 */}
-      <div className="rounded-2xl border border-ink/10 bg-white p-5">
+      <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge
             label={item.status === 'open' ? '미답변' : item.status === 'answered' ? '답변됨' : '보관'}
@@ -208,7 +208,7 @@ function InquiryDetail({
           <PriorityBadge priority={item.priority} />
           <h2 className="min-w-0 flex-1 truncate text-lg font-bold text-ink">{item.subject}</h2>
         </div>
-        <p className="mt-1 font-mono text-[11px] text-ink-soft/45">
+        <p className="mt-1 font-mono text-[11px] text-fg-muted">
           {item.contact} · 접수 {new Date(item.createdAt).toLocaleString('ko-KR')}
           {item.firstResponseAt && ` · 첫 응답 ${new Date(item.firstResponseAt).toLocaleString('ko-KR')}`}
         </p>
@@ -240,7 +240,7 @@ function InquiryDetail({
                 </option>
               ))}
             </select>
-            <button className="rounded-lg border border-ink/15 px-2 py-1 text-[11px] text-ink-soft/70 hover:border-ink/40">
+            <button className="rounded-lg border border-ink/15 px-2 py-1 text-[11px] text-fg-secondary hover:border-ink/40">
               분류 저장
             </button>
           </form>
@@ -261,7 +261,7 @@ function InquiryDetail({
                 </option>
               ))}
             </select>
-            <button className="rounded-lg border border-ink/15 px-2 py-1 text-[11px] text-ink-soft/70 hover:border-ink/40">
+            <button className="rounded-lg border border-ink/15 px-2 py-1 text-[11px] text-fg-secondary hover:border-ink/40">
               지정
             </button>
           </form>
@@ -285,17 +285,17 @@ function InquiryDetail({
       </div>
 
       {/* 문의 본문 */}
-      <section className="rounded-2xl border border-ink/10 bg-white p-5">
-        <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">문의 내용</h3>
-        <p className="whitespace-pre-wrap rounded-xl bg-paper/50 px-4 py-3 text-sm leading-relaxed text-ink-soft/80">
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+        <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">문의 내용</h3>
+        <p className="whitespace-pre-wrap rounded-xl bg-paper/50 px-4 py-3 text-sm leading-relaxed text-fg">
           {item.body}
         </p>
       </section>
 
       {/* 답변 */}
-      <section className="rounded-2xl border border-ink/10 bg-white p-5">
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">답변</h3>
+          <h3 className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">답변</h3>
           {item.answer && !editing && (
             <button type="button" onClick={() => setEditing(true)} className={BTN_NEUTRAL}>
               답변 수정
@@ -305,11 +305,11 @@ function InquiryDetail({
 
         {!editing && item.answer ? (
           <>
-            <p className="whitespace-pre-wrap rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3 text-sm leading-relaxed text-ink-soft/85">
+            <p className="whitespace-pre-wrap rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3 text-sm leading-relaxed text-fg">
               {item.answer}
             </p>
             {item.answeredByName && (
-              <p className="mt-1.5 font-mono text-[11px] text-ink-soft/40">답변자 {item.answeredByName}</p>
+              <p className="mt-1.5 font-mono text-[11px] text-fg-quiet">답변자 {item.answeredByName}</p>
             )}
           </>
         ) : (
@@ -326,7 +326,7 @@ function InquiryDetail({
             />
 
 
-            <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs text-ink-soft/70">
+            <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs text-fg-secondary">
               <input
                 type="checkbox"
                 name="notify"
@@ -337,7 +337,7 @@ function InquiryDetail({
               <span>
                 답변 저장 시 회신 메일 보내기
                 {!item.canEmail && (
-                  <span className="ml-1 text-ink-soft/40">— 회신 가능한 주소가 없어 보낼 수 없습니다</span>
+                  <span className="ml-1 text-fg-quiet">— 회신 가능한 주소가 없어 보낼 수 없습니다</span>
                 )}
               </span>
             </label>

@@ -48,12 +48,12 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
   const ready = Boolean(userId) && valid && memo.trim().length >= 4 && (after == null || after >= 0);
 
   return (
-    <form action={formAction} className="space-y-4 rounded-2xl border border-ink/10 bg-white p-5">
+    <form action={formAction} className="space-y-4 rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
       <input type="hidden" name="userId" value={userId} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="min-w-0">
-          <label htmlFor="grant-search" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+          <label htmlFor="grant-search" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
             대상 계정
           </label>
           <input
@@ -64,9 +64,9 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
             placeholder="이름·역할로 찾기"
             className={`${FIELD} mb-2`}
           />
-          <div className="max-h-48 divide-y divide-ink/5 overflow-y-auto rounded-xl border border-ink/10">
+          <div className="max-h-48 divide-y divide-ink/5 overflow-y-auto rounded-xl border border-hairline">
             {filtered.length === 0 && (
-              <p className="px-3 py-6 text-center text-xs text-ink-soft/45">해당하는 계정이 없습니다.</p>
+              <p className="px-3 py-6 text-center text-xs text-fg-muted">해당하는 계정이 없습니다.</p>
             )}
             {filtered.map((t) => (
               <label
@@ -83,8 +83,8 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
                   className="h-4 w-4 accent-[#1800AC]"
                 />
                 <span className="min-w-0 flex-1 truncate text-ink">{t.name}</span>
-                <span className="shrink-0 font-mono text-[10px] text-ink-soft/45">{t.role}</span>
-                <span className="shrink-0 font-mono text-[11px] text-ink-soft/60">
+                <span className="shrink-0 font-mono text-[10px] text-fg-muted">{t.role}</span>
+                <span className="shrink-0 font-mono text-[11px] text-fg-secondary">
                   {t.balance.toLocaleString()}P
                 </span>
               </label>
@@ -94,7 +94,7 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
 
         <div className="space-y-3">
           <div>
-            <label htmlFor="grant-amount" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="grant-amount" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               포인트 (음수면 차감)
             </label>
             <input
@@ -112,7 +112,7 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
                   key={p.amount}
                   type="button"
                   onClick={() => setAmount(String(p.amount))}
-                  className={`rounded-lg border border-ink/15 px-2.5 py-1 text-[11px] text-ink-soft/70 hover:border-brand-300 hover:text-brand-700 ${FOCUS}`}
+                  className={`rounded-lg border border-ink/15 px-2.5 py-1 text-[11px] text-fg-secondary hover:border-brand-300 hover:text-brand-700 ${FOCUS}`}
                 >
                   {p.label}
                 </button>
@@ -121,7 +121,7 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
           </div>
 
           <div>
-            <label htmlFor="grant-memo" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="grant-memo" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               사유 (필수 · 원장에 그대로 남습니다)
             </label>
             <input
@@ -135,8 +135,8 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
           </div>
 
           {selected && valid && (
-            <div className="rounded-xl border border-ink/10 bg-paper/40 px-3 py-2.5 text-xs">
-              <p className="text-ink-soft/70">
+            <div className="rounded-xl border border-hairline bg-paper/40 px-3 py-2.5 text-xs">
+              <p className="text-fg-secondary">
                 <strong className="text-ink">{selected.name}</strong> · {selected.balance.toLocaleString()}P →{' '}
                 <strong className={after != null && after < 0 ? 'text-rose-600' : 'text-ink'}>
                   {after?.toLocaleString()}P

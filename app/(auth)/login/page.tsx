@@ -26,11 +26,11 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
           </h1>
         </div>
 
-        <div className="bg-white rounded-xl border border-ink/10 shadow-sm p-8">
+        <div className="bg-white rounded-xl border border-hairline shadow-sm p-8">
           <LoginForm oauthError={typeof oauthError === 'string' ? oauthError : undefined} />
         </div>
 
-        <p className="mt-6 text-center text-sm text-ink-soft/60">
+        <p className="mt-6 text-center text-sm text-fg-secondary">
           아직 계정이 없나요?{' '}
           <Link href="/signup" className="font-semibold text-ink-soft underline underline-offset-4 hover:text-signal transition-colors">
             회원가입

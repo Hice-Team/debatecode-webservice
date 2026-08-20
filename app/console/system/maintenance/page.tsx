@@ -42,7 +42,7 @@ export default async function MaintenancePage() {
 
       <div className="mt-10">
         <SectionHeader title="점검 이력" sub="최근 10건 — 켠 사람과 시각이 남습니다." />
-        <div className="divide-y divide-ink/5 rounded-2xl border border-ink/10 bg-white">
+        <div className="divide-y divide-ink/5 rounded-[var(--radius-panel)] border border-hairline bg-white">
           {history.length === 0 && <EmptyRow text="점검 모드를 사용한 이력이 없습니다." />}
           {history.map((entry) => (
             <div key={entry.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
@@ -55,8 +55,8 @@ export default async function MaintenancePage() {
               >
                 {auditActionLabel(entry.action)}
               </span>
-              <span className="min-w-0 flex-1 truncate text-sm text-ink-soft/75">{entry.summary}</span>
-              <span className="shrink-0 font-mono text-[11px] text-ink-soft/45">
+              <span className="min-w-0 flex-1 truncate text-sm text-fg">{entry.summary}</span>
+              <span className="shrink-0 font-mono text-[11px] text-fg-muted">
                 {entry.actorName} · {entry.createdAt.toLocaleString('ko-KR')}
               </span>
             </div>

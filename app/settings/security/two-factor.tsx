@@ -187,33 +187,33 @@ export default function TwoFactor({
       {/* 복구 이메일 — 코드 확인을 거쳐야 저장된다(app/settings/security/recovery-email.tsx) */}
       <RecoveryEmail current={initialEmail ?? null} verifiedAt={recoveryVerifiedAt ?? null} />
 
-      <div className="rounded-xl border border-ink/10 bg-white p-4">
+      <div className="rounded-xl border border-hairline bg-white p-4">
         <div className="flex flex-wrap items-center gap-2">
           <h4 className="font-semibold">인증 앱 (TOTP)</h4>
           <span
             className={`rounded border px-1.5 py-0.5 font-mono text-[10px] ${
               enabled
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                : 'border-ink/10 bg-paper/60 text-ink-soft/50'
+                : 'border-hairline bg-paper/60 text-fg-muted'
             }`}
           >
             {enabled ? '사용 중' : '꺼짐'}
           </span>
         </div>
-        <p className="mt-1 text-sm text-ink-soft/60">앱에서 QR 코드를 스캔하고 생성된 코드를 입력하면 2단계 인증이 활성화됩니다.</p>
+        <p className="mt-1 text-sm text-fg-secondary">앱에서 QR 코드를 스캔하고 생성된 코드를 입력하면 2단계 인증이 활성화됩니다.</p>
         <div className="mt-3 flex items-center gap-3">
           <button onClick={beginSetup} disabled={provisioning} className="px-3 py-2 rounded bg-brand-600 text-white">{provisioning ? '생성 중…' : '설정 시작'}</button>
-          <span className="text-sm text-ink-soft/60">이미 등록된 경우 새로 발급하면 이전 앱의 등록은 무효화됩니다.</span>
+          <span className="text-sm text-fg-secondary">이미 등록된 경우 새로 발급하면 이전 앱의 등록은 무효화됩니다.</span>
         </div>
 
         {qrDataUrl && (
           <div className="mt-4 flex flex-wrap items-start gap-4">
             {/* eslint-disable-next-line @next/next/no-img-element -- data: URL이라 최적화 대상이 아니다 */}
-            <img src={qrDataUrl} alt="TOTP 등록용 QR 코드" width={200} height={200} className="rounded-lg border border-ink/10" />
+            <img src={qrDataUrl} alt="TOTP 등록용 QR 코드" width={200} height={200} className="rounded-lg border border-hairline" />
             <div className="min-w-[16rem] flex-1">
-              <p className="font-mono text-xs text-ink-soft/60">스캔 후 생성된 6자리 코드를 입력하세요.</p>
+              <p className="font-mono text-xs text-fg-secondary">스캔 후 생성된 6자리 코드를 입력하세요.</p>
               {secret && (
-                <p className="mt-1.5 break-all rounded bg-paper/60 px-2 py-1 font-mono text-[10px] text-ink-soft/55">
+                <p className="mt-1.5 break-all rounded bg-paper/60 px-2 py-1 font-mono text-[10px] text-fg-muted">
                   QR을 못 찍는다면 이 키를 앱에 직접 입력: {secret}
                 </p>
               )}
@@ -239,35 +239,35 @@ export default function TwoFactor({
       </div>
 
       {/* 보안키 — 등록 함수는 있는데 부르는 버튼이 없어서 그동안 쓸 수 없었다 */}
-      <div className="rounded-xl border border-ink/10 bg-white p-4">
+      <div className="rounded-xl border border-hairline bg-white p-4">
         <div className="flex flex-wrap items-center gap-2">
           <h4 className="font-semibold">보안키 (WebAuthn)</h4>
           <span
             className={`rounded border px-1.5 py-0.5 font-mono text-[10px] ${
               keys.length > 0
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                : 'border-ink/10 bg-paper/60 text-ink-soft/50'
+                : 'border-hairline bg-paper/60 text-fg-muted'
             }`}
           >
             {keys.length > 0 ? `${keys.length}개 등록됨` : '없음'}
           </span>
         </div>
-        <p className="mt-1 text-sm text-ink-soft/60">
+        <p className="mt-1 text-sm text-fg-secondary">
           지문·얼굴 인식이나 하드웨어 키(YubiKey 등)로 로그인합니다. 코드를 옮겨 적을 필요가 없고, 피싱 사이트에서는
           아예 동작하지 않습니다.
         </p>
 
         {keys.length > 0 && (
-          <ul className="mt-3 divide-y divide-ink/5 rounded-lg border border-ink/10">
+          <ul className="mt-3 divide-y divide-ink/5 rounded-lg border border-hairline">
             {keys.map((key) => (
               <li key={key.id} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
                 <span className="min-w-0 flex-1 truncate">{key.name || '이름 없는 키'}</span>
-                <span className="font-mono text-[10px] text-ink-soft/40">
+                <span className="font-mono text-[10px] text-fg-quiet">
                   {new Date(key.createdAt).toLocaleDateString('ko-KR')}
                 </span>
                 <form action={deleteWebauthnKey}>
                   <input type="hidden" name="id" value={key.id} />
-                  <button className="rounded border border-ink/15 px-2 py-1 text-xs text-ink-soft/70 hover:border-rose-300 hover:text-rose-700">
+                  <button className="rounded border border-ink/15 px-2 py-1 text-xs text-fg-secondary hover:border-rose-300 hover:text-rose-700">
                     삭제
                   </button>
                 </form>

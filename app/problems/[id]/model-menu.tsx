@@ -67,7 +67,7 @@ export default function ModelMenu({
         aria-label="debateAI 모델 선택"
         title={`${current.label} · ${TIER_LABELS[current.tier]} · Effort ${EFFORT_LABELS_EN[effort]}`}
         className={`flex h-7 min-w-0 items-center gap-1.5 rounded-full px-2 text-[11px] font-medium transition-colors disabled:opacity-40 ${
-          open ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/[0.07] hover:text-white/80'
+          open ? 'bg-white/10 text-white' : 'text-fg-on-dark-muted hover:bg-white/[0.07] hover:text-fg-on-dark'
         }`}
       >
         <span
@@ -92,16 +92,16 @@ export default function ModelMenu({
         >
           {groupedModels().map((group) => (
             <div key={group.tier} className="py-0.5">
-              <p className="border-b border-white/[0.06] px-3 pb-1.5 pt-2 font-mono text-[9px] uppercase tracking-wider text-white/30">
+              <p className="border-b border-white/[0.06] px-3 pb-1.5 pt-2 font-mono text-[9px] uppercase tracking-wider text-fg-on-dark-quiet">
                 {TIER_LABELS[group.tier]}
-                <span className="ml-1 normal-case tracking-normal text-white/20">{TIER_NOTES[group.tier]}</span>
+                <span className="ml-1 normal-case tracking-normal text-fg-on-dark-quiet">{TIER_NOTES[group.tier]}</span>
               </p>
               {/* 티어 안을 다시 기능별로 나눈다 — 이름만 열세 개 늘어놓으면 고를 수 없다 */}
               {groupByRole(group.models).map((sub) => (
                 <div key={sub.role ?? 'etc'}>
                   {sub.role && (
                     <p
-                      className="px-3 pb-0.5 pt-2 text-[10px] font-semibold text-white/45"
+                      className="px-3 pb-0.5 pt-2 text-[10px] font-semibold text-fg-on-dark-muted"
                       title={ROLE_NOTES[sub.role]}
                     >
                       {ROLE_LABELS[sub.role]}
@@ -127,11 +127,11 @@ export default function ModelMenu({
                         } ${selected ? 'bg-signal/15' : ''}`}
                       >
                         <span
-                          className={`truncate text-[12px] ${selected ? 'font-semibold text-brand-200' : 'text-white/80'}`}
+                          className={`truncate text-[12px] ${selected ? 'font-semibold text-brand-200' : 'text-fg-on-dark'}`}
                         >
                           {model.label}
                         </span>
-                        <span className="ml-auto shrink-0 font-mono text-[9px] text-white/25">{model.vendor}</span>
+                        <span className="ml-auto shrink-0 font-mono text-[9px] text-fg-on-dark-quiet">{model.vendor}</span>
                       </button>
                     );
                   })}
@@ -146,7 +146,7 @@ export default function ModelMenu({
 
           {/* 못 고르는 모델이 왜 잠겨 있는지 — 목록 끝에 한 번만 적는다 */}
           {!access.hasOwnKey && (
-            <p className="mx-1.5 mt-1 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-[10px] leading-relaxed text-white/35">
+            <p className="mx-1.5 mt-1 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-[10px] leading-relaxed text-fg-on-dark-quiet">
               설정 → 서비스에서 내 API 키를 등록하면 상용 모델(ChatGPT · Claude · Gemini · Grok · Perplexity)을 쓸 수
               있습니다.
             </p>

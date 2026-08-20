@@ -71,7 +71,7 @@ export default function SolveSetupGate({
         <header>
           <Link
             href={backHref}
-            className="mb-3 inline-block text-[11px] text-white/40 transition-colors hover:text-white/70"
+            className="mb-3 inline-block text-[11px] text-fg-on-dark-quiet transition-colors hover:text-fg-on-dark-secondary"
           >
             ← {t('back', uiLang)}
           </Link>
@@ -79,7 +79,7 @@ export default function SolveSetupGate({
           <h2 className="mt-1 text-2xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             {t('setup-title', uiLang)}
           </h2>
-          <p className="mt-1.5 text-sm text-white/55">
+          <p className="mt-1.5 text-sm text-fg-on-dark-muted">
             {problemTitle} — {t('setup-desc', uiLang)}
           </p>
         </header>
@@ -111,7 +111,7 @@ export default function SolveSetupGate({
           {/* 제한 시간 — 엄격모드에서만 의미가 있어 고를 때만 펼친다 */}
           {draft.timerMode === 'strict' && (
             <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-              <span className="text-xs text-white/60">{t('setup-limit', uiLang)}</span>
+              <span className="text-xs text-fg-on-dark-secondary">{t('setup-limit', uiLang)}</span>
               {STRICT_LIMIT_CHOICES.map((min) => (
                 <button
                   key={min}
@@ -121,7 +121,7 @@ export default function SolveSetupGate({
                   className={`rounded-lg px-3 py-1 text-[11px] font-semibold transition-colors ${
                     draft.limitMinutes === min
                       ? 'bg-signal text-white'
-                      : 'border border-white/15 text-white/55 hover:border-white/35 hover:text-white'
+                      : 'border border-white/15 text-fg-on-dark-muted hover:border-white/35 hover:text-white'
                   }`}
                 >
                   {min}
@@ -212,7 +212,7 @@ export default function SolveSetupGate({
 function SectionTitle({ step, title }: { step: number; title: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="grid h-5 w-5 place-items-center rounded-full bg-white/10 font-mono text-[10px] text-white/60">
+      <span className="grid h-5 w-5 place-items-center rounded-full bg-white/10 font-mono text-[10px] text-fg-on-dark-secondary">
         {step}
       </span>
       <h3 className="text-sm font-bold text-white">{title}</h3>
@@ -256,7 +256,7 @@ function ChoiceCard({
         {title}
         {locked && <span className="text-[10px]">🔒</span>}
       </p>
-      <p className="mt-1 text-[11.5px] leading-relaxed text-white/50">{locked && lockHint ? lockHint : desc}</p>
+      <p className="mt-1 text-[11.5px] leading-relaxed text-fg-on-dark-muted">{locked && lockHint ? lockHint : desc}</p>
     </button>
   );
 }

@@ -109,7 +109,7 @@ function EditCommentForm({ comment, onDone }: { comment: CommentNode; onDone: ()
       {state.errors?.content && <p className="text-xs text-rose-600">{state.errors.content[0]}</p>}
       {state.errors?.form && <p className="text-xs text-rose-600">{state.errors.form[0]}</p>}
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onDone} className="px-3 py-1.5 text-xs font-medium text-ink-soft/50 hover:text-ink-soft">
+        <button type="button" onClick={onDone} className="px-3 py-1.5 text-xs font-medium text-fg-muted hover:text-ink-soft">
           {t('cancel', language)}
         </button>
         <button
@@ -163,23 +163,23 @@ function CommentItem({
                 {t('adopted-answer', language)}
               </span>
             )}
-            <span className="font-mono text-[11px] text-ink-soft/40" title={new Date(node.createdAt).toLocaleString(language === 'en' ? 'en-US' : 'ko-KR')}>
+            <span className="font-mono text-[11px] text-fg-quiet" title={new Date(node.createdAt).toLocaleString(language === 'en' ? 'en-US' : 'ko-KR')}>
               {timeAgo(node.createdAt, language)}
             </span>
-            {node.updatedAt && <span className="font-mono text-[10px] text-ink-soft/30">{t('comment-edited', language)}</span>}
+            {node.updatedAt && <span className="font-mono text-[10px] text-fg-quiet">{t('comment-edited', language)}</span>}
           </p>
 
           {/* 본문 */}
           {editing ? (
             <EditCommentForm comment={node} onDone={() => setEditing(false)} />
           ) : (
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-snug text-ink-soft/85">{node.content}</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm leading-snug text-fg">{node.content}</p>
           )}
 
           {/* 액션 로우 — 답글 · 수정 · 삭제 · 신고.
               모두 같은 크기의 글자 버튼으로 두고, 눌리는 영역만 배경으로 넓힌다 */}
           {!editing && (
-            <div className="-ml-1 mt-1 flex flex-wrap items-center gap-1 text-[11px] font-medium text-ink-soft/45 [&_button]:rounded-md [&_button]:px-1 [&_button]:py-0.5 [&_button]:transition-colors">
+            <div className="-ml-1 mt-1 flex flex-wrap items-center gap-1 text-[11px] font-medium text-fg-muted [&_button]:rounded-md [&_button]:px-1 [&_button]:py-0.5 [&_button]:transition-colors">
               {currentUserId && replyPermission.allowed && (
                 <button type="button" onClick={() => setReplying((v) => !v)} className="text-brand-600/80 hover:bg-brand-50 hover:text-brand-600">
                   {replying ? t('comment-reply-cancel', language) : t('comment-reply', language)}
@@ -214,7 +214,7 @@ function CommentItem({
               )}
               {!isMine && currentUserId && <ReportButton targetType="comment" targetId={node.id} />}
               {node.replies.length > 0 && (
-                <span className="ml-auto pr-1 font-mono text-[10px] text-ink-soft/35">
+                <span className="ml-auto pr-1 font-mono text-[10px] text-fg-quiet">
                   {t('comment-replies-count', language)} {node.replies.length}
                 </span>
               )}
@@ -255,7 +255,7 @@ function CommentItem({
               </ul>
 
               {node.replies.length > 3 && (
-                <div className="mt-2 flex items-center gap-2 text-xs text-ink-soft/50">
+                <div className="mt-2 flex items-center gap-2 text-xs text-fg-muted">
                   <button
                     type="button"
                     onClick={() => setShowAllReplies((v) => !v)}
@@ -293,19 +293,26 @@ export default function CommentSection({
       </h2>
 
       {!currentUserId ? (
-        <p className="border-t border-ink/10 pt-4 text-sm text-ink-soft/40">
+        <p className="border-t border-hairline pt-4 text-sm text-fg-quiet">
           {t('comment-login-required', language)}
         </p>
       ) : replyPermission.allowed ? (
         <CommentForm postId={postId} />
       ) : (
-        <p className="border-l-2 border-ink/15 pl-3 text-sm text-ink-soft/50">
-          {t(replyPermission.reason === 'adopted' ? 'reply-locked-adopted' : 'reply-verified-only', language)}
+        <p className="border-l-2 border-ink/15 pl-3 text-sm text-fg-muted">
+          {t(
+            replyPermission.reason === 'adopted'
+              ? 'reply-locked-adopted'
+              : replyPermission.reason === 'admin-only'
+                ? 'reply-admin-only'
+                : 'reply-verified-only',
+            language,
+          )}
         </p>
       )}
 
       {comments.length > 0 ? (
-        <ul className="mt-5 space-y-5 border-t border-ink/10 pt-5">
+        <ul className="mt-5 space-y-5 border-t border-hairline pt-5">
           {comments.map((node) => (
             <CommentItem
               key={node.id}
@@ -321,7 +328,7 @@ export default function CommentSection({
           ))}
         </ul>
       ) : (
-        <p className="mt-4 text-sm text-ink-soft/40">{t('comment-empty', language)}</p>
+        <p className="mt-4 text-sm text-fg-quiet">{t('comment-empty', language)}</p>
       )}
     </div>
   );

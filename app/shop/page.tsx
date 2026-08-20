@@ -74,7 +74,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         <div>
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">DEBATE SHOP</p>
           <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">디베이트샵</h1>
-          <p className="mt-1 text-sm text-ink-soft/55">모은 포인트로 기프티콘을 교환하세요. 1,000P = 1,000원</p>
+          <p className="mt-1 text-sm text-fg-muted">모은 포인트로 기프티콘을 교환하세요. 1,000P = 1,000원</p>
         </div>
 
         {session ? (
@@ -97,7 +97,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 
       {/* ---------- 상점 구분 ---------- */}
       {scopes.length > 1 && (
-        <nav aria-label="상점 구분" className="dc-scroll-none mt-6 flex gap-1 overflow-x-auto border-b border-ink/10">
+        <nav aria-label="상점 구분" className="dc-scroll-none mt-6 flex gap-1 overflow-x-auto border-b border-hairline">
           {scopes.map((sc) => (
             <Link
               key={sc}
@@ -106,7 +106,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
               className={`-mb-px shrink-0 whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                 sc === scope
                   ? 'border-signal text-signal'
-                  : 'border-transparent text-ink-soft/60 hover:border-ink/20 hover:text-ink'
+                  : 'border-transparent text-fg-secondary hover:border-ink/20 hover:text-ink'
               }`}
             >
               {SHOP_SCOPE_LABELS[sc]}
@@ -117,14 +117,14 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 
       {/* ---------- 상품 진열 ---------- */}
       <section className="mt-8">
-        <h2 className="border-b border-ink/10 pb-3 font-display text-lg font-bold tracking-tight text-ink">
+        <h2 className="border-b border-hairline pb-3 font-display text-lg font-bold tracking-tight text-ink">
           {SHOP_SCOPE_LABELS[scope]}
-          <span className="ml-1.5 font-mono text-xs font-normal text-ink-soft/35">{products.length}</span>
+          <span className="ml-1.5 font-mono text-xs font-normal text-fg-quiet">{products.length}</span>
         </h2>
-        <p className="mt-2 text-[13px] text-ink-soft/55">{SHOP_SCOPE_DESC[scope]}</p>
+        <p className="mt-2 text-[13px] text-fg-muted">{SHOP_SCOPE_DESC[scope]}</p>
 
         {products.length === 0 ? (
-          <p className="mt-6 rounded-xl border border-dashed border-ink/15 px-4 py-16 text-center text-sm text-ink-soft/45">
+          <p className="mt-6 rounded-xl border border-dashed border-ink/15 px-4 py-16 text-center text-sm text-fg-muted">
             현재 교환 가능한 상품이 없습니다. 곧 새로운 상품이 등록됩니다.
           </p>
         ) : (
@@ -135,7 +135,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
                 <li key={product.id}>
                   <Link
                     href={`/shop/${product.id}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-xl border border-ink/10 bg-white transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lg hover:shadow-ink/5"
+                    className="group flex h-full flex-col overflow-hidden rounded-xl border border-hairline bg-white transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lg hover:shadow-ink/5"
                   >
                     <div className="relative aspect-[4/3] overflow-hidden bg-paper">
                       {product.imageUrl ? (
@@ -158,7 +158,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
                     </div>
 
                     <div className="flex flex-1 flex-col p-4">
-                      <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">{product.brand}</p>
+                      <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{product.brand}</p>
                       <p className="mt-1 line-clamp-2 text-sm font-semibold text-ink group-hover:text-signal">
                         {product.name}
                       </p>
@@ -166,7 +166,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
                         <span className="font-display text-lg font-bold text-signal">
                           {product.priceKrw.toLocaleString()}P
                         </span>
-                        <span className="font-mono text-[11px] text-ink-soft/35">
+                        <span className="font-mono text-[11px] text-fg-quiet">
                           {product.priceKrw.toLocaleString()}원
                         </span>
                       </div>
@@ -182,7 +182,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
       {/* ---------- 최근 교환 내역 ---------- */}
       {session && recentOrders.length > 0 && (
         <section className="mt-10">
-          <div className="flex items-baseline justify-between border-b border-ink/10 pb-3">
+          <div className="flex items-baseline justify-between border-b border-hairline pb-3">
             <h2 className="font-display text-lg font-bold tracking-tight text-ink">최근 교환 내역</h2>
             <Link href="/shop/orders" className="text-sm font-medium text-signal hover:underline">
               전체 보기 →
@@ -190,12 +190,12 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
           </div>
           <ul className="mt-1">
             {recentOrders.map((order) => (
-              <li key={order.id} className="flex items-center gap-3 border-b border-ink/[0.07] py-3 last:border-b-0">
+              <li key={order.id} className="flex items-center gap-3 border-b border-hairline py-3 last:border-b-0">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-ink">
                     {order.product.brand} {order.product.name}
                   </p>
-                  <p className="font-mono text-[11px] text-ink-soft/40">
+                  <p className="font-mono text-[11px] text-fg-quiet">
                     {order.createdAt.toLocaleDateString('ko-KR')} · {order.pointsSpent.toLocaleString()}P
                   </p>
                 </div>
@@ -204,7 +204,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
                     {order.couponCode}
                   </code>
                 )}
-                <span className="shrink-0 font-mono text-[11px] text-ink-soft/50">
+                <span className="shrink-0 font-mono text-[11px] text-fg-muted">
                   {ORDER_STATUS_LABELS[order.status] ?? order.status}
                 </span>
               </li>

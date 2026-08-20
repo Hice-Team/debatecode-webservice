@@ -39,8 +39,8 @@ const STEP_LABELS: Record<Step, string> = {
 };
 
 const inputClass =
-  'w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal';
-const labelClass = 'block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5';
+  'w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal';
+const labelClass = 'block font-mono text-xs text-fg-secondary tracking-wider mb-1.5';
 const primaryBtnClass =
   'w-full rounded-lg bg-brand-600 text-white font-semibold py-3 hover:bg-brand-500 transition-colors disabled:opacity-50 disabled:pointer-events-none';
 const errorTextClass = 'mt-1.5 text-xs text-rose-600';
@@ -74,13 +74,13 @@ function Stepper({ current }: { current: Step }) {
                     ? 'bg-signal text-white'
                     : active
                       ? 'bg-brand-600 text-white'
-                      : 'bg-ink/5 text-ink-soft/40 border border-ink/10'
+                      : 'bg-ink/5 text-fg-quiet border border-hairline'
                 }`}
               >
                 {done ? '✓' : String(i + 1).padStart(2, '0')}
               </span>
               <span
-                className={`text-[11px] ${active ? 'text-ink-soft font-semibold' : 'text-ink-soft/40'} hidden sm:block`}
+                className={`text-[11px] ${active ? 'text-ink-soft font-semibold' : 'text-fg-quiet'} hidden sm:block`}
               >
                 {STEP_LABELS[step]}
               </span>
@@ -90,7 +90,7 @@ function Stepper({ current }: { current: Step }) {
       </div>
       <div className="h-1 rounded-full bg-ink/5 overflow-hidden">
         <div
-          className="h-full rounded-full bg-signal transition-all duration-500 ease-out"
+          className="h-full rounded-full bg-signal transition-colors duration-500 ease-out"
           style={{ width: `${(currentIdx / (STEP_ORDER.length - 1)) * 100}%` }}
         />
       </div>
@@ -132,7 +132,7 @@ function ConsentStep({
     setMarketing(v);
   };
 
-  const rowClass = 'flex items-start gap-2.5 text-sm text-ink-soft/70 cursor-pointer';
+  const rowClass = 'flex items-start gap-2.5 text-sm text-fg-secondary cursor-pointer';
   const checkboxClass = 'mt-0.5 h-4 w-4 accent-[#4531d9]';
 
   return (
@@ -143,7 +143,7 @@ function ConsentStep({
         <h2 className="text-lg font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           약관에 동의해 주세요
         </h2>
-        <p className="mt-1 text-sm text-ink-soft/50">서비스 이용을 위해 필수 약관 동의가 필요합니다.</p>
+        <p className="mt-1 text-sm text-fg-muted">서비스 이용을 위해 필수 약관 동의가 필요합니다.</p>
       </div>
 
       <label className={`${rowClass} rounded-lg border border-ink/15 bg-paper/50 px-4 py-3 font-semibold text-ink-soft`}>
@@ -177,7 +177,7 @@ function ConsentStep({
             className={checkboxClass}
           />
           <span>
-            <span className="font-mono text-[11px] text-ink-soft/40 mr-1.5">[선택]</span>
+            <span className="font-mono text-[11px] text-fg-quiet mr-1.5">[선택]</span>
             새 문제·이벤트 등 마케팅 정보 수신에 동의합니다.
           </span>
         </label>
@@ -196,7 +196,7 @@ function ConsentStep({
       {allRequired ? (
         <OAuthButtons action={signupWithOAuth.bind(null, marketing)} heading="간편 가입" />
       ) : (
-        <p className="text-center text-xs text-ink-soft/40">
+        <p className="text-center text-xs text-fg-quiet">
           필수 약관에 동의하면 소셜 계정으로도 가입할 수 있습니다.
         </p>
       )}
@@ -223,7 +223,7 @@ function Chip({
       className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
         selected
           ? 'border-brand-600 bg-brand-600 text-white'
-          : 'border-ink/15 bg-white text-ink-soft/70 hover:border-ink/40'
+          : 'border-ink/15 bg-white text-fg-secondary hover:border-ink/40'
       }`}
     >
       {children}
@@ -268,7 +268,7 @@ function AccountStep({
         <h2 className="text-lg font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           계정 정보를 입력해 주세요
         </h2>
-        <p className="mt-1 text-sm text-ink-soft/50">
+        <p className="mt-1 text-sm text-fg-muted">
           {requiresPassword ? '로그인에 사용할 이메일·비밀번호와 기본 정보를 설정합니다.' : '서비스에서 사용할 기본 정보를 설정합니다.'}
         </p>
       </div>
@@ -316,7 +316,7 @@ function AccountStep({
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-ink-soft/50 hover:text-ink-soft"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-fg-muted hover:text-ink-soft"
                 >
                   {showPassword ? '숨기기' : '보기'}
                 </button>
@@ -421,7 +421,7 @@ function ProfileStep({ onSaved, onBack }: { onSaved: (nickname?: string) => void
         <h2 className="text-lg font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           거의 다 왔어요
         </h2>
-        <p className="mt-1 text-sm text-ink-soft/50">맞춤 문제와 면접 질문을 위해 몇 가지만 더 알려주세요.</p>
+        <p className="mt-1 text-sm text-fg-muted">맞춤 문제와 면접 질문을 위해 몇 가지만 더 알려주세요.</p>
       </div>
 
       <form action={formAction} className="space-y-6">
@@ -492,7 +492,7 @@ function ProfileStep({ onSaved, onBack }: { onSaved: (nickname?: string) => void
       <button
         type="button"
         onClick={onBack}
-        className="w-full text-center text-xs text-ink-soft/40 hover:text-ink-soft transition-colors"
+        className="w-full text-center text-xs text-fg-quiet hover:text-ink-soft transition-colors"
       >
         ← 계정 정보 수정
       </button>
@@ -511,7 +511,7 @@ function WelcomeStep({ nickname }: { nickname: string }) {
         <h2 className="mt-2 text-2xl font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           {nickname ? `${nickname}님, 환영합니다!` : '가입을 환영합니다!'}
         </h2>
-        <p className="mt-3 text-sm text-ink-soft/60 leading-relaxed">
+        <p className="mt-3 text-sm text-fg-secondary leading-relaxed">
           이제 문제를 풀고, DebateAI 면접관 앞에서
           <br />
           당신의 코드를 변호할 차례입니다.
@@ -524,7 +524,7 @@ function WelcomeStep({ nickname }: { nickname: string }) {
         </Link>
         <Link
           href="/dashboard"
-          className="block w-full rounded-lg border border-ink/15 bg-white py-3 text-sm font-medium text-ink-soft/70 hover:border-ink/40 transition-colors"
+          className="block w-full rounded-lg border border-ink/15 bg-white py-3 text-sm font-medium text-fg-secondary hover:border-ink/40 transition-colors"
         >
           나중에 하기 — 대시보드로 이동
         </Link>

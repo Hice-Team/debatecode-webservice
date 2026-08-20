@@ -20,7 +20,7 @@ export default async function DashboardPage() {
         <div className="border-b border-brand-100 bg-brand-50/70">
           <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-2.5 sm:px-8">
             <span className="hidden font-mono text-[10px] font-bold tracking-wider text-brand-600 sm:inline">ADMIN</span>
-            <p className="text-xs text-ink-soft/70">
+            <p className="text-xs text-fg-secondary">
               {roleLabel(user.role)} 권한으로 접속 중입니다. 운영 기능은 관리 콘솔에서 사용할 수 있어요.
             </p>
             <Link

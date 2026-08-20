@@ -27,7 +27,7 @@ export default function LikeButton({ postId, likeCount, likedByMe, loggedIn }: P
 
   if (!loggedIn) {
     return (
-      <span className="inline-flex h-10 items-center gap-1.5 rounded-full border border-ink/10 px-4 text-sm text-ink-soft/45">
+      <span className="inline-flex h-10 items-center gap-1.5 rounded-full border border-hairline px-4 text-sm text-fg-muted">
         <HeartIcon filled={false} />
         {likeCount}
       </span>
@@ -42,7 +42,7 @@ export default function LikeButton({ postId, likeCount, likedByMe, loggedIn }: P
       className={`inline-flex h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition active:scale-[0.96] ${
         optimistic.liked
           ? 'border-rose-200 bg-rose-50 text-rose-600'
-          : 'border-ink/15 bg-white text-ink-soft/60 hover:border-rose-200 hover:text-rose-500'
+          : 'border-ink/15 bg-white text-fg-secondary hover:border-rose-200 hover:text-rose-500'
       }`}
     >
       <HeartIcon filled={optimistic.liked} />

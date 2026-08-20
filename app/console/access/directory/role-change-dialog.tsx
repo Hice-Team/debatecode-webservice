@@ -54,9 +54,9 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
 
         <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-5">
           {!single && (
-            <div className="rounded-xl border border-ink/10 bg-paper/50 px-3 py-2.5">
-              <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">대상</p>
-              <p className="text-xs leading-relaxed text-ink-soft/75">
+            <div className="rounded-xl border border-hairline bg-paper/50 px-3 py-2.5">
+              <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-fg-muted">대상</p>
+              <p className="text-xs leading-relaxed text-fg">
                 {targets
                   .slice(0, 8)
                   .map((t) => `${t.name}(${roleLabel(t.role)})`)
@@ -67,13 +67,13 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
           )}
 
           <fieldset>
-            <legend className="mb-2 font-mono text-xs tracking-wider text-ink-soft/60">변경할 역할</legend>
+            <legend className="mb-2 font-mono text-xs tracking-wider text-fg-secondary">변경할 역할</legend>
             <div className="space-y-1.5">
               {ROLES.map((r) => (
                 <label
                   key={r}
                   className={`flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 transition-colors ${
-                    nextRole === r ? 'border-signal bg-brand-50/50' : 'border-ink/10 hover:border-ink/25'
+                    nextRole === r ? 'border-signal bg-brand-50/50' : 'border-hairline hover:border-ink/25'
                   }`}
                 >
                   <input
@@ -86,7 +86,7 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
                   />
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-ink">{ROLE_LABELS[r]}</span>
-                    <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-soft/55">
+                    <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">
                       {ROLE_DESCRIPTIONS[r]}
                     </span>
                   </span>
@@ -97,8 +97,8 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
 
           {/* 권한 변화 미리보기 — 역할 이름만으로는 알 수 없는 것을 보여 준다 */}
           {!unchanged && (diff.gained.length > 0 || diff.lost.length > 0) && (
-            <div className="rounded-xl border border-ink/10 bg-paper/40 p-3.5">
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+            <div className="rounded-xl border border-hairline bg-paper/40 p-3.5">
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                 이 변경으로 달라지는 권한
               </p>
               {diff.gained.length > 0 && (
@@ -128,13 +128,13 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
             </div>
           )}
           {unchanged && (
-            <p className="rounded-xl border border-ink/10 bg-paper/40 px-3 py-2.5 text-[11px] text-ink-soft/55">
+            <p className="rounded-xl border border-hairline bg-paper/40 px-3 py-2.5 text-[11px] text-fg-muted">
               현재와 같은 역할입니다. 다른 역할을 선택하세요.
             </p>
           )}
 
           <div>
-            <label htmlFor="role-reason" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="role-reason" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               변경 사유 (필수)
             </label>
             <input
@@ -147,7 +147,7 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
               placeholder="예: 운영팀 합류 / 활동 중단으로 권한 회수"
               className={FIELD}
             />
-            <p className="mt-1 text-[11px] text-ink-soft/50">
+            <p className="mt-1 text-[11px] text-fg-muted">
               감사 로그에 그대로 남습니다. 나중에 이 변경을 설명해야 할 사람이 읽습니다.
             </p>
           </div>
@@ -158,7 +158,7 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
         </div>
 
         <Footer>
-          <button type="button" onClick={onClose} className={`rounded-xl border border-ink/15 px-4 py-2 text-sm text-ink-soft/70 ${FOCUS}`}>
+          <button type="button" onClick={onClose} className={`rounded-xl border border-ink/15 px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}>
             취소
           </button>
           <button
@@ -198,15 +198,15 @@ export function Shell({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative w-[min(34rem,100%)] overflow-hidden rounded-2xl bg-white shadow-2xl shadow-black/30"
+        className="relative w-[min(34rem,100%)] overflow-hidden rounded-[var(--radius-panel)] bg-white shadow-2xl shadow-black/30"
       >
-        <div className="flex items-center justify-between border-b border-ink/10 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-hairline px-6 py-4">
           <h3 className="text-lg font-bold text-ink">{title}</h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="grid h-7 w-7 place-items-center rounded-full text-ink-soft/50 hover:bg-ink/5"
+            className="grid h-7 w-7 place-items-center rounded-full text-fg-muted hover:bg-ink/5"
           >
             ✕
           </button>
@@ -219,6 +219,6 @@ export function Shell({
 
 export function Footer({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-end gap-2 border-t border-ink/10 bg-paper/40 px-6 py-4">{children}</div>
+    <div className="flex items-center justify-end gap-2 border-t border-hairline bg-paper/40 px-6 py-4">{children}</div>
   );
 }

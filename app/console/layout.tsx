@@ -65,6 +65,8 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
 
     ...opt(has('marketing.send'), { href: '/console/marketing', labelKey: 'console-nav-marketing', icon: 'marketing', group: 'growth' }),
 
+    ...opt(has('ranking.manage'), { href: '/console/seasons', labelKey: 'console-nav-seasons', icon: 'season', group: 'system' }),
+    ...opt(has('feedback.read'), { href: '/console/ai-feedback', labelKey: 'console-nav-ai-feedback', icon: 'feedback', group: 'system' }),
     ...opt(has('setting.read'), { href: '/console/system', labelKey: 'console-nav-system', icon: 'system', group: 'system', exact: true }),
     ...opt(has('setting.write'), { href: '/console/system/settings', labelKey: 'console-nav-settings', icon: 'settings', group: 'system' }),
     ...opt(has('maintenance.toggle'), { href: '/console/system/maintenance', labelKey: 'console-nav-maintenance', icon: 'maintenance', group: 'system' }),

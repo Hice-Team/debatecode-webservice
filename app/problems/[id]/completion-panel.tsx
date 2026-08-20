@@ -27,12 +27,12 @@ export default function CompletionPanel({
   if (!correct) {
     return (
       <div className="absolute inset-0 z-20 grid place-items-center bg-ink/85 p-6 backdrop-blur-sm">
-        <div className="w-full max-w-md rounded-2xl border border-rose-500/30 bg-[#12141C] p-6 text-center">
+        <div className="w-full max-w-md rounded-[var(--radius-panel)] border border-rose-500/30 bg-[#12141C] p-6 text-center">
           <p className="text-4xl">🤔</p>
           <p className="mt-3 text-xl font-bold text-rose-300" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             Try again.
           </p>
-          <p className="mt-1.5 text-sm text-white/55">다시 한 번 확인해 보세요.</p>
+          <p className="mt-1.5 text-sm text-fg-on-dark-muted">다시 한 번 확인해 보세요.</p>
           <button
             type="button"
             onClick={onRetry}
@@ -49,12 +49,12 @@ export default function CompletionPanel({
   if (mode === 'signature') {
     return (
       <div className="absolute inset-0 z-20 grid place-items-center bg-ink/85 p-6 backdrop-blur-sm">
-        <div className="w-full max-w-md rounded-2xl border border-emerald-500/30 bg-[#12141C] p-6 text-center">
+        <div className="w-full max-w-md rounded-[var(--radius-panel)] border border-emerald-500/30 bg-[#12141C] p-6 text-center">
           <p className="text-4xl">🎉</p>
           <p className="mt-3 text-xl font-bold text-emerald-300" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             Correct!
           </p>
-          <p className="mt-1.5 text-sm text-white/60">문제를 해결했습니다.</p>
+          <p className="mt-1.5 text-sm text-fg-on-dark-secondary">문제를 해결했습니다.</p>
 
           <Link
             href={cta.href}
@@ -65,7 +65,7 @@ export default function CompletionPanel({
           <button
             type="button"
             onClick={onContinue}
-            className="mt-2 w-full rounded-xl border border-white/15 py-2.5 text-sm font-medium text-white/65 transition hover:border-white/35 hover:text-white"
+            className="mt-2 w-full rounded-xl border border-white/15 py-2.5 text-sm font-medium text-fg-on-dark-secondary transition hover:border-white/35 hover:text-white"
           >
             이 문제 계속 보기
           </button>
@@ -77,7 +77,7 @@ export default function CompletionPanel({
   // ---------- 디베이트 / 리팩토링: 면접형 ----------
   return (
     <div className="absolute inset-0 z-20 grid place-items-center overflow-y-auto bg-ink/85 p-6 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-emerald-500/30 bg-[#12141C] p-6">
+      <div className="w-full max-w-lg rounded-[var(--radius-panel)] border border-emerald-500/30 bg-[#12141C] p-6">
         <div className="text-center">
           <p className="text-3xl">✅</p>
           <p className="mt-2 text-xl font-bold text-emerald-300" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
@@ -97,7 +97,7 @@ export default function CompletionPanel({
         <button
           type="button"
           onClick={onContinue}
-          className="mt-2 w-full text-xs text-white/40 transition hover:text-white/70"
+          className="mt-2 w-full text-xs text-fg-on-dark-quiet transition hover:text-fg-on-dark-secondary"
         >
           이 문제 계속 보기
         </button>

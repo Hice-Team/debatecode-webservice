@@ -6,7 +6,7 @@ export default function ConsentPage() {
   return (
     <>
       <h1>개인정보 수집 및 이용 동의서</h1>
-      <p className="text-sm text-ink-soft/50">시행일: 2026년 8월 11일 · 이전 개정일: 2026년 8월 10일</p>
+      <p className="text-sm text-fg-muted">시행일: 2026년 8월 11일 · 이전 개정일: 2026년 8월 10일</p>
       <p>
         Debate Code(개인 운영, 비영리)는 회원가입 및 서비스 제공을 위해 아래와 같이 개인정보를 수집·이용합니다.
         <strong> 필수 항목</strong>과 <strong>선택 항목</strong>을 구분하여 동의받으며, 선택 항목에 동의하지 않아도
@@ -148,7 +148,7 @@ export default function ConsentPage() {
         방법은 <a href="/legal/privacy">개인정보처리방침</a> 제9조에 정리되어 있습니다.
       </p>
 
-      <p className="mt-8 text-sm text-ink-soft/50">
+      <p className="mt-8 text-sm text-fg-muted">
         회원가입 화면에서 본 동의서 및 서비스 이용약관, 개인정보처리방침에 대한 동의 절차를 통해 위 내용에 동의한
         것으로 처리됩니다. (필수/선택 동의는 각각 구분하여 표시됩니다.)
       </p>

@@ -20,15 +20,15 @@ export default function ProfileForm({ initial }: { initial: { name: string; avat
   return (
     <form action={formAction} className="space-y-6">
       <div className="flex items-center gap-4">
-        <Avatar src={preview || null} alt="아바타 미리보기" className="h-16 w-16 rounded-full border border-ink/10" />
+        <Avatar src={preview || null} alt="아바타 미리보기" className="h-16 w-16 rounded-full border border-hairline" />
         <div>
-          <label htmlFor="avatar" className="block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5">AVATAR</label>
+          <label htmlFor="avatar" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">AVATAR</label>
           <input id="avatar" name="avatar" type="file" accept="image/*" onChange={handleAvatarChange} className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-brand-600 file:text-white file:px-3 file:py-1.5 file:text-xs" />
         </div>
       </div>
 
       <div>
-        <label htmlFor="name" className="block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5">NAME</label>
+        <label htmlFor="name" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">NAME</label>
         <input
           id="name"
           name="name"
@@ -41,9 +41,9 @@ export default function ProfileForm({ initial }: { initial: { name: string; avat
       </div>
 
       {/* 랭크 배지 공개 — 글/답글의 배지와 명예의 전당 표시 이름이 함께 바뀐다 */}
-      <fieldset className="rounded-lg border border-ink/10 bg-paper/50 px-4 py-3">
-        <legend className="px-1 font-mono text-xs tracking-wider text-ink-soft/60">RANK BADGE</legend>
-        <p className="mb-2 text-xs text-ink-soft/55">
+      <fieldset className="rounded-lg border border-hairline bg-paper/50 px-4 py-3">
+        <legend className="px-1 font-mono text-xs tracking-wider text-fg-secondary">RANK BADGE</legend>
+        <p className="mb-2 text-xs text-fg-muted">
           커뮤니티 글과 답글에 내 등급 배지를 보여줄지 선택합니다.
         </p>
 
@@ -62,7 +62,7 @@ export default function ProfileForm({ initial }: { initial: { name: string; avat
           <label
             key={String(option.value)}
             className={`mt-1.5 flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
-              badgeVisible === option.value ? 'border-signal bg-brand-50/60' : 'border-ink/10 hover:border-brand-200'
+              badgeVisible === option.value ? 'border-signal bg-brand-50/60' : 'border-hairline hover:border-brand-200'
             }`}
           >
             <input
@@ -77,7 +77,7 @@ export default function ProfileForm({ initial }: { initial: { name: string; avat
             />
             <span>
               <span className="font-medium text-ink">{option.label}</span>
-              <span className="mt-0.5 block text-xs text-ink-soft/50">{option.desc}</span>
+              <span className="mt-0.5 block text-xs text-fg-muted">{option.desc}</span>
             </span>
           </label>
         ))}

@@ -12,7 +12,7 @@ import ShopSection from './shop-section';
 
 export const metadata: Metadata = { title: '디베이트메이트 활동 콘솔' };
 
-const CARD = 'rounded-2xl border border-ink/10 bg-white';
+const CARD = 'rounded-[var(--radius-panel)] border border-hairline bg-white';
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
@@ -21,7 +21,7 @@ function StatusBadge({ status }: { status: string }) {
     rejected: 'bg-rose-50 text-rose-600 border-rose-200',
     requested: 'bg-sky-50 text-sky-700 border-sky-200',
     fulfilled: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    canceled: 'bg-ink/[0.05] text-ink-soft/50 border-ink/10',
+    canceled: 'bg-ink/[0.05] text-fg-muted border-hairline',
     failed: 'bg-rose-50 text-rose-600 border-rose-200',
   };
   const labels: Record<string, string> = {
@@ -110,10 +110,10 @@ export default async function MateConsolePage() {
 
       {/* 포인트 현황 */}
       <section className={`${CARD} mb-6 overflow-hidden`} aria-labelledby="points-title">
-        <div className="border-b border-ink/[0.07] px-5 py-3">
+        <div className="border-b border-hairline px-5 py-3">
           <h2 id="points-title" className="font-bold text-ink">디베이트포인트 현황</h2>
         </div>
-        <div className="grid grid-cols-2 divide-x divide-y divide-ink/[0.07] sm:grid-cols-4 sm:divide-y-0">
+        <div className="grid grid-cols-2 divide-x divide-y divide-hairline sm:grid-cols-4 sm:divide-y-0">
           {[
             { label: '현재 포인트', value: summary.balance, tone: 'text-signal', hint: `${summary.balance.toLocaleString()}원 상당` },
             { label: '적립 예정', value: summary.pending, tone: 'text-amber-600', hint: '승인 대기 중' },
@@ -121,12 +121,12 @@ export default async function MateConsolePage() {
             { label: '누적 적립', value: summary.totalEarned, tone: 'text-ink', hint: `누적 사용 ${summary.totalSpent.toLocaleString()}P` },
           ].map((stat) => (
             <div key={stat.label} className="px-5 py-4">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">{stat.label}</p>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
               <p className={`mt-1 font-display text-2xl font-bold ${stat.tone}`}>
                 {stat.value.toLocaleString()}
-                <span className="ml-0.5 text-sm font-semibold text-ink-soft/35">P</span>
+                <span className="ml-0.5 text-sm font-semibold text-fg-quiet">P</span>
               </p>
-              <p className="mt-0.5 text-[11px] text-ink-soft/45">{stat.hint}</p>
+              <p className="mt-0.5 text-[11px] text-fg-muted">{stat.hint}</p>
             </div>
           ))}
         </div>
@@ -140,8 +140,8 @@ export default async function MateConsolePage() {
           { label: '검토 대기', value: pendingDrafts, warn: pendingDrafts > 0 },
           { label: 'debateQ 완료', value: debateQCount },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-ink/10 bg-white px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/40">{stat.label}</p>
+          <div key={stat.label} className="rounded-xl border border-hairline bg-white px-4 py-3">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
             <p className={`mt-1 font-display text-2xl font-bold ${stat.warn ? 'text-amber-600' : 'text-ink'}`}>{stat.value}</p>
           </div>
         ))}
@@ -150,14 +150,14 @@ export default async function MateConsolePage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* 내가 만든 문제 + 검토 현황 */}
         <section className={`${CARD} overflow-hidden`}>
-          <div className="flex items-center justify-between border-b border-ink/[0.07] px-5 py-3">
+          <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
             <h2 className="font-bold text-ink">내가 만든 문제</h2>
             <Link href="/console/drafts" className="font-mono text-[11px] text-brand-600 hover:underline">
               초안 관리 →
             </Link>
           </div>
           {drafts.length === 0 ? (
-            <p className="px-5 py-10 text-center text-sm text-ink-soft/45">
+            <p className="px-5 py-10 text-center text-sm text-fg-muted">
               아직 출제한 문제가 없습니다. 위의 <span className="font-semibold text-signal">문제 만들기</span>로 시작해 보세요.
             </p>
           ) : (
@@ -168,7 +168,7 @@ export default async function MateConsolePage() {
                     <span className="min-w-0 flex-1 truncate font-medium text-ink">{draft.title}</span>
                     <StatusBadge status={draft.status} />
                   </div>
-                  <p className="mt-0.5 font-mono text-[11px] text-ink-soft/40">
+                  <p className="mt-0.5 font-mono text-[11px] text-fg-quiet">
                     {draft.category} · {DIFFICULTY_LABELS[draft.difficulty] ?? ''} ·{' '}
                     {new Date(draft.createdAt).toLocaleDateString('ko-KR')}
                   </p>
@@ -183,22 +183,22 @@ export default async function MateConsolePage() {
 
         {/* 포인트 적립 내역 */}
         <section className={`${CARD} overflow-hidden`}>
-          <div className="border-b border-ink/[0.07] px-5 py-3">
+          <div className="border-b border-hairline px-5 py-3">
             <h2 className="font-bold text-ink">포인트 내역</h2>
           </div>
           {ledger.length === 0 ? (
-            <p className="px-5 py-10 text-center text-sm text-ink-soft/45">아직 적립 내역이 없습니다.</p>
+            <p className="px-5 py-10 text-center text-sm text-fg-muted">아직 적립 내역이 없습니다.</p>
           ) : (
             <ul className="divide-y divide-ink/5">
               {ledger.map((entry) => (
                 <li key={entry.id} className="flex items-center gap-3 px-5 py-2.5">
-                  <span className="w-12 shrink-0 font-mono text-[11px] text-ink-soft/40">
+                  <span className="w-12 shrink-0 font-mono text-[11px] text-fg-quiet">
                     {new Date(entry.createdAt).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-ink-soft/75">
+                  <span className="min-w-0 flex-1 truncate text-sm text-fg">
                     {entry.memo ?? POINT_KIND_LABELS[entry.kind] ?? entry.kind}
                   </span>
-                  <span className={`shrink-0 font-mono text-sm font-semibold ${entry.amount > 0 ? 'text-emerald-600' : 'text-ink-soft/60'}`}>
+                  <span className={`shrink-0 font-mono text-sm font-semibold ${entry.amount > 0 ? 'text-emerald-600' : 'text-fg-secondary'}`}>
                     {entry.amount > 0 ? '+' : ''}
                     {entry.amount.toLocaleString()}P
                   </span>
@@ -211,9 +211,9 @@ export default async function MateConsolePage() {
 
       {/* SNS 홍보 인증 신청 */}
       <section className={`${CARD} mt-6 overflow-hidden`}>
-        <div className="border-b border-ink/[0.07] px-5 py-3">
+        <div className="border-b border-hairline px-5 py-3">
           <h2 className="font-bold text-ink">SNS 홍보 활동 인증</h2>
-          <p className="mt-0.5 text-xs text-ink-soft/55">
+          <p className="mt-0.5 text-xs text-fg-muted">
             SNS 게시판에 올린 홍보 글을 골라 신청하면 운영진 검토 후 포인트가 지급됩니다.
           </p>
         </div>
@@ -229,21 +229,21 @@ export default async function MateConsolePage() {
         </div>
 
         {requests.length > 0 && (
-          <ul className="divide-y divide-ink/5 border-t border-ink/[0.07]">
+          <ul className="divide-y divide-ink/5 border-t border-hairline">
             {requests.map((request) => {
               const payload = request.payload as { title?: string; platform?: string };
               return (
                 <li key={request.id} className="flex items-center gap-3 px-5 py-3">
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm text-ink-soft/80">{payload?.title ?? 'SNS 홍보'}</span>
-                    <span className="font-mono text-[11px] text-ink-soft/40">
+                    <span className="block truncate text-sm text-fg">{payload?.title ?? 'SNS 홍보'}</span>
+                    <span className="font-mono text-[11px] text-fg-quiet">
                       {platformLabel(payload?.platform)} · {new Date(request.createdAt).toLocaleDateString('ko-KR')}
                     </span>
                     {request.status === 'rejected' && request.reviewNote && (
                       <span className="mt-1 block rounded-lg bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">{request.reviewNote}</span>
                     )}
                   </span>
-                  <span className="shrink-0 font-mono text-xs text-ink-soft/50">+{request.amount}P</span>
+                  <span className="shrink-0 font-mono text-xs text-fg-muted">+{request.amount}P</span>
                   <StatusBadge status={request.status} />
                 </li>
               );
