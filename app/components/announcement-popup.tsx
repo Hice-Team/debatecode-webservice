@@ -153,7 +153,7 @@ export default function AnnouncementPopup({
         {/* 포스터 이미지 */}
         {item.imageUrl && (
           // 외부 Storage URL이라 next/image 최적화를 태우지 않는다(도메인 화이트리스트 불필요)
-          // eslint-disable-next-line @next/next/no-img-element
+           
           <img
             src={item.imageUrl}
             alt={item.title}
@@ -200,7 +200,7 @@ export default function AnnouncementPopup({
                 href={link.href}
                 {...(link.external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
                 onClick={close}
-                className="rounded-lg border border-brand-300 bg-white px-3.5 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                className="rounded-full border border-brand-300 bg-white px-4 py-3 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
               >
                 {link.label} {link.external ? '↗' : '→'}
               </a>

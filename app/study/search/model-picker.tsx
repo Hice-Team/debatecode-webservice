@@ -62,7 +62,7 @@ export default function ModelPicker({
             ? `${current.vendor} · ${current.label} · Effort ${EFFORT_LABELS_EN[effort]}`
             : '모델 키가 없어 문서 검색 모드로 동작합니다'
         }
-        className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2 text-xs font-medium text-fg-secondary transition hover:bg-paper hover:text-ink disabled:opacity-40 sm:px-3"
+        className="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-fg-secondary transition-colors hover:bg-paper hover:text-fg disabled:opacity-40 sm:px-3.5"
       >
         <span
           aria-hidden
@@ -102,7 +102,7 @@ export default function ModelPicker({
                   onChange(model.id);
                   setOpen(false);
                 }}
-                className={`flex w-full items-start gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-paper ${
+                className={`flex w-full items-start gap-2.5 px-4 py-3.5 text-left transition-colors hover:bg-paper ${
                   selected ? 'bg-brand-50/60' : ''
                 }`}
               >

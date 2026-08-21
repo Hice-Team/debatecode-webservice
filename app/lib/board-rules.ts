@@ -82,6 +82,17 @@ export function forcedSecret(_board: string): boolean {
   return false;
 }
 
+/**
+ * 익명으로 쓸 수 있는 게시판인가.
+ *
+ * 공지사항만 막는다. 공지는 "누가 말하는지"가 내용의 일부라, 운영진이 아닌 것처럼 보이는
+ * 공지는 읽는 사람이 신뢰할 근거를 잃는다. 화면에서 체크박스를 감추는 것만으로는 부족하다 —
+ * 폼을 직접 만들어 보내면 그만이므로 서버에서도 같은 판단을 한다.
+ */
+export function supportsAnonymous(board: string): boolean {
+  return board !== 'notice';
+}
+
 /** 비밀글 선택지를 제공하는 게시판인가. */
 export function supportsSecret(board: string): boolean {
   return board === 'qna';

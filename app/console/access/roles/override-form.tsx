@@ -169,7 +169,7 @@ export default function OverrideForm({
       </div>
 
       {/* ---- 방향 · 기간 ---- */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_10rem]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_10rem]">
         <fieldset>
           <legend className="mb-1.5 font-mono text-xs tracking-wider text-fg-secondary">방향</legend>
           <div className="flex gap-2">

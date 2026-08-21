@@ -119,7 +119,7 @@ export default function AiSearch({ liveModel, authed }: { liveModel: boolean; au
                 }}
                 placeholder={t('ai-search-placeholder', language)}
                 aria-label={t('ai-search-title', language)}
-                className="min-w-0 flex-1 bg-transparent px-2 py-1.5 text-[15px] text-ink placeholder:text-fg-quiet focus:outline-none"
+                className="min-w-0 flex-1 bg-transparent px-2 py-3.5 text-[15px] text-ink placeholder:text-fg-quiet focus:outline-none"
               />
             )}
 

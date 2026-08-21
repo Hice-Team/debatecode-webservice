@@ -153,7 +153,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
             value={email}
             onChange={(e) => setEmailInput(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
+            className="w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-4 py-3 text-sm text-fg placeholder:text-fg-quiet focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25"
           />
           {errors.email && <p className="mt-1.5 text-xs text-rose-600">{errors.email[0]}</p>}
         </div>
@@ -163,7 +163,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
             <label htmlFor="password" className="block font-mono text-xs text-fg-secondary tracking-wider">
               PASSWORD
             </label>
-            <Link href="/forgot-password" className="text-xs text-fg-muted hover:text-signal transition-colors">
+            <Link href="/forgot-password" className="-my-3.5 inline-block py-3.5 text-xs text-fg-muted transition-colors hover:text-signal">
               비밀번호를 잊으셨나요?
             </Link>
           </div>
@@ -174,12 +174,15 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
               placeholder="••••••••"
-              className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 pr-16 text-sm text-ink-soft placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
+              className="w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-4 py-3 pr-16 text-sm text-fg placeholder:text-fg-quiet focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25"
             />
+            {/* 비밀번호 보기 — 글자만 있는 24×16 버튼이라 누르기 어려웠다.
+                입력칸 안이라 크기를 키우면 글자를 가리므로 좌우·상하 여백으로 영역을 넓힌다. */}
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-fg-muted hover:text-ink-soft"
+              aria-pressed={showPassword}
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-[var(--radius-control)] px-3 py-3 text-xs font-medium text-fg-muted transition-colors hover:bg-paper hover:text-fg"
             >
               {showPassword ? '숨기기' : '보기'}
             </button>
@@ -188,7 +191,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
         </div>
 
         {/* 아이디 저장 — 체크 시 브라우저에 이메일 저장(+ 지원 시 자격증명/패스키) */}
-        <label className="flex items-center gap-2 text-sm text-fg-secondary select-none cursor-pointer">
+        <label className="flex cursor-pointer select-none items-center gap-2 py-2.5 text-sm text-fg-secondary">
           <input
             type="checkbox"
             checked={remember}
@@ -207,7 +210,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded-lg bg-brand-600 text-white font-semibold py-3 hover:bg-brand-500 transition-colors disabled:opacity-50"
+          className="w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-50"
         >
           {pending ? '확인 중…' : '로그인'}
         </button>

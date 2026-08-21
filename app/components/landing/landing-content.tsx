@@ -5,7 +5,6 @@
 // useLanguage 기반 ko/en 국제화. 브랜드 = 워드마크 인디고(#1800AC).
 // 디베이트코드는 100% 프리웨어 — 구독/결제 유도 카피는 두지 않는다.
 
-import Link from 'next/link';
 import { useLanguage } from '@/app/context/language-context';
 import EditorShowcase from './editor-showcase';
 

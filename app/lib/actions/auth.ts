@@ -4,7 +4,8 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 import { createClient } from '../supabase/server';
-import { rateLimit, clientIp } from '../rate-limit';
+import { clientIp } from '../rate-limit';
+import { durableRateLimit, retryAfterLabel } from '../rate-limit-durable';
 import { mapAuthError } from '../auth-errors';
 
 export interface AuthFormState {
@@ -62,8 +63,15 @@ async function origin() {
 // 회원가입은 다단계 위저드로 대체 — app/lib/actions/signup.ts 참조.
 
 export async function login(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  if (!rateLimit(`login:${await clientIp()}`, 10, 5 * 60_000)) {
-    return { errors: { form: ['로그인 시도가 너무 잦습니다. 잠시 후 다시 시도해 주세요.'] } };
+  // 무차별 대입 방어는 인스턴스가 바뀌어도 횟수가 남아야 한다 — DB에 센다.
+  // 이메일까지 키에 넣지 않는 이유: 한 IP가 여러 계정을 훑는 것도 같은 공격이다.
+  const loginLimit = await durableRateLimit(`login:${await clientIp()}`, 10, 5 * 60_000);
+  if (!loginLimit.allowed) {
+    return {
+      errors: {
+        form: [`로그인 시도가 너무 잦습니다. ${retryAfterLabel(loginLimit.retryAfterMs)} 후에 다시 시도해 주세요.`],
+      },
+    };
   }
 
   const parsed = loginSchema.safeParse({
@@ -117,8 +125,14 @@ export async function requestPasswordReset(
   _prev: RequestResetState,
   formData: FormData,
 ): Promise<RequestResetState> {
-  if (!rateLimit(`pwreset:${await clientIp()}`, 3, 10 * 60_000)) {
-    return { errors: { form: ['요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.'] } };
+  // 재설정 메일은 남의 주소로도 보낼 수 있으므로 괴롭힘 수단이 된다 — 엄격하게 센다
+  const resetLimit = await durableRateLimit(`pwreset:${await clientIp()}`, 3, 10 * 60_000);
+  if (!resetLimit.allowed) {
+    return {
+      errors: {
+        form: [`요청이 너무 잦습니다. ${retryAfterLabel(resetLimit.retryAfterMs)} 후에 다시 시도해 주세요.`],
+      },
+    };
   }
 
   const parsed = emailSchema.safeParse({ email: formData.get('email') });

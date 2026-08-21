@@ -18,6 +18,7 @@
   --color-ink: #08091a;        /* 네이비-블랙 에디터/크롬 배경 */
   --color-ink-soft: #12142c;   /* 패널/텍스트 다크 */
   --color-paper: #f5f6fb;      /* 쿨톤 라이트 배경 */
+  --color-surface: #ffffff;    /* 페이퍼 위에 얹히는 카드·입력 표면 (DESIGN.md §1) */
 
   /* 브랜드 인디고 스케일 (#1800AC 기준) */
   --color-brand-50: #eef0ff;
@@ -79,6 +80,16 @@
   --font-sans: "Pretendard Variable", "Pretendard", var(--font-plex-sans), var(--font-geist-sans), ui-sans-serif, sans-serif;
   --font-mono: var(--font-plex-mono), var(--font-geist-mono), ui-monospace, monospace;
   --font-display: var(--font-space-grotesk), "Pretendard", ui-sans-serif, sans-serif;
+}
+
+/* 가로 스크롤 차단.
+   `clip`이지 `hidden`이 아니다 — hidden은 스크롤 컨테이너를 만들어서 position: sticky를
+   조용히 망가뜨린다(헤더가 안 붙는다). clip은 넘치는 부분만 자른다.
+   넓은 표(순위·포인트 내역)나 코드 블록은 자기 안에서 가로로 스크롤한다. */
+html,
+body {
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 body {
@@ -148,6 +159,65 @@ textarea {
   field-sizing: content;
   max-height: 45vh;
 }
+
+/* 움직임 줄이기 — 운영체제 설정과 앱 설정 둘 다 본다.
+   OS에서 켠 사람은 앱에서 끌 수 없다(접근성 설정을 앱이 덮어쓰면 안 된다).
+   위치 이동과 크기 변화만 없애고 페이드는 남긴다 — 무언가 바뀌었다는 신호까지 지우면
+   화면이 언제 갱신됐는지 알 수 없다. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+:root[data-reduce-motion='on'] *,
+:root[data-reduce-motion='on'] *::before,
+:root[data-reduce-motion='on'] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* 작은 아이콘 버튼의 터치 영역 — 보이는 크기는 그대로 두고 누를 수 있는 넓이만 44×44로.
+   손가락 끝은 대략 9mm(≈44px)라, 28px 버튼은 옆 버튼을 같이 누르게 된다.
+   버튼을 실제로 키우면 촘촘한 툴바가 무너지므로 투명한 판을 하나 덮는다.
+   겹치는 버튼끼리는 나란히 두지 말 것 — 판이 서로 먹는다. */
+.dc-tap {
+  position: relative;
+}
+.dc-tap::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+/* 마우스에서는 필요 없다 — 정확히 겨냥할 수 있고, 넓은 판이 옆 요소의 호버를 가린다 */
+@media (pointer: fine) {
+  .dc-tap::after {
+    content: none;
+  }
+}
+
+/* ═══ 레이어 순서 ═══════════════════════════════════════════
+   z 값을 화면마다 눈대중으로 고르면 언젠가 반드시 겹친다.
+   실제로 설정 화면의 확인창이 헤더와 같은 z-50이라, DOM 순서가 바뀌면 가려질 상태였다.
+
+     10~40   페이지 안 요소 (카드 위 배지, 목록 위 버튼)
+     50      전역 헤더 (sticky)
+     60~70   화면에 붙어 있는 보조 UI (에디터 헤더 토글 등)
+     80      드롭다운·팝오버
+     90      다이얼로그·확인창  ← 헤더보다 반드시 위
+     100     전체화면 뷰어 (첨부 미리보기)
+
+   새 오버레이를 만들 때는 위 표에서 고른다. 표에 없는 값을 쓰지 않는다. */
 
 /* 키보드 포커스 가시성 — 마우스 클릭에는 나타나지 않는다 */
 :focus-visible {

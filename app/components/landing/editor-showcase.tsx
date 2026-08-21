@@ -104,7 +104,7 @@ export default function EditorShowcase() {
                 role="tab"
                 aria-selected={tab === key}
                 onClick={() => setTab(key)}
-                className={`px-2.5 py-2.5 whitespace-nowrap cursor-pointer transition-colors flex items-center gap-1 ${
+                className={`px-3 py-3 whitespace-nowrap cursor-pointer transition-colors flex items-center gap-1 ${
                   tab === key
                     ? 'border-b-2 border-brand-400 text-brand-400 font-bold'
                     : 'hover:text-fg-on-dark-secondary'
@@ -182,7 +182,7 @@ export default function EditorShowcase() {
 
           <Link
             href="/problems"
-            className="block text-center border-t border-white/10 py-2.5 text-[11px] font-semibold text-brand-400 hover:bg-brand-500/10 transition-colors"
+            className="block border-t border-white/10 py-3.5 text-center text-[11px] font-semibold text-brand-400 transition-colors hover:bg-brand-500/10"
           >
             {c.openEditor}
           </Link>

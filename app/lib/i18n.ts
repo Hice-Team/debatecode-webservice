@@ -116,6 +116,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'footer-point-terms': '디베이트포인트 약관',
     'footer-ai-terms': 'debateAI 이용약관',
     'footer-rep': 'Debate Code | 대표자: Seogo',
+    'footer-maker': '제작 · 운영: HICE Team (Luce 402 Studio)',
+    'footer-address': '세종특별자치시 집현북로 109 (세종행복기숙사)',
 
     // Nav & Header
     'debate-mate': '디베이트메이트',
@@ -414,6 +416,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'preview-open': '미리보기',
     'ai-branch-open-origin': '원본 대화 열기',
     'ai-branching': '분기하는 중…',
+    'profile-community': '내 글과 답글',
+    'profile-market': '중고 거래',
     'tts-pause': '일시정지',
     'tts-resume': '이어 듣기',
     'tts-stop': '낭독 정지',
@@ -892,6 +896,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'footer-point-terms': 'DebatePoint Terms',
     'footer-ai-terms': 'debateAI Terms',
     'footer-rep': 'Debate Code | Representative: Seogo',
+    'footer-maker': 'Built and operated by HICE Team (Luce 402 Studio)',
+    'footer-address': '109 Jiphyeon-buk-ro, Sejong, Republic of Korea',
 
     // Nav & Header
     'debate-mate': 'DebateMate',
@@ -1043,6 +1049,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'preview-open': 'Preview',
     'ai-branch-open-origin': 'Open original',
     'ai-branching': 'Branching…',
+    'profile-community': 'My posts & replies',
+    'profile-market': 'Marketplace',
     'tts-pause': 'Pause',
     'tts-resume': 'Resume',
     'tts-stop': 'Stop reading',

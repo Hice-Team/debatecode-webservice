@@ -184,7 +184,7 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
             <Link
               href={hrefFor({ range: undefined })}
               aria-current={!allTime ? 'page' : undefined}
-              className={`rounded-lg px-3 py-1.5 transition-colors ${
+              className={`rounded-full px-3.5 py-3 transition-colors ${
                 !allTime ? 'bg-signal text-white' : 'text-fg-muted hover:text-signal'
               }`}
             >
@@ -193,7 +193,7 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
             <Link
               href={hrefFor({ range: 'all' })}
               aria-current={allTime ? 'page' : undefined}
-              className={`rounded-lg px-3 py-1.5 transition-colors ${
+              className={`rounded-full px-3.5 py-3 transition-colors ${
                 allTime ? 'bg-signal text-white' : 'text-fg-muted hover:text-signal'
               }`}
             >
@@ -223,7 +223,7 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
                 key={t.key}
                 href={hrefFor({ tab: t.key })}
                 aria-current={on ? 'page' : undefined}
-                className={`shrink-0 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors ${
+                className={`shrink-0 rounded-full border px-4 py-3 text-sm font-semibold transition-colors ${
                   on
                     ? 'border-signal bg-signal text-white shadow-sm shadow-brand-500/25'
                     : 'border-hairline bg-white text-fg-secondary hover:border-brand-300 hover:text-signal'
@@ -239,7 +239,7 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
           <Link
             href={hrefFor({ view: undefined })}
             aria-current={!tierView ? 'page' : undefined}
-            className={`rounded-lg px-3 py-1.5 transition-colors ${
+            className={`rounded-full px-3.5 py-3 transition-colors ${
               !tierView ? 'bg-signal text-white' : 'text-fg-muted hover:text-signal'
             }`}
           >
@@ -248,7 +248,7 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
           <Link
             href={hrefFor({ view: 'tier' })}
             aria-current={tierView ? 'page' : undefined}
-            className={`rounded-lg px-3 py-1.5 transition-colors ${
+            className={`rounded-full px-3.5 py-3 transition-colors ${
               tierView ? 'bg-signal text-white' : 'text-fg-muted hover:text-signal'
             }`}
           >

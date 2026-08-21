@@ -11,9 +11,7 @@ import { prisma } from '../prisma';
 import { canOrderScope, validateContact } from '../shop-scope';
 import { featureBlockMessage } from '../settings';
 import { POINT_AMOUNTS, POINT_KINDS, getPointSummary, grantPoints } from '../points';
-import { SNS_PLATFORMS } from '@/app/community/boards';
 
-const PLATFORM_KEYS = SNS_PLATFORMS.map((p) => p.key) as [string, ...string[]];
 
 export interface MateActionState {
   errors?: { form?: string[] };

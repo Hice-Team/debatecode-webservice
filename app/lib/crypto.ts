@@ -60,10 +60,40 @@ async function decryptLayer(key: CryptoKey, packed: Uint8Array): Promise<Uint8Ar
 }
 
 // 이중 암호화 저장 — 1차(AI_SECRET_KEY) → 2차(AI_SECRET_KEY_2 또는 파생 키)
+/**
+ * 암호화 키가 없을 때 어떻게 할 것인가.
+ *
+ * 예전에는 평문을 그대로 돌려줬다(개발 편의). 그런데 이 경로는 조용하다 — 배포 환경에서
+ * AI_SECRET_KEY를 빠뜨려도 저장은 성공하고, 이용자 API 키가 평문으로 DB에 쌓인다.
+ * 그 사실은 DB가 새고 난 뒤에야 알게 된다.
+ *
+ * 그래서 운영에서는 실패시킨다. 키를 넣는 것을 잊는 쪽이, 남의 API 키를 평문으로
+ * 보관하는 쪽보다 훨씬 낫다. 개발 환경에서는 종전처럼 평문을 허용하되 경고를 남긴다.
+ */
+function allowPlaintextFallback(): boolean {
+  return process.env.NODE_ENV !== 'production';
+}
+
+export class SecretKeyMissingError extends Error {
+  constructor() {
+    super(
+      '비밀값 암호화 키가 설정되지 않았습니다. AI_SECRET_KEY(권장: AI_SECRET_KEY_2도 함께)를 설정해 주세요.',
+    );
+    this.name = 'SecretKeyMissingError';
+  }
+}
+
 export async function encryptSecret(plain: string | null | undefined): Promise<string | null> {
   if (!plain) return null;
   const [k1, k2] = await Promise.all([getPrimaryKey(), getSecondaryKey()]);
-  if (!k1 || !k2) return plain; // 키 미설정 — 평문 저장 (레거시 호환)
+  if (!k1 || !k2) {
+    // 운영에서는 평문으로 떨어지지 않는다 — 저장을 막고 원인을 드러낸다
+    if (!allowPlaintextFallback()) throw new SecretKeyMissingError();
+    console.warn(
+      '[crypto] AI_SECRET_KEY가 없어 비밀값을 평문으로 저장합니다. 개발 환경에서만 허용됩니다.',
+    );
+    return plain;
+  }
   const layer1 = await encryptLayer(k1, new TextEncoder().encode(plain));
   const layer2 = await encryptLayer(k2, layer1);
   return PREFIX_V2 + toB64(layer2);

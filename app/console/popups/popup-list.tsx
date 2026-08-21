@@ -52,7 +52,7 @@ export default function PopupList({ items }: { items: PopupRow[] }) {
             </span>
 
             {item.imageUrl && (
-              /* eslint-disable-next-line @next/next/no-img-element */
+               
               <img src={item.imageUrl} alt="" className="h-9 w-14 shrink-0 rounded object-cover ring-1 ring-ink/10" />
             )}
 

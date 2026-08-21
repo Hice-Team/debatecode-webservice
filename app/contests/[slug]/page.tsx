@@ -6,7 +6,7 @@ import I18nSlot from '@/app/components/i18n-slot';
 import { prisma } from '@/app/lib/prisma';
 import { getSessionOptional } from '@/app/lib/dal';
 import { DIFFICULTY_LABELS } from '@/app/lib/types';
-import { SET_KIND_BADGE, SET_KIND_LABELS, isSetKind } from '@/app/lib/problem-sets';
+import { SET_KIND_LABELS, isSetKind } from '@/app/lib/problem-sets';
 import { setEntryHref } from '@/app/problems/[id]/entry-context';
 
 const DIFFICULTY_BADGE: Record<number, string> = {

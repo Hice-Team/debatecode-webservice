@@ -5,7 +5,7 @@ import { PageShell } from '@/app/components/page-shell';
 import BackButton from '@/app/components/back-button';
 import { prisma } from '@/app/lib/prisma';
 import { getSessionOptional } from '@/app/lib/dal';
-import { canOrderScope, SHOP_SCOPE_LABELS, asShopScope } from '@/app/lib/shop-scope';
+import { canOrderScope } from '@/app/lib/shop-scope';
 import { getPointSummary } from '@/app/lib/points';
 import { POINT_TO_KRW_NOTE, providerLabel } from '@/app/lib/shop';
 import PurchaseForm from './purchase-form';

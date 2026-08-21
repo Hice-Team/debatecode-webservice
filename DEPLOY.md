@@ -192,3 +192,49 @@ Sender    hicecorp.team@gmail.com / debateCode
 - 스팸/어뷰징 폭주 → 가입·글쓰기 플래그 off, 레이트 한도 축소
 - AI 공급자 장애 → 기본 공급자/모델을 다른 곳으로 전환
 - 전면 장애 → **유지보수 모드** on (운영진은 그대로 접속 가능)
+
+---
+
+## 보안 — 무엇을 코드가 막고, 무엇을 엣지가 막는가
+
+이 구분이 중요하다. **애플리케이션 코드는 DDoS를 막을 수 없다.** 요청이 Worker에
+닿은 시점에 이미 실행 비용이 발생했기 때문이다. 대량 트래픽은 도달하기 전에 끊어야 한다.
+
+### 코드가 맡는 것 (구현됨)
+
+| 위협 | 방어 | 위치 |
+|---|---|---|
+| SQL 인젝션 | Prisma 파라미터 바인딩. 원시 쿼리는 태그드 템플릿만 사용하고 `$queryRawUnsafe`는 쓰지 않는다 | 전역 |
+| 무차별 대입(로그인·가입·재설정) | DB 기반 지속 카운터. 인스턴스가 바뀌어도 횟수가 남고, 증가·판정이 한 SQL 문에서 원자적으로 처리된다 | `app/lib/rate-limit-durable.ts` |
+| 비용 남용(AI 호출·업로드) | 인메모리 슬라이딩 윈도우 + 일일 토큰 쿼터 | `app/lib/rate-limit.ts`, `app/lib/ai/free-ai.ts` |
+| SSRF(URL·GitHub 가져오기) | 사설망·루프백·메타데이터 IP 차단, 리다이렉트 홉마다 재검사 | `app/api/ai-search/import/route.ts` |
+| XSS | React 기본 이스케이프. `dangerouslySetInnerHTML` 0건. CSP `object-src 'none'`, `base-uri 'self'` | `next.config.ts` |
+| 클릭재킹 | `X-Frame-Options: DENY`, CSP `frame-ancestors 'none'` | `next.config.ts` |
+| 이용자 API 키 유출 | AES-256-GCM 이중 암호화. **키가 없으면 운영에서는 저장을 거부한다**(평문으로 떨어지지 않는다) | `app/lib/crypto.ts` |
+| 개인 첨부 유출 | 비공개 버킷 + 소유자 확인 후 5분 서명 URL. 버킷 RLS가 2차 방어 | `app/api/ai-search/file/route.ts` |
+| 권한 우회 | 역할 + 계정별 오버라이드(deny 우선), 서버에서만 판정 | `app/lib/permissions-server.ts` |
+
+### 엣지가 맡아야 하는 것 (Cloudflare 대시보드에서 설정 — 코드로 불가)
+
+1. **Rate Limiting Rules** — `/api/*`와 `/login`에 IP 단위 상한.
+   권장 시작값: `/api/ai-search/*` 분당 30, `/login` 분당 20, 그 외 `/api/*` 분당 120.
+2. **WAF Managed Rules** — OWASP 코어 룰셋을 켠다.
+3. **Bot Fight Mode** — 자동화 트래픽 차단.
+4. **DDoS Protection** — 기본 활성이지만 임계값을 서비스 규모에 맞춘다.
+5. **Under Attack Mode** — 공격이 실제로 오면 수동으로 올린다.
+
+> 위 다섯을 켜지 않으면, 아래 코드 방어가 아무리 촘촘해도 요금과 가용성은 지켜지지 않는다.
+
+### 비밀값 취급 규칙
+
+- `AI_SECRET_KEY`(+ 권장 `AI_SECRET_KEY_2`)는 **운영에 반드시 설정**한다. 없으면 이용자
+  API 키 저장이 실패한다 — 의도된 동작이다(평문 저장보다 낫다).
+- `SUPABASE_SERVICE_ROLE_KEY`는 서버 전용이다. `NEXT_PUBLIC_` 접두사를 붙이지 않는다.
+- 소스 코드가 공개되어도 안전해야 한다. 비밀은 코드가 아니라 환경 변수와 DB 암호화에 있다.
+
+### 정기 점검
+
+```bash
+npx tsx --env-file=.env scripts/check-rate-limit.ts   # 지속 리미터 동작 확인
+node scripts/qa-walkthrough.mjs                        # 브라우저 UX·반응형 회귀 검사
+```

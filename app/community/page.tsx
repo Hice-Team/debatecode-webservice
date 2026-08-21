@@ -24,8 +24,6 @@ import { displayName } from "@/app/lib/display-name";
 export const metadata: Metadata = { title: "커뮤니티" };
 
 const PAGE_SIZE = 20;
-// 탭 줄에 바로 노출할 게시판 수 — 나머지는 "더보기"로 접는다
-const VISIBLE_TABS = 4;
 const FRESH_MS = 24 * 60 * 60 * 1000;
 
 // 정렬 — 최신순만 겉으로 드러내고 나머지는 드롭다운 안에 둔다
@@ -241,17 +239,17 @@ export default async function CommunityPage({
     <PageShell width="6xl">
       {/* ---------- 헤더 ---------- */}
       <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">
-            COMMUNITY
-          </p>
-          <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">
+        <div className="min-w-0">
+          {/* 아이브로우("COMMUNITY")를 뺐다 — 바로 아래 제목이 같은 말을 한다.
+              velog식으로 읽는 면을 먼저 두고 크롬은 물러난다. */}
+          <h1 className="font-display text-[28px] font-bold leading-tight tracking-tight text-fg">
             <I18nSlot k="community" fallback="커뮤니티" />
           </h1>
+          <p className="mt-1 text-sm text-fg-muted">{boardDesc(activeBoard)}</p>
         </div>
         <Link
           href={writeHref}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-signal px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 active:scale-[0.98]"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-600 active:scale-[0.98]"
         >
           <svg
             viewBox="0 0 24 24"
@@ -302,7 +300,7 @@ export default async function CommunityPage({
           {/* 모바일에서는 우측 레일이 사라지므로 명예의 전당을 여기에 붙인다 */}
           <Link
             href="/hall-of-fame"
-            className="mt-4 flex items-center gap-2 rounded-lg border border-hairline bg-white px-3 py-2 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50/40 xl:hidden"
+            className="mt-4 flex items-center gap-2 rounded-[var(--radius-card)] border border-hairline bg-white px-3.5 py-3 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50/40 xl:hidden"
           >
             <span aria-hidden>🏆</span>
             <span className="min-w-0 flex-1 truncate font-medium text-fg">
@@ -395,7 +393,7 @@ export default async function CommunityPage({
                   defaultValue={query}
                   aria-label="게시글 검색"
                   placeholder="게시글 검색"
-                  className="w-full rounded-lg border border-hairline bg-white py-2 pl-9 pr-3 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/20"
+                  className="w-full rounded-lg border border-hairline bg-white py-3 pl-9 pr-3 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/20"
                 />
               </form>
 
@@ -415,7 +413,7 @@ export default async function CommunityPage({
                         sort: s.key === "latest" ? undefined : s.key,
                         page: undefined,
                       })}
-                      className={`block px-3 py-2 text-sm transition-colors hover:bg-brand-50/60 ${
+                      className={`block px-3.5 py-3 text-sm transition-colors hover:bg-brand-50/60 ${
                         s.key === activeSort
                           ? "font-semibold text-signal"
                           : "text-fg-secondary"
@@ -578,7 +576,8 @@ function BoardLink({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+      // py-2.5 — 게시판 이동은 커뮤니티의 주 동선이라 44px에 맞춘다(36px에서는 옆 항목을 누른다)
+      className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors ${
         active ? 'bg-signal font-semibold text-white' : 'text-fg-secondary hover:bg-brand-50/60 hover:text-signal'
       }`}
     >
@@ -616,7 +615,7 @@ function PostRow({
     >
       <Link
         href={`/community/${post.id}`}
-        className={`group flex items-center gap-4 px-3 py-3.5 transition-colors ${
+        className={`group flex items-center gap-4 px-3 py-4 transition-colors ${
           notice ? "hover:bg-amber-50" : "hover:bg-brand-50/40"
         }`}
       >
@@ -650,12 +649,8 @@ function PostRow({
               </span>
             )}
             {post.secret && (
-              <span
-                className="shrink-0 text-[11px]"
-                title="비밀글"
-                aria-label="비밀글"
-              >
-                🔒
+              <span className="shrink-0 rounded border border-hairline bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted">
+                비밀글
               </span>
             )}
             {post.adoptedCommentId && (
@@ -663,12 +658,14 @@ function PostRow({
                 <I18nSlot k="answer-adopted" fallback="채택완료" />
               </span>
             )}
-            <span className="truncate text-[15px] font-semibold text-ink group-hover:text-signal">
+            {/* velog식 — 목록에서도 제목이 가장 큰 글자다. 배지·메타는 뒤로 물러난다. */}
+            <span className="truncate text-[16px] font-semibold text-fg group-hover:text-signal">
               {post.title}
             </span>
+            {/* 댓글 수를 액션 색으로 칠하지 않는다 — signal은 "누를 곳"에만 쓴다 */}
             {post._count.comments > 0 && (
-              <span className="shrink-0 font-mono text-xs font-semibold text-signal">
-                [{post._count.comments}]
+              <span className="dc-num shrink-0 font-mono text-xs font-semibold text-fg-muted">
+                {post._count.comments}
               </span>
             )}
           </div>

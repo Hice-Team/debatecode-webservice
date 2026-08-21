@@ -10,6 +10,8 @@ import CommentSection, { type CommentAuthor, type CommentNode } from './comment-
 import LikeButton from './like-button';
 import PostActions from './post-actions';
 import PinToggle from './pin-toggle';
+import TradePanel from './trade-panel';
+import { canTrade } from '@/app/lib/market';
 import PollCard, { type PollData } from './poll-card';
 import ShareButton from './share-button';
 import ReportButton from '@/app/components/report-button';
@@ -69,6 +71,8 @@ export default async function PostPage({ params }: PageProps<'/community/[id]'>)
           include: { votes: { select: { userId: true, optionIndex: true } } },
         },
         _count: { select: { likes: true } },
+        // 중고글이면 거래 정보가 함께 온다(없으면 null)
+        listing: true,
       },
     }),
   ]);
@@ -88,6 +92,19 @@ export default async function PostPage({ params }: PageProps<'/community/[id]'>)
     : [null, null];
   const isAuthor = viewer?.id === post.authorId;
   const isAdmin = viewer?.role === 'admin';
+
+  // 중고 거래 자격 — 이메일 인증 여부는 매물이 있을 때만 확인한다(auth.users 조회 1회)
+  let tradeEligibility = { allowed: false, message: undefined as string | undefined };
+  if (post.listing && session) {
+    const rows = await prisma.$queryRaw<{ confirmed: boolean }[]>`
+      SELECT (email_confirmed_at IS NOT NULL) AS confirmed
+      FROM auth.users WHERE id = ${session.userId}::uuid LIMIT 1`.catch(() => []);
+    const result = canTrade({ userId: session.userId, emailVerified: rows[0]?.confirmed === true });
+    tradeEligibility = { allowed: result.allowed, message: result.message };
+  } else if (post.listing) {
+    const result = canTrade({ userId: null, emailVerified: false });
+    tradeEligibility = { allowed: result.allowed, message: result.message };
+  }
 
   // 비밀글 열람 차단 — 존재 자체를 노출하지 않도록 404 처리한다
   const me = { userId: session?.userId ?? null, role: viewer?.role ?? 'user' };
@@ -169,6 +186,18 @@ export default async function PostPage({ params }: PageProps<'/community/[id]'>)
               {(isAuthor || isAdmin) && <PostActions postId={post.id} canEdit={isAuthor} />}
             </div>
           </div>
+          {/* 중고 매물 — 가격·상태·거래 방법을 본문보다 먼저 보여 준다 */}
+          {post.listing && (
+            <div className="mt-5">
+              <TradePanel
+                listing={post.listing}
+                isSeller={post.listing.sellerId === viewer?.id}
+                canTrade={tradeEligibility.allowed}
+                tradeBlockedReason={tradeEligibility.message}
+              />
+            </div>
+          )}
+
           {images.length > 0 && (
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {images.map((img) => (

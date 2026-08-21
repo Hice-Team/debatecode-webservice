@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { PageShell, PageHeader } from '@/app/components/page-shell';
+import { PageShell } from '@/app/components/page-shell';
 import I18nSlot from '@/app/components/i18n-slot';
-import { prisma } from '@/app/lib/prisma';
 import { getSessionOptional } from '@/app/lib/dal';
 import AiSearch from './ai-search';
 import ResumePrompt from './resume-prompt';
@@ -59,46 +58,12 @@ const DOCS_SITEMAP: Array<{
 
 export default async function StudyPage() {
   const session = await getSessionOptional();
-  // AI 설정 여부 — "debateAI와 함께 배우기" 버튼 노출 판단 (기본 provider는 mock)
-  const aiConfigured = session
-    ? ((await prisma.user.findUnique({ where: { id: session.userId }, select: { aiProvider: true } }))?.aiProvider ?? 'mock') !== 'mock'
-    : false;
   // 최근 AI Search 세션 — 로그인 상태에서만 조회한다
   const recentSession = session ? await getRecentSession() : null;
 
-  const courses = await prisma.course.findMany({
-    orderBy: { order: 'asc' },
-    include: {
-      lessons: {
-        orderBy: { order: 'asc' },
-        select: {
-          id: true,
-          slug: true,
-          title: true,
-          progress: session ? { where: { userId: session.userId }, select: { id: true } } : undefined,
-        },
-      },
-    },
-  });
-
-  // 전체 진도 요약 + "이어서 학습하기" 대상(첫 미완료 레슨)
-  const totalLessons = courses.reduce((sum, c) => sum + c.lessons.length, 0);
-  const doneLessons = session
-    ? courses.reduce((sum, c) => sum + c.lessons.filter((l) => (l.progress?.length ?? 0) > 0).length, 0)
-    : 0;
-  const overallPct = totalLessons > 0 ? Math.round((doneLessons / totalLessons) * 100) : 0;
-
-  let nextLesson: { courseSlug: string; lessonSlug: string; title: string } | null = null;
-  if (session) {
-    outer: for (const c of courses) {
-      for (const l of c.lessons) {
-        if ((l.progress?.length ?? 0) === 0) {
-          nextLesson = { courseSlug: c.slug, lessonSlug: l.slug, title: l.title };
-          break outer;
-        }
-      }
-    }
-  }
+  // 코스웨어 목록(courses) 조회는 걷어냈다. 아래 코스 카드 JSX가 주석 처리돼 있어서
+  // 결과를 아무도 쓰지 않는데, 강의마다 레슨과 사용자별 진도까지 조인하는 무거운 쿼리가
+  // /study 방문마다 돌고 있었다. 코스웨어를 다시 켤 때 이 자리에 되살린다.
 
   return (
     <PageShell width="6xl">

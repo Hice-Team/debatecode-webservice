@@ -66,7 +66,10 @@ export default function ContestFilters({
     if (debounceRef.current) clearTimeout(debounceRef.current);
   }, []);
 
-  const chipBase = 'px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer';
+  // py-2.5 — 칩이 나란히 붙어 있어 투명 판(dc-tap)을 쓰면 서로의 영역을 먹는다.
+// 실제 높이를 44px에 맞춘다.
+const chipBase =
+  'px-3.5 py-2.5 rounded-full border text-xs font-medium transition-colors cursor-pointer';
   const on = 'bg-brand-50 text-brand-700 border-brand-300 shadow-[inset_0_0_0_1px_rgba(69,49,217,0.15)]';
   const off = 'bg-white text-fg-secondary border-hairline hover:border-brand-300 hover:text-signal';
   const groupLabel = 'font-mono text-[10px] uppercase tracking-wider text-fg-quiet w-20 shrink-0 pt-1.5';
@@ -86,7 +89,7 @@ export default function ContestFilters({
             value={q}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder={t('search-contests-placeholder', language)}
-            className="w-full rounded-lg border border-hairline bg-paper px-4 py-2.5 pl-10 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-signal/30"
+            className="w-full rounded-[var(--radius-card)] border border-hairline bg-paper px-4 py-3 pl-10 text-sm placeholder:text-fg-quiet focus:border-signal focus:bg-white focus:outline-none focus:ring-2 focus:ring-signal/25"
           />
         </label>
         <button

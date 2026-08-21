@@ -134,7 +134,7 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
         <Link
           href={buildHref({ kind: undefined, page: undefined })}
           aria-current={!activeKind ? 'page' : undefined}
-          className={`shrink-0 rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`shrink-0 rounded-full border px-4 py-3 text-sm font-semibold transition-colors ${
             !activeKind
               ? 'border-signal bg-signal text-white'
               : 'border-hairline bg-white text-fg-secondary hover:border-brand-300 hover:text-signal'
@@ -147,7 +147,7 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
             key={k}
             href={buildHref({ kind: k, page: undefined })}
             aria-current={activeKind === k ? 'page' : undefined}
-            className={`shrink-0 rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
+            className={`shrink-0 rounded-full border px-4 py-3 text-sm font-semibold transition-colors ${
               activeKind === k
                 ? 'border-signal bg-signal text-white'
                 : 'border-hairline bg-white text-fg-secondary hover:border-brand-300 hover:text-signal'

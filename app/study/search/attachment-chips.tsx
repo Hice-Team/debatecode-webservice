@@ -161,7 +161,7 @@ export function AttachmentChip({
       {/* 썸네일 */}
       <span className="pointer-events-none relative shrink-0">
         {file.kind === 'image' && (file.previewUrl || file.url) ? (
-          // eslint-disable-next-line @next/next/no-img-element -- Storage 공개 URL을 그대로 쓴다(최적화 대상 아님)
+           
           <img
             src={file.previewUrl || file.url}
             alt=""

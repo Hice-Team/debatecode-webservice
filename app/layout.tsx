@@ -5,6 +5,7 @@ import AnnouncementGate from "./components/announcement-gate";
 import MaintenanceGate from "./components/maintenance-gate";
 import GlobalBanner from "./components/global-banner";
 import BannerSlot from '@/app/components/banner-slot';
+import DomainNotice from '@/app/components/domain-notice';
 import AutoTranslate from "./components/auto-translate";
 import ChannelTalk from "./components/channel-talk";
 
@@ -97,6 +98,8 @@ export default async function RootLayout({
           <MaintenanceGate>
             {/* 콘솔에서 설정한 상시 안내 한 줄 — 비어 있으면 아무것도 렌더하지 않는다.
                 문제 풀이 화면에서는 작업 공간을 밀어내지 않도록 BannerSlot이 통째로 뺀다. */}
+            {/* 비즈니스용 도메인으로 들어온 방문자 안내 — 해당 호스트에서만 뜬다 */}
+            <DomainNotice />
             <BannerSlot>
               <GlobalBanner />
             </BannerSlot>

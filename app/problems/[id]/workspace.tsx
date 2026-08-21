@@ -813,7 +813,7 @@ export default function Workspace({
             '--- 작성 중인 코드 ---',
             code.slice(0, 2000),
           ].join('\n')}
-          className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/15 text-fg-on-dark-quiet transition-colors hover:border-rose-400/50 hover:text-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
+          className="dc-tap grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/15 text-fg-on-dark-quiet transition-colors hover:border-rose-400/50 hover:text-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
         />
         {/* 가이드 다시 보기 — "앞으로 보지 않기"로 껐어도 여기서 언제든 다시 열 수 있다 */}
         <button
@@ -821,7 +821,7 @@ export default function Workspace({
           onClick={() => setTourOpen(true)}
           aria-label="사용 가이드 다시 보기"
           title="사용 가이드 다시 보기"
-          className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-white/20 text-[10px] font-bold text-fg-on-dark-quiet transition-colors hover:border-brand-400 hover:text-brand-300"
+          className="dc-tap grid h-5 w-5 shrink-0 place-items-center rounded-full border border-white/20 text-[10px] font-bold text-fg-on-dark-quiet transition-colors hover:border-brand-400 hover:text-brand-300"
         >
           ?
         </button>

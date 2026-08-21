@@ -13,12 +13,14 @@ import {
   canWriteToBoard,
   clampBounty,
   forcedSecret,
+  supportsAnonymous,
   supportsBounty,
   supportsPinning,
   supportsSecret,
   supportsVerifiedOnly,
 } from '../board-rules';
 import { ensureAnonymousTag } from '../identity';
+import { canTrade, isCondition, parsePrice, MAX_SHIPPING_FEE } from '../market';
 import { can } from '../permissions-server';
 import { audit } from '../audit';
 
@@ -27,6 +29,9 @@ export interface PostFormState {
     title?: string[];
     content?: string[];
     url?: string[];
+    // 중고게시판 전용 입력
+    price?: string[];
+    region?: string[];
     form?: string[];
   };
 }
@@ -68,6 +73,17 @@ const postSchema = z
     message: 'SNS 게시판은 외부 링크(URL)가 필요합니다.',
     path: ['url'],
   });
+
+/**
+ * 이메일 인증 여부 — Supabase auth.users의 확인 시각을 본다.
+ * public.User에 사본을 두면 언젠가 반드시 어긋나므로, 필요한 순간에만 확인한다.
+ */
+async function isEmailVerified(userId: string): Promise<boolean> {
+  const rows = await prisma.$queryRaw<{ confirmed: boolean }[]>`
+    SELECT (email_confirmed_at IS NOT NULL) AS confirmed
+    FROM auth.users WHERE id = ${userId}::uuid LIMIT 1`.catch(() => []);
+  return rows[0]?.confirmed === true;
+}
 
 function parseLines(value: string | undefined): string[] {
   return (value ?? '')
@@ -201,6 +217,50 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
   const secret = forcedSecret(board) || (supportsSecret(board) && formData.get('secret') === 'on');
   const bounty = supportsBounty(board) ? clampBounty(formData.get('bounty')) : null;
 
+  /* ---------- 중고 거래 ----------
+     중고글은 게시글이면서 동시에 매물이다. 글만 만들고 매물을 못 만들면 "가격 없는 중고글"이
+     남으므로 검증을 먼저 끝내고 트랜잭션 안에서 함께 만든다. */
+  let listing: {
+    price: number;
+    condition: string;
+    conditionNote: string | null;
+    region: string | null;
+    shipping: boolean;
+    shippingFee: number | null;
+    sellerVerified: boolean;
+  } | null = null;
+
+  if (board === 'market') {
+    // 중고 거래는 이 서비스에서 유일하게 금전이 오가는 자리라 이메일 인증을 요구한다
+    const verified = await isEmailVerified(session.userId);
+    const eligibility = canTrade({ userId: session.userId, emailVerified: verified });
+    if (!eligibility.allowed) return { errors: { form: [eligibility.message ?? '거래할 수 없습니다.'] } };
+
+    const price = parsePrice(formData.get('price'));
+    if (price === null) return { errors: { price: ['판매 가격을 숫자로 입력해 주세요. (나눔은 0)'] } };
+
+    const conditionRaw = String(formData.get('condition') ?? 'used');
+    if (!isCondition(conditionRaw)) return { errors: { form: ['상품 상태를 골라 주세요.'] } };
+
+    const shipping = formData.get('shipping') === 'on';
+    const region = String(formData.get('region') ?? '').trim().slice(0, 60) || null;
+    if (!shipping && !region) {
+      return { errors: { region: ['직거래 희망 장소를 적거나 택배 거래를 켜 주세요.'] } };
+    }
+
+    const shippingFee = shipping ? parsePrice(formData.get('shippingFee'), MAX_SHIPPING_FEE) : null;
+
+    listing = {
+      price,
+      condition: conditionRaw,
+      conditionNote: String(formData.get('conditionNote') ?? '').trim().slice(0, 300) || null,
+      region,
+      shipping,
+      shippingFee,
+      sellerVerified: verified,
+    };
+  }
+
   // 익명 글이면 표시용 식별자를 미리 확보해 둔다(없으면 생성)
   if (anonymous) await ensureAnonymousTag(session.userId);
 
@@ -220,7 +280,8 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
         type: board === 'sns' ? 'link' : 'text',
         url: board === 'sns' ? url : null,
         snsPlatform: board === 'sns' ? snsPlatform || null : null,
-        anonymous: !!anonymous,
+        // 공지사항은 익명 불가 — 화면에서 감추는 것과 별개로 서버가 최종 판단한다
+        anonymous: supportsAnonymous(board) && !!anonymous,
         secret,
         bounty,
         // '인증된 사용자에게만 답변 받기'는 멘토게시판에서만 의미가 있다
@@ -232,6 +293,11 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
     if (attachments.length > 0) {
       await tx.attachment.createMany({
         data: attachments.map((a) => ({ ...a, postId: created.id })),
+      });
+    }
+    if (listing) {
+      await tx.marketListing.create({
+        data: { ...listing, postId: created.id, sellerId: session.userId },
       });
     }
     return created;

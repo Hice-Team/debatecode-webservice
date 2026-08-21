@@ -822,3 +822,72 @@ CREATE INDEX IF NOT EXISTS "MarketMessage_chatId_createdAt_idx" ON "MarketMessag
 ALTER TABLE public."MarketListing" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."MarketChat"    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public."MarketMessage" ENABLE ROW LEVEL SECURITY;
+
+-- 2026-08-20h: 지속 레이트 리밋
+--
+-- 기존 리미터는 인메모리다. 단일 서버에서는 맞지만 Cloudflare Workers에서는 요청마다
+-- 다른 아이솔레이트에 붙고 그 메모리는 수시로 사라진다. 즉 운영에서는 사실상 세지 않는다.
+-- 로그인·가입·비밀번호 재설정처럼 "틀린 횟수"가 곧 보안인 자리만 DB로 센다.
+CREATE TABLE IF NOT EXISTS "RateLimitCounter" (
+  "key"       TEXT NOT NULL PRIMARY KEY,
+  "count"     INTEGER NOT NULL DEFAULT 0,
+  "windowEnd" TIMESTAMP(3) NOT NULL
+);
+CREATE INDEX IF NOT EXISTS "RateLimitCounter_windowEnd_idx" ON "RateLimitCounter"("windowEnd");
+ALTER TABLE public."RateLimitCounter" ENABLE ROW LEVEL SECURITY;
+
+-- 원자적 증가 + 창 만료 처리를 한 문장으로. 애플리케이션에서 읽고-쓰면
+-- 동시 요청 두 개가 같은 값을 읽어 둘 다 통과하는 경쟁이 생긴다.
+CREATE OR REPLACE FUNCTION public.rate_limit_hit(
+  p_key TEXT,
+  p_limit INTEGER,
+  p_window_ms INTEGER
+) RETURNS TABLE(allowed BOOLEAN, current_count INTEGER, retry_after_ms INTEGER)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_now TIMESTAMP(3) := (now() AT TIME ZONE 'utc');
+  v_count INTEGER;
+  v_end TIMESTAMP(3);
+BEGIN
+  INSERT INTO "RateLimitCounter" ("key", "count", "windowEnd")
+  VALUES (p_key, 1, v_now + make_interval(secs => p_window_ms / 1000.0))
+  ON CONFLICT ("key") DO UPDATE SET
+    -- 창이 지났으면 1부터 다시, 아니면 누적
+    "count" = CASE WHEN "RateLimitCounter"."windowEnd" <= v_now THEN 1
+                   ELSE "RateLimitCounter"."count" + 1 END,
+    "windowEnd" = CASE WHEN "RateLimitCounter"."windowEnd" <= v_now
+                       THEN v_now + make_interval(secs => p_window_ms / 1000.0)
+                       ELSE "RateLimitCounter"."windowEnd" END
+  RETURNING "count", "windowEnd" INTO v_count, v_end;
+
+  RETURN QUERY SELECT
+    (v_count <= p_limit),
+    v_count,
+    GREATEST(0, (EXTRACT(EPOCH FROM (v_end - v_now)) * 1000)::INTEGER);
+END;
+$$;
+
+-- 만료된 카운터 정리 — 표가 무한히 자라지 않게 한다.
+CREATE OR REPLACE FUNCTION public.rate_limit_sweep() RETURNS INTEGER
+LANGUAGE plpgsql
+AS $$
+DECLARE v_deleted INTEGER;
+BEGIN
+  DELETE FROM "RateLimitCounter"
+  WHERE "windowEnd" < (now() AT TIME ZONE 'utc') - interval '1 hour';
+  GET DIAGNOSTICS v_deleted = ROW_COUNT;
+  RETURN v_deleted;
+END;
+$$;
+
+-- 2026-08-20i: 2차 보안 컬럼 — 스키마에는 있었으나 DB에 만들어진 적이 없었다.
+--
+-- 설정 페이지가 이 컬럼들을 select 하므로 접속할 때마다 Prisma P2022로 터졌다
+-- ("설정 페이지가 안 열린다"의 실제 원인). 드리프트는 scripts/check-schema-drift.ts로 잡는다.
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "twoFactorRecoveryEmail"           TEXT;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "twoFactorRecoveryEmailVerifiedAt" TIMESTAMP(3);
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "twoFactorEnabled"                 BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "twoFactorSecret"                  TEXT;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "twoFactorTempSecret"              TEXT;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "webauthnChallenge"                TEXT;

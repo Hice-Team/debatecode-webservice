@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { DIFFICULTY_LABELS, LANGUAGE_LABELS, type Language } from '@/app/lib/types';
+import { LANGUAGE_LABELS, type Language } from '@/app/lib/types';
 import { useLanguage } from '@/app/context/language-context';
 import { t } from '@/app/lib/i18n';
 

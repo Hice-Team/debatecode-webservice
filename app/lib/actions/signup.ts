@@ -24,7 +24,8 @@ import { createAdminClient } from '../supabase/admin';
 import { prisma } from '../prisma';
 import { assertEnabled, featureBlockMessage } from '../settings';
 import { addMarketingConsent } from '../marketing';
-import { rateLimit, clientIp } from '../rate-limit';
+import { clientIp } from '../rate-limit';
+import { durableRateLimit, retryAfterLabel } from '../rate-limit-durable';
 import { mapAuthError } from '../auth-errors';
 import { encryptSecret, decryptSecret } from '../crypto';
 import { saveDraft, adoptDraftByEmail, discardDraft, loadDraft } from '../signup-draft';
@@ -184,8 +185,13 @@ export async function saveSignupAccount(_prev: AccountStepState, formData: FormD
 
     // 무차별 가입 시도를 IP 단위로 막는다 (인증 코드가 없어진 만큼 여기가 유일한 방벽이다)
     const ip = await clientIp();
-    if (!rateLimit(`signup:${ip}`, 10, 10 * 60_000)) {
-      return { errors: { form: ['가입 시도가 너무 잦습니다. 잠시 후 다시 시도해 주세요.'] } };
+    const signupLimit = await durableRateLimit(`signup:${ip}`, 10, 10 * 60_000);
+    if (!signupLimit.allowed) {
+      return {
+        errors: {
+          form: [`가입 시도가 너무 잦습니다. ${retryAfterLabel(signupLimit.retryAfterMs)} 후에 다시 시도해 주세요.`],
+        },
+      };
     }
 
     if (await prisma.user.findUnique({ where: { email }, select: { id: true } })) {

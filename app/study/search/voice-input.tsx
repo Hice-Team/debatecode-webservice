@@ -373,7 +373,7 @@ export function VoiceButton({
       aria-pressed={listening}
       aria-label={listening ? stopLabel : label}
       title={listening ? stopLabel : label}
-      className={`relative grid h-9 w-9 shrink-0 place-items-center rounded-full transition active:scale-95 disabled:opacity-35 ${
+      className={`relative grid h-10 w-10 shrink-0 place-items-center rounded-full transition active:scale-95 disabled:opacity-35 ${
         listening ? 'bg-rose-500 text-white' : idle
       }`}
     >

@@ -2,7 +2,6 @@
 
 // 운영 콘솔 액션 — 역할 가드로 접근을 제어한다.
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
 import { getUser } from '../dal';
 import { prisma } from '../prisma';
 import { canReview, hasConsoleAccess } from '../roles';

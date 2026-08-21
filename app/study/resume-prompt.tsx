@@ -92,7 +92,7 @@ export default function ResumePrompt({
         onClick={dismiss}
         aria-label="이 안내 닫기"
         title="닫기"
-        className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-fg-quiet transition hover:bg-paper hover:text-ink-soft"
+        className="dc-tap absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-fg-quiet transition hover:bg-paper hover:text-ink-soft"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2" aria-hidden>
           <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />

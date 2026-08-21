@@ -12,6 +12,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { createPost, type PostFormState } from '@/app/lib/actions/community';
 import { BOARDS, SNS_PLATFORMS, boardDesc } from '../boards';
+import { CONDITIONS, CONDITION_LABELS } from '@/app/lib/market';
 import {
   BOUNTY_DEFAULT,
   BOUNTY_MAX,
@@ -83,6 +84,10 @@ export default function WriteForm({ initialBoard, role }: { initialBoard: string
   const isSns = board === 'sns';
   const canSecret = supportsSecret(board); // 문의게시판 — 비밀글 선택
   const canBounty = supportsBounty(board); // 문의게시판 — 채택 포인트
+  const isMarket = board === 'market'; // 중고게시판 — 매물 정보
+  const isNotice = board === 'notice'; // 공지사항 — 익명 불가
+  // 택배 여부에 따라 택배비 칸을 열고 닫는다
+  const [shipping, setShipping] = useState(false);
   const canVerifiedOnly = supportsVerifiedOnly(board); // 멘토게시판 — 인증 답변 전용 옵션
   // 쓸 수 없는 게시판은 목록에서 아예 뺀다 — 고르고 나서 거절당하는 것보다 낫다
   const writableBoards = BOARDS.filter((b) => canWriteToBoard(b.key, role));
@@ -306,6 +311,100 @@ export default function WriteForm({ initialBoard, role }: { initialBoard: string
           <p className="mt-1.5 text-[11px] leading-relaxed text-fg-muted">{boardDesc(board)}</p>
         </div>
 
+        {/* 중고 매물 — 가격과 거래 방법이 없으면 글이 아니라 그냥 사진이다.
+            그래서 옵션이 아니라 본 입력으로 올려 둔다. */}
+        {isMarket && (
+          <div className="space-y-3 rounded-[var(--radius-panel)] border border-hairline bg-paper/50 p-4">
+            <p className={LABEL}>거래 정보</p>
+
+            <div>
+              <label htmlFor="price" className="block text-sm text-fg-secondary">
+                판매 가격
+              </label>
+              <div className="mt-1.5 flex items-center gap-2">
+                <input
+                  id="price"
+                  name="price"
+                  inputMode="numeric"
+                  placeholder="0"
+                  className={`${FIELD} dc-num`}
+                />
+                <span className="shrink-0 text-sm text-fg-muted">원</span>
+              </div>
+              <p className="mt-1 text-[11px] text-fg-muted">0을 넣으면 나눔으로 표시됩니다.</p>
+              {state.errors?.price && <p className="mt-1 text-xs text-rose-600">{state.errors.price[0]}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="condition" className="block text-sm text-fg-secondary">
+                상품 상태
+              </label>
+              <select id="condition" name="condition" defaultValue="used" className={`${FIELD} mt-1.5`}>
+                {CONDITIONS.map((key) => (
+                  <option key={key} value={key}>
+                    {CONDITION_LABELS[key]}
+                  </option>
+                ))}
+              </select>
+              <input
+                name="conditionNote"
+                placeholder="예: 모서리 찍힘, 필기 약간 있음"
+                maxLength={300}
+                className={`${FIELD} mt-2`}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="region" className="block text-sm text-fg-secondary">
+                직거래 희망 장소
+              </label>
+              <input
+                id="region"
+                name="region"
+                placeholder="예: 서울 성북구 안암동"
+                maxLength={60}
+                className={`${FIELD} mt-1.5`}
+              />
+              {state.errors?.region && <p className="mt-1 text-xs text-rose-600">{state.errors.region[0]}</p>}
+            </div>
+
+            <label className="flex cursor-pointer items-center gap-2.5 text-sm text-fg-secondary">
+              <input
+                type="checkbox"
+                name="shipping"
+                checked={shipping}
+                onChange={(e) => setShipping(e.target.checked)}
+                className="h-4 w-4 accent-[var(--color-signal)]"
+              />
+              택배 거래도 가능
+            </label>
+
+            {shipping && (
+              <div>
+                <label htmlFor="shippingFee" className="block text-sm text-fg-secondary">
+                  택배비
+                </label>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <input
+                    id="shippingFee"
+                    name="shippingFee"
+                    inputMode="numeric"
+                    placeholder="3000"
+                    className={`${FIELD} dc-num`}
+                  />
+                  <span className="shrink-0 text-sm text-fg-muted">원</span>
+                </div>
+                <p className="mt-1 text-[11px] text-fg-muted">비워 두면 &apos;착불 또는 협의&apos;로 표시됩니다.</p>
+              </div>
+            )}
+
+            <p className="text-[11px] leading-relaxed text-fg-muted">
+              중고 거래는 이메일 인증을 마친 계정만 등록할 수 있습니다. 거래 전 상대의 계좌·연락처를
+              더치트에서 조회해 보시길 권합니다.
+            </p>
+          </div>
+        )}
+
         <div className="space-y-2.5">
           <p className={LABEL}>{t('post-options', language)}</p>
 
@@ -371,10 +470,14 @@ export default function WriteForm({ initialBoard, role }: { initialBoard: string
             </label>
           )}
 
-          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-fg">
-            <input type="checkbox" name="anonymous" className="h-4 w-4 accent-[var(--color-signal)]" />
-            {t('post-anonymous', language)}
-          </label>
+          {/* 공지사항은 익명으로 쓸 수 없다 — 공지는 "누가 말하는지"가 내용의 일부다.
+              운영진이 아닌 것처럼 보이는 공지는 신뢰할 근거가 사라진다. */}
+          {!isNotice && (
+            <label className="flex cursor-pointer items-center gap-2.5 text-sm text-fg">
+              <input type="checkbox" name="anonymous" className="h-4 w-4 accent-[var(--color-signal)]" />
+              {t('post-anonymous', language)}
+            </label>
+          )}
         </div>
 
         {state.errors?.form && <p className="text-sm text-rose-600">{state.errors.form[0]}</p>}

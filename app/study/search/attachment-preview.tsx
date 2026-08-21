@@ -148,7 +148,7 @@ export default function AttachmentPreview({
 
         <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
           {kind === 'image' && (
-            /* eslint-disable-next-line @next/next/no-img-element -- Storage 공개 URL을 그대로 쓴다(최적화 대상 아님) */
+             
             <img
               src={file.previewUrl || file.url}
               alt={file.name}

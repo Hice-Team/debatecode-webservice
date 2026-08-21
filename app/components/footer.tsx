@@ -15,7 +15,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="md:col-span-2 space-y-4">
-            <Link href="/" className="inline-block">
+            <Link href="/" className="inline-block py-2">
               <Image src="/logo-dark.png" alt="Debate Code" width={805} height={310} className="h-7 w-auto object-contain" />
             </Link>
             <p className="text-sm text-fg-on-dark-muted max-w-sm leading-relaxed">{t('footer-desc', language)}</p>
@@ -50,14 +50,17 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs text-fg-on-dark-quiet">
           <div className="space-y-1">
             <p>{t('footer-rep', language)}</p>
+            {/* 제작사와 소재지 */}
+            <p>{t('footer-maker', language)}</p>
+            <p>{t('footer-address', language)}</p>
             <p>{t('email', language)}: hicecorp.team@gmail.com</p>
             <div className="flex flex-wrap gap-3 pt-1">
-              <Link href="/legal/terms" className="hover:text-fg-on-dark-secondary transition underline underline-offset-2">{t('footer-terms', language)}</Link>
-              <Link href="/legal/ai-terms" className="hover:text-fg-on-dark-secondary transition underline underline-offset-2">{t('footer-ai-terms', language)}</Link>
-              <Link href="/legal/privacy" className="hover:text-fg-on-dark-secondary transition underline underline-offset-2 font-medium">{t('footer-privacy', language)}</Link>
-              <Link href="/legal/consent" className="hover:text-fg-on-dark-secondary transition underline underline-offset-2">{t('footer-consent', language)}</Link>
-              <Link href="/legal/mate-terms" className="hover:text-fg-on-dark-secondary transition underline underline-offset-2">{t('footer-mate-terms', language)}</Link>
-              <Link href="/legal/point-terms" className="hover:text-fg-on-dark-secondary transition underline underline-offset-2">{t('footer-point-terms', language)}</Link>
+              <Link href="/legal/terms" className="dc-tap whitespace-nowrap py-1.5 hover:text-fg-on-dark-secondary transition underline underline-offset-2">{t('footer-terms', language)}</Link>
+              <Link href="/legal/ai-terms" className="dc-tap whitespace-nowrap py-1.5 hover:text-fg-on-dark-secondary transition underline underline-offset-2">{t('footer-ai-terms', language)}</Link>
+              <Link href="/legal/privacy" className="dc-tap whitespace-nowrap py-1.5 hover:text-fg-on-dark-secondary transition underline underline-offset-2 font-medium">{t('footer-privacy', language)}</Link>
+              <Link href="/legal/consent" className="dc-tap whitespace-nowrap py-1.5 hover:text-fg-on-dark-secondary transition underline underline-offset-2">{t('footer-consent', language)}</Link>
+              <Link href="/legal/mate-terms" className="dc-tap whitespace-nowrap py-1.5 hover:text-fg-on-dark-secondary transition underline underline-offset-2">{t('footer-mate-terms', language)}</Link>
+              <Link href="/legal/point-terms" className="dc-tap whitespace-nowrap py-1.5 hover:text-fg-on-dark-secondary transition underline underline-offset-2">{t('footer-point-terms', language)}</Link>
             </div>
           </div>
           <div className="text-right space-y-1">

@@ -15,7 +15,7 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
     <div className="min-h-screen bg-paper flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link href="/" className="inline-block">
+          <Link href="/" className="inline-block py-2.5">
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600">WELCOME BACK</span>
           </Link>
           <h1

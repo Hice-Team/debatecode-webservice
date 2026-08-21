@@ -157,7 +157,7 @@ export default function Composer({
               disabled={disabled}
               placeholder={t('ai-search-followup-placeholder', language)}
               aria-label={t('ai-search-followup-placeholder', language)}
-              className="dc-scroll min-w-0 flex-1 resize-none self-center bg-transparent px-2 py-2 text-[15px] leading-6 text-ink placeholder:text-fg-quiet focus:outline-none disabled:cursor-not-allowed disabled:text-fg-quiet"
+              className="dc-scroll min-w-0 flex-1 resize-none self-center bg-transparent px-2 py-3.5 text-[15px] leading-6 text-ink placeholder:text-fg-quiet focus:outline-none disabled:cursor-not-allowed disabled:text-fg-quiet"
             />
           )}
 
@@ -191,7 +191,7 @@ export default function Composer({
                 onClick={onStop}
                 aria-label={t('ai-stop', language)}
                 title={t('ai-stop', language)}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-white shadow-sm transition hover:bg-ink/85 active:scale-95"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-white shadow-sm transition hover:bg-ink/85 active:scale-95"
               >
                 {/* 정지 — 사각형 둘레에 진행 링을 돌려 "아직 도는 중"임을 남긴다 */}
                 <span aria-hidden className="relative grid h-full w-full place-items-center">
@@ -205,7 +205,7 @@ export default function Composer({
                 disabled={!text.trim() || busy}
                 aria-label={t('ai-search-submit', language)}
                 title={t('ai-search-submit', language)}
-                className="group/send grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.28)] transition-[color,background-color,border-color,box-shadow,transform] hover:shadow-[0_3px_12px_rgba(24,0,172,0.4)] active:scale-95 disabled:bg-none disabled:bg-ink/[0.07] disabled:text-fg-quiet disabled:shadow-none"
+                className="group/send grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.28)] transition-[color,background-color,border-color,box-shadow,transform] hover:shadow-[0_3px_12px_rgba(24,0,172,0.4)] active:scale-95 disabled:bg-none disabled:bg-ink/[0.07] disabled:text-fg-quiet disabled:shadow-none"
               >
                 {busy ? (
                   <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none" />

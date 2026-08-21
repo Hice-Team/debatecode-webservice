@@ -105,7 +105,7 @@ export default function AnswerToolbar({
   }
 
   const buttonClass =
-    'grid h-7 w-7 place-items-center rounded-full text-fg-on-dark-quiet transition-colors hover:bg-white/10 hover:text-fg-on-dark disabled:opacity-30';
+    'dc-tap grid h-7 w-7 place-items-center rounded-full text-fg-on-dark-quiet transition-colors hover:bg-white/10 hover:text-fg-on-dark disabled:opacity-30';
   const menuItemClass =
     'flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[12px] text-fg-on-dark transition-colors hover:bg-white/[0.06]';
 

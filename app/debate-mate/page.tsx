@@ -3,7 +3,6 @@ import type { Metadata } from 'next';
 import { prisma } from '@/app/lib/prisma';
 import { getSessionOptional } from '@/app/lib/dal';
 import I18nSlot from '@/app/components/i18n-slot';
-import { isBuiltinLive } from '@/app/lib/ai/builtin';
 import { PageShell, PageHeader } from '@/app/components/page-shell';
 import MateApply from '@/app/dashboard/mate-apply';
 
@@ -33,7 +32,6 @@ export default async function DebateMatePage() {
     { title: '디베이트포인트 제공', desc: '출제 횟수, 문제 은행 기여도, 저작권 양도, 검토 참여 등 활동에 따라 기프티콘 교환 가능한 디베이트포인트를 제공합니다.'}
   ];
 
-  const live = isBuiltinLive();
 
   return (
     <PageShell width="4xl">

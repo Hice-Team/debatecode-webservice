@@ -18,6 +18,7 @@ import SettingsShell from './settings-shell';
 import { SettingRow, SettingValue } from './ui';
 import DeleteAccount from './delete-account';
 import DataSection from './data-section';
+import AccessibilitySection from './accessibility-section';
 
 export const metadata: Metadata = { title: '설정' };
 
@@ -121,6 +122,12 @@ export default async function SettingsPage() {
       icon: icon('M9 7H7a5 5 0 0 0 0 10h2M15 7h2a5 5 0 0 1 0 10h-2M8.5 12h7'),
     },
     {
+      id: 'accessibility',
+      label: '접근성 및 표시',
+      keywords: ['애니메이션', '움직임', '모션', '낭독', 'TTS', '속도', '접근성', 'motion', 'accessibility'],
+      icon: icon('M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17ZM8.5 12h7M12 8.5v7'),
+    },
+    {
       id: 'data',
       label: '데이터 제어',
       keywords: ['데이터', '삭제', '약관', '방침', '개인정보', 'AI Search 대화'],
@@ -190,6 +197,8 @@ export default async function SettingsPage() {
         </ul>
       </div>
     ),
+
+    accessibility: <AccessibilitySection />,
 
     data: <DataSection aiSessionCount={aiSessionCount} />,
 

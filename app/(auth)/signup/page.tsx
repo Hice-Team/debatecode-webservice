@@ -59,7 +59,7 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
     <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
         <div className="mb-8 text-center">
-          <Link href="/" className="inline-block">
+          <Link href="/" className="inline-block py-2.5">
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600">JOIN THE DEBATE</span>
           </Link>
           <h1

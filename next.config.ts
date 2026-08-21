@@ -14,9 +14,13 @@ const documentCsp = [
   // cdn.channel.io / *.channel.io — 채널톡 SDK (커뮤니티/대시보드/설정/온보딩 상담 위젯)
   // apis.google.com / accounts.google.com — AI Search 첨부의 "Drive에서 파일 추가"(Google Picker)
   `script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.channel.io https://apis.google.com https://accounts.google.com${isDev ? " 'unsafe-eval'" : ""}`,
-  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.channel.io https://accounts.google.com",
+  // fonts.googleapis.com — layout.tsx가 Space Grotesk·IBM Plex를 이 주소의 스타일시트로 불러온다.
+  // 여기 없으면 CSP가 조용히 막고, 화면은 시스템 폰트로 떨어진 채 아무 경고도 보이지 않는다
+  // (실제로 그 상태였다 — 브라우저 콘솔에서만 확인된다).
+  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.channel.io https://accounts.google.com https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
-  "font-src 'self' data: https://cdn.jsdelivr.net https://cdn.channel.io",
+  // fonts.gstatic.com — 위 스타일시트가 실제 폰트 파일을 여기서 받아온다(둘 다 있어야 뜬다)
+  "font-src 'self' data: https://cdn.jsdelivr.net https://cdn.channel.io https://fonts.gstatic.com",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://*.channel.io wss://*.channel.io https://www.googleapis.com https://accounts.google.com",
   "worker-src 'self' blob:",
   // supabase.co — 첨부 미리보기의 PDF는 <iframe>으로 연다. 프록시(/api/ai-search/file)가

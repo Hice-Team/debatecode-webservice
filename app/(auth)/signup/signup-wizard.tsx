@@ -19,6 +19,7 @@ import {
   type AccountStepState,
   type ProfileStepState,
 } from '@/app/lib/actions/signup';
+import { sendVerificationEmail } from '@/app/lib/actions/signup-extras';
 import OAuthButtons from '../oauth-buttons';
 import {
   GENDER_OPTIONS,
@@ -39,12 +40,13 @@ const STEP_LABELS: Record<Step, string> = {
 };
 
 const inputClass =
-  'w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal';
+  'w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-4 py-3 text-sm text-fg placeholder:text-fg-quiet focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25';
 const labelClass = 'block font-mono text-xs text-fg-secondary tracking-wider mb-1.5';
 const primaryBtnClass =
-  'w-full rounded-lg bg-brand-600 text-white font-semibold py-3 hover:bg-brand-500 transition-colors disabled:opacity-50 disabled:pointer-events-none';
+  'w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-50 disabled:pointer-events-none';
 const errorTextClass = 'mt-1.5 text-xs text-rose-600';
-const formErrorClass = 'text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-4 py-2.5';
+const formErrorClass =
+  'rounded-[var(--radius-card)] border border-rose-200 bg-rose-50/70 px-4 py-3 text-sm text-rose-700';
 
 function FieldError({ messages }: { messages?: string[] }) {
   if (!messages?.length) return null;
@@ -132,7 +134,9 @@ function ConsentStep({
     setMarketing(v);
   };
 
-  const rowClass = 'flex items-start gap-2.5 text-sm text-fg-secondary cursor-pointer';
+  // py-2.5 — 동의 항목은 체크박스가 아니라 줄 전체가 누르는 자리다.
+  // 줄 높이가 20px이면 손가락으로 옆 항목을 같이 누르게 된다.
+  const rowClass = 'flex cursor-pointer items-start gap-2.5 py-2.5 text-sm text-fg-secondary';
   const checkboxClass = 'mt-0.5 h-4 w-4 accent-[#4531d9]';
 
   return (
@@ -162,7 +166,11 @@ function ConsentStep({
             />
             <span>
               <span className="font-mono text-[11px] text-signal mr-1.5">[필수]</span>
-              <Link href={t.href} target="_blank" className="underline underline-offset-2 hover:text-ink-soft">
+              <Link
+                href={t.href}
+                target="_blank"
+                className="-my-3.5 inline-block py-3.5 underline underline-offset-2 hover:text-fg"
+              >
                 {t.label}
               </Link>
               에 동의합니다.
@@ -502,33 +510,96 @@ function ProfileStep({ onSaved, onBack }: { onSaved: (nickname?: string) => void
 
 /* ---------- 5단계: 환영 ---------- */
 
+/**
+ * 가입 마무리 — 선택 설정 세 가지.
+ *
+ * 계정은 이미 만들어졌다. 여기 있는 것은 전부 **나중에 해도 되는 일**이고, 그 사실을
+ * 화면에서 분명히 한다. 예전처럼 인증을 통과해야 들어올 수 있게 만들면 여기서 사람을 잃는다.
+ *
+ * 그래도 자리를 마련해 둔 이유는, 필요해진 순간에 설정 화면을 찾아 들어가는 사람이
+ * 생각보다 적기 때문이다. 지금 한 번은 보여 준다.
+ */
 function WelcomeStep({ nickname }: { nickname: string }) {
+  const [mailState, setMailState] = useState<{ ok?: string; error?: string } | null>(null);
+  const [sending, setSending] = useState(false);
+
+  async function sendMail() {
+    setSending(true);
+    setMailState(null);
+    try {
+      setMailState(await sendVerificationEmail());
+    } finally {
+      setSending(false);
+    }
+  }
+
   return (
-    <div className="space-y-6 text-center py-4">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-signal/15 text-3xl">🎉</div>
-      <div>
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-600">WELCOME ABOARD</span>
-        <h2 className="mt-2 text-2xl font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-          {nickname ? `${nickname}님, 환영합니다!` : '가입을 환영합니다!'}
+    <div className="space-y-6 py-4">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          {nickname ? `${nickname}님, 환영합니다` : '가입이 끝났습니다'}
         </h2>
-        <p className="mt-3 text-sm text-fg-secondary leading-relaxed">
-          이제 문제를 풀고, DebateAI 면접관 앞에서
-          <br />
-          당신의 코드를 변호할 차례입니다.
+        <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
+          계정이 만들어졌습니다. 아래는 모두 <strong>선택</strong>이며 나중에 설정에서도 할 수 있습니다.
         </p>
       </div>
 
-      <div className="space-y-3">
-        <Link href="/onboarding/ai" className={`${primaryBtnClass} block`}>
-          DebateAI 면접관 설정하기
-        </Link>
-        <Link
-          href="/dashboard"
-          className="block w-full rounded-lg border border-ink/15 bg-white py-3 text-sm font-medium text-fg-secondary hover:border-ink/40 transition-colors"
-        >
-          나중에 하기 — 대시보드로 이동
-        </Link>
-      </div>
+      <ul className="space-y-3">
+        {/* 1. 이메일 인증 — 왜 필요한지 먼저 말한다 */}
+        <li className="rounded-[var(--radius-panel)] border border-hairline bg-white p-4">
+          <p className="text-sm font-semibold text-fg">이메일 인증</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-fg-muted">
+            비밀번호를 잊었을 때 되찾는 길이 되고, 중고 거래는 인증한 계정만 이용할 수 있습니다.
+          </p>
+          <button
+            type="button"
+            onClick={sendMail}
+            disabled={sending}
+            className="mt-3 rounded-full border border-hairline px-4 py-2 text-[13px] font-medium text-fg-secondary transition-colors hover:border-ink/25 disabled:opacity-40"
+          >
+            {sending ? '보내는 중…' : '인증 메일 보내기'}
+          </button>
+          {mailState?.ok && <p className="mt-2 text-[12px] text-emerald-700">{mailState.ok}</p>}
+          {mailState?.error && (
+            <p role="alert" className="mt-2 text-[12px] text-rose-600">
+              {mailState.error}
+            </p>
+          )}
+        </li>
+
+        {/* 2. AI 키 — 서비스 기본 모델로도 쓸 수 있다는 점을 분명히 */}
+        <li className="rounded-[var(--radius-panel)] border border-hairline bg-white p-4">
+          <p className="text-sm font-semibold text-fg">내 AI 키 등록</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-fg-muted">
+            등록하지 않아도 무료 모델로 쓸 수 있습니다. 자기 키를 넣으면 일일 한도 없이
+            원하는 모델을 씁니다. 키는 암호화해 저장합니다.
+          </p>
+          <Link
+            href="/onboarding/ai"
+            className="mt-3 inline-block rounded-full border border-hairline px-4 py-2 text-[13px] font-medium text-fg-secondary transition-colors hover:border-ink/25"
+          >
+            AI 설정하기
+          </Link>
+        </li>
+
+        {/* 3. 2차 보안 — 등록 흐름(QR 스캔)이 길어서 설정 화면으로 보낸다 */}
+        <li className="rounded-[var(--radius-panel)] border border-hairline bg-white p-4">
+          <p className="text-sm font-semibold text-fg">2차 보안</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-fg-muted">
+            OTP 앱이나 보안키(패스키)를 등록하면 비밀번호가 새더라도 로그인을 막을 수 있습니다.
+          </p>
+          <Link
+            href="/settings#security"
+            className="mt-3 inline-block rounded-full border border-hairline px-4 py-2 text-[13px] font-medium text-fg-secondary transition-colors hover:border-ink/25"
+          >
+            보안 설정 열기
+          </Link>
+        </li>
+      </ul>
+
+      <Link href="/dashboard" className={`${primaryBtnClass} block text-center`}>
+        건너뛰고 시작하기
+      </Link>
     </div>
   );
 }

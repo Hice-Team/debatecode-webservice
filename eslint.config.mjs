@@ -28,6 +28,37 @@ const eslintConfig = defineConfig([
     ".cursor/**",
     ".codex/**",
   ]),
+
+  {
+    rules: {
+      // `_`로 시작하는 이름은 "쓰지 않을 것을 알고 남겨 둔 자리"라는 뜻으로 이미 쓰고 있다.
+      // 시그니처를 맞추려고 받는 인자(_board, _role)나 구조분해에서 버리는 값(_s)이 그렇다.
+      // 규칙이 이 관례를 모르면 개발자는 경고를 지우려고 이름을 더 이상하게 바꾸게 된다.
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+        },
+      ],
+
+      // next/image를 쓰지 않는 것은 실수가 아니라 결정이다.
+      //
+      // 이 앱이 그리는 이미지는 전부 이용자가 올린 것이거나 외부 주소다(Supabase Storage의
+      // 서명 URL, 커뮤니티 첨부, 상품 사진, 아바타). next/image로 최적화하려면
+      //   1) 도메인마다 remotePatterns를 등록해야 하는데 서명 URL은 쿼리가 매번 바뀌고,
+      //   2) Cloudflare Workers 배포에서는 이미지 최적화가 별도 과금 대상이다.
+      // 최적화가 필요해지는 시점이 오면 그때 loader를 붙이는 편이 낫다.
+      '@next/next/no-img-element': 'off',
+
+      // App Router에서는 오탐이다. 이 규칙은 pages/_document.js를 전제로 하는데
+      // 이 저장소에는 pages 디렉터리가 없고, 폰트는 app/layout.tsx의 <head>에서
+      // preconnect와 함께 한 번만 불러온다.
+      '@next/next/no-page-custom-font': 'off',
+    },
+  },
 ]);
 
 export default eslintConfig;

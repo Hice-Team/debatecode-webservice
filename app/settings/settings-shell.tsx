@@ -61,7 +61,7 @@ export default function SettingsShell({
             onChange={(e) => setQuery(e.target.value)}
             aria-label="설정 검색"
             placeholder="설정 검색"
-            className="w-full rounded-full border border-hairline bg-white py-2 pl-9 pr-3 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/20"
+            className="w-full rounded-[var(--radius-card)] border border-hairline bg-surface py-2.5 pl-9 pr-3 text-sm placeholder:text-fg-quiet focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/20"
           />
         </div>
 
@@ -74,8 +74,13 @@ export default function SettingsShell({
                 type="button"
                 onClick={() => setActive(c.id)}
                 aria-current={on ? 'true' : undefined}
-                className={`flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
-                  on ? 'bg-ink/[0.06] font-semibold text-ink' : 'text-fg-secondary hover:bg-ink/[0.03] hover:text-ink'
+                // Liner식 — 선택 상태를 회색이 아니라 브랜드 틴트로 표시한다.
+                // 회색 선택은 "비활성"으로도 읽혀서, 지금 어느 화면인지 한눈에 안 들어온다.
+                // 좁은 화면에서는 가로 탭이 되므로 pill, 넓은 화면에서는 목록이라 8px.
+                className={`flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-full px-3.5 py-2.5 text-sm transition-colors md:rounded-[var(--radius-card)] ${
+                  on
+                    ? 'bg-brand-50 font-semibold text-signal'
+                    : 'text-fg-secondary hover:bg-paper hover:text-fg'
                 }`}
               >
                 <span aria-hidden className={on ? 'text-signal' : 'text-fg-muted'}>
@@ -95,10 +100,17 @@ export default function SettingsShell({
       <section aria-live="polite" className="min-w-0">
         {current && (
           <>
-            <h2 className="border-b border-hairline pb-3 font-display text-xl font-bold tracking-tight text-ink">
-              {current.label}
-            </h2>
-            <div className="pt-1">{panels[current.id]}</div>
+            {/* 제목 아래에 그 갈래가 무엇을 다루는지 한 줄 — 항목 이름만으로는
+                "여기서 무엇을 바꿀 수 있는지" 알기 어렵다. */}
+            <div className="border-b border-hairline pb-4">
+              <h2 className="font-display text-xl font-bold tracking-tight text-fg">{current.label}</h2>
+              {current.keywords.length > 0 && (
+                <p className="mt-1 text-[13px] text-fg-muted">
+                  {current.keywords.slice(0, 4).join(' · ')}
+                </p>
+              )}
+            </div>
+            <div className="pt-2">{panels[current.id]}</div>
           </>
         )}
       </section>

@@ -208,7 +208,7 @@ export default function TwoFactor({
 
         {qrDataUrl && (
           <div className="mt-4 flex flex-wrap items-start gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element -- data: URL이라 최적화 대상이 아니다 */}
+            { }
             <img src={qrDataUrl} alt="TOTP 등록용 QR 코드" width={200} height={200} className="rounded-lg border border-hairline" />
             <div className="min-w-[16rem] flex-1">
               <p className="font-mono text-xs text-fg-secondary">스캔 후 생성된 6자리 코드를 입력하세요.</p>

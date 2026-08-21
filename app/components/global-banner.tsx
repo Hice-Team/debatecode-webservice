@@ -19,7 +19,7 @@ const TONE_CLASS: Record<string, string> = {
 };
 
 const BTN_CLASS =
-  'shrink-0 rounded-full border border-current/30 bg-white/15 px-3 py-1 text-[11px] font-semibold hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current';
+  'shrink-0 rounded-full border border-current/30 bg-white/15 px-3.5 py-3 text-[11px] font-semibold transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current';
 
 export default async function GlobalBanner() {
   const [text, tone, actionType, actionTarget, actionLabel] = await Promise.all([

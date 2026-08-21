@@ -258,7 +258,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
         <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">방문자에게 보이는 모습</p>
         <div className="overflow-hidden rounded-[var(--radius-panel)] border border-ink/15 bg-white shadow-sm">
           {preview && (
-            /* eslint-disable-next-line @next/next/no-img-element */
+             
             <img
               src={preview}
               alt=""

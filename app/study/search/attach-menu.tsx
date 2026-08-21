@@ -332,7 +332,7 @@ export default function AttachMenu({
         aria-expanded={open}
         aria-label={t('ai-attach', language)}
         title={t('ai-attach', language)}
-        className="grid h-9 w-9 place-items-center rounded-full text-fg-muted transition hover:bg-paper hover:text-signal disabled:opacity-40"
+        className="grid h-10 w-10 place-items-center rounded-full text-fg-muted transition hover:bg-paper hover:text-signal disabled:opacity-40"
       >
         {busy ? (
           <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-ink/15 border-t-signal motion-reduce:animate-none" />

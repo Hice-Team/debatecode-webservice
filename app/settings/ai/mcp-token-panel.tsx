@@ -2,15 +2,14 @@
 
 // debateNetwork(MCP)·debateBridge 연동 토큰 패널.
 // 발급 시 평문 토큰을 1회만 노출하고, 서버에는 해시만 저장된다.
-import { useState, useTransition } from 'react';
-import { generateMcpToken, revokeMcpToken } from '@/app/lib/actions/mcp-token';
 
 interface Props {
   prefix: string | null;
   createdAt: string | null;
 }
 
-export default function McpTokenPanel({ prefix, createdAt }: Props) {
+// 기능을 다시 켤 때 prefix·createdAt과 generateMcpToken/revokeMcpToken을 되살린다.
+export default function McpTokenPanel(_props: Props) {
   // 현재 로컬 연동 기능은 준비중입니다. UI에서 기능을 숨기고 안내만 표시합니다.
   return (
     <div className="dc-card rounded-xl p-8">
