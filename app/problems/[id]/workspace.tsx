@@ -796,6 +796,25 @@ export default function Workspace({
            스크롤해도 컨트롤이 따라오도록 sticky. 워크스페이스는 자체 스크롤 컨테이너를
            쓰므로 top-0으로 붙여도 사이트 헤더와 겹치지 않는다. */}
       <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-white/10 bg-[#0B0D12]/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-[#0B0D12]/80">
+        {/* 문제·에디터 신고 — 지문이나 채점이 잘못됐을 때 그 자리에서 알릴 수 있어야 한다.
+            문의로 흘려보내면 어느 문제였는지부터 다시 물어야 한다.
+            스트립 맨 왼쪽에 붙여, 어느 모드에서나 같은 자리에서 찾게 한다. */}
+        <ReportButton
+          targetType="problem"
+          targetId={String(problem.id)}
+          variant="icon"
+          label="문제 오류 신고"
+          autoContext={[
+            `문제 #${problem.id} ${problem.title}`,
+            `난이도 ${problem.difficulty} · ${problem.category}`,
+            `언어 ${language}`,
+            '',
+            '--- 작성 중인 코드 ---',
+            code.slice(0, 2000),
+          ].join('\n')}
+          className="dc-tap grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/15 text-fg-on-dark-quiet transition-colors hover:border-rose-400/50 hover:text-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
+        />
+        <span aria-hidden className="h-4 w-px shrink-0 bg-white/10" />
         <span className={`px-2 py-0.5 rounded-full border text-[11px] font-medium ${DIFFICULTY_BADGE[problem.difficulty]}`}>
           {DIFFICULTY_LABELS[problem.difficulty]}
         </span>
@@ -815,23 +834,6 @@ export default function Workspace({
         </h1>
         <span className="font-mono text-[11px] text-fg-on-dark-quiet">{problem.category}</span>
 
-        {/* 문제·에디터 신고 — 지문이나 채점이 잘못됐을 때 이용자가 그 자리에서 알릴 수 있어야 한다.
-            문의로 흘려보내면 어느 문제였는지부터 다시 물어야 한다. */}
-        <ReportButton
-          targetType="problem"
-          targetId={String(problem.id)}
-          variant="icon"
-          label="문제 오류 신고"
-          autoContext={[
-            `문제 #${problem.id} ${problem.title}`,
-            `난이도 ${problem.difficulty} · ${problem.category}`,
-            `언어 ${language}`,
-            '',
-            '--- 작성 중인 코드 ---',
-            code.slice(0, 2000),
-          ].join('\n')}
-          className="dc-tap grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/15 text-fg-on-dark-quiet transition-colors hover:border-rose-400/50 hover:text-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
-        />
         {/* 가이드 다시 보기 — "앞으로 보지 않기"로 껐어도 여기서 언제든 다시 열 수 있다 */}
         <button
           type="button"
@@ -1643,7 +1645,7 @@ export default function Workspace({
             <div className="absolute inset-0 z-30 flex items-center justify-center bg-ink/85 backdrop-blur-sm p-6">
               <div className="dc-scroll max-h-[88vh] w-full max-w-md space-y-5 overflow-y-auto rounded-xl border border-white/10 bg-ink-soft p-6">
                 <div>
-                  <p className="font-mono text-[11px] text-brand-300 tracking-wider mb-1">INTERVIEW SETUP</p>
+                  <p className="font-mono text-[11px] text-brand-300 tracking-wider mb-1">면접 설정</p>
                   <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                     면접 방식을 선택하세요
                   </h3>

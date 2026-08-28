@@ -250,7 +250,7 @@ export default function InterviewPanel({
         {report && (
           <div className="rounded-xl border border-signal/30 bg-signal/[0.04] overflow-hidden">
             <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
-              <span className="font-mono text-xs text-brand-300 tracking-wider">DEFENSE REPORT</span>
+              <span className="font-mono text-xs text-brand-300 tracking-wider">방어 리포트</span>
               <span className="font-mono text-[10px] text-fg-on-dark-quiet">debate.code</span>
             </div>
             <div className="px-5 py-4 space-y-4">

@@ -6,7 +6,9 @@
 // 채점표가 아니라 "무슨 일이 일어났는가"의 기록이라, 실행한 명령까지 프롬프트로 남긴다.
 // 히든 케이스는 입력·출력을 가린다.
 //
-// 색은 의미에만 쓴다(DESIGN.md §2) — 성공/실패/인자/시간 넷뿐이고 장식은 없다.
+// 색은 넷으로만 쓴다 — 성공 emerald-400 · 실패 rose-400 · 값(인자·반환) amber-300 ·
+// 메타(경로·프롬프트·시간·키워드) slate-500. 다섯 번째 색을 더하면 그 순간부터
+// 색이 의미가 아니라 장식이 된다(DESIGN.md §2).
 import type { CaseResult, Language } from '@/app/lib/types';
 
 /** 실행 파일 이름 — 명령 줄을 그럴듯하게 꾸미려는 것이 아니라 무엇으로 돌았는지 밝히려는 것이다. */
@@ -52,8 +54,8 @@ export default function TerminalView({
           <div key={r.id} className="mb-3 last:mb-0">
             {/* 명령 줄 — 무엇을 어떤 인자로 돌렸는지 */}
             <p className="break-all">
-              <span className="text-emerald-400">➜</span>{' '}
               <span className="text-slate-500">~/debatecode</span>{' '}
+              <span className="text-slate-500">&gt;</span>{' '}
               <span className="text-fg-on-dark">
                 {runner.cmd} {runner.file}
               </span>{' '}
@@ -82,8 +84,8 @@ export default function TerminalView({
                   </p>
                 ) : (
                   <p>
-                    <span className="text-cyan-300">return</span>{' '}
-                    <span className={r.status === 'pass' ? 'font-semibold text-emerald-400' : 'font-semibold text-rose-400'}>
+                    <span className="text-slate-500">return</span>{' '}
+                    <span className={r.status === 'pass' ? 'text-amber-300' : 'font-semibold text-rose-400'}>
                       {fmt(r.actual)}
                     </span>{' '}
                     <span className="dc-num text-slate-500">({r.timeMs}ms)</span>

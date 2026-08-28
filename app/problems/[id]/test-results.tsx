@@ -71,29 +71,23 @@ export default function TestResults({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* ① 요약 배너 — 통과했는지부터 말한다 */}
+      {/* ① 요약 줄 — 통과했는지부터 말한다. 한 줄이면 충분하다 —
+          결과 패널은 높이가 귀한 자리라, 배너가 커질수록 정작 볼 케이스가 밀린다. */}
       <div
         role="status"
-        className={`flex shrink-0 items-center gap-3 border-b px-4 py-3 ${
-          allPassed
-            ? 'border-emerald-500/25 bg-emerald-500/10'
-            : 'border-rose-500/25 bg-rose-500/10'
+        className={`flex shrink-0 items-center gap-2 border-b px-4 py-2 ${
+          allPassed ? 'border-emerald-500/20 bg-emerald-500/10' : 'border-rose-500/20 bg-rose-500/10'
         }`}
       >
-        <span
-          aria-hidden
-          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-sm font-bold ${
-            allPassed ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
-          }`}
-        >
+        <span aria-hidden className={allPassed ? 'text-emerald-400' : 'text-rose-400'}>
           {allPassed ? '✓' : '✗'}
         </span>
-        <p className={`text-sm font-bold ${allPassed ? 'text-emerald-300' : 'text-rose-300'}`}>
+        <p className={`text-[13px] font-bold ${allPassed ? 'text-emerald-300' : 'text-rose-300'}`}>
           {allPassed ? '모든 테스트 통과' : '오답'}
-          <span className="dc-num ml-2 font-mono text-[12px] font-medium text-fg-on-dark-secondary">
-            ({passed} / {total} 통과)
-          </span>
         </p>
+        <span className="dc-num font-mono text-[12px] text-fg-on-dark-muted">
+          ({passed} / {total} 통과)
+        </span>
       </div>
 
       {/* ② 케이스 선택 탭 — 통과 여부를 아이콘으로 함께 보여 준다 */}

@@ -43,7 +43,7 @@ export default function SolveResumePrompt({
   return (
     <div className="grid flex-grow place-items-center bg-ink px-6 py-10">
       <div className="w-full max-w-md rounded-[var(--radius-panel)] border border-white/10 bg-[#12141C] p-6">
-        <p className="font-mono text-[11px] tracking-wider text-brand-300">MOCK EXAM IN PROGRESS</p>
+        <p className="font-mono text-[11px] tracking-wider text-brand-300">실전 모의고사 진행 중</p>
         <h2 className="mt-1 text-xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           {t('resume-title', uiLang)}
         </h2>

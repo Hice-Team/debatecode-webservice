@@ -516,7 +516,7 @@ export default function DebateAiChat({
             대신 스스로 풀 수 있는 힌트를 드립니다.
             {agentAvailable && (
               <p className="mt-2 text-fg-on-dark-muted">
-                코드를 직접 고쳐 주길 원하면 입력창에서 <strong className="text-brand-300">Agent</strong>로 바꿔 주세요.
+                코드를 직접 고쳐 주길 원하면 입력창에서 <strong className="text-brand-300">코드 수정</strong>으로 바꿔 주세요.
               </p>
             )}
           </div>
@@ -524,7 +524,7 @@ export default function DebateAiChat({
 
         {analyzing && !draft && (
           <div className="rounded-xl border border-brand-400/25 bg-signal/10 p-4">
-            <p className="mb-1.5 font-mono text-[10px] text-brand-300">ANALYZING</p>
+            <p className="mb-1.5 font-mono text-[10px] text-brand-300">분석 중</p>
             <p className="text-xs text-fg-on-dark-secondary">
               {current.label}이(가) 이 문제와 방금 작성한 코드를 분석하고 있습니다
               <span className="animate-pulse">…</span>
@@ -543,7 +543,7 @@ export default function DebateAiChat({
                   : 'min-w-0 border border-white/10 bg-white/[0.06] text-fg-on-dark'
               }`}
             >
-              {t.command && <p className="mb-1 font-mono text-[10px] text-brand-200">Agent</p>}
+              {t.command && <p className="mb-1 font-mono text-[10px] text-brand-200">코드 수정</p>}
               {t.role === 'assistant' ? (
                 <>
                   <p className="mb-1 font-mono text-[10px] text-brand-300">{current.label}</p>

@@ -382,10 +382,10 @@ export default function DebateQPanel({
           ))}
           <span className="ml-auto shrink-0 px-3 font-mono text-[10px] text-fg-on-dark-quiet">
             {done
-              ? 'COMPLETED'
+              ? '완료'
               : phase === 'INTERVIEW'
-                ? `ROUND ${round}/${totalPromptRounds(extractPromptHistory(messages))}`
-                : 'BUILD'}
+                ? `${round}라운드 / ${totalPromptRounds(extractPromptHistory(messages))}`
+                : '코드 작성'}
           </span>
         </div>
 
@@ -396,7 +396,7 @@ export default function DebateQPanel({
           {refactorMode === 'copilot' && phase === 'BUILD' && !builtinLive && (
             <p className="border-b border-white/10 bg-white/5 px-4 py-2.5 text-[11px] leading-relaxed text-fg-on-dark-muted">
               실모델(debateAI)이 설정되지 않아 코드 명령을 실행할 수 없습니다. 질문은 그대로 할 수 있고, 직접 고치려면
-              상단에서 <strong className="text-fg-on-dark">Editor</strong>로 바꿔 주세요.
+              상단에서 <strong className="text-fg-on-dark">직접 수정</strong>으로 바꿔 주세요.
             </p>
           )}
           <DebateAiChat
@@ -464,7 +464,7 @@ export default function DebateQPanel({
               )}
               {report && (
                 <div className="rounded-[var(--radius-panel)] border border-brand-400/30 bg-brand-900/30 p-5">
-                  <p className="mb-1 font-mono text-[11px] text-brand-300">FINAL REPORT</p>
+                  <p className="mb-1 font-mono text-[11px] text-brand-300">최종 리포트</p>
                   <p className="text-3xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                     {report.defenseScore}%
                   </p>
@@ -643,7 +643,7 @@ export default function DebateQPanel({
       <div className="relative flex min-h-[380px] lg:min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10 bg-[#0B0D12]">
         <div className="flex items-center gap-3 border-b border-white/10 px-4 py-2">
           <span className="font-mono text-[10px] text-fg-on-dark-quiet">solution.{language === 'python' ? 'py' : 'js'}</span>
-          <span className="text-[9px] uppercase tracking-wider text-fg-on-dark-quiet">debateQ sandbox</span>
+          <span className="text-[9px] uppercase tracking-wider text-fg-on-dark-quiet">debateQ 샌드박스</span>
           <span className="font-mono text-[10px] text-fg-on-dark-quiet hidden sm:inline">
             읽기 전용 — 코드는 AI 명령으로만 수정됩니다
           </span>

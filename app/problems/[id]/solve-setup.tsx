@@ -75,7 +75,7 @@ export default function SolveSetupGate({
           >
             ← {t('back', uiLang)}
           </Link>
-          <p className="font-mono text-[11px] tracking-wider text-brand-300">MOCK EXAM SETUP</p>
+          <p className="font-mono text-[11px] tracking-wider text-brand-300">실전 모의고사 설정</p>
           <h2 className="mt-1 text-2xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             {t('setup-title', uiLang)}
           </h2>
