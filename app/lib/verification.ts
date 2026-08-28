@@ -17,18 +17,20 @@ export const MAX_ATTEMPTS = 5;
 /** 같은 주소로 코드를 다시 받기까지 기다려야 하는 시간 */
 export const RESEND_COOLDOWN_SECONDS = 60;
 
-export type VerificationPurpose = 'signup' | 'recovery_email' | 'email_change';
+export type VerificationPurpose = 'signup' | 'recovery_email' | 'email_change' | 'login_2fa';
 
 const PURPOSE_SUBJECT: Record<VerificationPurpose, string> = {
   signup: '[debateCode] 이메일 인증 코드',
   recovery_email: '[debateCode] 복구 이메일 확인 코드',
   email_change: '[debateCode] 이메일 변경 확인 코드',
+  login_2fa: '[debateCode] 로그인 확인 코드',
 };
 
 const PURPOSE_INTRO: Record<VerificationPurpose, string> = {
   signup: '회원가입을 완료하려면 아래 코드를 입력해 주세요.',
   recovery_email: '이 주소를 복구 이메일로 등록하려면 아래 코드를 입력해 주세요.',
   email_change: '이메일 변경을 확인하려면 아래 코드를 입력해 주세요.',
+  login_2fa: '로그인을 마치려면 아래 코드를 입력해 주세요. 본인이 로그인한 것이 아니라면 비밀번호를 즉시 바꿔 주세요.',
 };
 
 /** 숫자 6자리 — 헷갈리는 문자를 섞지 않으려고 숫자만 쓴다. */

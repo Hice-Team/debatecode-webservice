@@ -33,7 +33,15 @@ import { DEFAULT_EFFORT, type Effort } from '@/app/lib/ai/effort';
 type DebateAiEvent =
   | { type: 'delta'; text: string }
   | { type: 'reasoning'; text: string }
-  | { type: 'done'; reply: string; model: string; code: string | null; usage: AnswerUsage }
+  | {
+      type: 'done';
+      reply: string;
+      model: string;
+      code: string | null;
+      usage: AnswerUsage;
+      /** 오늘 이 문제에서 남은 대화 수 — 다 쓴 뒤에 알려 주면 늦다 */
+      allowance?: { unlimited: true } | { unlimited: false; remaining: number; limit: number };
+    }
   | { type: 'error'; message: string };
 
 /**
@@ -158,6 +166,8 @@ export default function DebateAiChat({
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string>();
+  /** 오늘 이 문제에서 남은 대화 수. null이면 아직 모르거나 한도가 걸리지 않는 계정이다. */
+  const [remaining, setRemaining] = useState<number | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   // 흘러들어오는 답변 — 완성되면 turns로 옮기고 비운다.
   // 중단했을 때 "여기까지 받은 글"을 읽어야 해서 ref에도 같이 담는다(핸들러에서 state는 낡아 있다).
@@ -273,6 +283,7 @@ export default function DebateAiChat({
           pushDraft(streamed);
           scrollDown();
         } else if (event.type === 'done') {
+          setRemaining(event.allowance && !event.allowance.unlimited ? event.allowance.remaining : null);
           finished = { role: 'assistant', content: event.reply, usage: event.usage, ts: Date.now() };
         } else if (event.type === 'error') {
           failure = event.message;
@@ -387,6 +398,7 @@ export default function DebateAiChat({
           pushDraft(streamed);
           scrollDown();
         } else if (event.type === 'done') {
+          setRemaining(event.allowance && !event.allowance.unlimited ? event.allowance.remaining : null);
           finished = {
             turn: { role: 'assistant', content: event.reply, usage: event.usage, ts: Date.now() },
             code: event.code,
@@ -600,6 +612,16 @@ export default function DebateAiChat({
         {error && (
           <p className="mb-2 text-xs text-rose-400" role="alert">
             {error}
+          </p>
+        )}
+
+        {/* 남은 횟수 — 세 번 이하로 떨어졌을 때만 말한다.
+            매번 띄우면 잔소리가 되고, 다 쓴 뒤에 알리면 늦다. */}
+        {remaining !== null && remaining <= 3 && (
+          <p className="mb-2 text-xs text-amber-300">
+            {remaining > 0
+              ? `이 문제에서 오늘 ${remaining}번 더 물어볼 수 있습니다.`
+              : '이 문제의 오늘 대화 횟수를 모두 썼습니다. 설정 › AI에서 내 API 키를 등록하면 제한이 없습니다.'}
           </p>
         )}
 

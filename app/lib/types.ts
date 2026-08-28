@@ -17,10 +17,14 @@ export const DIFFICULTY_LABELS: Record<number, string> = {
 
 // ---------- 채점(judge) 워커 프로토콜 ----------
 
+// 워커에 넘기는 케이스 — 입력만이다.
+//
+// 기대 출력(expected)이 여기 없는 것은 실수가 아니라 설계다. 채점 판정이 서버로
+// 옮겨 갔고(app/lib/judge/server.ts), 기대 출력은 브라우저까지 내려오지 않는다.
+// 예전에는 히든 케이스의 정답까지 통째로 내려가서 사실상 숨겨진 것이 없었다.
 export interface JudgeCase {
   id: number;
   args: unknown[];
-  expected: unknown;
 }
 
 export type JudgeRunMessage = {
@@ -31,20 +35,23 @@ export type JudgeRunMessage = {
 
 export type CaseStatus = 'pass' | 'fail' | 'error' | 'timeout';
 
+/** 워커가 보고하는 것 — 실행 결과이지 판정이 아니다. */
+export type CaseOutcomeKind = 'returned' | 'error' | 'timeout';
+
 export type JudgeWorkerMessage =
   | { type: 'ready' }
   | {
-      type: 'case-result';
+      type: 'case-outcome';
       id: number;
-      status: CaseStatus;
+      outcome: CaseOutcomeKind;
       actual?: unknown;
-      expected?: unknown;
       stdout: string;
       timeMs: number;
       errorMessage?: string;
     }
-  | { type: 'done'; passed: number; total: number };
+  | { type: 'done'; total: number };
 
+/** 서버가 내린 케이스별 판정. 히든 케이스에는 actual·expected가 담기지 않는다. */
 export interface CaseResult {
   id: number;
   status: CaseStatus;

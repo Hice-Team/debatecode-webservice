@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import { getUser } from '../dal';
+import { requirePermission } from '../permissions-server';
 
 export interface CourseFormState {
   errors?: { title?: string[]; slug?: string[]; description?: string[]; form?: string[] };
@@ -18,8 +19,19 @@ export interface LessonFormState {
 
 async function requireAdmin(): Promise<string | null> {
   const user = await getUser();
-  return user.role === 'admin' ? null : '관리자만 수행할 수 있습니다.';
+  if (user.role !== 'admin') return '관리자만 수행할 수 있습니다.';
+  try {
+    await requirePermission(user, 'problem.manage');
+  } catch (error) {
+    return error instanceof Error ? error.message : '권한이 없습니다.';
+  }
+  return null;
 }
+//
+// 역할 검사만으로는 부족하다. PermissionGrant의 **개별 차단(deny)** 이 통하지 않기 때문이다.
+// 문제가 된 담당자의 권한 하나만 잠그려 해도, 역할만 보는 자리는 그대로 열려 있다 —
+// 하필 돈과 발송이 걸린 쪽이 그랬다. requirePermission이 역할 기본값과 오버라이드를
+// 함께 판정한다(app/lib/permissions-server.ts).
 
 const SLUG = z
   .string()

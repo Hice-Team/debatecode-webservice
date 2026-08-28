@@ -14,9 +14,36 @@ import { verifySession } from '../dal';
 import { createClient } from '../supabase/server';
 import { createAdminClient } from '../supabase/admin';
 import { DELETE_CONFIRM_PHRASE } from '../account-policy';
+import { requireSecondFactor, type SecondFactorProof } from '../two-factor';
+
+/**
+ * 폼에서 2차 인증 증거를 꺼낸다.
+ *
+ * 보안키는 브라우저의 `navigator.credentials.get()` 결과(JSON)를 hidden 필드에 담아 보낸다 —
+ * 서버 액션은 FormData만 받으므로 구조체를 그대로 넘길 자리가 없다.
+ */
+function readSecondFactorProof(formData: FormData): SecondFactorProof | null {
+  const assertion = String(formData.get('webauthn') ?? '').trim();
+  if (assertion) {
+    try {
+      return { method: 'webauthn', response: JSON.parse(assertion) };
+    } catch {
+      return null;
+    }
+  }
+  const backup = String(formData.get('backupCode') ?? '').trim();
+  if (backup) return { method: 'backup', code: backup };
+
+  const totp = String(formData.get('totpCode') ?? '').trim();
+  if (totp) return { method: 'totp', code: totp };
+
+  return null;
+}
 
 export interface DeleteAccountState {
   error?: string;
+  /** 2차 인증이 걸린 계정이면 어떤 수단을 쓸 수 있는지 화면에 알려 준다 */
+  needsSecondFactor?: { totp: boolean; securityKeys: number; backupCodesLeft: number };
 }
 
 export async function deleteAccount(
@@ -28,6 +55,27 @@ export async function deleteAccount(
   const typed = String(formData.get('confirm') ?? '').trim();
   if (typed !== DELETE_CONFIRM_PHRASE) {
     return { error: `확인 문구가 일치하지 않습니다. "${DELETE_CONFIRM_PHRASE}"를 그대로 입력해 주세요.` };
+  }
+
+  /* ---------- 2차 인증 확인 ----------
+     탈퇴는 되돌릴 수 없다. 세션이 탈취된 상태에서 계정이 지워지면 되찾을 방법이 없고,
+     그건 2차 인증이 막아야 하는 바로 그 상황이다. 그래서 2차 인증을 설정해 둔 계정에는
+     여기서 한 번 더 확인을 받는다.
+
+     설정하지 않은 계정에는 요구하지 않는다 — 없는 수단을 요구하면 탈퇴가 막힌다. */
+  const proof = readSecondFactorProof(formData);
+  const verified = await requireSecondFactor(userId, proof);
+  if (!verified.ok) {
+    return {
+      error: verified.error,
+      needsSecondFactor: verified.required
+        ? {
+            totp: verified.required.totp,
+            securityKeys: verified.required.securityKeys,
+            backupCodesLeft: verified.required.backupCodesLeft,
+          }
+        : undefined,
+    };
   }
 
   try {
@@ -63,6 +111,14 @@ export async function deleteAccount(
       await tx.debateMateApplication.deleteMany({ where: { userId } });
       await tx.sanction.deleteMany({ where: { userId } });
       await tx.loginEvent.deleteMany({ where: { userId } });
+      // 2차 인증 수단 — 예전에는 이 두 줄이 없었고, 관계가 RESTRICT라서
+      // 보안키나 백업 코드를 만든 계정은 탈퇴 자체가 외래키 제약으로 실패했다.
+      // 이제 스키마도 CASCADE지만, 무엇이 지워지는지 여기에 남겨 둔다.
+      await tx.backupCode.deleteMany({ where: { userId } });
+      await tx.webauthnKey.deleteMany({ where: { userId } });
+      // 채점 세션·AI 사용 카운터
+      await tx.judgeSession.deleteMany({ where: { userId } });
+      await tx.aiUsageCounter.deleteMany({ where: { userId } });
 
       // 7) 공용 운영 기록 — 행은 남기고 작성자 연결만 끊는다
       await tx.inquiry.updateMany({ where: { userId }, data: { userId: null } });
@@ -77,7 +133,10 @@ export async function deleteAccount(
       // 9) 마지막으로 프로필 — 암호화된 API 키와 개인정보가 여기서 함께 사라진다
       await tx.user.delete({ where: { id: userId } });
     });
-  } catch {
+  } catch (error) {
+    // 원인을 남긴다. 예전에는 조용히 삼켜서, 외래키 제약으로 막혀 있어도
+    // "문제가 발생했습니다"만 보이고 무엇이 걸렸는지 알 방법이 없었다.
+    console.error('[deleteAccount] 삭제 실패', { userId, error });
     return { error: '탈퇴 처리 중 문제가 발생했습니다. 잠시 후 다시 시도하거나 문의해 주세요.' };
   }
 

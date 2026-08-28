@@ -53,7 +53,14 @@ type StreamEvent =
   | { type: 'user-message'; id: string; createdAt: string }
   | { type: 'reasoning'; text: string }
   | { type: 'delta'; text: string }
-  | { type: 'done'; sessionId: string; live: boolean; message: ConversationMessage }
+  | {
+      type: 'done';
+      sessionId: string;
+      live: boolean;
+      message: ConversationMessage;
+      /** 오늘 남은 대화 수 — 다 쓴 뒤에 알려 주면 늦다 */
+      allowance?: { unlimited: true } | { unlimited: false; remaining: number; limit: number };
+    }
   | { type: 'error'; message: string };
 
 const PROSE =
@@ -89,6 +96,8 @@ export default function Conversation({
   const [reasoning, setReasoning] = useState('');
   const [reasoningOpen, setReasoningOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** 오늘 남은 대화 수. null이면 아직 모르거나 한도가 걸리지 않는 계정이다. */
+  const [remaining, setRemaining] = useState<number | null>(null);
   const [, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
   const autoSent = useRef(false);
@@ -267,6 +276,7 @@ export default function Conversation({
         return;
 
       case 'done':
+        setRemaining(event.allowance && !event.allowance.unlimited ? event.allowance.remaining : null);
         // 저장된 답변을 목록에 넣는 것과 흘려보내던 초안을 지우는 것을 **같은 배치**로 처리한다.
         // 나눠 두면 한 프레임 동안 초안과 최종 답변이 같이 떠서 화면이 한 번 튄다.
         setMessages((prev) => [...prev, event.message]);
@@ -477,6 +487,20 @@ export default function Conversation({
           {error && (
             <p role="alert" className="mt-6 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {error}
+            </p>
+          )}
+
+          {/* 남은 횟수 — 세 번 이하일 때만 말한다.
+              매번 띄우면 잔소리가 되고, 다 쓴 뒤에 알리면 늦다. */}
+          {remaining !== null && remaining <= 3 && !error && (
+            <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {remaining > 0
+                ? `오늘 ${remaining}번 더 물어볼 수 있습니다.`
+                : '오늘 쓸 수 있는 대화 횟수를 모두 썼습니다.'}{' '}
+              <Link href="/settings?tab=ai" className="font-semibold underline">
+                내 API 키를 등록
+              </Link>
+              하면 제한이 없습니다.
             </p>
           )}
 

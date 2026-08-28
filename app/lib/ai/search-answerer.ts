@@ -9,6 +9,7 @@ import { llmChatStream, type LlmChunk, type LlmConfig, type LlmUsage } from './l
 import { DEFAULT_EFFORT, effortDirective, effortMaxTokens, type Effort } from './effort';
 import { getFreeAiLlmConfig } from './free-ai';
 import { findSearchModel } from './search-models';
+import { userFundedConfig, type Funding, type UserAiKeys } from './funding';
 
 export interface ChatTurn {
   role: 'user' | 'assistant';
@@ -44,11 +45,21 @@ function getHuggingFaceConfig(modelId?: string | null): LlmConfig | null {
 /**
  * 사용할 모델 설정을 고른다.
  *
- * 1순위 Hugging Face(고른 모델) → 2순위 Free AI 기본 모델로 내려간다.
+ * 이용자가 자기 API 키(또는 로컬 모델)를 등록해 두었으면 그쪽을 먼저 쓴다.
+ * 그러면 이 호출의 요금은 이용자 계정으로 청구되고, 사용 한도도 걸리지 않는다
+ * (app/lib/ai/usage-limits.ts). 등록하지 않았으면 서비스 키(Hugging Face)로 간다.
+ *
  * 둘 다 없으면 null이며, 호출부는 안내 문구를 답변 자리에 넣는다.
  */
-export function getSearchLlmConfig(modelId?: string | null): LlmConfig | null {
-  return getHuggingFaceConfig(modelId) ?? getFreeAiLlmConfig();
+export function getSearchLlmConfig(
+  modelId?: string | null,
+  user?: UserAiKeys | null,
+): { config: LlmConfig; funding: Funding } | null {
+  const own = userFundedConfig(user);
+  if (own) return { config: own, funding: 'user' };
+
+  const service = getHuggingFaceConfig(modelId) ?? getFreeAiLlmConfig();
+  return service ? { config: service, funding: 'service' } : null;
 }
 
 /** 추론형 모델 대응 — 넉넉히 잡는다. */
@@ -80,6 +91,8 @@ export interface AnswerInput {
   signal?: AbortSignal;
   /** 공급자가 토큰 사용량을 알려 주면 그대로 넘겨준다 */
   onUsage?: (usage: LlmUsage) => void;
+  /** 이용자 키가 등록돼 있으면 그 키로 부른다 */
+  user?: UserAiKeys | null;
 }
 
 /** 모델에 넘길 사용자 프롬프트 — 단발 호출과 스트리밍이 같은 문자열을 쓴다. */
@@ -109,8 +122,9 @@ function buildPrompt(input: AnswerInput): string {
  * 호출부는 이 구분만 보고 "추론 중 → 답변 작성 중" 단계를 전환한다.
  */
 export async function* streamSearchAnswer(input: AnswerInput): AsyncGenerator<LlmChunk> {
-  const config = getSearchLlmConfig(input.modelId);
-  if (!config) throw new Error('no-config');
+  const resolved = getSearchLlmConfig(input.modelId, input.user);
+  if (!resolved) throw new Error('no-config');
+  const config = resolved.config;
 
   let inThink = false;
   let carry = ''; // 태그가 청크 경계에서 잘리는 경우를 대비한 꼬리 보관

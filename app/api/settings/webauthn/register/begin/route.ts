@@ -1,30 +1,20 @@
-'use server';
-
 import { NextResponse } from 'next/server';
-import { generateRegistrationOptions } from '@simplewebauthn/server';
-import { verifySession } from '@/app/lib/dal';
+import { requireApiSession } from '@/app/lib/dal';
 import { prisma } from '@/app/lib/prisma';
+import { beginKeyRegistration } from '@/app/lib/two-factor';
 
+// 보안키 등록 시작 — 챌린지를 만들어 내려보낸다.
+// 중복 등록 방지(excludeCredentials)와 챌린지 만료는 app/lib/two-factor.ts에 있다.
 export async function POST() {
-  const session = await verifySession();
-  const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { id: true, email: true } });
-  if (!user) return NextResponse.json({ error: 'no-user' }, { status: 400 });
+  const session = await requireApiSession();
+  if ('response' in session) return session.response;
 
-  const existing = await prisma.webauthnKey.findMany({ where: { userId: session.userId } });
-
-  const opts = await generateRegistrationOptions({
-    rpName: 'debate.app',
-    rpID: process.env.NEXT_PUBLIC_WEBAUTHN_RPID || (new URL(process.env.NEXTAUTH_URL || 'http://localhost')).hostname,
-    userID: Buffer.from(user.id, 'utf8'),
-    userName: user.email || user.id,
-    timeout: 60000,
-    attestationType: 'none',
-    excludeCredentials: existing.map((c) => ({ id: c.id, type: 'public-key' })),
-    authenticatorSelection: { userVerification: 'preferred' },
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { id: true, email: true },
   });
+  if (!user) return NextResponse.json({ error: '계정 정보를 찾지 못했습니다.' }, { status: 400 });
 
-  // store challenge
-  await prisma.user.update({ where: { id: session.userId }, data: { webauthnChallenge: opts.challenge } });
-
-  return NextResponse.json(opts);
+  const options = await beginKeyRegistration({ id: user.id, email: user.email });
+  return NextResponse.json(options, { headers: { 'Cache-Control': 'no-store' } });
 }

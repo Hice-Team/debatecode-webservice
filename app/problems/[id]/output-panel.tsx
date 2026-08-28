@@ -17,13 +17,11 @@ export default function OutputPanel({
 }: {
   results: CaseResult[];
   total: number;
-  cases: Array<{ id: number; args: unknown[]; isHidden: boolean }>;
+  /** 예제 케이스만 들어온다 — 히든 케이스의 입력은 브라우저에 오지 않는다 */
+  cases: Array<{ id: number; args: unknown[] }>;
 }) {
   const [tab, setTab] = useState<OutputTab>('tests');
-  const argsById = useMemo(
-    () => new Map(cases.filter((c) => !c.isHidden).map((c) => [c.id, c.args])),
-    [cases],
-  );
+  const argsById = useMemo(() => new Map(cases.map((c) => [c.id, c.args])), [cases]);
 
   return (
     <div className="flex h-full flex-col">

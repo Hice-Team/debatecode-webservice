@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifySession } from '@/app/lib/dal';
+import { requireApiSession } from '@/app/lib/dal';
 import { createClient } from '@/app/lib/supabase/server';
 import { AI_ATTACHMENT_BUCKET } from '@/app/lib/storage';
 
@@ -15,7 +15,9 @@ import { AI_ATTACHMENT_BUCKET } from '@/app/lib/storage';
 const SIGNED_TTL_SECONDS = 300;
 
 export async function GET(request: Request) {
-  const { userId } = await verifySession();
+  const session = await requireApiSession();
+  if ('response' in session) return session.response;
+  const { userId } = session;
 
   const path = new URL(request.url).searchParams.get('path');
   if (!path) return NextResponse.json({ error: 'path required' }, { status: 400 });

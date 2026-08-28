@@ -19,7 +19,7 @@ import {
   type AccountStepState,
   type ProfileStepState,
 } from '@/app/lib/actions/signup';
-import { sendVerificationEmail } from '@/app/lib/actions/signup-extras';
+import { confirmVerificationEmail, sendVerificationEmail } from '@/app/lib/actions/signup-extras';
 import OAuthButtons from '../oauth-buttons';
 import {
   GENDER_OPTIONS,
@@ -520,16 +520,38 @@ function ProfileStep({ onSaved, onBack }: { onSaved: (nickname?: string) => void
  * 생각보다 적기 때문이다. 지금 한 번은 보여 준다.
  */
 function WelcomeStep({ nickname }: { nickname: string }) {
-  const [mailState, setMailState] = useState<{ ok?: string; error?: string } | null>(null);
+  const [mailState, setMailState] = useState<{ ok?: string; error?: string; sent?: boolean } | null>(null);
   const [sending, setSending] = useState(false);
+  const [code, setCode] = useState('');
+  const [confirming, setConfirming] = useState(false);
+  const [verified, setVerified] = useState(false);
 
   async function sendMail() {
     setSending(true);
     setMailState(null);
     try {
-      setMailState(await sendVerificationEmail());
+      const result = await sendVerificationEmail();
+      setMailState(result);
+      // 이미 인증된 계정(소셜 가입 등)이면 입력란을 열 이유가 없다
+      if (result.ok && !result.sent) setVerified(true);
     } finally {
       setSending(false);
+    }
+  }
+
+  async function confirmCode() {
+    setConfirming(true);
+    try {
+      const form = new FormData();
+      form.set('code', code);
+      const result = await confirmVerificationEmail({}, form);
+      setMailState(result);
+      if (result.ok && !result.error) {
+        setVerified(true);
+        setCode('');
+      }
+    } finally {
+      setConfirming(false);
     }
   }
 
@@ -551,15 +573,51 @@ function WelcomeStep({ nickname }: { nickname: string }) {
           <p className="mt-1 text-[12px] leading-relaxed text-fg-muted">
             비밀번호를 잊었을 때 되찾는 길이 되고, 중고 거래는 인증한 계정만 이용할 수 있습니다.
           </p>
-          <button
-            type="button"
-            onClick={sendMail}
-            disabled={sending}
-            className="mt-3 rounded-full border border-hairline px-4 py-2 text-[13px] font-medium text-fg-secondary transition-colors hover:border-ink/25 disabled:opacity-40"
-          >
-            {sending ? '보내는 중…' : '인증 메일 보내기'}
-          </button>
-          {mailState?.ok && <p className="mt-2 text-[12px] text-emerald-700">{mailState.ok}</p>}
+          {verified ? (
+            <p className="mt-3 text-[13px] font-medium text-emerald-700">인증이 끝났습니다.</p>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={sendMail}
+                disabled={sending}
+                className="mt-3 rounded-full border border-hairline px-4 py-2 text-[13px] font-medium text-fg-secondary transition-colors hover:border-ink/25 disabled:opacity-40"
+              >
+                {sending ? '보내는 중…' : mailState?.sent ? '코드 다시 보내기' : '인증 코드 보내기'}
+              </button>
+
+              {/* 코드 입력란은 실제로 보낸 뒤에만 연다 — 보내기 전에 띄우면
+                  무엇을 넣어야 하는지 알 수 없는 빈 칸이 된다 */}
+              {mailState?.sent && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <label htmlFor="signup-verify-code" className="sr-only">
+                    인증 코드 6자리
+                  </label>
+                  <input
+                    id="signup-verify-code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="123456"
+                    className="w-32 rounded-[var(--radius-card)] border border-hairline px-3 py-2 text-center font-mono text-[15px] tracking-[0.3em]"
+                  />
+                  <button
+                    type="button"
+                    onClick={confirmCode}
+                    disabled={confirming || code.length !== 6}
+                    className="rounded-full bg-signal px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-40"
+                  >
+                    {confirming ? '확인 중…' : '확인'}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {mailState?.ok && !mailState.error && (
+            <p className="mt-2 text-[12px] text-emerald-700">{mailState.ok}</p>
+          )}
           {mailState?.error && (
             <p role="alert" className="mt-2 text-[12px] text-rose-600">
               {mailState.error}

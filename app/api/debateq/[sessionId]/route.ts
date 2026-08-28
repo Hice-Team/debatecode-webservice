@@ -7,8 +7,8 @@ import { getBuiltinProvider, getBuiltinLlmConfig } from '@/app/lib/ai/builtin';
 
 // 리팩토링모드는 모델 선택 없이 내장 모델로 돈다 — 사용량 내역에서도 한 줄로 묶어 보여 준다
 const REFACTOR_USAGE_MODEL = 'builtin-refactor';
-import { addFreeAiUsage, estimateTokens, getFreeAiQuota } from '@/app/lib/ai/free-ai';
-import { getProviderFor } from '@/app/lib/ai/provider';
+import { addFreeAiUsage, estimateTokens } from '@/app/lib/ai/free-ai';
+import { consumeAiUsage, exhaustedMessage, refundAiUsage } from '@/app/lib/ai/usage-limits';
 import { llmChat } from '@/app/lib/ai/llm-interviewer';
 import { extractPromptHistory, promptQuestion, totalPromptRounds } from '@/app/lib/debateq-prompts';
 import type { ChatMessage, CodeRecord, Language, RoundEval } from '@/app/lib/types';
@@ -68,18 +68,21 @@ export async function POST(request: Request, ctx: RouteContext<'/api/debateq/[se
 
   const { mode, answer, currentCode } = parsed.data;
 
-  // Debate Free AI 일일 쿠터 — 소진 시 명령 모드는 차단, 면접 평가는 규칙 기반으로 전환
-  const freeQuota = await getFreeAiQuota(user.id);
+  // 명령 모드는 debateAI와 같은 성격의 호출이라(문제 하나를 두고 AI에게 시킨다)
+  // 같은 한도를 나눠 쓴다 — 문제당 하루 10회. 변론 평가는 면접 축이라 한도가 없다.
+  const scope = String(session.problemId);
 
   // ---- 명령 모드: AI에게 지시해 코드를 작성/수정 (라운드 미소모) ----
   if (mode === 'command') {
-    if (freeQuota.exhausted) {
+    const allowance = await consumeAiUsage({
+      userId: user.id,
+      surface: 'debateai',
+      scope,
+      serviceFunded: true, // debateQ는 내장 모델 전용이다(getBuiltinLlmConfig)
+    });
+    if (allowance.exhausted) {
       return NextResponse.json(
-        {
-          error: `오늘의 Debate Free AI 토큰을 모두 사용했습니다. ${
-            freeQuota.resetAt ? freeQuota.resetAt.toLocaleString('ko-KR') : '24시간 후'
-          }에 초기화됩니다.`,
-        },
+        { error: exhaustedMessage('debateai', allowance.resetAt), code: 'quota_exhausted' },
         { status: 429 },
       );
     }
@@ -98,6 +101,7 @@ export async function POST(request: Request, ctx: RouteContext<'/api/debateq/[se
       );
       const parsedReply = extractJson(reply);
       if (!parsedReply?.code || parsedReply.code.trim().length < 10) {
+        void refundAiUsage({ userId: user.id, surface: 'debateai', scope, serviceFunded: true });
         return NextResponse.json({ error: 'AI가 코드를 생성하지 못했습니다. 명령을 더 구체적으로 내려보세요.' }, { status: 502 });
       }
       addFreeAiUsage(user.id, estimateTokens(session.currentCode, answer, reply), REFACTOR_USAGE_MODEL).catch(() => {});
@@ -111,8 +115,16 @@ export async function POST(request: Request, ctx: RouteContext<'/api/debateq/[se
         where: { id: session.id },
         data: { currentCode: parsedReply.code, messages: messages0 as object, codeHistory: history as object },
       });
-      return NextResponse.json({ done: false, command: true, code: parsedReply.code, note: parsedReply.note ?? '' });
+      return NextResponse.json({
+        done: false,
+        command: true,
+        code: parsedReply.code,
+        note: parsedReply.note ?? '',
+        allowance: { remaining: allowance.remaining, limit: allowance.limit },
+      });
     } catch {
+      // 코드를 만들지 못했으면 이번 호출은 없던 것으로 한다
+      void refundAiUsage({ userId: user.id, surface: 'debateai', scope, serviceFunded: true });
       return NextResponse.json({ error: 'AI 호출에 실패했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 502 });
     }
   }
@@ -128,9 +140,10 @@ export async function POST(request: Request, ctx: RouteContext<'/api/debateq/[se
     );
   }
 
-  // 쿠터 소진 시 규칙 기반 모델로 자동 전환 — 평가는 계속 진행된다
-  const ai = freeQuota.exhausted ? getProviderFor(null) : getBuiltinProvider();
-  if (!freeQuota.exhausted) addFreeAiUsage(user.id, estimateTokens(answer, currentCode), REFACTOR_USAGE_MODEL).catch(() => {});
+  // 변론 평가에는 한도를 두지 않는다 — 면접과 같은 이유다(흐름이 끊기면 성립하지 않는다).
+  // 토큰은 사용 내역용으로만 남긴다.
+  const ai = getBuiltinProvider();
+  addFreeAiUsage(user.id, estimateTokens(answer, currentCode), REFACTOR_USAGE_MODEL).catch(() => {});
   const language = session.language as Language;
   const problemMeta = {
     id: session.problem.id,

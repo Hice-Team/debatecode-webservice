@@ -7,6 +7,7 @@
 
 import { useLanguage } from '@/app/context/language-context';
 import EditorShowcase from './editor-showcase';
+import SearchShowcase from './search-showcase';
 
 type Lang = 'ko' | 'en';
 
@@ -19,6 +20,11 @@ interface Provider {
 interface Faq {
   q: string;
   a: string;
+  /**
+   * Pro Tier 점검 중일 때만 답변 끝에 `aiProSuspended` 한 줄이 덧붙는다.
+   * 점검이 끝나면 PRO_TIER_SUSPENDED만 false로 두면 된다.
+   */
+  proNote?: boolean;
 }
 
 const COPY: Record<Lang, {
@@ -33,6 +39,12 @@ const COPY: Record<Lang, {
   f1ProvLabel: string;
   f1Providers: Provider[];
   f1AiOptional: string;
+  searchEyebrow: string;
+  searchTitle: string;
+  searchDesc: string;
+  searchLimits: { label: string; value: string; note: string }[];
+  /** Pro Tier 점검 안내 — proNote가 붙은 FAQ 답변 끝에 덧붙는다 */
+  aiProSuspended: string;
   f2Eyebrow: string;
   f2Title: string;
   f2Desc: React.ReactNode;
@@ -70,7 +82,7 @@ const COPY: Record<Lang, {
       { icon: 'λ', tint: 'brand', title: '알고리즘 문제', desc: '기초 문법부터 고급 알고리즘까지, 엄선된 핵심 문제집을 제공합니다.' },
       { icon: '◍', tint: 'rose', title: '대화형 기술 면접', desc: '내가 짠 코드를 기반으로 AI와 반론을 주고받으며 면접을 대비합니다.' },
       { icon: '✎', tint: 'emerald', title: '성장형 커뮤니티', desc: '집단지성을 통해 코드 리뷰를 받고, 모르는 것을 부담 없이 묻고 답합니다.' },
-      { icon: '⚑', tint: 'sky', title: '코딩테스트 대비', desc: '기업별 기출 유형과 실전 모의고사를 통해 실전 감각을 극대화합니다.' },
+      { icon: '⚑', tint: 'sky', title: '새로운 코딩테스트 대비', desc: '기업별 기출 유형과 실전 모의고사로 AI 채용 트렌드에 맞춘 실전 감각을 극대화합니다.' },
     ],
     f1Eyebrow: 'DebateAI',
     f1Title: '대화형 AI 기술 면접관',
@@ -84,7 +96,16 @@ const COPY: Record<Lang, {
       { tag: 'MCP', title: 'debateNetwork', desc: 'MCP 서버를 실행해 AI 서비스와 디베이트코드를 안전하게 연동합니다.' },
       { tag: 'Local', title: 'debateBridge', desc: '데스크톱 앱으로 로컬 Ollama 모델을 연결해 완전 오프라인으로 씁니다.' },
     ],
-    f1AiOptional: 'AI가 연결되지 않아도 채점 시스템은 그대로 이용할 수 있습니다.',
+    f1AiOptional: '연결하지 않아도 기본 제공 모델로 바로 시작할 수 있습니다.',
+    searchEyebrow: 'AI 검색',
+    searchTitle: '막히면 검색하지 말고 물어보세요',
+    searchDesc:
+      '탭을 여러 개 열어 가며 답을 짜맞출 필요가 없습니다. DeepSeek 모델이 코드와 개념을 함께 읽고 한 자리에서 답합니다.',
+    searchLimits: [
+      { label: '세션', value: '1개', note: '대화 하나로 이어집니다' },
+      { label: '하루', value: '50회', note: '자정에 다시 채워집니다' },
+    ],
+    aiProSuspended: '지금은 보안 점검으로 Pro Tier 연결을 잠시 닫아 두었습니다. 다시 열리면 공지합니다.',
     f2Eyebrow: '워크스페이스',
     f2Title: '몰입형 온라인 코드 에디터',
     f2Desc: (
@@ -136,6 +157,15 @@ const COPY: Record<Lang, {
         a: '물론입니다. AI 없이도 문제 풀이와 채점 시스템은 그대로 동작합니다. AI 면접 기능을 쓰고 싶다면 내 API 키 연결, debateNetwork(MCP), debateBridge(로컬 Ollama) 중 원하는 방식을 선택하면 됩니다.',
       },
       {
+        q: '어떤 AI 모델을 쓸 수 있나요?',
+        a: '키를 등록하지 않아도 기본 제공 토큰 제한 모델을 바로 씁니다 — EXAONE, DeepSeek, Qwen, Kimi, Kanana, Solar. 추론·빠른 답변·코드 생성·에이전트 용도에 맞춰 고르면 되고, 절반은 한국어에 강한 국내 모델입니다. 보유한 API 키가 있다면 Pro Tier로 ChatGPT, Gemini, Claude, Grok, Perplexity를 붙일 수 있습니다. 이때 요금은 그 키의 계정으로 청구됩니다.',
+        proNote: true,
+      },
+      {
+        q: 'AI 사용 횟수에 제한이 있나요?',
+        a: 'debateAI 탭은 횟수 제한이 없습니다. 다만 운영하면서 비용 부담이 커지면 한도가 생길 수 있고, 그렇게 되기 전에 미리 공지합니다. AI 검색은 하나의 세션에서 하루 50회까지 쓸 수 있고 자정에 다시 채워집니다.',
+      },
+      {
         q: '어떤 프로그래밍 언어를 지원하나요?',
         a: '현재 Python과 JavaScript를 지원하며 Java, C, C++, C#, TypeScript, Rust, Dart를 순차적으로 추가하고 있습니다. 최종 목표는 모든 언어 지원입니다.',
       },
@@ -176,6 +206,15 @@ const COPY: Record<Lang, {
       { tag: 'Local', title: 'debateBridge', desc: 'A desktop app that connects a local Ollama model — fully offline.' },
     ],
     f1AiOptional: 'Even without an AI connected, the judging system works exactly the same.',
+    searchEyebrow: 'AI Search',
+    searchTitle: 'Stuck? Ask instead of searching',
+    searchDesc:
+      'No more piecing an answer together across ten tabs. DeepSeek models read your code and the concept behind it, and answer in one place.',
+    searchLimits: [
+      { label: 'Session', value: '1', note: 'One continuous thread' },
+      { label: 'Per day', value: '50', note: 'Refills at midnight' },
+    ],
+    aiProSuspended: 'Pro Tier connections are paused for a security review right now. We will announce it when they reopen.',
     f2Eyebrow: 'Workspace',
     f2Title: 'Immersive Online Code Editor',
     f2Desc: (
@@ -228,6 +267,15 @@ const COPY: Record<Lang, {
         a: 'Absolutely. Problem solving and the judging system work exactly the same without AI. When you want the interview feature, pick your way: your own API key, debateNetwork (MCP), or debateBridge (local Ollama).',
       },
       {
+        q: 'Which AI models can I use?',
+        a: 'Token-limited models are included with no key to register — EXAONE, DeepSeek, Qwen, Kimi, Kanana, and Solar. Choose by job: reasoning, fast answers, code generation, or agent work; half of them are Korean-first models. If you already have an API key, Pro Tier connects ChatGPT, Gemini, Claude, Grok, and Perplexity, with billing going to that key’s account.',
+        proNote: true,
+      },
+      {
+        q: 'Is there a cap on AI usage?',
+        a: 'The debateAI tab has no cap. If running costs climb we may add one, and we will announce it before anything changes. AI Search runs in a single session with 50 questions a day, refilling at midnight.',
+      },
+      {
         q: 'Which programming languages are supported?',
         a: 'Python and JavaScript today, with Java, C, C++, C#, TypeScript, Rust, and Dart on the way. The end goal is every language.',
       },
@@ -246,6 +294,15 @@ const COPY: Record<Lang, {
     caseHeader: ['CASE', 'STATUS', 'TIME', 'MEM'],
   },
 };
+
+/**
+ * Pro Tier(BYOK) 일시 중단 안내.
+ *
+ * 보안 점검이 끝나면 이 상수를 false로 두면 `proNote: true`가 붙은 FAQ 답변에서
+ * 안내 문장이 사라진다. 완전히 걷어낼 때는 이 상수와 ko/en `aiProSuspended` 카피,
+ * FAQ의 `proNote` 표시, 그리고 아래 `faqs` 조립부 한 줄만 지우면 된다.
+ */
+const PRO_TIER_SUSPENDED = true;
 
 const LANGS_NOW = ['Python', 'JavaScript'];
 const LANGS_SOON = ['Java', 'C', 'C++', 'C#', 'Dart', 'Rust', 'TypeScript'];
@@ -270,21 +327,29 @@ const TINTS: Record<string, string> = {
 function Eyebrow({
   children,
   index,
+  tone = 'light',
   className = '',
 }: {
   children: React.ReactNode;
   /** 01, 02 … 없으면 번호 없이 라벨만 */
   index?: number;
+  /** 잉크 밴드 위에 얹힐 때는 명도 계단의 -on-dark 짝을 쓴다 */
+  tone?: 'light' | 'dark';
   className?: string;
 }) {
+  const dark = tone === 'dark';
   return (
-    <p className={`flex items-center gap-2 text-[12px] font-semibold tracking-wide text-fg-muted ${className}`}>
+    <p
+      className={`flex items-center gap-2 text-[12px] font-semibold tracking-wide ${
+        dark ? 'text-fg-on-dark-muted' : 'text-fg-muted'
+      } ${className}`}
+    >
       {index !== undefined && (
-        <span aria-hidden className="dc-num font-mono text-[11px] text-brand-600">
+        <span aria-hidden className={`dc-num font-mono text-[11px] ${dark ? 'text-brand-300' : 'text-brand-600'}`}>
           {String(index).padStart(2, '0')}
         </span>
       )}
-      <span aria-hidden className="h-px w-6 bg-hairline" />
+      <span aria-hidden className={`h-px w-6 ${dark ? 'bg-hairline-on-dark' : 'bg-hairline'}`} />
       {children}
     </p>
   );
@@ -294,6 +359,10 @@ export default function LandingContent() {
   const { language } = useLanguage();
   const c = COPY[language];
   const companies = language === 'ko' ? COMPANIES_KO : COMPANIES_EN;
+  // Pro Tier가 닫혀 있는 동안만 해당 답변 끝에 안내 한 줄을 덧붙인다.
+  const faqs = c.faqs.map((f) =>
+    f.proNote && PRO_TIER_SUSPENDED ? { ...f, a: `${f.a} ${c.aiProSuspended}` } : f,
+  );
 
   return (
     <>
@@ -373,12 +442,54 @@ export default function LandingContent() {
       </section>
 
       {/* ============================================================= */}
-      {/* Feature 02 — 인터랙티브 에디터 (센터 정렬 데모) */}
+      {/* Feature 02 — AI 검색 (DeepSeek · 한 세션 · 하루 50회)            */}
+      {/*                                                                */}
+      {/* 앞뒤가 모두 밝은 면이라 여기서 한 번 어두워진다. 이 서비스에서 AI가   */}
+      {/* 도는 층임을 색으로 말하는 자리다(DESIGN.md §1 — 작업·마케팅 밴드는  */}
+      {/* ink). 모델 카탈로그와 한도 정책은 FAQ로 내렸다. 여기에는 숫자 두 개와 */}
+      {/* 눌러 볼 수 있는 데모만 남긴다 — 무엇을 할 수 있는지는 나열하는 것보다 */}
+      {/* 눌러 보게 하는 쪽이 빠르다.                                       */}
+      {/* ============================================================= */}
+      <section className="py-20 sm:py-24 bg-ink">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="space-y-4">
+            <Eyebrow index={2} tone="dark">
+              {c.searchEyebrow}
+            </Eyebrow>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-fg-on-dark">
+              {c.searchTitle}
+            </h2>
+            <p className="text-fg-on-dark-secondary leading-relaxed">{c.searchDesc}</p>
+
+            {/* 한도는 문장이 아니라 숫자로 — "얼마나 쓸 수 있나"가 먼저 보여야 한다 */}
+            <dl className="grid grid-cols-2 gap-3 pt-2">
+              {c.searchLimits.map((l) => (
+                <div
+                  key={l.label}
+                  className="rounded-[var(--radius-panel)] border border-hairline-on-dark bg-ink-soft p-4"
+                >
+                  <dt className="text-xs font-semibold text-fg-on-dark-muted">{l.label}</dt>
+                  <dd className="dc-num mt-1 font-display text-3xl font-bold text-brand-300">{l.value}</dd>
+                  <p className="mt-1.5 text-xs text-fg-on-dark-muted leading-relaxed">{l.note}</p>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {/* 오른쪽: 눌러 볼 수 있는 검색 데모 — 세 칩이 이 기능이 하는 세 가지 일이다 */}
+          <SearchShowcase />
+        </div>
+      </section>
+
+      {/* ============================================================= */}
+      {/* Feature 03 — 인터랙티브 에디터 (센터 정렬 데모) */}
       {/* ============================================================= */}
       <section className="py-20 sm:py-24 bg-white">
         <div className="max-w-6xl mx-auto px-6 sm:px-8">
           <div className="max-w-2xl mx-auto text-center mb-12">
-            <Eyebrow index={2}>{c.f2Eyebrow}</Eyebrow>
+            <Eyebrow index={3} className="justify-center">
+              {c.f2Eyebrow}
+            </Eyebrow>
             <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
               {c.f2Title}
             </h2>
@@ -391,12 +502,12 @@ export default function LandingContent() {
       </section>
 
       {/* ============================================================= */}
-      {/* Feature 03 — 채점 시스템 */}
+      {/* Feature 04 — 채점 시스템 */}
       {/* ============================================================= */}
       <section className="py-20 sm:py-24 bg-paper">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="space-y-4">
-            <Eyebrow index={3}>{c.f3Eyebrow}</Eyebrow>
+            <Eyebrow index={4}>{c.f3Eyebrow}</Eyebrow>
             <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
               {c.f3Title}
             </h2>
@@ -422,12 +533,12 @@ export default function LandingContent() {
       </section>
 
       {/* ============================================================= */}
-      {/* Feature 04 — 문제집: 난이도별 + 기업 변형문제 + 언어 로드맵 */}
+      {/* Feature 05 — 문제집: 난이도별 + 기업 변형문제 + 언어 로드맵 */}
       {/* ============================================================= */}
       <section className="py-20 sm:py-24 bg-white">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="lg:order-2 space-y-4">
-            <Eyebrow index={4}>{c.f4Eyebrow}</Eyebrow>
+            <Eyebrow index={5}>{c.f4Eyebrow}</Eyebrow>
             <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
               {c.f4Title}
             </h2>
@@ -499,7 +610,7 @@ export default function LandingContent() {
       <section className="py-20 sm:py-24 bg-paper">
         <div className="max-w-6xl mx-auto px-6 sm:px-8">
           <div className="max-w-2xl mx-auto text-center">
-            <Eyebrow index={5} className="justify-center">{c.osEyebrow}</Eyebrow>
+            <Eyebrow index={6} className="justify-center">{c.osEyebrow}</Eyebrow>
             <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
               {c.osTitle}
             </h2>
@@ -548,7 +659,7 @@ export default function LandingContent() {
             {c.faqTitle}
           </h2>
           <div className="divide-y divide-hairline border-y border-hairline">
-            {c.faqs.map((f) => (
+            {faqs.map((f) => (
               <details key={f.q} className="group py-1">
                 <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none text-base font-semibold text-ink-soft hover:text-brand-600 transition-colors [&::-webkit-details-marker]:hidden">
                   {f.q}

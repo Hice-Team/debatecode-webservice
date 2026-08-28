@@ -11,12 +11,15 @@
 //   AI 계층    모델 호출·스트리밍   app/lib/ai/search-answerer.ts
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { verifySession } from '@/app/lib/dal';
+import { requireApiSession } from '@/app/lib/dal';
 import { prisma } from '@/app/lib/prisma';
 import { rateLimit } from '@/app/lib/rate-limit';
+import { decryptSecret } from '@/app/lib/crypto';
+import { consumeAiUsage, exhaustedMessage, refundAiUsage } from '@/app/lib/ai/usage-limits';
 import { featureBlockMessage, getLimit } from '@/app/lib/settings';
 import { DEFAULT_SEARCH_MODEL_ID, findSearchModel, isSearchModelId } from '@/app/lib/ai/search-models';
 import { fallbackAnswer, getSearchLlmConfig, streamSearchAnswer } from '@/app/lib/ai/search-answerer';
+import { hasOwnFunding } from '@/app/lib/ai/funding';
 import { EFFORTS, asEffort } from '@/app/lib/ai/effort';
 import { estimateTokens } from '@/app/lib/ai/free-ai';
 
@@ -51,16 +54,33 @@ function titleFrom(question: string): string {
 }
 
 export async function POST(request: Request) {
-  const { userId } = await verifySession();
+  // 로그인 필수 — 401 JSON으로 답한다. verifySession()은 /login으로 리다이렉트하는데,
+  // API에서 그러면 fetch가 로그인 페이지 HTML을 받아 "JSON 파싱 실패"로 보인다.
+  const session = await requireApiSession();
+  if ('response' in session) return session.response;
+  const { userId } = session;
 
   // 운영 킬 스위치 — 업스트림 장애나 비용 급증 시 콘솔에서 끈다
   const blocked = await featureBlockMessage('flag.ai_search');
   if (blocked) return NextResponse.json({ error: blocked }, { status: 503 });
 
-  // 한도는 런타임 설정에서 읽는다 — 남용이 시작되면 재배포 없이 조인다
+  // 분당 연타 방어 — 한도는 런타임 설정에서 읽는다(재배포 없이 조인다)
   if (!rateLimit(`ai-search:${userId}`, await getLimit('limit.rate.ai_ask'), 60_000)) {
     return NextResponse.json({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' }, { status: 429 });
   }
+
+  // 이용자 AI 설정 — 개인 키가 있으면 그 키로 부르고 한도를 걸지 않는다.
+  const aiRow = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { aiProvider: true, aiModel: true, aiApiKey: true, aiBaseUrl: true },
+  });
+  const userKeys = {
+    provider: aiRow?.aiProvider ?? 'builtin_ai',
+    model: aiRow?.aiModel ?? null,
+    apiKey: await decryptSecret(aiRow?.aiApiKey),
+    baseUrl: await decryptSecret(aiRow?.aiBaseUrl),
+  };
+  const serviceFunded = !hasOwnFunding(userKeys);
 
   const raw = await request.json().catch(() => null);
   const parsed = bodySchema.safeParse(raw ?? {});
@@ -103,6 +123,17 @@ export async function POST(request: Request) {
   }
 
   if (!question) return NextResponse.json({ error: '질문을 입력해 주세요.' }, { status: 400 });
+
+  // 하루 15회 — 실제로 물어볼 질문이 확정된 뒤에 센다.
+  // 잘못된 요청이나 찾지 못한 답변 때문에 이용자의 하루 횟수가 줄어들면 안 된다.
+  // 모델이 답하지 못한 경우는 아래에서 되돌린다.
+  const allowance = await consumeAiUsage({ userId, surface: 'ai-search', serviceFunded });
+  if (allowance.exhausted) {
+    return NextResponse.json(
+      { error: exhaustedMessage('ai-search', allowance.resetAt), code: 'quota_exhausted' },
+      { status: 429 },
+    );
+  }
 
   if (!sessionId) {
     const existing = await prisma.aiSession.findFirst({
@@ -169,9 +200,11 @@ export async function POST(request: Request) {
         // 공급자가 usage를 주면 실측, 안 주면 아래에서 추정치로 채운다
         let usage: { promptTokens?: number; completionTokens?: number } | null = null;
 
-        if (!getSearchLlmConfig(modelId)) {
+        if (!getSearchLlmConfig(modelId, userKeys)) {
           step('dispatch', 'done', '모델 미연결');
           answer = fallbackAnswer('no-key');
+          // 부를 모델이 없었다 — 이번 호출은 없던 것으로 한다
+          void refundAiUsage({ userId, surface: 'ai-search', serviceFunded });
         } else {
           step('dispatch', 'running', `${model.label} · ${model.repo}`);
           let dispatched = false;
@@ -184,6 +217,7 @@ export async function POST(request: Request) {
               attachmentNames: attachments.map((a) => a.name),
               modelId,
               effort,
+              user: userKeys,
               // 이용자가 중단하거나 브라우저가 연결을 끊으면 모델 호출도 함께 끊는다
               signal: request.signal,
               onUsage: (u) => {
@@ -216,7 +250,10 @@ export async function POST(request: Request) {
             if (reasoningOpen && !composing) step('reason', 'done', `${reasoningChars.toLocaleString()}자`);
             answer = answer.trim();
             live = answer.length > 0;
-            if (!live) answer = fallbackAnswer('failed');
+            if (!live) {
+              answer = fallbackAnswer('failed');
+              void refundAiUsage({ userId, surface: 'ai-search', serviceFunded });
+            }
           } catch {
             // 중단이면 여기까지 받은 본문을 살려 둔다 — 이용자가 읽던 내용이 사라지면 안 된다
             answer = answer.trim();
@@ -227,6 +264,7 @@ export async function POST(request: Request) {
             } else {
               if (!dispatched) step('dispatch', 'done', '호출 실패');
               answer = fallbackAnswer('failed');
+              void refundAiUsage({ userId, surface: 'ai-search', serviceFunded });
             }
           }
         }
@@ -268,6 +306,10 @@ export async function POST(request: Request) {
           sessionId,
           live,
           aborted,
+          // 오늘 남은 대화 수 — 다 쓴 뒤에 알려 주면 늦다
+          allowance: allowance.unlimited
+            ? { unlimited: true as const }
+            : { unlimited: false as const, remaining: allowance.remaining, limit: allowance.limit },
           message: {
             id: saved.id,
             role: 'assistant',

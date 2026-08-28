@@ -283,13 +283,13 @@ export default function DebateQPanel({
     }
   }
 
-  // 실행(공개 케이스) / 제출(전체 케이스) — 제출에서 전부 통과하면 면접 모드로 전환된다
+  // 실행(공개 케이스) / 제출(전체 케이스) — 제출에서 전부 통과하면 면접 모드로 전환된다.
+  // 판정은 서버가 한다(app/lib/judge/client.ts) — 여기서도 통과 여부를 브라우저가 정하지 않는다.
   async function handleRun(allCases: boolean) {
     if (judging || switchingLang) return;
-    const cases = allCases ? problem.cases : problem.cases.filter((c) => !c.isHidden);
     setJudging(true);
     setResults([]);
-    setLastRunTotal(cases.length);
+    setLastRunTotal(allCases ? problem.examples.length + problem.hiddenCount : problem.examples.length);
     setAttempts((prev) => prev + 1);
     // 시도 횟수 서버 기록 — 실패해도 실행은 계속한다
     fetch(`/api/debateq/${sessionId}`, { method: 'PATCH' })
@@ -297,14 +297,16 @@ export default function DebateQPanel({
       .then((d) => typeof d.attempts === 'number' && setAttempts(d.attempts))
       .catch(() => {});
     try {
-      const result = await runJudge({
+      const outcome = await runJudge({
         language,
         code: codeRef.current,
-        cases,
-        timeLimitMs: problem.timeLimitMs,
+        problemId: problem.id,
+        kind: allCases ? 'submit' : 'run',
         onRuntimeLoading: setRuntimeLoading,
-        onCaseResult: (r) => setResults((prev) => [...prev, r]),
       });
+      const result = outcome.verdict;
+      setResults(result.results);
+      setLastRunTotal(result.total);
       // 전체 케이스 제출이 정답과 전부 일치 → 프롬프트 면접 모드 전환
       if (allCases && result.status === 'PASS' && phase === 'BUILD' && !done) {
         setPassedFlash(true);
@@ -322,12 +324,15 @@ export default function DebateQPanel({
           scrollDown();
         }, 1400);
       }
+    } catch (error) {
+      setResults([]);
+      setError(error instanceof Error ? error.message : '채점에 실패했습니다.');
     } finally {
       setJudging(false);
     }
   }
 
-  const hiddenCount = problem.cases.filter((c) => c.isHidden).length;
+  const hiddenCount = problem.hiddenCount;
 
   // 코드 명령은 debateAI 탭으로 합쳤다 — BUILD 단계에 별도 탭을 두지 않는다.
   // 면접이 시작되면 성격이 다른 대화(라운드·평가)라 그때 탭이 따로 열린다.
@@ -541,7 +546,7 @@ export default function DebateQPanel({
                       ['유형', problem.category],
                       ['난이도', DIFFICULTY_LABELS[problem.difficulty]],
                       ['언어', LANGUAGE_LABELS[language]],
-                      ['테스트 케이스', `공개 ${problem.cases.length - hiddenCount} · 히든 ${hiddenCount}`],
+                      ['테스트 케이스', `공개 ${problem.examples.length} · 히든 ${hiddenCount}`],
                       ['제한 시간', `케이스당 ${problem.timeLimitMs / 1000}초`],
                     ] as const
                   ).map(([k, v]) => (
@@ -710,7 +715,7 @@ export default function DebateQPanel({
             className="border-t border-white/10 bg-white/[0.02]"
           />
           <div style={{ height: `${termPct}%` }} className="min-h-0 overflow-hidden">
-            <OutputPanel results={results} total={lastRunTotal} cases={problem.cases} />
+            <OutputPanel results={results} total={lastRunTotal} cases={problem.examples} />
           </div>
         </div>
 

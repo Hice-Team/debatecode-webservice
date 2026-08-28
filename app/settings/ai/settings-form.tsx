@@ -20,7 +20,6 @@ import {
   type AiTestState,
 } from '@/app/lib/actions/settings';
 import { AI_PROVIDERS, KEY_CONSOLE_URLS, KEY_HINTS, normalizeProvider } from '@/app/lib/ai/config';
-import { FREE_AI_DAILY_LIMIT } from '@/app/lib/ai/free-ai-models';
 
 const initialState: AiSettingsState = {};
 const initialTestState: AiTestState = {};
@@ -46,8 +45,18 @@ const SURFACE_ORDER: ModelUsage['surface'][] = ['debateai', 'ai-search', 'other'
 
 interface Props {
   initial: { aiProvider: string; hasKey: boolean; keyHint: string | null };
-  /** Free Tier 사용량 — 총량과 모델별 내역 */
-  freeQuota?: { used: number; limit: number; resetAt: string | null; models: ModelUsage[] };
+  /** 기본 제공 AI 사용 현황 — 회수 한도(차단 기준)와 토큰 내역(참고) */
+  freeQuota?: {
+    used: number;
+    limit: number;
+    resetAt: string | null;
+    models: ModelUsage[];
+    allowance: {
+      aiSearch: { used: number; limit: number; remaining: number; resetAt: string | null };
+      debateAiPerProblem: number;
+      unlimited: boolean;
+    };
+  };
   /** 온보딩 흐름에서만 전달 — 저장 성공 시 이 경로로 리다이렉트 */
   redirectTo?: string;
   /** 온보딩 흐름에서만 표시되는 "건너뛰기" 버튼 */
@@ -86,7 +95,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
           <span className="flex-1">
             DebateAI Free Tier
             <span className="block text-[11px] font-normal text-fg-muted">
-              키 없이 바로 사용 · 하루 {FREE_AI_DAILY_LIMIT.toLocaleString()} 토큰
+              키 없이 바로 사용 · AI Search 하루 15회 · debateAI 문제당 10회
             </span>
           </span>
           <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] text-emerald-700">
@@ -245,33 +254,63 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
 }
 
 /**
- * Free Tier 사용량 — 총량 하나만 보여 주면 "무엇 때문에 다 썼는지"를 알 수 없다.
- * AI Search와 debateAI 탭에서 고른 모델을 축으로 나눠, 지금 선택된 모델을 표시해 준다.
+ * 기본 제공 AI 사용 현황.
+ *
+ * 예전에는 "62,400 / 100,000 토큰" 하나만 보여 줬다. 그 숫자를 보고 다음 질문을 할지
+ * 말지 정할 수 있는 사람은 없다 — 질문 하나가 몇 토큰인지 알 수 없기 때문이다.
+ * 그래서 한도를 **횟수**로 바꿨고, 화면도 셀 수 있는 값을 먼저 보여 준다.
+ * 토큰은 아래쪽 "모델별 내역"으로 내렸다 — 참고 정보이지 한도가 아니다.
  */
 function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
-  const pct = Math.min(100, (quota.used / quota.limit) * 100);
+  const { allowance } = quota;
+  const search = allowance.aiSearch;
+  const searchPct = Math.min(100, (search.used / Math.max(1, search.limit)) * 100);
   const grouped = SURFACE_ORDER.map((surface) => ({
     surface,
     models: quota.models.filter((m) => m.surface === surface),
   })).filter((g) => g.models.length > 0);
+  const topModelUsage = quota.models.reduce((max, m) => Math.max(max, m.used), 0);
+
+  if (allowance.unlimited) {
+    return (
+      <div className="mt-2 space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+        <p className="text-[12px] font-semibold text-emerald-900">사용 한도 없음</p>
+        <p className="text-[11px] leading-relaxed text-emerald-900/70">
+          내 API 키(또는 로컬 모델)가 등록되어 있어 AI Search·debateAI에 횟수 제한이 걸리지 않습니다.
+          요금은 등록하신 키의 계정으로 청구됩니다.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-2 space-y-4 rounded-xl border border-brand-200 bg-brand-50/60 p-4">
       <div>
         <div className="mb-1 flex items-center justify-between font-mono text-[11px] text-brand-800/70">
-          <span>오늘 사용량</span>
+          <span>AI Search · 오늘</span>
           <span>
-            {quota.used.toLocaleString()} / {quota.limit.toLocaleString()} 토큰
-            {quota.resetAt &&
-              ` · ${new Date(quota.resetAt).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' })} 초기화`}
+            {search.used} / {search.limit}회
+            {search.resetAt &&
+              ` · ${new Date(search.resetAt).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' })} 초기화`}
           </span>
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-brand-100">
           <div
-            className={`h-full rounded-full ${quota.used >= quota.limit ? 'bg-rose-500' : 'bg-signal'}`}
-            style={{ width: `${pct}%` }}
+            className={`h-full rounded-full ${search.remaining === 0 ? 'bg-rose-500' : 'bg-signal'}`}
+            style={{ width: `${searchPct}%` }}
           />
         </div>
+      </div>
+
+      <div className="grid gap-1.5 border-t border-brand-200/70 pt-3 text-[11px] text-brand-900/75">
+        <p className="flex justify-between">
+          <span>debateAI (문제 풀이 중 질문)</span>
+          <span className="font-mono">문제당 하루 {allowance.debateAiPerProblem}회</span>
+        </p>
+        <p className="flex justify-between">
+          <span>AI 면접관</span>
+          <span className="font-mono">제한 없음</span>
+        </p>
       </div>
 
       {grouped.map((group) => (
@@ -296,9 +335,11 @@ function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
                   </span>
                 </div>
                 <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-brand-100">
+                  {/* 가장 많이 쓴 모델을 100%로 둔다 — 토큰은 더 이상 한도가 아니므로
+                      고정 분모로 그리면 막대가 전부 바닥에 붙어 비교가 안 된다 */}
                   <div
                     className="h-full rounded-full bg-signal/60"
-                    style={{ width: `${Math.min(100, (m.used / quota.limit) * 100)}%` }}
+                    style={{ width: `${Math.min(100, (m.used / Math.max(1, topModelUsage)) * 100)}%` }}
                   />
                 </div>
               </li>
@@ -313,8 +354,13 @@ function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
 
       <ul className="list-disc space-y-1 pl-4 text-[11px] leading-relaxed text-brand-900/70">
         <li>
-          한도를 모두 쓰면 초기화(사용 시점 기준 24시간 뒤)까지 <strong>규칙 기반 모델로 자동 전환</strong>됩니다.
+          횟수는 <strong>처음 사용한 시점부터 24시간</strong>이 지나면 다시 채워집니다.
         </li>
+        <li>
+          <strong>내 API 키를 등록하거나 로컬 모델을 연결하면 횟수 제한이 없습니다</strong> — 요금이 그 키의
+          계정으로 청구되기 때문입니다.
+        </li>
+        <li>모델이 답하지 못한 요청은 횟수에서 다시 빼 드립니다.</li>
         <li>무료 제공 특성상 개인 API 키 연결 대비 응답 품질·속도가 떨어질 수 있습니다.</li>
       </ul>
     </div>

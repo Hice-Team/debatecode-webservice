@@ -11,7 +11,9 @@ export default function AiTermsPage() {
   return (
     <>
       <h1>debateAI 이용약관</h1>
-      <p className="text-sm text-fg-muted">시행일: 2026년 8월 11일 · 이전 개정일: 2026년 8월 10일</p>
+      <p className="text-sm text-fg-muted">
+        시행일: 2026년 9월 26일 · 공고일: 2026년 8월 27일 · 이전 개정일: 2026년 8월 11일
+      </p>
 
       <p>
         이 약관은 Debate Code(이하 &quot;서비스&quot;)가 제공하는 생성형 AI 기능(이하

@@ -9,6 +9,7 @@ import { auditActionLabel } from '@/app/lib/audit';
 import { isEmailLive, emailTransportLabel } from '@/app/lib/email';
 import { PageHeader, StatGrid, Callout, EmptyRow, BTN_NEUTRAL } from '../ui';
 import TestMail from './test-mail';
+import SweepPanel from './sweep-panel';
 
 export const metadata: Metadata = { title: '시스템 상태' };
 
@@ -229,8 +230,9 @@ export default async function SystemHealthPage() {
           })}
         </div>
         {canWrite && (
-          <div className="mt-3">
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
             <TestMail defaultTo={user.email} />
+            <SweepPanel />
           </div>
         )}
       </div>

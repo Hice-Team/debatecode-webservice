@@ -36,9 +36,26 @@ export interface PostFormState {
   };
 }
 
-const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB — 파일 하나의 상한
 const MAX_FILES = 5;
 const MAX_IMAGES = 5;
+
+/**
+ * 한 글에 붙는 첨부의 **합계** 상한.
+ *
+ * 개별 검증만 있으면 10MB × 10개 = 100MB가 통과한다. 그런데 서버 액션 본문 한도는
+ * 25MB다(next.config.ts의 bodySizeLimit). 그 한도는 이 함수에 닿기 **전에** 걸리므로,
+ * 이용자는 "무엇이 잘못됐는지 알려주지 않는 실패"를 보고 작성 중이던 글까지 잃는다.
+ *
+ * 그래서 합계를 body 한도보다 낮게 잡아 여기서 먼저 걸러 낸다. 값을 바꿀 때는 세 곳을
+ * 함께 본다 — next.config.ts의 bodySizeLimit, 이 상수, 그리고 화면 쪽 같은 이름의 상수
+ * (app/community/write/attachment-composer.tsx). 어긋나면 "화면은 통과시키는데 서버가
+ * 거절하는" 상태가 된다.
+ *
+ * 이 파일은 'use server'라서 async 함수 외의 export를 둘 수 없다 — 그래서 내보내지 않고
+ * 화면 쪽에 같은 값을 따로 적어 둔다.
+ */
+const MAX_TOTAL_UPLOAD_BYTES = 20 * 1024 * 1024; // 20MB (bodySizeLimit 25MB보다 낮게)
 
 // href로 렌더되는 사용자 입력 URL은 http/https만 허용 — javascript: 등 스킴 차단
 const HTTP_URL = z
@@ -75,14 +92,21 @@ const postSchema = z
   });
 
 /**
- * 이메일 인증 여부 — Supabase auth.users의 확인 시각을 본다.
- * public.User에 사본을 두면 언젠가 반드시 어긋나므로, 필요한 순간에만 확인한다.
+ * 이메일 인증 여부.
+ *
+ * 예전에는 `auth.users.email_confirmed_at`을 봤다. 그런데 가입이
+ * `admin.createUser({ email_confirm: true })`로 계정을 즉시 확정 생성하므로 그 값은
+ * **모든 계정에서 항상 채워져 있다**. 즉 이 함수는 언제나 true를 돌려줬고,
+ * "인증한 계정만" 이라는 조건이 걸린 자리(중고거래 판매자 배지, 멘토게시판의
+ * 인증 계정 전용 답변)는 사실상 전원 통과 상태였다.
+ *
+ * 지금은 실제로 코드를 확인한 시각(User.emailVerifiedAt)만 본다.
  */
 async function isEmailVerified(userId: string): Promise<boolean> {
-  const rows = await prisma.$queryRaw<{ confirmed: boolean }[]>`
-    SELECT (email_confirmed_at IS NOT NULL) AS confirmed
-    FROM auth.users WHERE id = ${userId}::uuid LIMIT 1`.catch(() => []);
-  return rows[0]?.confirmed === true;
+  const row = await prisma.user
+    .findUnique({ where: { id: userId }, select: { emailVerifiedAt: true } })
+    .catch(() => null);
+  return !!row?.emailVerifiedAt;
 }
 
 function parseLines(value: string | undefined): string[] {
@@ -115,8 +139,16 @@ async function collectAttachments(
   const images = formData.getAll('images').filter((f): f is File => f instanceof File && f.size > 0);
   if (files.length > MAX_FILES) return { error: `파일은 최대 ${MAX_FILES}개까지 첨부할 수 있습니다.` };
   if (images.length > MAX_IMAGES) return { error: `이미지는 최대 ${MAX_IMAGES}개까지 첨부할 수 있습니다.` };
+  let total = 0;
   for (const f of [...files, ...images]) {
     if (f.size > MAX_FILE_BYTES) return { error: `"${f.name}"의 용량이 너무 큽니다. (최대 10MB)` };
+    total += f.size;
+  }
+  if (total > MAX_TOTAL_UPLOAD_BYTES) {
+    const mb = (total / 1024 / 1024).toFixed(1);
+    return {
+      error: `첨부 파일 합계가 너무 큽니다. (${mb}MB / 최대 ${MAX_TOTAL_UPLOAD_BYTES / 1024 / 1024}MB) 일부를 빼고 다시 올려 주세요.`,
+    };
   }
 
   const supabase = await createClient();

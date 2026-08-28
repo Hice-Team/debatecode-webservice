@@ -55,6 +55,7 @@ export const AUDIT_ACTIONS = {
   'security.recovery_email': '복구 이메일 변경',
 
   'system.test_mail': '테스트 메일 발송',
+  'system.sweep': '만료 데이터 정리',
   'setting.update': '런타임 설정 변경',
   'setting.reset': '런타임 설정 초기화',
   'maintenance.on': '유지보수 모드 시작',

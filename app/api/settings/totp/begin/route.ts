@@ -1,16 +1,28 @@
-'use server';
-
 import { NextResponse } from 'next/server';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
-import { verifySession } from '@/app/lib/dal';
+import { requireApiSession } from '@/app/lib/dal';
 import { prisma } from '@/app/lib/prisma';
 import { encryptSecret } from '@/app/lib/crypto';
 
+// 인증 앱(TOTP) 등록 시작 — 비밀키를 만들어 QR로 내려보낸다.
+//
+// 파일 맨 위에 `'use server'`가 붙어 있었다. 그 지시어는 모듈의 export를 **서버 액션**으로
+// 등록하는 것이라 라우트 핸들러와는 층이 다르다. POST가 HTTP 엔드포인트이면서 동시에
+// 액션 ID로도 불릴 수 있는 상태가 되고, Next 버전이 오르면 빌드가 깨질 자리다.
+
 export async function POST() {
-  const session = await verifySession();
-  const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { email: true } });
-  if (!user?.email) return NextResponse.json({ error: 'no-email' }, { status: 400 });
+  const session = await requireApiSession();
+  if ('response' in session) return session.response;
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { email: true, twoFactorEnabled: true },
+  });
+  if (!user?.email) return NextResponse.json({ error: '계정 정보를 찾지 못했습니다.' }, { status: 400 });
+  if (user.twoFactorEnabled) {
+    return NextResponse.json({ error: '이미 인증 앱이 등록되어 있습니다. 먼저 해제해 주세요.' }, { status: 409 });
+  }
 
   const secret = authenticator.generateSecret();
   const otpauth = authenticator.keyuri(user.email, 'debateCode', secret);
@@ -23,8 +35,11 @@ export async function POST() {
   // 그 서비스가 죽으면 QR이 안 보이는 문제도 함께 사라진다.
   const qrDataUrl = await QRCode.toDataURL(otpauth, { width: 200, margin: 1 });
 
-  await prisma.user.update({ where: { id: session.userId }, data: { twoFactorTempSecret: await encryptSecret(secret) } });
+  await prisma.user.update({
+    where: { id: session.userId },
+    data: { twoFactorTempSecret: await encryptSecret(secret) },
+  });
 
-  // secret은 앱에 QR을 못 찍는 이용자가 손으로 입력할 수 있게 함께 준다(otpauth 안에도 있다).
-  return NextResponse.json({ otpauth, qrDataUrl, secret });
+  // secret은 QR을 못 찍는 이용자가 손으로 입력할 수 있게 함께 준다(otpauth 안에도 있다).
+  return NextResponse.json({ otpauth, qrDataUrl, secret }, { headers: { 'Cache-Control': 'no-store' } });
 }

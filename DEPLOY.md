@@ -114,6 +114,37 @@ npx prisma db execute --file prisma/manual-additive.sql --schema prisma/schema.p
 npx prisma generate
 ```
 
+### ⚠ 이번 배포에 반드시 먼저 적용할 마이그레이션
+
+마이그레이션이 **두 개**다. 번호 순서대로 적용한다.
+
+1. `prisma/migrations/20260825120000_judge_pipeline_ai_limits_security/migration.sql`
+2. `prisma/migrations/20260825140000_login_two_factor/migration.sql`
+
+```bash
+npx prisma db execute   --file prisma/migrations/20260825120000_judge_pipeline_ai_limits_security/migration.sql   --schema prisma/schema.prisma
+
+npx prisma db execute   --file prisma/migrations/20260825140000_login_two_factor/migration.sql   --schema prisma/schema.prisma
+
+npx prisma generate
+npx tsx --env-file=.env scripts/check-schema-drift.ts
+```
+
+**코드보다 먼저 적용해야 한다.** 새 코드는 여기서 만드는 표(`JudgeSession`,
+`AiUsageCounter`)와 함수(`ai_usage_hit` 등)에 의존하므로, 순서가 뒤바뀌면 채점과 AI 호출이
+전부 실패한다. 인덱스와 표 생성은 전부 `IF NOT EXISTS`라 여러 번 돌려도 안전하다.
+
+되돌릴 수 없는 두 가지가 들어 있으니 미리 알고 있어야 한다:
+
+- **기존 백업 코드가 전부 삭제된다.** 암호문으로 저장하던 것을 sha256으로 바꾸는데,
+  평문을 복원할 수 없으므로(그리고 복원해서도 안 되므로) 버린다. 이용자는 설정에서
+  다시 발급받으면 된다 — 재발급은 원래도 언제든 가능한 동작이다.
+- **형식을 옮길 수 없는 보안키 행이 삭제된다.** 등록만 되고 인증에 쓰인 적이 없는 값들이다
+  (인증 경로 자체가 없었다). 이용자는 설정에서 다시 등록한다.
+
+적용 전에 백업을 받아 두는 편이 좋다. 두 항목 모두 이용자가 스스로 복구할 수 있으므로
+서비스가 멈추지는 않는다.
+
 ---
 
 ## 배포 후 확인
@@ -206,13 +237,18 @@ Sender    hicecorp.team@gmail.com / debateCode
 |---|---|---|
 | SQL 인젝션 | Prisma 파라미터 바인딩. 원시 쿼리는 태그드 템플릿만 사용하고 `$queryRawUnsafe`는 쓰지 않는다 | 전역 |
 | 무차별 대입(로그인·가입·재설정) | DB 기반 지속 카운터. 인스턴스가 바뀌어도 횟수가 남고, 증가·판정이 한 SQL 문에서 원자적으로 처리된다 | `app/lib/rate-limit-durable.ts` |
-| 비용 남용(AI 호출·업로드) | 인메모리 슬라이딩 윈도우 + 일일 토큰 쿼터 | `app/lib/rate-limit.ts`, `app/lib/ai/free-ai.ts` |
+| 비용 남용(AI 호출) | 로그인 필수 + **회수 기반 사용 한도**(AI Search 하루 15회 · debateAI 문제당 10회 · 면접관 무제한). 증가·판정이 한 SQL 문에서 원자적으로 처리된다. 개인 API 키·로컬 모델은 이용자 부담이라 세지 않는다 | `app/lib/ai/usage-limits.ts`, `app/lib/ai/funding.ts` |
+| 비용 남용(업로드·번역) | 인메모리 슬라이딩 윈도우 + 지속 카운터. `/api/translate`의 LLM 경로는 로그인 필수(사전 조회만 공개) | `app/lib/rate-limit.ts`, `app/api/translate/route.ts` |
+| 채점 결과 위조 | 판정을 서버가 한다. 브라우저는 실행 결과만 보고하고, 기대 출력은 내려가지 않는다. 세션은 1회용이고 코드 지문으로 묶인다 | `app/lib/judge/server.ts` |
+| 포인트 이중 사용 | 잔액 확인과 차감이 한 트랜잭션(Serializable). 재고는 `UPDATE … WHERE stock > 0`의 영향 행 수로 판정 | `app/lib/actions/mate.ts` |
 | SSRF(URL·GitHub 가져오기) | 사설망·루프백·메타데이터 IP 차단, 리다이렉트 홉마다 재검사 | `app/api/ai-search/import/route.ts` |
 | XSS | React 기본 이스케이프. `dangerouslySetInnerHTML` 0건. CSP `object-src 'none'`, `base-uri 'self'` | `next.config.ts` |
 | 클릭재킹 | `X-Frame-Options: DENY`, CSP `frame-ancestors 'none'` | `next.config.ts` |
 | 이용자 API 키 유출 | AES-256-GCM 이중 암호화. **키가 없으면 운영에서는 저장을 거부한다**(평문으로 떨어지지 않는다) | `app/lib/crypto.ts` |
 | 개인 첨부 유출 | 비공개 버킷 + 소유자 확인 후 5분 서명 URL. 버킷 RLS가 2차 방어 | `app/api/ai-search/file/route.ts` |
 | 권한 우회 | 역할 + 계정별 오버라이드(deny 우선), 서버에서만 판정 | `app/lib/permissions-server.ts` |
+| 비밀번호만으로의 계정 접근 | 2차 인증을 켠 계정은 세션이 확인을 통과해야 화면·API가 열린다. 수단은 인증 앱·복구 이메일·복구 키·보안키 넷 | `app/lib/dal.ts`, `app/lib/two-factor.ts` |
+| 자격 증명이 주소에 남는 것 | 클라이언트 폼에 `method="post"` — 하이드레이션 전 제출도 본문으로 나간다 | `app/(auth)/login/login-form.tsx` |
 
 ### 엣지가 맡아야 하는 것 (Cloudflare 대시보드에서 설정 — 코드로 불가)
 
@@ -238,3 +274,9 @@ Sender    hicecorp.team@gmail.com / debateCode
 npx tsx --env-file=.env scripts/check-rate-limit.ts   # 지속 리미터 동작 확인
 node scripts/qa-walkthrough.mjs                        # 브라우저 UX·반응형 회귀 검사
 ```
+
+**콘솔 › 시스템 › 상태**의 `만료 데이터 정리`를 주기적으로(주 1회 정도) 누른다.
+레이트리밋 카운터·AI 사용량·채점 세션·이메일 인증 코드·가입 초안이 정리된다.
+cron으로 돌리지 않는 이유는 아래 "알려진 한계"에 적힌 그대로다 — OpenNext가 만드는
+worker.js에는 `scheduled` 핸들러가 없다. 정기 실행이 필요해지면 Supabase의 `pg_cron`으로
+DB 안에서 도는 편이 맞다(정리 함수는 전부 SQL 함수로 만들어져 있다).

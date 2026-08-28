@@ -5,7 +5,7 @@
 // 일반 URL은 링크와 본문 미리보기만 메타데이터로 돌려준다.
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { verifySession } from '@/app/lib/dal';
+import { requireApiSession } from '@/app/lib/dal';
 import { createClient } from '@/app/lib/supabase/server';
 import { AI_ATTACHMENT_BUCKET, attachmentProxyUrl, safeStorageKey } from '@/app/lib/storage';
 import { rateLimit } from '@/app/lib/rate-limit';
@@ -181,7 +181,9 @@ async function importRepository(
 }
 
 export async function POST(request: Request) {
-  const { userId } = await verifySession();
+  const session = await requireApiSession();
+  if ('response' in session) return session.response;
+  const { userId } = session;
 
   if (!rateLimit(`ai-import:${userId}`, 20, 60_000)) {
     return NextResponse.json({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' }, { status: 429 });

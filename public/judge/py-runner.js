@@ -1,5 +1,8 @@
-// debateCode Python 채점 워커 (Pyodide)
+// debateCode Python 실행 워커 (Pyodide)
 // 첫 로드 시 CDN에서 ~6MB wasm을 받아오므로 {type:'ready'}가 늦게 옵니다.
+//
+// 이 워커는 **채점하지 않는다.** 코드를 돌려 각 케이스가 무엇을 돌려주었는지만 보고한다.
+// 판정은 서버가 한다(app/lib/judge/server.ts). 기대 출력은 워커까지 내려오지 않는다.
 
 var PYODIDE_VERSION = 'v0.26.4';
 importScripts('https://cdn.jsdelivr.net/pyodide/' + PYODIDE_VERSION + '/full/pyodide.js');
@@ -10,26 +13,6 @@ var pyodideReadyPromise = loadPyodide({
   self.postMessage({ type: 'ready' });
   return py;
 });
-
-function deepEqual(a, b) {
-  if (a === b) return true;
-  if (typeof a !== typeof b) return false;
-  if (typeof a === 'number' && typeof b === 'number') {
-    return Math.abs(a - b) < 1e-9 || a === b;
-  }
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    for (var i = 0; i < a.length; i++) if (!deepEqual(a[i], b[i])) return false;
-    return true;
-  }
-  if (a && b && typeof a === 'object' && typeof b === 'object') {
-    var ka = Object.keys(a);
-    var kb = Object.keys(b);
-    if (ka.length !== kb.length) return false;
-    return ka.every(function (k) { return deepEqual(a[k], b[k]); });
-  }
-  return false;
-}
 
 // Pyodide Proxy → 순수 JS 값 변환 (tuple→array, dict→object, int 유지)
 function toPlain(value) {
@@ -42,6 +25,31 @@ function toPlain(value) {
   if (Array.isArray(value)) return value.map(toPlain);
   if (typeof value === 'bigint') return Number(value);
   return value;
+}
+
+/** 구조화 복제(postMessage)로 보낼 수 있는 형태로 좁힌다. */
+function toTransferable(value, depth) {
+  depth = depth || 0;
+  if (value === undefined || value === null) return null;
+  var t = typeof value;
+  if (t === 'number') return isFinite(value) ? value : String(value);
+  if (t === 'boolean') return value;
+  if (t === 'bigint') return Number(value);
+  if (t === 'string') return value.length > 20000 ? value.slice(0, 20000) : value;
+  if (t === 'function' || t === 'symbol') return null;
+  if (depth >= 12) return null;
+  if (Array.isArray(value)) {
+    var arr = [];
+    for (var i = 0; i < value.length && i < 5000; i++) arr.push(toTransferable(value[i], depth + 1));
+    return arr;
+  }
+  if (t === 'object') {
+    var o = {};
+    var keys = Object.keys(value).slice(0, 5000);
+    for (var j = 0; j < keys.length; j++) o[keys[j]] = toTransferable(value[keys[j]], depth + 1);
+    return o;
+  }
+  return null;
 }
 
 self.onmessage = function (e) {
@@ -61,23 +69,26 @@ self.onmessage = function (e) {
     } catch (err) {
       for (var i = 0; i < msg.cases.length; i++) {
         self.postMessage({
-          type: 'case-result',
+          type: 'case-outcome',
           id: msg.cases[i].id,
-          status: 'error',
+          outcome: 'error',
           stdout: stdoutBuf.join('\n'),
           timeMs: 0,
           errorMessage: String(err && err.message ? err.message : err),
         });
       }
-      self.postMessage({ type: 'done', passed: 0, total: msg.cases.length });
+      self.postMessage({ type: 'done', total: msg.cases.length });
       return;
     }
 
-    var passed = 0;
     for (var j = 0; j < msg.cases.length; j++) {
       var c = msg.cases[j];
       stdoutBuf = [];
-      pyodide.setStdout({ batched: (function (buf) { return function (line) { buf.push(line); }; })(stdoutBuf) });
+      pyodide.setStdout({
+        batched: (function (buf) {
+          return function (line) { buf.push(line); };
+        })(stdoutBuf),
+      });
 
       var start = performance.now();
       try {
@@ -86,22 +97,19 @@ self.onmessage = function (e) {
         pyArgs.forEach(function (a) { if (a && typeof a.destroy === 'function') a.destroy(); });
         var actual = toPlain(rawResult);
         var timeMs = performance.now() - start;
-        var ok = deepEqual(actual, c.expected);
-        if (ok) passed++;
         self.postMessage({
-          type: 'case-result',
+          type: 'case-outcome',
           id: c.id,
-          status: ok ? 'pass' : 'fail',
-          actual: actual === undefined ? null : actual,
-          expected: c.expected,
+          outcome: 'returned',
+          actual: toTransferable(actual),
           stdout: stdoutBuf.join('\n'),
           timeMs: Math.round(timeMs * 100) / 100,
         });
       } catch (err) {
         self.postMessage({
-          type: 'case-result',
+          type: 'case-outcome',
           id: c.id,
-          status: 'error',
+          outcome: 'error',
           stdout: stdoutBuf.join('\n'),
           timeMs: Math.round((performance.now() - start) * 100) / 100,
           errorMessage: String(err && err.message ? err.message : err),
@@ -110,6 +118,6 @@ self.onmessage = function (e) {
     }
 
     if (solution && typeof solution.destroy === 'function') solution.destroy();
-    self.postMessage({ type: 'done', passed: passed, total: msg.cases.length });
+    self.postMessage({ type: 'done', total: msg.cases.length });
   });
 };

@@ -87,6 +87,9 @@ export async function requestSnsPromo(_prev: MateActionState, formData: FormData
  * 상품을 주문한다. 주문 즉시 포인트를 차감(원장에 음수 기록)하고 주문은 requested 상태가 된다.
  * 실제 쿠폰 발급은 운영자 확정(또는 발급 채널 연동) 단계에서 이뤄진다.
  */
+/** 트랜잭션 안에서 되돌리면서 이유를 이용자에게 그대로 전할 때 쓴다. */
+class OrderRejected extends Error {}
+
 export async function orderShopProduct(_prev: MateActionState, formData: FormData): Promise<MateActionState> {
   const { userId } = await verifySession();
 
@@ -113,41 +116,78 @@ export async function orderShopProduct(_prev: MateActionState, formData: FormDat
   const contactError = validateContact(contactType, contact);
   if (contactError) return { errors: { form: [contactError] } };
 
+  // 화면에 미리 알려 주기 위한 확인 — 판정 자체가 아니다.
+  // 진짜 판정은 아래 트랜잭션 안에서 다시 한다(아래 주석 참고).
+  const preview = await getPointSummary(userId);
+  if (preview.balance < product.priceKrw) {
+    return { errors: { form: [`포인트가 부족합니다. (보유 ${preview.balance.toLocaleString()}P / 필요 ${product.priceKrw.toLocaleString()}P)`] } };
+  }
   if (product.stock != null && product.stock <= 0) {
     return { errors: { form: ['재고가 소진된 상품입니다.'] } };
   }
 
-  const summary = await getPointSummary(userId);
-  if (summary.balance < product.priceKrw) {
-    return { errors: { form: [`포인트가 부족합니다. (보유 ${summary.balance.toLocaleString()}P / 필요 ${product.priceKrw.toLocaleString()}P)`] } };
-  }
+  /* ---------- 주문 확정 ----------
+     잔액 확인과 차감이 갈라져 있으면 안 된다.
+     예전에는 트랜잭션 **밖에서** 잔액을 읽고 안에서 차감했다. 같은 잔액을 읽은 두 요청이
+     둘 다 통과하므로, 1,000P를 가진 계정이 동시 요청 두 번으로 2,000P어치 기프티콘을
+     주문할 수 있었다. 포인트는 실제 상품으로 나가고 원장은 음수로 남는다.
 
-  // 주문 생성과 포인트 차감을 한 트랜잭션으로 묶는다 — 차감만 되고 주문이 없는 상태를 막는다
-  await prisma.$transaction(async (tx) => {
-    if (product.stock != null) {
-      await tx.shopProduct.update({ where: { id: product.id }, data: { stock: { decrement: 1 } } });
-    }
-    const order = await tx.shopOrder.create({
-      data: {
-        userId,
-        productId: product.id,
-        pointsSpent: product.priceKrw,
-        status: 'requested',
-        contact,
-        contactType,
+     그래서 확인과 차감을 한 트랜잭션 안에 함께 두고, 격리 수준을 Serializable로 올린다.
+     동시에 들어온 두 번째 요청은 직렬화 실패로 되돌아간다 — 두 번 나가는 것보다
+     "다시 시도해 주세요"가 낫다.
+
+     재고도 같은 문제였다. `UPDATE ... WHERE stock > 0`의 영향 행 수로 판정하면
+     확인과 차감이 한 번에 끝나 음수로 내려갈 수 없다. */
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        if (product.stock != null) {
+          const taken = await tx.shopProduct.updateMany({
+            where: { id: product.id, stock: { gt: 0 } },
+            data: { stock: { decrement: 1 } },
+          });
+          if (taken.count === 0) throw new OrderRejected('재고가 소진된 상품입니다.');
+        }
+
+        const [earned, spent] = await Promise.all([
+          tx.pointLedger.aggregate({ where: { userId, amount: { gt: 0 } }, _sum: { amount: true } }),
+          tx.pointLedger.aggregate({ where: { userId, amount: { lt: 0 } }, _sum: { amount: true } }),
+        ]);
+        const balance = (earned._sum.amount ?? 0) - Math.abs(spent._sum.amount ?? 0);
+        if (balance < product.priceKrw) {
+          throw new OrderRejected(
+            `포인트가 부족합니다. (보유 ${balance.toLocaleString()}P / 필요 ${product.priceKrw.toLocaleString()}P)`,
+          );
+        }
+
+        const order = await tx.shopOrder.create({
+          data: {
+            userId,
+            productId: product.id,
+            pointsSpent: product.priceKrw,
+            status: 'requested',
+            contact,
+            contactType,
+          },
+        });
+        await tx.pointLedger.create({
+          data: {
+            userId,
+            amount: -product.priceKrw,
+            kind: POINT_KINDS.shopPurchase,
+            memo: `${product.brand} ${product.name}`,
+            refType: 'shopOrder',
+            refId: order.id,
+          },
+        });
       },
-    });
-    await tx.pointLedger.create({
-      data: {
-        userId,
-        amount: -product.priceKrw,
-        kind: POINT_KINDS.shopPurchase,
-        memo: `${product.brand} ${product.name}`,
-        refType: 'shopOrder',
-        refId: order.id,
-      },
-    });
-  });
+      { isolationLevel: 'Serializable' },
+    );
+  } catch (error) {
+    if (error instanceof OrderRejected) return { errors: { form: [error.message] } };
+    // 직렬화 실패 — 같은 순간에 다른 주문이 확정됐다는 뜻이다
+    return { errors: { form: ['주문을 확정하지 못했습니다. 잠시 후 다시 시도해 주세요.'] } };
+  }
 
   revalidatePath('/debate-mate/console');
   revalidatePath('/console/points');

@@ -8,7 +8,7 @@ import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import ReportButton from '@/app/components/report-button';
 import remarkGfm from 'remark-gfm';
-import { runJudge, disposeJudgeWorkers } from '@/app/lib/judge/client';
+import { runJudge, disposeJudgeWorkers, JudgeError, type JudgeOutcome } from '@/app/lib/judge/client';
 import {
   DIFFICULTY_LABELS,
   LANGUAGE_LABELS,
@@ -83,7 +83,10 @@ export interface WorkspaceProblem {
   timeLimitMs: number;
   tags: string[];
   starterCodes: StarterCodes;
-  cases: Array<{ id: number; args: unknown[]; expected: unknown; isHidden: boolean }>;
+  /** 화면에 보여 주는 예제 케이스 — 기대 출력은 서버에만 있다 */
+  examples: Array<{ id: number; args: unknown[] }>;
+  /** 제출할 때 함께 돌아가는 히든 케이스 수 — 안내 문구에만 쓴다 */
+  hiddenCount: number;
 }
 
 type Mode = 'SOLVING' | 'INTERVIEW';
@@ -381,10 +384,14 @@ export default function Workspace({
       .catch(() => {});
   }, [isLoggedIn, problem.id, attemptPage, attemptOrder]);
 
-  // 실행 1회를 시도 기록에 남긴다 — 화면에 즉시 반영하고, 로그인 시 서버에도 저장
-  function recordAttempt(result: JudgeRunResult, kind: 'run' | 'submit') {
+  // 시도 기록을 화면에 반영한다.
+  //
+  // 서버에 보내지 않는다 — 채점 판정과 함께 이미 저장됐다(/api/judge/verify).
+  // 예전에는 여기서 status·passedCount를 따로 POST 했는데, 그러면 시도 기록도
+  // 브라우저가 쓰는 값이 된다. 기록은 판정과 같은 곳에서 나와야 한다.
+  function recordAttempt(result: JudgeRunResult, kind: 'run' | 'submit', serverId?: string) {
     const rec: RunRecord = {
-      id: crypto.randomUUID(),
+      id: serverId ?? crypto.randomUUID(),
       ts: Date.now(),
       code: codeRef.current,
       language,
@@ -395,21 +402,6 @@ export default function Workspace({
     };
     setRunHistory((prev) => [rec, ...prev].slice(0, 10));
     setAttemptTotal((prev) => prev + 1);
-    if (isLoggedIn) {
-      fetch('/api/attempts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          problemId: problem.id,
-          code: rec.code,
-          language: rec.language,
-          status: rec.status,
-          passedCount: rec.passedCount,
-          totalCount: rec.totalCount,
-          kind,
-        }),
-      }).catch(() => {});
-    }
   }
 
   // 시도 기록 클릭 — 그때 작성한 코드를 에디터에 복원한다
@@ -538,78 +530,94 @@ export default function Workspace({
     setAgentCode(next);
   }
 
+  /**
+   * 채점 한 번.
+   *
+   * 서버가 세션을 열어 케이스 입력을 내려주고, 워커가 코드를 돌리고, 서버가 판정한다
+   * (app/lib/judge/client.ts). 화면이 그리는 결과는 언제나 서버 판정이다 —
+   * 통과 여부를 브라우저가 정하던 시절에는 그 값이 그대로 점수와 포인트가 되었다.
+   */
   const execute = useCallback(
-    async (allCases: boolean) => {
-      const cases = allCases ? problem.cases : problem.cases.filter((c) => !c.isHidden);
+    async (kind: 'run' | 'submit'): Promise<JudgeOutcome | null> => {
       setJudging(true);
       setResults([]);
-      setLastRunTotal(cases.length);
+      setLastRunTotal(kind === 'submit' ? problem.examples.length + problem.hiddenCount : problem.examples.length);
       setBanner(null);
       try {
-        return await runJudge({
+        const outcome = await runJudge({
           language,
           code: codeRef.current,
-          cases,
-          timeLimitMs: problem.timeLimitMs,
+          problemId: problem.id,
+          kind,
           onRuntimeLoading: setRuntimeLoading,
-          onCaseResult: (r) => setResults((prev) => [...prev, r]),
+          // 진행 표시만 — 통과 여부는 서버 응답이 올 때 한 번에 들어온다
+          onCaseProgress: (done, total) => setLastRunTotal(Math.max(total, done)),
         });
+        setResults(outcome.verdict.results);
+        setLastRunTotal(outcome.verdict.total);
+        return outcome;
+      } catch (error) {
+        setResults([]);
+        setBanner(error instanceof JudgeError ? error.message : '채점에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+        return null;
       } finally {
         setJudging(false);
       }
     },
-    [language, problem.cases, problem.timeLimitMs],
+    [language, problem.id, problem.examples.length, problem.hiddenCount],
   );
 
   async function handleRun() {
     if (timeUp) return;
-    const result = await execute(false);
-    if (result) recordAttempt(result, 'run');
+    const outcome = await execute('run');
+    if (outcome) recordAttempt(outcome.verdict, 'run', outcome.attempt?.id);
   }
 
+  /**
+   * 제출 — 히든 케이스까지 함께 돌린다.
+   *
+   * 제출과 기록이 한 번의 왕복으로 끝난다. 예전에는 브라우저가 채점한 뒤 그 결과를
+   * 따로 /api/submissions에 보고했는데, 그 보고 내용이 곧 점수였다.
+   * 지금은 서버 판정(verdict)이 곧 기록이고, 면접 세션도 같은 응답에 실려 온다.
+   */
   async function handleSubmit() {
     if (timeUp) return;
     if (!isLoggedIn) {
       setBanner(t('submit-login-required', uiLang));
       return;
     }
-    const result = await execute(true);
-    if (!result) return;
-    recordAttempt(result, 'submit');
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          problemId: problem.id,
-          code: codeRef.current,
-          language,
-          status: result.status,
-          passedCount: result.passed,
-          totalCount: result.total,
-          runtimeMs: result.maxTimeMs,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setBanner(data.error ?? t('submit-failed', uiLang));
+      const outcome = await execute('submit');
+      if (!outcome) return;
+
+      const { verdict } = outcome;
+      recordAttempt(verdict, 'submit', outcome.attempt?.id);
+
+      if (verdict.status !== 'PASS') {
+        setBanner(`${verdict.passed}/${verdict.total} ${t('submit-partial', uiLang)}`);
         return;
       }
-      if (result.status === 'PASS' && activeMode === 'signature') {
+      if (activeMode === 'signature') {
         // 시그니처모드는 학습 흐름 — AI 분석 화면 대신 완료 카드를 띄운다
         setCompletion({ correct: true });
-      } else if (result.status === 'PASS' && data.interviewSessionId) {
+        return;
+      }
+      if (outcome.interviewSessionId && outcome.firstQuestion) {
         // 전체 통과 → 면접 모드 선택 화면으로
         setPassedFlash(true);
         setTimeout(() => {
           setPassedFlash(false);
-          setPendingInterview({ sessionId: data.interviewSessionId, firstQuestion: data.firstQuestion });
+          setPendingInterview({
+            sessionId: outcome.interviewSessionId!,
+            firstQuestion: outcome.firstQuestion!,
+          });
         }, 1400);
-      } else if (result.status !== 'PASS') {
-        setBanner(`${result.passed}/${result.total} ${t('submit-partial', uiLang)}`);
+        return;
       }
+      // 통과했지만 면접을 열지 못했다(킬 스위치 또는 모델 장애) — 통과 사실은 그대로 알린다
+      setCompletion({ correct: true });
     } finally {
       setSubmitting(false);
     }
@@ -1558,7 +1566,7 @@ export default function Workspace({
             />
 
             <div style={{ height: `${termPct}%` }} className="min-h-0 overflow-hidden">
-              <OutputPanel results={results} total={lastRunTotal} cases={problem.cases} />
+              <OutputPanel results={results} total={lastRunTotal} cases={problem.examples} />
             </div>
           </div>
 

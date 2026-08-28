@@ -10,6 +10,12 @@ export default function PasswordForm({ email }: { email: string }) {
   const router = useRouter();
   const supabase = createClient();
 
+  /**
+   * 비밀번호 변경 제출.
+   *
+   * 폼의 `method="post"`는 하이드레이션 전 제출을 막기 위한 것이다 — 없으면 브라우저가
+   * GET으로 보내 새 비밀번호가 주소창에 붙는다(app/(auth)/login/login-form.tsx 참고).
+   */
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPending(true);
@@ -39,7 +45,7 @@ export default function PasswordForm({ email }: { email: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} method="post" className="space-y-4">
       <div>
         <label htmlFor="current" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">현재 비밀번호</label>
         <input id="current" name="current" type="password" autoComplete="current-password" required placeholder="현재 비밀번호" className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60" />

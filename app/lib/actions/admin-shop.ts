@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { prisma } from '../prisma';
 import { getUser } from '../dal';
 import { canManagePublishedContent } from '../roles';
+import { requirePermission } from '../permissions-server';
 import { SHOP_PROVIDERS } from '../shop';
 
 export interface ShopAdminState {
@@ -53,8 +54,14 @@ const productSchema = z.object({
 async function requireManager() {
   const user = await getUser();
   if (!canManagePublishedContent(user.role)) throw new Error('forbidden');
+  await requirePermission(user, 'shop.manage');
   return user;
 }
+//
+// 역할 검사만으로는 부족하다. PermissionGrant의 **개별 차단(deny)** 이 통하지 않기 때문이다.
+// 문제가 된 담당자의 권한 하나만 잠그려 해도, 역할만 보는 자리는 그대로 열려 있다 —
+// 하필 돈과 발송이 걸린 쪽이 그랬다. requirePermission이 역할 기본값과 오버라이드를
+// 함께 판정한다(app/lib/permissions-server.ts).
 
 /** 상품 등록·수정 — id가 있으면 수정, 없으면 새로 만든다 */
 export async function saveShopProduct(_prev: ShopAdminState, formData: FormData): Promise<ShopAdminState> {

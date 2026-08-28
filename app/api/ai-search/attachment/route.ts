@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifySession } from '@/app/lib/dal';
+import { requireApiSession } from '@/app/lib/dal';
 import { createClient } from '@/app/lib/supabase/server';
 import { AI_ATTACHMENT_BUCKET, attachmentProxyUrl, safeStorageKey } from '@/app/lib/storage';
 import { rateLimit } from '@/app/lib/rate-limit';
@@ -10,7 +10,9 @@ import { rateLimit } from '@/app/lib/rate-limit';
 const MAX_BYTES = 10 * 1024 * 1024;
 
 export async function POST(request: Request) {
-  const { userId } = await verifySession();
+  const session = await requireApiSession();
+  if ('response' in session) return session.response;
+  const { userId } = session;
 
   if (!rateLimit(`ai-attach:${userId}`, 30, 60_000)) {
     return NextResponse.json({ error: 'too many requests' }, { status: 429 });

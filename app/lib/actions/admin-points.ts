@@ -11,13 +11,20 @@ import { prisma } from '../prisma';
 import { canReview } from '../roles';
 import { POINT_KINDS, grantPoints, getPointSummary } from '../points';
 import { audit } from '../audit';
+import { requirePermission } from '../permissions-server';
 import { maskName } from '../privacy';
 
 async function requireReviewer() {
   const caller = await getUser();
   if (!canReview(caller.role)) throw new Error('검토 권한이 없습니다.');
+  await requirePermission(caller, 'point.review');
   return caller;
 }
+//
+// 역할 검사만으로는 부족하다. PermissionGrant의 **개별 차단(deny)** 이 통하지 않기 때문이다.
+// 문제가 된 담당자의 권한 하나만 잠그려 해도, 역할만 보는 자리는 그대로 열려 있다 —
+// 하필 돈과 발송이 걸린 쪽이 그랬다. requirePermission이 역할 기본값과 오버라이드를
+// 함께 판정한다(app/lib/permissions-server.ts).
 
 /** 활동 인증 신청 승인/반려 — 승인 시에만 원장에 적립된다. */
 export async function reviewPointRequest(formData: FormData): Promise<void> {

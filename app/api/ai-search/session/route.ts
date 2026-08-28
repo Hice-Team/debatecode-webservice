@@ -4,11 +4,13 @@
 // 그래도 서버는 여기까지 만든 답변을 저장하므로, 중단 직후 이 경로로 다시 읽어
 // 화면과 저장된 대화를 일치시킨다.
 import { NextResponse } from 'next/server';
-import { verifySession } from '@/app/lib/dal';
+import { requireApiSession } from '@/app/lib/dal';
 import { prisma } from '@/app/lib/prisma';
 
 export async function GET(request: Request) {
-  const { userId } = await verifySession();
+  const auth = await requireApiSession();
+  if ('response' in auth) return auth.response;
+  const { userId } = auth;
 
   const id = new URL(request.url).searchParams.get('id') ?? '';
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });

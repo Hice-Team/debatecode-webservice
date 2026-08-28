@@ -8,6 +8,7 @@ import { prisma } from '../prisma';
 import { getFreeAiQuota } from './free-ai';
 import { DEBATEAI_MODELS, DEFAULT_CODE_MODEL_ID } from './debateai-models';
 import { SEARCH_MODELS } from './search-models';
+import { AI_USAGE_POLICY, peekAiUsage } from './usage-limits';
 
 export type UsageSurface = 'debateai' | 'ai-search' | 'other';
 
@@ -41,25 +42,44 @@ function surfaceFor(id: string, searchSelected: string | null): UsageSurface {
   return 'other';
 }
 
+/** 회수 한도 현황 — 이용자가 실제로 세면서 쓸 수 있는 값. */
+export interface AllowanceSummary {
+  aiSearch: { used: number; limit: number; remaining: number; resetAt: Date | null };
+  /** debateAI는 문제별로 따로 세므로 총량이 없다. 정책만 알려 준다. */
+  debateAiPerProblem: number;
+  /** 개인 키·로컬 모델을 등록해 두어 한도가 걸리지 않는 상태인가 */
+  unlimited: boolean;
+}
+
 export interface FreeUsageSummary {
+  /** 누적 토큰 — 한도가 아니라 **내역**이다. 차단 기준은 allowance 쪽이다. */
   used: number;
   limit: number;
   resetAt: Date | null;
   exhausted: boolean;
   models: ModelUsageRow[];
+  allowance: AllowanceSummary;
 }
 
 export async function getFreeUsageSummary(userId: string): Promise<FreeUsageSummary> {
-  const [quota, user, lastSearch] = await Promise.all([
+  const [quota, user, lastSearch, searchUsage] = await Promise.all([
     getFreeAiQuota(userId),
-    prisma.user.findUnique({ where: { id: userId }, select: { aiCodeModel: true } }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { aiCodeModel: true, aiProvider: true, aiModel: true, aiApiKey: true, aiBaseUrl: true },
+    }),
     // AI Search는 세션마다 모델을 기억한다 — 가장 최근 세션의 모델이 지금 고른 모델이다
     prisma.aiSession.findFirst({
       where: { userId, model: { not: null } },
       orderBy: { updatedAt: 'desc' },
       select: { model: true },
     }),
+    peekAiUsage(userId, 'ai-search'),
   ]);
+
+  // 개인 키나 로컬 모델을 등록해 두었으면 한도 자체가 걸리지 않는다.
+  // 키 원문은 필요 없다 — 등록돼 있는지만 보면 되므로 복호화하지 않는다.
+  const unlimited = !!user?.aiApiKey || !!user?.aiBaseUrl;
 
   const debateAiSelected = user?.aiCodeModel || DEFAULT_CODE_MODEL_ID;
   const searchSelected = lastSearch?.model ?? null;
@@ -80,5 +100,21 @@ export async function getFreeUsageSummary(userId: string): Promise<FreeUsageSumm
   // 많이 쓴 순 — 같은 양이면 선택된 모델을 위로
   models.sort((a, b) => b.used - a.used || Number(b.selected) - Number(a.selected) || a.label.localeCompare(b.label));
 
-  return { used: quota.used, limit: quota.limit, resetAt: quota.resetAt, exhausted: quota.exhausted, models };
+  return {
+    used: quota.used,
+    limit: quota.limit,
+    resetAt: quota.resetAt,
+    exhausted: quota.exhausted,
+    models,
+    allowance: {
+      aiSearch: {
+        used: searchUsage.used,
+        limit: searchUsage.limit,
+        remaining: searchUsage.remaining,
+        resetAt: searchUsage.resetAt,
+      },
+      debateAiPerProblem: AI_USAGE_POLICY.debateai.limit,
+      unlimited,
+    },
+  };
 }

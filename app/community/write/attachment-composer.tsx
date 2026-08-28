@@ -16,6 +16,9 @@ export interface AttachmentComposerHandle {
 
 const MAX_FILES = 5;
 const MAX_IMAGES = 5;
+// 합계 상한은 서버 액션(app/lib/actions/community.ts)이 원본이다 — 두 곳에서 각자 정하면
+// 화면은 통과시키고 서버는 거절하는 상태가 된다.
+const MAX_TOTAL_UPLOAD_BYTES = 20 * 1024 * 1024;
 const MIN_POLL_OPTIONS = 2;
 const MAX_POLL_OPTIONS = 6;
 
@@ -117,6 +120,12 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
 
   const hasChips = images.length + files.length + links.length + youtubes.length > 0;
 
+  // 합계 상한은 전송 **전에** 보여 준다.
+  // 서버 액션 본문 한도(25MB)는 액션 코드에 닿기 전에 걸리므로, 넘긴 채로 제출하면
+  // 이유 없는 실패로 보이고 작성 중이던 글까지 사라진다.
+  const totalBytes = [...images, ...files].reduce((sum, f) => sum + f.size, 0);
+  const overTotal = totalBytes > MAX_TOTAL_UPLOAD_BYTES;
+
   return (
     <div className="space-y-3">
       {/* 서버 액션이 읽는 실제 폼 필드 */}
@@ -151,7 +160,13 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
       {/* 파일/링크/유튜브 칩 */}
       {hasChips && (
         <div className="flex flex-wrap gap-2">
-          {files.map((f, i) => (
+          {overTotal && (
+        <p role="alert" className="w-full text-xs text-rose-600">
+          첨부 합계 {(totalBytes / 1024 / 1024).toFixed(1)}MB — 최대{' '}
+          {MAX_TOTAL_UPLOAD_BYTES / 1024 / 1024}MB까지 올릴 수 있습니다. 일부를 빼 주세요.
+        </p>
+      )}
+      {files.map((f, i) => (
             <Chip key={`f-${f.name}-${i}`} icon="📎" label={f.name} onRemove={() => setFiles((p) => p.filter((_, idx) => idx !== i))} />
           ))}
           {links.map((url) => (

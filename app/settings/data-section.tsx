@@ -92,7 +92,7 @@ export default function DataSection({ aiSessionCount }: { aiSessionCount: number
 
       {showModal && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-4">
-          <form onSubmit={submitDelete} className="w-full max-w-lg rounded-xl bg-white p-6">
+          <form onSubmit={submitDelete} className="w-full max-w-lg rounded-xl bg-white p-6" method="post">
             <h3 className="text-lg font-semibold">서비스 이용 데이터 제거</h3>
             <p className="mt-2 text-sm text-fg-secondary">제거할 데이터 종류를 선택하세요. 삭제한 데이터는 복구할 수 없습니다.</p>
             <div className="mt-4 grid gap-3">

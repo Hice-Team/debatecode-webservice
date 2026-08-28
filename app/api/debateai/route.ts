@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/app/lib/prisma';
-import { createClient } from '@/app/lib/supabase/server';
+import { requireApiSession } from '@/app/lib/dal';
 import { decryptSecret } from '@/app/lib/crypto';
 import { rateLimit } from '@/app/lib/rate-limit';
 import { llmChatStream, type LlmConfig, type LlmUsage } from '@/app/lib/ai/llm-interviewer';
 import { EFFORTS, asEffort, effortDirective, effortMaxTokens } from '@/app/lib/ai/effort';
 import { DEBATEAI_MODEL_IDS, findDebateAiModel } from '@/app/lib/ai/debateai-models';
 import { resolveDebateAiUpstream } from '@/app/lib/ai/debateai-upstream';
-import { addFreeAiUsage, estimateTokens, getFreeAiQuota } from '@/app/lib/ai/free-ai';
+import { addFreeAiUsage, estimateTokens } from '@/app/lib/ai/free-ai';
+import { consumeAiUsage, exhaustedMessage, refundAiUsage } from '@/app/lib/ai/usage-limits';
 
 // debateAI 챗봇 — 문제 정보와 에디터의 현재 코드를 매 턴 함께 보고 답한다.
 //
@@ -84,12 +85,15 @@ function extractCodeBlock(reply: string, language: 'javascript' | 'python'): str
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const limitKey = user?.id ?? request.headers.get('x-forwarded-for') ?? 'anon';
-  if (!rateLimit(`debateai:${limitKey}`, 10, 60_000)) {
+  // 로그인 필수.
+  //
+  // 예전에는 비로그인도 그대로 통과했고, 쿠터 검사는 `if (user && ...)`이라 로그인한
+  // 사람에게만 걸렸다. 가입할수록 손해인 구조였고, 서비스 키는 상한 없이 열려 있었다.
+  const session = await requireApiSession();
+  if ('response' in session) return session.response;
+  const userId = session.userId;
+
+  if (!rateLimit(`debateai:${userId}`, 10, 60_000)) {
     return NextResponse.json({ error: '요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.' }, { status: 429 });
   }
 
@@ -107,41 +111,45 @@ export async function POST(request: Request) {
   const model = findDebateAiModel(modelId);
 
   // 이용자 AI 설정 — BYOK 키와 로컬 엔드포인트는 암호화 저장이라 복호화해서 쓴다
-  const row = user
-    ? await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { role: true, aiApiKey: true, aiBaseUrl: true },
-      })
-    : null;
+  const row = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, aiApiKey: true, aiBaseUrl: true },
+  });
   const settings = {
-    apiKey: row ? await decryptSecret(row.aiApiKey) : null,
-    baseUrl: row ? await decryptSecret(row.aiBaseUrl) : null,
+    apiKey: await decryptSecret(row?.aiApiKey),
+    baseUrl: await decryptSecret(row?.aiBaseUrl),
   };
-
-  // 일일 쿠터는 서비스가 비용을 대는 경우에만 — 개인 키·로컬 실행은 이용자 부담이라 적용하지 않는다
-  const serviceFunded = model.tier === 'free' || (model.tier !== 'local' && !settings.apiKey);
-  if (user && serviceFunded) {
-    const quota = await getFreeAiQuota(user.id);
-    if (quota.exhausted) {
-      return NextResponse.json(
-        {
-          error: `오늘의 Debate Free AI 토큰(${quota.limit.toLocaleString()})을 모두 사용했습니다. ${
-            quota.resetAt ? quota.resetAt.toLocaleString('ko-KR') : '24시간 후'
-          }에 초기화됩니다.`,
-        },
-        { status: 429 },
-      );
-    }
-  }
 
   const resolved = resolveDebateAiUpstream(modelId, settings);
   if ('error' in resolved) return NextResponse.json({ error: resolved.error }, { status: resolved.status });
 
+  // 한도를 소비하기 전에 거절될 수 있는 것들을 먼저 끝낸다.
+  // 없는 문제나 잘못된 모델 때문에 이용자의 하루 횟수가 줄어들면 안 된다.
   const problem = await prisma.problem.findUnique({
     where: { id: problemId },
     select: { title: true, category: true, difficulty: true, description: true },
   });
   if (!problem) return NextResponse.json({ error: '문제를 찾을 수 없습니다.' }, { status: 404 });
+
+  // 누가 요금을 내는가 — 해석된 호출 경로 하나로만 판단한다(app/lib/ai/funding.ts).
+  // 모델 티어와 이용자 설정을 각자 조합해 짐작하던 방식은 라우트마다 답이 달라졌다.
+  const serviceFunded = model.tier === 'free';
+
+  // 문제당 하루 10회. 개인 키·로컬 모델로 도는 호출은 세지 않는다.
+  const allowance = await consumeAiUsage({
+    userId,
+    surface: 'debateai',
+    scope: String(problemId),
+    serviceFunded,
+  });
+  if (allowance.exhausted) {
+    return NextResponse.json(
+      { error: exhaustedMessage('debateai', allowance.resetAt), code: 'quota_exhausted' },
+      { status: 429 },
+    );
+  }
+  const refundOnFailure = () =>
+    refundAiUsage({ userId, surface: 'debateai', scope: String(problemId), serviceFunded });
 
   const SYSTEM =
     mode === 'refactor-why' ? SYSTEM_REFACTOR_WHY : mode === 'agent' ? SYSTEM_AGENT : SYSTEM_GENERAL;
@@ -223,9 +231,10 @@ export async function POST(request: Request) {
           completionTokens: estimateTokens(trimmed),
         };
 
-        // 일일 쿠터 누적 — 응답을 막지 않는다
-        if (user && serviceFunded) {
-          addFreeAiUsage(user.id, (tokens.promptTokens ?? 0) + (tokens.completionTokens ?? 0), modelId).catch(() => {});
+        // 토큰은 이제 한도가 아니라 **내역**이다 — 설정 화면이 "무엇을 얼마나 썼는지"를
+        // 보여 주는 데만 쓴다. 차단 기준은 위의 회수 한도(consumeAiUsage)다.
+        if (serviceFunded) {
+          addFreeAiUsage(userId, (tokens.promptTokens ?? 0) + (tokens.completionTokens ?? 0), modelId).catch(() => {});
         }
 
         // Agent 모드는 코드 블록을 따로 뽑아 준다 — 화면이 마크다운을 다시 파싱하지 않아도 되고,
@@ -246,8 +255,15 @@ export async function POST(request: Request) {
             // 고른 모델이 막혀 대체 모델로 답한 경우 — 화면이 이를 밝힌다
             replaced,
           },
+          // 남은 횟수 — 다 쓴 뒤에 알려 주면 늦다. 이번 답과 함께 내려보낸다.
+          allowance: allowance.unlimited
+            ? { unlimited: true as const }
+            : { unlimited: false as const, remaining: allowance.remaining, limit: allowance.limit },
         });
       } catch {
+        // 답을 만들지 못했다면 이번 호출은 없던 것으로 한다 — 업스트림 장애로
+        // 이용자의 하루 한도가 줄어들면 장애 난 날에 두 번 손해를 본다.
+        void refundOnFailure();
         // 이용자가 창을 닫거나 중단을 누른 경우는 알릴 대상이 없다
         if (!request.signal.aborted) {
           send({ type: 'error', message: 'AI 호출에 실패했습니다. 잠시 후 다시 시도해 주세요.' });

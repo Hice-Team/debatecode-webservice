@@ -69,6 +69,17 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
   // 통합 로그인 — 하나의 버튼이 SSO와 이메일/비밀번호를 모두 처리한다.
   //  1) 이메일 도메인으로 등록된 SSO(SAML) IdP가 있으면 그쪽으로 이동
   //  2) SSO가 없으면 비밀번호 로그인으로 자동 폴백
+  /**
+   * 로그인 제출.
+   *
+   * 폼에 `method="post"`가 붙어 있는 이유를 여기 적어 둔다. 이 폼은 onSubmit으로만
+   * 동작하는 클라이언트 폼이라, **하이드레이션이 끝나기 전**이나 JS가 실패한 상황에서
+   * 제출하면 브라우저가 기본 동작을 한다. 그 기본값이 GET이라 입력값이 주소창에 붙는다 —
+   * `/login?email=…&password=…` 가 되고, 그 주소는 브라우저 기록·Referer 헤더·프록시
+   * 로그에 남는다. (자동 QA가 하이드레이션 전에 눌러서 실제로 이 상태를 재현했다.)
+   *
+   * method="post"면 같은 상황에서도 값이 본문으로 가고 주소에는 남지 않는다.
+   */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
@@ -139,7 +150,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
         <p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-4 py-2.5">{oauthError}</p>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} method="post" className="space-y-5">
         <div>
           <label htmlFor="email" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">
             EMAIL

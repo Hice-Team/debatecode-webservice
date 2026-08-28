@@ -20,6 +20,7 @@ import { DEFAULT_CODE_MODEL_ID } from './debateai-models';
 import { resolveDebateAiUpstream } from './debateai-upstream';
 import { DEFAULT_BASE_URLS } from './config';
 import { getFreeAiLlmConfig } from './free-ai';
+import { userFundedConfig } from './funding';
 
 export interface QuestionContext {
   analysis: CodeAnalysis;
@@ -74,10 +75,29 @@ export function getProviderFor(config?: UserAiConfig | null): InterviewerProvide
   if (!config || config.aiProvider === 'mock') return new MockInterviewer();
 
   // 면접·리팩토링은 코드를 읽고 따지는 일이라 전용 모델을 따로 둔다.
-  // 설정에서 고르지 않았으면 기본값(DeepSeek Coder-V2)을 쓴다.
-  // 호출할 수 없는 조합(키 없음 등)이면 아래의 기존 경로로 자연스럽게 넘어간다.
-  const codeModel = config.aiCodeModel || DEFAULT_CODE_MODEL_ID;
-  const resolved = resolveDebateAiUpstream(codeModel, {
+  //
+  // 순서가 중요하다. 이용자가 코드 모델을 **직접 골랐으면** 그 선택이 먼저다.
+  // 고르지 않았는데 개인 키가 등록돼 있으면 그 키를 쓴다 — 키를 등록한 사람은
+  // 자기 키로 좋은 모델을 쓰려고 등록한 것이지, 등록해 두고 무료 모델을 받으려고
+  // 한 것이 아니다. 예전에는 코드 모델 기본값(free 티어)이 항상 먼저라
+  // 등록한 키가 면접에서 한 번도 쓰이지 않았다.
+  if (config.aiCodeModel) {
+    const chosen = resolveDebateAiUpstream(config.aiCodeModel, {
+      apiKey: config.aiApiKey,
+      baseUrl: config.aiBaseUrl,
+    });
+    if ('config' in chosen) return new LlmInterviewer(chosen.config);
+  }
+
+  const own = userFundedConfig({
+    provider: config.aiProvider,
+    model: config.aiModel,
+    apiKey: config.aiApiKey,
+    baseUrl: config.aiBaseUrl,
+  });
+  if (own) return new LlmInterviewer(own);
+
+  const resolved = resolveDebateAiUpstream(DEFAULT_CODE_MODEL_ID, {
     apiKey: config.aiApiKey,
     baseUrl: config.aiBaseUrl,
   });

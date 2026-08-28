@@ -5,6 +5,7 @@ import { getUser, verifySession } from '@/app/lib/dal';
 import { createClient } from '@/app/lib/supabase/server';
 import { maskSecret } from '@/app/lib/crypto';
 import { getFreeUsageSummary } from '@/app/lib/ai/usage-summary';
+import { getTwoFactorState } from '@/app/lib/two-factor';
 import { signOutDevice } from '@/app/lib/actions/settings';
 import { PageShell, PageHeader } from '@/app/components/page-shell';
 import ProfileForm from './profile/profile-form';
@@ -14,6 +15,7 @@ import AppSettingsForm from './app/app-settings-form';
 import AiSettingsForm from './ai/settings-form';
 import McpTokenPanel from './ai/mcp-token-panel';
 import TwoFactor from './security/two-factor';
+import EmailVerification from './security/email-verification';
 import SettingsShell from './settings-shell';
 import { SettingRow, SettingValue } from './ui';
 import DeleteAccount from './delete-account';
@@ -60,6 +62,8 @@ export default async function SettingsPage() {
     .catch(() => [] as { id: string; created_at: Date; updated_at: Date; user_agent: string | null; ip: string | null }[]);
 
   const freeQuota = await getFreeUsageSummary(userId);
+  // 탈퇴 화면이 어떤 2차 인증 수단을 물어볼지 미리 알아야 한다
+  const twoFactor = await getTwoFactorState(userId);
   const aiSessionCount = await prisma.aiSession.count({ where: { userId } });
   // 익명 식별자는 설정 화면에서 처음 보여줄 수 있으므로 여기서 확보해 둔다
   const anonymousTag = await ensureAnonymousTag(userId);
@@ -75,6 +79,7 @@ export default async function SettingsPage() {
         twoFactorRecoveryEmail: true,
         twoFactorRecoveryEmailVerifiedAt: true,
         twoFactorEnabled: true,
+        emailVerifiedAt: true,
       },
     }),
     prisma.loginEvent.findMany({
@@ -180,6 +185,13 @@ export default async function SettingsPage() {
             limit: freeQuota.limit,
             resetAt: freeQuota.resetAt ? freeQuota.resetAt.toISOString() : null,
             models: freeQuota.models,
+            allowance: {
+              ...freeQuota.allowance,
+              aiSearch: {
+                ...freeQuota.allowance.aiSearch,
+                resetAt: freeQuota.allowance.aiSearch.resetAt?.toISOString() ?? null,
+              },
+            },
           }}
         />
       </div>
@@ -209,6 +221,18 @@ export default async function SettingsPage() {
           desc="주기적으로 바꾸면 계정을 더 안전하게 지킬 수 있습니다."
           stacked
           control={<PasswordForm email={email} />}
+        />
+
+        <SettingRow
+          label="이메일 인증"
+          desc="이 주소를 실제로 받아볼 수 있는지 확인합니다. 중고 거래와 일부 게시판 답변에 필요합니다."
+          stacked
+          control={
+            <EmailVerification
+              email={email}
+              verifiedAt={user.emailVerifiedAt?.toISOString() ?? null}
+            />
+          }
         />
 
         <SettingRow
@@ -328,7 +352,16 @@ export default async function SettingsPage() {
           label="회원 탈퇴"
           desc="계정과 관련된 모든 데이터가 즉시 삭제됩니다. 되돌릴 수 없습니다."
           stacked
-          control={<DeleteAccount email={email} />}
+          control={
+            <DeleteAccount
+              email={email}
+              guard={{
+                totp: twoFactor.totp,
+                securityKeys: twoFactor.securityKeys,
+                backupCodesLeft: twoFactor.backupCodesLeft,
+              }}
+            />
+          }
         />
       </>
     ),
