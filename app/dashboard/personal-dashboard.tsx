@@ -35,8 +35,8 @@ const RADAR_CATEGORIES = ['해시', '스택', 'DP', '그래프', '그리디', '�
 // dataviz 검증 통과 팔레트 — 언어/도메인 분포
 const DIST_COLORS = { language: '#0369a1', domain: '#047857' };
 
-// 벤토 타일 공용 스타일
-const TILE = 'rounded-[var(--radius-panel)] border border-hairline bg-white p-5';
+// 벤토 타일 공용 스타일 (Premium)
+const TILE = 'rounded-[var(--radius-panel)] border border-hairline bg-white/90 backdrop-blur-sm p-5 shadow-[0_4px_20px_-10px_rgba(20,21,43,0.05)] transition-all duration-300 hover:shadow-[0_8px_30px_-12px_rgba(20,21,43,0.1)] hover:-translate-y-0.5';
 
 // 연속 학습일(스트릭) — 활동한 날짜 집합에서 오늘(또는 어제)부터 이어지는 연속 일수.
 function computeStreak(dates: Date[]): number {
@@ -209,8 +209,8 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
             { k: 'response', label: '면접 응답률', value: responseRate != null ? `${responseRate}%` : '—', sub: '방어 성공' },
             { k: 'defense', label: '평균 방어율', value: avgDefense != null ? `${avgDefense}%` : '—', sub: null },
           ].map((c) => (
-            <div key={c.k} className="relative overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white p-4 flex flex-col justify-between">
-              <span aria-hidden className="absolute left-0 top-0 h-full w-1 bg-signal/70" />
+            <div key={c.k} className="group relative overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white/90 backdrop-blur-sm p-4 flex flex-col justify-between shadow-[0_4px_20px_-10px_rgba(20,21,43,0.05)] transition-all duration-300 hover:shadow-[0_8px_30px_-12px_rgba(20,21,43,0.1)] hover:-translate-y-0.5">
+              <span aria-hidden className="absolute left-0 top-0 h-full w-1 bg-signal/70 transition-transform duration-300 group-hover:scale-y-110 group-hover:bg-brand-500" />
               <p className="font-mono text-[10px] text-fg-muted tracking-wider">
                 <I18nSlot k={`dash-kpi-${c.k}`} fallback={c.label} />
               </p>
@@ -231,7 +231,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
         </div>
 
         {/* Star 점수 · 티어 · 명예의 전당 순위 (풀폭 스트립) */}
-        <section className="lg:col-span-12 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white" aria-labelledby="rank-title">
+        <section className="lg:col-span-12 overflow-hidden rounded-[var(--radius-panel)] border border-brand-200 bg-gradient-to-r from-brand-50/50 to-white shadow-[0_8px_32px_-12px_rgba(24,0,172,0.1)] transition-transform duration-300 hover:shadow-[0_12px_40px_-16px_rgba(24,0,172,0.15)]" aria-labelledby="rank-title">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:divide-x lg:divide-hairline">
             {/* 좌: Star 점수 + 티어 진행도 */}
             <div className="p-5 sm:p-6">

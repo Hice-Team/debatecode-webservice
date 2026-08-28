@@ -24,15 +24,50 @@ export default function MateApply({ status }: { status: 'none' | 'pending' | 'ap
     <div>
       {status === 'rejected' && <p className="mb-2 text-xs text-rose-600">이전 신청이 반려되었습니다. 보완 후 다시 신청할 수 있어요.</p>}
       {!open ? (
-        <button onClick={() => setOpen(true)} className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal">
+        <button onClick={() => setOpen(true)} className="rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_14px_rgba(69,49,217,0.39)] hover:shadow-[0_6px_20px_rgba(69,49,217,0.23)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal">
           디베이트메이트 신청하기
         </button>
       ) : (
-       <form
-          action={formAction}
-          encType="multipart/form-data"
-          className="space-y-3"
-        >
+       // encType은 적지 않는다 — 서버 액션 폼에서는 React가 multipart를 알아서 정하고,
+       // 명시하면 무시되면서 콘솔 경고만 남는다.
+       <form action={formAction} className="space-y-3">
+
+          {/* 지원 동기 — 서버(applyDebateMate)가 20자 이상을 요구하고 DB에도 필수 컬럼이다.
+              이 칸이 없던 동안에는 제출을 눌러도 검증에서 막혀 아무 일도 일어나지 않았다. */}
+          <div>
+            <label htmlFor="mate-motivation" className="mb-1 block text-sm font-medium text-ink">
+              지원 동기 (필수)
+            </label>
+            <textarea
+              id="mate-motivation"
+              name="motivation"
+              required
+              minLength={20}
+              rows={4}
+              placeholder="어떤 문제를 만들고 싶은지, 어떤 활동을 하고 싶은지 20자 이상 적어 주세요."
+              className="block w-full rounded-lg border border-ink/15 bg-white px-4 py-3 text-sm placeholder:text-fg-quiet shadow-sm transition-all focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/10 hover:border-ink/30"
+            />
+            {state.errors?.motivation && (
+              <p className="mt-1 text-xs text-rose-600">{state.errors.motivation[0]}</p>
+            )}
+          </div>
+
+          {/* 포트폴리오 — 있으면 심사에 참고한다 */}
+          <div>
+            <label htmlFor="mate-portfolio" className="mb-1 block text-sm font-medium text-ink">
+              포트폴리오 링크 (선택)
+            </label>
+            <input
+              id="mate-portfolio"
+              name="portfolioUrl"
+              type="url"
+              placeholder="https://github.com/..."
+              className="block w-full rounded-lg border border-ink/15 bg-white px-4 py-3 text-sm placeholder:text-fg-quiet shadow-sm transition-all focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/10 hover:border-ink/30"
+            />
+            {state.errors?.portfolioUrl && (
+              <p className="mt-1 text-xs text-rose-600">{state.errors.portfolioUrl[0]}</p>
+            )}
+          </div>
 
           {/* 파일 업로드 */}
           <div>
@@ -44,7 +79,7 @@ export default function MateApply({ status }: { status: 'none' | 'pending' | 'ap
               name="attachment"
               type="file"
               accept=".pdf"
-              className="block w-full rounded-lg border border-ink/15 bg-paper/40 px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700"
+              className="block w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm shadow-sm transition-all file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:border-ink/30 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
             />
 
             <p className="mt-1 text-[11px] text-fg-muted">
@@ -87,7 +122,7 @@ export default function MateApply({ status }: { status: 'none' | 'pending' | 'ap
             <button
               type="submit"
               disabled={pending}
-              className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50"
+              className="rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_14px_rgba(69,49,217,0.39)] transition-all duration-200 hover:shadow-[0_6px_20px_rgba(69,49,217,0.23)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
             >
               {pending ? "제출 중…" : "신청 제출"}
             </button>
@@ -95,7 +130,7 @@ export default function MateApply({ status }: { status: 'none' | 'pending' | 'ap
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-xl border border-ink/15 px-4 py-2 text-sm text-fg-secondary hover:border-ink/40"
+              className="rounded-xl border border-ink/15 bg-white px-5 py-2.5 text-sm font-semibold text-fg-secondary shadow-sm transition-all duration-200 hover:border-ink/30 hover:bg-paper active:scale-[0.98]"
             >
               취소
             </button>

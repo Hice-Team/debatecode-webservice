@@ -91,13 +91,24 @@ export async function submitInquiry(_prev: InquiryState, formData: FormData): Pr
 /* ---------- 디베이트메이트 신청 ---------- */
 
 export interface MateApplyState {
-  errors?: { motivation?: string[]; attachment?: string[]; form?: string[] };
+  errors?: { motivation?: string[]; portfolioUrl?: string[]; attachment?: string[]; form?: string[] };
   saved?: boolean;
 }
 
 const mateSchema = z.object({
   motivation: z.string().trim().min(20, '지원 동기를 20자 이상 작성해 주세요.').max(2000),
-  portfolioUrl: z.string().trim().url('올바른 URL이 아닙니다.').optional().or(z.literal('')),
+  // 이 값은 콘솔에서 관리자가 누르는 <a href>로 그대로 렌더된다.
+  // zod의 .url()은 javascript:·data:·file: 스킴도 통과시키므로, 그대로 두면 신청자가
+  // 심사자의 브라우저에서 스크립트를 돌릴 수 있다 — http/https로 못 박는다.
+  // (커뮤니티 첨부도 같은 이유로 같은 제약을 둔다 — app/lib/actions/community.ts)
+  portfolioUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .url('올바른 URL이 아닙니다.')
+    .refine((v) => /^https?:\/\//i.test(v), 'http/https 주소만 등록할 수 있습니다.')
+    .optional()
+    .or(z.literal('')),
 });
 
 const MATE_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;

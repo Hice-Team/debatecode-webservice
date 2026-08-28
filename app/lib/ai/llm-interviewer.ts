@@ -64,6 +64,10 @@ export interface LlmChatOptions {
   maxTokens?: number;
   /** 호출이 끝나면 공급자가 준 usage를 넘겨준다 (주지 않으면 호출되지 않는다) */
   onUsage?: (usage: LlmUsage) => void;
+  /** 고른 모델을 라우터가 못 부를 때 한 번 더 시도할 모델 (기본 제공 모델 전용) */
+  fallbackModel?: string;
+  /** 내부용 — 폴백 재시도에서 모델만 갈아 끼울 때 쓴다 */
+  modelOverride?: string;
 }
 
 /** 공급자별 usage 필드를 하나의 모양으로 맞춘다. */
@@ -89,7 +93,7 @@ export async function llmChat(
 ): Promise<string> {
   // 추론형 모델(DeepSeek R1 등)은 40초를 넘기기도 한다. 호출부가 필요에 따라 늘린다.
   const timeout = AbortSignal.timeout(options.timeoutMs ?? 30_000);
-  const model = resolveModel(config);
+  const model = options.modelOverride ?? resolveModel(config);
 
   if (config.kind === 'anthropic') {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -157,7 +161,21 @@ export async function llmChat(
       ],
     }),
   });
-  if (!res.ok) throw new Error(`${config.provider} API ${res.status}`);
+  if (!res.ok) {
+    // 라우터가 이 모델을 못 부르는 경우(내려갔거나, 크레딧이 떨어졌거나, 계정에 안 열려 있거나)
+    // 오류를 그대로 올리면 리팩토링모드처럼 모델을 고를 수 없는 화면이 통째로 죽는다.
+    // 스트리밍 경로(app/lib/ai/debateai-upstream.ts)는 이미 폴백 모델로 한 번 더 시도하는데,
+    // 이 단발 경로에는 그 장치가 없어 같은 키·같은 라우터인데 결과가 달랐다.
+    const retriable = res.status === 400 || res.status === 402 || res.status === 404 || res.status === 503;
+    if (retriable && options.fallbackModel && options.fallbackModel !== model) {
+      return llmChat(config, systemPrompt, userPrompt, {
+        ...options,
+        fallbackModel: undefined, // 폴백의 폴백은 없다 — 한 번만 더 시도한다
+        modelOverride: options.fallbackModel,
+      });
+    }
+    throw new Error(`${config.provider} API ${res.status}`);
+  }
   const data = await res.json();
   const usage = readUsage(data.usage);
   if (usage) options.onUsage?.(usage);

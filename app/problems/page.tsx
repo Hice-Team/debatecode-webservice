@@ -4,7 +4,7 @@ import { PageShell, PageHeader } from '@/app/components/page-shell';
 import I18nSlot from '@/app/components/i18n-slot';
 import { prisma } from '@/app/lib/prisma';
 import { getSessionOptional } from '@/app/lib/dal';
-import { DIFFICULTY_LABELS } from '@/app/lib/types';
+import { DIFFICULTY_LABELS, LANGUAGE_LABELS, problemLanguages } from '@/app/lib/types';
 import WorkbookBookmark from '@/app/components/workbook-bookmark';
 import ProblemFilters from './problem-filters';
 import Pagination from '@/app/components/pagination';
@@ -40,8 +40,11 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
   const session = await getSessionOptional();
 
   // 난이도/카테고리/기업/검색은 DB where 절로 필터링.
-  // 언어 필터만 starterCodes(JSON) 구조상 DB 필터가 어려워 in-memory 유지 —
-  // 언어 필터가 활성일 때는 페이지네이션 전에 전체 후보를 가져와 거른다.
+  // 언어만 starterCodes(JSON) 구조상 DB 필터가 어려워 in-memory로 거른다 —
+  // 언어 필터가 활성일 때는 페이지네이션 전에 전체 후보를 가져와야 개수가 맞는다.
+  //
+  // starterCodes는 이제 필터와 무관하게 **항상** 가져온다. 목록의 LANG 칸이 지원 언어를
+  // 보여 주기 때문이다. 문제 하나당 코드 두 조각이라 목록 12개면 무시할 만한 크기다.
   const baseWhere = {
     ...(difficultyValues.length > 0 ? { difficulty: { in: difficultyValues } } : {}),
     ...(categoryValues.length > 0 ? { category: { in: categoryValues } } : {}),
@@ -61,7 +64,7 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
         difficulty: true,
         category: true,
         company: true,
-        starterCodes: languageActive,
+        starterCodes: true,
       },
       ...(languageActive ? {} : { skip: (currentPage - 1) * PAGE_SIZE, take: PAGE_SIZE }),
     }),
@@ -86,8 +89,14 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
       : Promise.resolve([]),
   ]);
 
+  // 고른 언어 중 **하나라도** 풀 수 있으면 남긴다(OR).
+  // AND로 두면 "JavaScript도 되고 Python도 되는 문제"만 남아, 언어를 하나 더 고를수록
+  // 결과가 줄어든다 — 고르는 사람의 기대와 반대다.
   const languageFiltered = languageActive
-    ? candidates.filter((p) => (p.starterCodes as Record<string, unknown>)[languageValues[0]] != null)
+    ? candidates.filter((p) => {
+        const langs = problemLanguages(p.starterCodes);
+        return languageValues.some((wanted) => langs.includes(wanted as (typeof langs)[number]));
+      })
     : candidates;
   const totalCount = languageActive ? languageFiltered.length : totalMatched;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -136,12 +145,13 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
         />
 
         <div className="mt-6 bg-white rounded-[var(--radius-panel)] border border-hairline overflow-hidden overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
+          <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-hairline font-mono text-[11px] text-fg-muted tracking-wider">
                 <th className="text-left px-6 py-3 font-medium">STATUS</th>
                 {session && <th className="text-left px-2 py-3 font-medium w-8" />}
                 <th className="text-left px-4 py-3 font-medium w-full">TITLE</th>
+                <th className="text-left px-4 py-3 font-medium whitespace-nowrap">LANG</th>
                 <th className="text-left px-4 py-3 font-medium whitespace-nowrap">CATEGORY</th>
                 <th className="text-left px-4 py-3 font-medium whitespace-nowrap">LEVEL</th>
                 <th className="text-right px-6 py-3 font-medium whitespace-nowrap">
@@ -185,6 +195,28 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
                         </span>
                       )}
                     </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {(() => {
+                        const langs = problemLanguages(p.starterCodes);
+                        // 스타터 코드가 하나도 없는 문제 — 조용히 비우면 "왜 못 푸는지"를
+                        // 목록에서 알 수 없다. 상태를 감추지 않는다.
+                        if (langs.length === 0) {
+                          return <span className="font-mono text-[11px] text-fg-quiet">준비 중</span>;
+                        }
+                        return (
+                          <span className="flex flex-wrap gap-1">
+                            {langs.map((l) => (
+                              <span
+                                key={l}
+                                className="rounded-full border border-hairline bg-paper px-2 py-0.5 font-mono text-[10px] font-medium text-fg-secondary"
+                              >
+                                {LANGUAGE_LABELS[l]}
+                              </span>
+                            ))}
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td className="px-4 py-4 font-mono text-xs text-fg-secondary whitespace-nowrap">{p.category}</td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span className={`inline-block px-2 py-0.5 rounded-full border text-[11px] font-medium ${DIFFICULTY_BADGE[p.difficulty]}`}>
@@ -205,7 +237,7 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
               })}
               {problems.length === 0 && (
                 <tr>
-                  <td colSpan={session ? 6 : 5} className="px-6 py-16 text-center text-fg-quiet">
+                  <td colSpan={session ? 7 : 6} className="px-6 py-16 text-center text-fg-quiet">
                     <I18nSlot k="no-matched-problems" fallback="조건에 맞는 문제가 없습니다." />
                   </td>
                 </tr>

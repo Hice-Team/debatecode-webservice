@@ -8,6 +8,7 @@ import { deleteProblem } from '@/app/lib/actions/admin-problems';
 import UploadForm from '../upload-form';
 import DeleteProblemButton from './delete-button';
 import { PageHeader, Callout, BTN_NEUTRAL } from '../../ui';
+import { problemLanguages } from '@/app/lib/types';
 
 export const metadata: Metadata = { title: '문제 수정' };
 
@@ -71,6 +72,7 @@ export default async function EditProblemPage({ params }: { params: Promise<{ id
           timeLimitMs: problem.timeLimitMs,
           company: problem.company ?? '',
           examYear: problem.examYear ?? '',
+          languages: problemLanguages(problem.starterCodes),
           starterJs: starters.javascript ?? '',
           starterPy: starters.python ?? '',
           cases: problem.testCases.map((tc) => ({

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/app/lib/prisma';
 import { createClient } from '@/app/lib/supabase/server';
 import { rateLimit } from '@/app/lib/rate-limit';
-import { getBuiltinProvider, getBuiltinLlmConfig } from '@/app/lib/ai/builtin';
+import { getBuiltinProvider, getBuiltinLlmConfig, builtinChatOptions } from '@/app/lib/ai/builtin';
 
 // 리팩토링모드는 모델 선택 없이 내장 모델로 돈다 — 사용량 내역에서도 한 줄로 묶어 보여 준다
 const REFACTOR_USAGE_MODEL = 'builtin-refactor';
@@ -98,6 +98,7 @@ export async function POST(request: Request, ctx: RouteContext<'/api/debateq/[se
         llmConfig,
         COMMAND_SYSTEM,
         `문제: ${session.problem.title}\n언어: ${session.language}\n\n현재 코드:\n\`\`\`\n${session.currentCode}\n\`\`\`\n\n사용자 명령: ${answer}`,
+        builtinChatOptions(),
       );
       const parsedReply = extractJson(reply);
       if (!parsedReply?.code || parsedReply.code.trim().length < 10) {

@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { VoiceButton, VoiceConsentDialog, VoiceWaveform, useVoiceInput } from '@/app/study/search/voice-input';
-import { voiceConsentStrings } from '@/app/study/search/voice-strings';
 import { useSpeech } from '@/app/lib/speech';
 import { useLanguage } from '@/app/context/language-context';
 import ModelMenu from './model-menu';
@@ -93,14 +91,9 @@ export default function InterviewPanel({
     inputRef.current = input;
   }, [input]);
 
-  // 음성 답변 — debateAI 탭과 같은 훅을 쓴다(같은 파형·같은 권한 안내).
-  // 보이스 모드가 아니어도 쓸 수 있다. 말로 답하는 편이 편한 사람은 늘 있다.
+  // 면접에서는 음성 입력을 두지 않는다. 말한 것이 그대로 기록되고 평가되는 자리라,
+  // 받아쓰기가 한 글자만 틀려도 답변이 아니라 인식 오류를 변호하게 된다.
   const { language: uiLang } = useLanguage();
-  const appendSpoken = useCallback((spoken: string) => {
-    setInput((prev) => (prev ? `${prev.replace(/\s+$/, '')} ${spoken}` : spoken));
-  }, []);
-  const voiceInput = useVoiceInput({ lang: uiLang === 'en' ? 'en-US' : 'ko-KR', onCommit: appendSpoken });
-  const stopListening = voiceInput.stop;
   // 면접관 질문 낭독 — 긴 질문이 중간에 끊기지 않도록 공용 훅을 쓴다
   const { speak, stop: stopSpeaking } = useSpeech(uiLang);
 
@@ -121,7 +114,6 @@ export default function InterviewPanel({
       if (!answer || report) return;
       setInput('');
       setTimeLeft(null); // 답변 제출 → 타이머 정지
-      stopListening();
       setMessages((prev) => [...prev, { role: 'user', content: answer }]);
       setThinking(true);
 
@@ -165,7 +157,7 @@ export default function InterviewPanel({
         setThinking(false);
       }
     },
-    [getCurrentCode, mode, report, sessionId, voice, stopListening, speak],
+    [getCurrentCode, mode, report, sessionId, voice, speak],
   );
 
   // 엄격 모드: 카운트다운
@@ -321,42 +313,24 @@ export default function InterviewPanel({
           면접에서 보내는 말은 언제나 "답변"이라 고를 것이 없기 때문이다. */}
       {!report && (
         <div className="border-t border-white/10 p-3">
-          {voiceInput.error && (
-            <p className="mb-2 text-xs text-rose-400" role="alert">
-              {voiceInput.error}
-            </p>
-          )}
-
           <div className="rounded-[var(--radius-panel)] border border-white/10 bg-white/5 transition-colors focus-within:border-signal/60">
-            {voiceInput.listening ? (
-              <div className="px-2 pt-2">
-                <VoiceWaveform
-                  analyser={voiceInput.analyser}
-                  transcript={input}
-                  interim={voiceInput.interim}
-                  placeholder="듣고 있습니다. 말씀해 주세요…"
-                  tone="dark"
-                />
-              </div>
-            ) : (
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-                    e.preventDefault();
-                    send();
-                  }
-                }}
-                rows={2}
-                disabled={thinking}
-                placeholder="설계 의도를 논리적으로 방어하세요"
-                aria-label="면접 답변"
-                className="dc-scroll max-h-28 w-full resize-none bg-transparent px-4 py-2.5 text-sm text-white placeholder:text-fg-on-dark-quiet focus:outline-none disabled:cursor-not-allowed"
-              />
-            )}
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              rows={2}
+              disabled={thinking}
+              placeholder="설계 의도를 논리적으로 방어하세요"
+              aria-label="면접 답변"
+              className="dc-scroll max-h-28 w-full resize-none bg-transparent px-4 py-2.5 text-sm text-white placeholder:text-fg-on-dark-quiet focus:outline-none disabled:cursor-not-allowed"
+            />
 
-            {/* 하단 줄 — [모델·강도] ····· [음성] [전송] */}
+            {/* 하단 줄 — [모델·강도] ····· [전송] */}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 px-2 pb-2">
               <ModelMenu
                 value={model}
@@ -372,14 +346,6 @@ export default function InterviewPanel({
               </span>
 
               <div className="ml-auto flex shrink-0 items-center gap-1">
-                <VoiceButton
-                  listening={voiceInput.listening}
-                  onClick={voiceInput.toggle}
-                  disabled={thinking || !voiceInput.supported}
-                  label="음성으로 답변"
-                  stopLabel="음성 입력 끝내기"
-                  tone="dark"
-                />
                 <button
                   type="button"
                   onClick={() => send()}
@@ -407,14 +373,6 @@ export default function InterviewPanel({
         </div>
       )}
 
-      {/* 브라우저 권한 창 전에 한 번 — 음성이 어디로 가는지 밝힌다 */}
-      <VoiceConsentDialog
-        open={voiceInput.askingConsent}
-        onAccept={voiceInput.acceptConsent}
-        onDecline={voiceInput.declineConsent}
-        permission={voiceInput.permission}
-        strings={voiceConsentStrings(uiLang)}
-      />
     </div>
   );
 }

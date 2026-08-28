@@ -19,6 +19,26 @@ import {
   slugifyTitle,
   type ProblemImport,
 } from '../problem-import';
+import { LANGUAGES, isLanguage, type Language } from '@/app/lib/types';
+
+/**
+ * 폼이 고른 지원 언어만 담은 스타터 코드 맵.
+ *
+ * 고르지 않은 언어는 키 자체를 넣지 않는다 — 빈 문자열을 남기면 목록과 에디터가
+ * 그 언어를 지원한다고 오해한다. 아무것도 고르지 않았으면 두 언어를 모두 받아
+ * 예전 폼(언어 선택이 없던 화면)이나 API 호출이 그대로 동작하게 둔다.
+ */
+function starterCodesFrom(formData: FormData): Record<string, string> {
+  const field: Record<Language, string> = { javascript: 'starterJs', python: 'starterPy' };
+  const picked = formData.getAll('languages').map(String).filter(isLanguage);
+  const langs = picked.length > 0 ? picked : LANGUAGES;
+  const out: Record<string, string> = {};
+  for (const l of langs) {
+    const code = String(formData.get(field[l]) ?? '');
+    if (code.trim()) out[l] = code;
+  }
+  return out;
+}
 
 export interface ProblemUploadState {
   errors?: string[];
@@ -94,10 +114,7 @@ export async function createProblem(
         .map((s) => s.trim())
         .filter(Boolean),
       timeLimitMs: formData.get('timeLimitMs'),
-      starterCodes: {
-        javascript: String(formData.get('starterJs') ?? ''),
-        python: String(formData.get('starterPy') ?? ''),
-      },
+      starterCodes: starterCodesFrom(formData),
       keywords: String(formData.get('keywords') ?? '')
         .split(',')
         .map((s) => s.trim())
@@ -301,10 +318,7 @@ export async function updateProblem(
       description: formData.get('description'),
       tags: String(formData.get('tags') ?? '').split(',').map((s) => s.trim()).filter(Boolean),
       timeLimitMs: formData.get('timeLimitMs'),
-      starterCodes: {
-        javascript: String(formData.get('starterJs') ?? ''),
-        python: String(formData.get('starterPy') ?? ''),
-      },
+      starterCodes: starterCodesFrom(formData),
       keywords: String(formData.get('keywords') ?? '').split(',').map((s) => s.trim()).filter(Boolean),
       company: String(formData.get('company') ?? '') || null,
       examYear: String(formData.get('examYear') ?? '') || null,

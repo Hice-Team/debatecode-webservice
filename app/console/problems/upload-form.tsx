@@ -11,6 +11,13 @@ import remarkGfm from 'remark-gfm';
 import { createProblem, updateProblem, type ProblemUploadState } from '@/app/lib/actions/admin-problems';
 import { PROBLEM_CATEGORIES, DIFFICULTY_LABEL } from '@/app/lib/problem-import';
 import { FIELD, FOCUS, Callout, BTN_PRIMARY, BTN_NEUTRAL } from '../ui';
+import { LANGUAGES, LANGUAGE_LABELS, type Language } from '@/app/lib/types';
+
+/** 언어 → 스타터 입력의 id·name과 빈 값일 때 깔아 줄 뼈대 */
+const STARTER_META: Record<Language, { id: string; field: 'starterJs' | 'starterPy'; skeleton: string }> = {
+  javascript: { id: 'p-js', field: 'starterJs', skeleton: 'function solution() {\n  \n}' },
+  python: { id: 'p-py', field: 'starterPy', skeleton: 'def solution():\n    pass' },
+};
 
 const initial: ProblemUploadState = {};
 
@@ -36,6 +43,8 @@ export interface ProblemFormDefaults {
   examYear: string;
   starterJs: string;
   starterPy: string;
+  /** 이미 스타터 코드가 있는 언어 — 체크 상태의 초기값 */
+  languages: Language[];
   cases: CaseRow[];
 }
 
@@ -44,6 +53,8 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
   const [state, formAction, pending] = useActionState(defaults ? updateProblem : createProblem, initial);
   const [description, setDescription] = useState(defaults?.description ?? '');
   const [showPreview, setShowPreview] = useState(false);
+  // 새 문제는 두 언어를 켠 채 시작한다 — 끄는 편이 켜는 편보다 쉽다.
+  const [languages, setLanguages] = useState<Language[]>(defaults ? defaults.languages : [...LANGUAGES]);
   const [cases, setCases] = useState<CaseRow[]>(
     defaults?.cases.length
       ? defaults.cases
@@ -201,32 +212,61 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
           이용자가 에디터를 열었을 때 처음 보이는 코드입니다. 함수명은 테스트케이스가 호출하는 이름과
           같아야 합니다.
         </p>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div>
-            <label htmlFor="p-js" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
-              JavaScript
-            </label>
-            <textarea
-              id="p-js"
-              name="starterJs"
-              rows={6}
-              defaultValue={'function solution() {\n  \n}'}
-              className={`${FIELD} font-mono text-[13px]`}
-            />
-          </div>
-          <div>
-            <label htmlFor="p-py" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
-              Python
-            </label>
-            <textarea
-              id="p-py"
-              name="starterPy"
-              rows={6}
-              defaultValue={'def solution():\n    pass'}
-              className={`${FIELD} font-mono text-[13px]`}
-            />
-          </div>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="font-mono text-xs tracking-wider text-fg-secondary">지원 언어</span>
+          {LANGUAGES.map((l) => {
+            const on = languages.includes(l);
+            return (
+              <label
+                key={l}
+                className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors ${
+                  on
+                    ? 'border-brand-300 bg-brand-50 text-brand-700'
+                    : 'border-hairline bg-white text-fg-muted hover:border-brand-300 hover:text-signal'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  name="languages"
+                  value={l}
+                  checked={on}
+                  onChange={() =>
+                    setLanguages((prev) => (prev.includes(l) ? prev.filter((x) => x !== l) : [...prev, l]))
+                  }
+                  className="h-4 w-4 accent-[#1800AC]"
+                />
+                {LANGUAGE_LABELS[l]}
+              </label>
+            );
+          })}
         </div>
+        {languages.length === 0 ? (
+          <p className="rounded-[var(--radius-card)] border border-dashed border-hairline px-4 py-6 text-center text-sm text-fg-muted">
+            언어를 하나 이상 골라 주세요. 고른 언어의 시작 코드만 입력하면 됩니다.
+          </p>
+        ) : (
+          <div className={`grid gap-4 ${languages.length > 1 ? 'lg:grid-cols-2' : ''}`}>
+            {LANGUAGES.filter((l) => languages.includes(l)).map((l) => (
+              <div key={l}>
+                <label
+                  htmlFor={STARTER_META[l].id}
+                  className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary"
+                >
+                  {LANGUAGE_LABELS[l]}
+                </label>
+                <textarea
+                  id={STARTER_META[l].id}
+                  name={STARTER_META[l].field}
+                  rows={6}
+                  defaultValue={
+                    (defaults ? defaults[STARTER_META[l].field] : '') || STARTER_META[l].skeleton
+                  }
+                  className={`${FIELD} font-mono text-[13px]`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* 테스트케이스 */}

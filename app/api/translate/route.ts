@@ -6,6 +6,7 @@ import { durableRateLimit } from '@/app/lib/rate-limit-durable';
 import { getFreeAiLlmConfig } from '@/app/lib/ai/free-ai';
 import { llmChat } from '@/app/lib/ai/llm-interviewer';
 import { glossaryLookup } from '@/app/lib/db-glossary';
+import { builtinChatOptions } from '@/app/lib/ai/builtin';
 
 // 한→영 일괄 번역 — 전역 언어 전환(AutoTranslate)이 화면의 한국어 텍스트를 배치로 보낸다.
 //
@@ -106,7 +107,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const reply = await llmChat(config, SYSTEM, JSON.stringify(missing));
+    const reply = await llmChat(config, SYSTEM, JSON.stringify(missing), builtinChatOptions());
     const match = reply.match(/\[[\s\S]*\]/);
     const arr = match ? (JSON.parse(match[0]) as unknown) : null;
     if (Array.isArray(arr) && arr.length === missing.length && arr.every((x) => typeof x === 'string')) {

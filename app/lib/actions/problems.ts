@@ -3,6 +3,7 @@
 // 문제 에디터 서버 액션 — 관리자 전용.
 // 테스트케이스의 input(인자 배열)/expected(기대 반환값)는 JSON으로 입력받아 저장한다.
 import { redirect } from 'next/navigation';
+import { LANGUAGE_LABELS, isLanguage, type Language } from '@/app/lib/types';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { prisma } from '../prisma';
@@ -15,6 +16,7 @@ export interface ProblemFormState {
     difficulty?: string[];
     category?: string[];
     description?: string[];
+    languages?: string[];
     starterJs?: string[];
     starterPy?: string[];
     testCases?: string[];
@@ -37,9 +39,16 @@ const problemSchema = z.object({
   timeLimitMs: z.coerce.number().int().min(500).max(30_000).default(3000),
   company: z.string().trim().max(30).optional().or(z.literal('')),
   examYear: z.string().trim().max(10).optional().or(z.literal('')),
-  starterJs: z.string().trim().min(1, 'JavaScript 시작 코드를 입력해 주세요.').max(4000),
-  starterPy: z.string().trim().min(1, 'Python 시작 코드를 입력해 주세요.').max(4000),
+  // 지원 언어는 폼에서 고른다 — 고른 언어의 스타터 코드만 필수다.
+  starterJs: z.string().trim().max(4000).optional().default(''),
+  starterPy: z.string().trim().max(4000).optional().default(''),
 });
+
+/** 폼 필드 이름 — 언어를 늘릴 때 여기만 늘리면 된다. */
+const STARTER_FIELD: Record<Language, 'starterJs' | 'starterPy'> = {
+  javascript: 'starterJs',
+  python: 'starterPy',
+};
 
 function slugify(title: string): string {
   const base = title
@@ -64,6 +73,8 @@ function parseCsv(value: FormDataEntryValue | null): string[] {
 function parseProblemForm(formData: FormData):
   | {
       data: z.infer<typeof problemSchema>;
+      /** 폼에서 고른 지원 언어 — 최소 1개 */
+      languages: Language[];
       tags: string[];
       keywords: string[];
       testCases: { input: unknown; expected: unknown; isHidden: boolean; order: number }[];
@@ -78,13 +89,35 @@ function parseProblemForm(formData: FormData):
     timeLimitMs: formData.get('timeLimitMs') || 3000,
     company: formData.get('company') ?? '',
     examYear: formData.get('examYear') ?? '',
-    starterJs: formData.get('starterJs'),
-    starterPy: formData.get('starterPy'),
+    // 고르지 않은 언어의 입력칸은 화면에서 사라지고, 그때 formData.get()은 null을 준다.
+    // zod의 .optional()은 undefined만 받으므로 null을 그대로 넘기면 "이유 없이 저장이 안 되는"
+    // 상태가 된다 — 화면에 그 언어의 오류를 그릴 자리도 없어서 조용히 막힌다.
+    starterJs: formData.get('starterJs') ?? '',
+    starterPy: formData.get('starterPy') ?? '',
   });
   if (!parsed.success) {
-    return { errors: z.flattenError(parsed.error).fieldErrors };
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    // 에디터가 오류를 그리는 필드는 정해져 있다. 그 밖의 필드에서 막히면 화면에는
+    // 아무것도 뜨지 않고 "눌렀는데 아무 일도 안 난다"가 된다 — 폼 맨 위로 끌어올린다.
+    const shown = new Set(['title', 'slug', 'difficulty', 'category', 'description', 'starterJs', 'starterPy']);
+    const hidden = Object.entries(fieldErrors).filter(([k, v]) => !shown.has(k) && v?.length);
+    if (hidden.length > 0) {
+      return { errors: { ...fieldErrors, form: hidden.map(([k, v]) => `${k}: ${v[0]}`) } };
+    }
+    return { errors: fieldErrors };
   }
   const d = parsed.data;
+
+  // 지원 언어 — 하나 이상 골라야 하고, 고른 언어에는 스타터 코드가 있어야 한다.
+  const languages = formData.getAll('languages').map(String).filter(isLanguage);
+  if (languages.length === 0) {
+    return { errors: { languages: ['지원 언어를 1개 이상 선택해 주세요.'] } };
+  }
+  for (const l of languages) {
+    if (!d[STARTER_FIELD[l]].trim()) {
+      return { errors: { [STARTER_FIELD[l]]: [`${LANGUAGE_LABELS[l]} 시작 코드를 입력해 주세요.`] } };
+    }
+  }
 
   const tags = parseCsv(formData.get('tags'));
   const keywords = parseCsv(formData.get('keywords'));
@@ -121,7 +154,7 @@ function parseProblemForm(formData: FormData):
     return { errors: { testCases: ['테스트케이스를 1개 이상 입력해 주세요.'] } };
   }
 
-  return { data: d, tags, keywords, testCases };
+  return { data: d, languages, tags, keywords, testCases };
 }
 
 function problemData(parsed: Exclude<ReturnType<typeof parseProblemForm>, { errors: ProblemFormState['errors'] }>, slug: string) {
@@ -134,7 +167,12 @@ function problemData(parsed: Exclude<ReturnType<typeof parseProblemForm>, { erro
     tags: parsed.tags,
     description: d.description,
     timeLimitMs: d.timeLimitMs,
-    starterCodes: { javascript: d.starterJs, python: d.starterPy },
+    // 고르지 않은 언어는 **키 자체를 넣지 않는다** — 빈 문자열을 남기면 목록·에디터가
+    // 그 언어를 지원한다고 오해한다(problemLanguages는 빈 값을 거르지만, 저장 단계에서
+    // 애초에 만들지 않는 편이 뒤탈이 없다).
+    starterCodes: Object.fromEntries(
+      parsed.languages.map((l) => [l, d[STARTER_FIELD[l]]]),
+    ) as Record<Language, string>,
     keywords: parsed.keywords,
     company: d.company || null,
     examYear: d.examYear || null,

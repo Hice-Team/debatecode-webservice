@@ -715,7 +715,7 @@ export default function DebateQPanel({
             className="border-t border-white/10 bg-white/[0.02]"
           />
           <div style={{ height: `${termPct}%` }} className="min-h-0 overflow-hidden">
-            <OutputPanel results={results} total={lastRunTotal} cases={problem.examples} />
+            <OutputPanel results={results} total={lastRunTotal} cases={problem.examples} language={language} />
           </div>
         </div>
 

@@ -8,6 +8,26 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
   python: 'Python',
 };
 
+/** 화면에 늘 같은 순서로 나열하기 위한 목록 — 객체 키 순서에 기대지 않는다. */
+export const LANGUAGES: Language[] = ['javascript', 'python'];
+
+export function isLanguage(value: unknown): value is Language {
+  return typeof value === 'string' && (LANGUAGES as string[]).includes(value);
+}
+
+/**
+ * 이 문제가 지원하는 언어 — starterCodes에 **비어 있지 않은** 코드가 들어 있는 언어만.
+ *
+ * 지원 언어를 따로 두는 컬럼은 없다. 스타터 코드가 곧 "이 언어로 풀 수 있다"는 뜻이고,
+ * 둘을 나눠 두면 언젠가 서로 어긋난다 — 목록에는 뜨는데 에디터를 열면 빈 화면인 문제가
+ * 생긴다. 빈 문자열을 걸러 내는 이유도 같다. 키만 있고 내용이 없으면 지원이 아니다.
+ */
+export function problemLanguages(starterCodes: unknown): Language[] {
+  if (!starterCodes || typeof starterCodes !== 'object') return [];
+  const codes = starterCodes as Record<string, unknown>;
+  return LANGUAGES.filter((l) => typeof codes[l] === 'string' && (codes[l] as string).trim().length > 0);
+}
+
 export const DIFFICULTY_LABELS: Record<number, string> = {
   1: '입문',
   2: '초급',
@@ -40,6 +60,7 @@ export type CaseOutcomeKind = 'returned' | 'error' | 'timeout';
 
 export type JudgeWorkerMessage =
   | { type: 'ready' }
+  | { type: 'worker-error'; errorMessage?: string }
   | {
       type: 'case-outcome';
       id: number;

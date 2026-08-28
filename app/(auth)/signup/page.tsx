@@ -56,8 +56,18 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
   const initialGender = (await decryptSecret(draft?.genderEnc)) ?? '';
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
+    <div className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden bg-paper">
+      {/* Premium Background Mesh / Radial Gradient */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            'radial-gradient(120% 100% at 50% -20%, rgba(91,76,240,0.15) 0%, rgba(245,246,251,1) 60%)',
+        }}
+      />
+      
+      <div className="w-full max-w-lg relative z-10">
         <div className="mb-8 text-center">
           <Link href="/" className="inline-block py-2.5">
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600">JOIN THE DEBATE</span>
@@ -70,7 +80,7 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
           </h1>
         </div>
 
-        <div className="bg-white rounded-xl border border-hairline shadow-sm p-8">
+        <div className="bg-white/90 backdrop-blur-xl rounded-[var(--radius-panel)] border border-brand-100 shadow-[0_24px_60px_-24px_rgba(24,0,172,0.15)] p-8">
           <SignupWizard
             initialStep={initialStep}
             requiresPassword={requiresPassword}

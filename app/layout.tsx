@@ -98,9 +98,10 @@ export default async function RootLayout({
           <MaintenanceGate>
             {/* 콘솔에서 설정한 상시 안내 한 줄 — 비어 있으면 아무것도 렌더하지 않는다.
                 문제 풀이 화면에서는 작업 공간을 밀어내지 않도록 BannerSlot이 통째로 뺀다. */}
-            {/* 비즈니스용 도메인으로 들어온 방문자 안내 — 해당 호스트에서만 뜬다 */}
-            <DomainNotice />
+            {/* 비즈니스용 도메인으로 들어온 방문자 안내 — 해당 호스트에서만 뜬다.
+                이것도 상단을 차지하는 안내 줄이라 코드 에디터에서는 함께 뺀다. */}
             <BannerSlot>
+              <DomainNotice />
               <GlobalBanner />
             </BannerSlot>
             {children}

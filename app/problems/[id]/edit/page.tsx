@@ -7,6 +7,7 @@ import EditorUnavailable from '@/app/components/editor-unavailable';
 import { canUseEditor, getDeviceClass } from '@/app/lib/device';
 import { getUser } from '@/app/lib/dal';
 import ProblemEditor, { type ProblemInitial } from '../../new/problem-editor';
+import { problemLanguages } from '@/app/lib/types';
 
 export const metadata: Metadata = { title: '문제 수정' };
 
@@ -42,6 +43,8 @@ export default async function EditProblemPage({ params }: PageProps<'/problems/[
     examYear: problem.examYear ?? '',
     starterJs: starters.javascript ?? '',
     starterPy: starters.python ?? '',
+    // 지원 언어는 별도 컬럼이 아니라 스타터 코드가 들어 있는 언어다(problemLanguages).
+    languages: problemLanguages(problem.starterCodes),
     keywords: (problem.keywords as string[]) ?? [],
     testCases: problem.testCases.map((tc) => ({
       input: JSON.stringify(tc.input),

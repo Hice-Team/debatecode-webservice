@@ -12,6 +12,8 @@ import { runJudge, disposeJudgeWorkers, JudgeError, type JudgeOutcome } from '@/
 import {
   DIFFICULTY_LABELS,
   LANGUAGE_LABELS,
+  LANGUAGES,
+  problemLanguages,
   type CaseResult,
   type JudgeRunResult,
   type Language,
@@ -141,17 +143,17 @@ const MODE_LABEL_KEYS: Record<WorkspaceMode, string> = {
 const REFACTOR_SEGMENTS: Array<{ key: RefactorMode; label: string; title: string }> = [
   {
     key: 'copilot',
-    label: 'Copilot',
+    label: 'AI 지시',
     title: 'AI가 생성한 결함 코드를 AI 프롬프트로만 수정해 실행합니다 (에디터 직접 편집 불가)',
   },
   {
     key: 'editor',
-    label: 'Editor',
+    label: '직접 수정',
     title: 'AI가 생성한 결함 코드를 AI 도움 없이 직접 수정합니다',
   },
 ];
 
-const REFACTOR_LABELS: Record<RefactorMode, string> = { copilot: 'Copilot', editor: 'Editor' };
+const REFACTOR_LABELS: Record<RefactorMode, string> = { copilot: 'AI 지시', editor: '직접 수정' };
 
 // Agent 모드 추천 — 질문이 아니라 "무엇을 어떻게 고쳐라"의 꼴이어야 한다
 const AGENT_PROMPTS = [
@@ -193,7 +195,14 @@ export default function Workspace({
 }) {
   const { language: uiLang } = useLanguage();
   const [mode, setMode] = useState<Mode>('SOLVING');
-  const [language, setLanguage] = useState<Language>('javascript');
+  // 이 문제가 실제로 지원하는 언어만 고를 수 있어야 한다. 스타터 코드가 없는 언어를
+  // 목록에 두면 고르는 순간 빈 에디터가 열리고, 채점도 실패한다.
+  // (모두 비어 있는 이상 상태에서는 예전처럼 전체를 보여 준다 — 화면이 멎지 않게.)
+  const supportedLanguages = useMemo(() => {
+    const langs = problemLanguages(problem.starterCodes);
+    return langs.length > 0 ? langs : LANGUAGES;
+  }, [problem.starterCodes]);
+  const [language, setLanguage] = useState<Language>(supportedLanguages[0]);
   const [codeByLang, setCodeByLang] = useState<StarterCodes>(problem.starterCodes);
   const [results, setResults] = useState<CaseResult[]>([]);
   const [lastRunTotal, setLastRunTotal] = useState(0);
@@ -835,7 +844,7 @@ export default function Workspace({
         </button>
         {mode === 'INTERVIEW' && (
           <span className="font-mono text-[10px] text-brand-300 tracking-wider border border-signal/30 bg-signal/10 rounded-full px-2.5 py-1">
-            DEBATE MODE
+            디베이트모드
           </span>
         )}
         {/* 실전 모의고사 — 조건은 입장 전에 확정됐다. 컨트롤이 아니라 잠긴 표시로 두고,
@@ -973,7 +982,7 @@ export default function Workspace({
               {/* 탭 내비게이션 — 스크롤은 가능하지만 스크롤바는 표시하지 않는다 */}
               <div
                 data-tour="tabs"
-                className="dc-scroll-none flex items-center overflow-x-auto border-b border-white/10 text-[11px] font-medium text-fg-on-dark-quiet"
+                className="dc-scroll-none flex h-12 shrink-0 items-center overflow-x-auto border-b border-white/10 text-[11px] font-medium text-fg-on-dark-quiet"
                 role="tablist"
               >
                 {/* debateAI 탭은 시그니처·디베이트 모드 모두에 있다.
@@ -985,12 +994,12 @@ export default function Workspace({
                     data-tour={tab.key === 'debate' ? 'debate-tab' : undefined}
                     aria-selected={sidebarTab === tab.key}
                     onClick={() => setSidebarTab(tab.key)}
-                    className={`flex items-center gap-1 whitespace-nowrap px-3 py-2.5 transition-colors ${
+                    className={`inline-flex h-full items-center gap-1 whitespace-nowrap border-b-2 px-3 transition-colors duration-[var(--duration-state)] ${
                       sidebarTab === tab.key
-                        ? 'border-b-2 border-brand-400 font-bold text-brand-400'
+                        ? 'border-brand-400 font-bold text-brand-400'
                         : tab.accent
-                          ? 'font-semibold text-brand-300/80 hover:text-brand-200'
-                          : 'hover:text-fg-on-dark-secondary'
+                          ? 'border-transparent font-semibold text-brand-300/80 hover:text-brand-200'
+                          : 'border-transparent hover:text-fg-on-dark-secondary'
                     }`}
                   >
                     {tab.accent && (
@@ -1491,9 +1500,10 @@ export default function Workspace({
 
         {/* 우: 검정 에디터 카드 (데모와 동일한 크롬) */}
         <div className="relative flex min-h-[380px] lg:min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10 bg-[#0B0D12]">
-          <div className="flex items-center gap-3 border-b border-white/10 px-4 py-2">
+          {/* 헤더 높이는 좌측 탭과 같은 48px — 두 패널의 첫 줄이 어긋나면 화면이 기울어 보인다 */}
+          <div className="flex h-12 shrink-0 items-center gap-3 border-b border-white/10 px-4">
             <span className="font-mono text-[10px] text-fg-on-dark-quiet">solution.{language === 'python' ? 'py' : 'js'}</span>
-            <span className="text-[9px] uppercase tracking-wider text-fg-on-dark-quiet">sandbox</span>
+            <span className="text-[10px] tracking-wider text-fg-on-dark-quiet">샌드박스</span>
             {mode === 'INTERVIEW' && (
               <span className="font-mono text-[10px] text-brand-300">라이브 리팩터링 가능</span>
             )}
@@ -1507,7 +1517,7 @@ export default function Workspace({
                 disabled={mode === 'INTERVIEW'}
                 className="bg-ink border border-white/15 rounded-lg px-2.5 py-1 font-mono text-[11px] text-fg-on-dark focus:outline-none focus:border-signal disabled:opacity-50"
               >
-                {(Object.keys(LANGUAGE_LABELS) as Language[]).map((l) => (
+                {supportedLanguages.map((l) => (
                   <option key={l} value={l}>
                     {LANGUAGE_LABELS[l]}
                   </option>
@@ -1566,7 +1576,7 @@ export default function Workspace({
             />
 
             <div style={{ height: `${termPct}%` }} className="min-h-0 overflow-hidden">
-              <OutputPanel results={results} total={lastRunTotal} cases={problem.examples} />
+              <OutputPanel results={results} total={lastRunTotal} cases={problem.examples} language={language} />
             </div>
           </div>
 
