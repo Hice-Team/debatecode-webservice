@@ -283,6 +283,8 @@ export default function Workspace({
 
   // 커스텀 스플리터 — 좌 패널 너비(%) / 터미널 높이(%). localStorage에 저장된다.
   const rowRef = useRef<HTMLDivElement>(null);
+  /** 신고 창을 얹을 기준 영역 — 좌측 문제 패널 */
+  const leftPanelRef = useRef<HTMLDivElement>(null);
   const editorColRef = useRef<HTMLDivElement>(null);
   const [leftPct, setLeftPct] = useSplitPct('dc:ws:split-x', 41, 24, 68);
   const [termPct, setTermPct] = useSplitPct('dc:ws:split-y', 30, 15, 70);
@@ -812,6 +814,7 @@ export default function Workspace({
             '--- 작성 중인 코드 ---',
             code.slice(0, 2000),
           ].join('\n')}
+          anchorRef={leftPanelRef}
           className="dc-tap grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/15 text-fg-on-dark-quiet transition-colors hover:border-rose-400/50 hover:text-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
         />
         <span aria-hidden className="h-4 w-px shrink-0 bg-white/10" />
@@ -974,8 +977,11 @@ export default function Workspace({
             : 'flex-grow flex flex-col lg:flex-row gap-3 lg:gap-0 p-3 min-h-0 bg-white/[0.03]'
         }
       >
-        {/* 좌: 밑줄 탭 패널 (데모와 동일한 크롬) */}
+        {/* 좌: 밑줄 탭 패널 (데모와 동일한 크롬).
+            신고 창은 이 패널 안에 띄운다 — 화면 가운데에 띄우면 오른쪽 에디터를 가려
+            무엇을 신고하려는지 보면서 쓸 수가 없다. */}
         <div
+          ref={leftPanelRef}
           style={{ '--left-w': `${leftPct}%` } as React.CSSProperties}
           className="flex min-h-[320px] w-full lg:min-h-0 lg:w-[var(--left-w)] lg:shrink-0 flex-col overflow-hidden rounded-lg border border-white/10 bg-[#12141C]"
         >

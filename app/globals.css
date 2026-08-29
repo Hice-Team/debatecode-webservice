@@ -315,3 +315,36 @@ textarea {
     animation-duration: 1ms;
   }
 }
+
+/* ═══ 잉크 표면의 내비게이션 ═══════════════════════════════════
+   코드 에디터(잉크 캔버스) 위에서는 상단 내비게이션도 같은 표면색을 쓴다.
+   레이아웃은 그대로 두고 색만 바꾸는 자리라, 자식 컴포넌트마다 pathname을 다시 읽게
+   하는 대신 부모가 .dc-nav-dark 표식을 달고 여기서 명도 계단을 -on-dark 짝으로 바꾼다.
+
+   개별 컴포넌트를 고치지 않는 이유: 내비게이션 자식은 로고·언어·프로필·인증 버튼까지
+   여섯 개이고, 각자 "지금 다크인가"를 알아야 할 이유가 없다. */
+.dc-nav-dark {
+  color: var(--color-fg-on-dark);
+}
+.dc-nav-dark .text-fg,
+.dc-nav-dark .text-ink,
+.dc-nav-dark .text-ink-soft {
+  color: var(--color-fg-on-dark);
+}
+.dc-nav-dark .text-fg-secondary {
+  color: var(--color-fg-on-dark-secondary);
+}
+.dc-nav-dark .text-fg-muted {
+  color: var(--color-fg-on-dark-muted);
+}
+.dc-nav-dark .text-fg-quiet {
+  color: var(--color-fg-on-dark-quiet);
+}
+/* 흰 배경을 쓰는 작은 조각(언어 칩·아바타 테두리 등)은 잉크 위에서 뒤집는다 */
+.dc-nav-dark .bg-white,
+.dc-nav-dark .bg-paper {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+.dc-nav-dark .border-hairline {
+  border-color: var(--color-hairline-on-dark);
+}
