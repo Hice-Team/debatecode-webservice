@@ -5,6 +5,7 @@
 // 첨부는 "붙일 수 있는가"와 "모델이 이해하는가"를 분리해 다룬다.
 // 파일은 메타데이터로만 보관하고, 실제 내용 해석은 모델 지원 범위에 맞춰 나중에 붙인다.
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useLanguage } from '@/app/context/language-context';
 import { t } from '@/app/lib/i18n';
 import ModelPicker from './model-picker';
@@ -124,8 +125,12 @@ export default function Composer({
 
         {/* 알약 입력 — 첨부 · 입력 · 모델(강도 포함) · 음성 · 전송.
             넓은 화면은 한 줄, 좁은 화면(스마트폰)은 컨트롤 묶음이 아랫줄로 내려간다.
-            여섯 개를 360px 안에 억지로 우겨넣으면 입력창이 손톱만 해지기 때문이다. */}
-        <div className="flex flex-wrap items-end gap-0.5 rounded-[1.75rem] border border-hairline bg-white p-1.5 sm:flex-nowrap sm:gap-1 sm:p-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.12)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.18)]">
+            여섯 개를 360px 안에 억지로 우겨넣으면 입력창이 손톱만 해지기 때문이다.
+
+            정렬은 items-center다. items-end로 두면 높이가 다른 컨트롤(40px 버튼과
+            한 줄짜리 입력)의 바닥만 맞아, 알약 안에서 아이콘이 아래로 처져 보였다.
+            좌우 여백도 px로 맞춰 '+'와 전송 버튼이 모서리에서 같은 거리에 놓인다. */}
+        <div className="flex flex-wrap items-center gap-1.5 rounded-[1.75rem] border border-hairline bg-white px-2 py-1.5 sm:flex-nowrap sm:px-2.5 sm:py-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.12)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.18)]">
           <AttachMenu
             placement="top"
             disabled={disabled}
@@ -157,12 +162,12 @@ export default function Composer({
               disabled={disabled}
               placeholder={t('ai-search-followup-placeholder', language)}
               aria-label={t('ai-search-followup-placeholder', language)}
-              className="dc-scroll min-w-0 flex-1 resize-none self-center bg-transparent px-2 py-3.5 text-[15px] leading-6 text-ink placeholder:text-fg-quiet focus:outline-none disabled:cursor-not-allowed disabled:text-fg-quiet"
+              className="dc-scroll min-w-0 flex-1 resize-none bg-transparent px-1.5 py-3 text-[15px] leading-6 text-ink placeholder:text-fg-quiet focus:outline-none disabled:cursor-not-allowed disabled:text-fg-quiet"
             />
           )}
 
           {/* 모델 · 음성 · 전송 — 폰에서는 이 묶음이 통째로 아랫줄로 내려간다 */}
-          <div className="flex w-full items-center gap-0.5 sm:w-auto sm:gap-1">
+          <div className="flex w-full items-center gap-1.5 sm:w-auto sm:gap-2 sm:pr-0.5">
             {/* 강도(Effort)는 이 메뉴 안에 함께 들어 있다 */}
             <ModelPicker
               value={model}
@@ -234,7 +239,13 @@ export default function Composer({
           ) : (
             <>
               <span className="hidden sm:inline">{t('ai-composer-hint', language)} — </span>
-              {t('ai-search-disclaimer-short', language)}
+              {t('ai-search-disclaimer-short', language)}{' '}
+              <Link
+                href="/legal/ai-terms"
+                className="font-medium text-signal underline underline-offset-2 hover:text-brand-700"
+              >
+                {t('ai-terms-link', language)}
+              </Link>
             </>
           )}
         </p>

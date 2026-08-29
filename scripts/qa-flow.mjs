@@ -328,21 +328,23 @@ async function qaAiSearch(browser) {
   await check('질문을 보내면 답변이 온다', async () => {
     const box = page.locator('textarea').first();
     if (!(await box.count())) return { skip: '입력창을 찾지 못했다' };
+    // 보내기 전 본문 길이를 재 둔다 — 늘어난 만큼이 답변이다.
+    // 화면 전체 길이를 기준으로 두면 안내 문구를 줄이는 것만으로 검사가 깨진다.
+    const before = (await page.locator('main').innerText()).length;
     await box.fill('파이썬에서 리스트를 정렬하는 방법을 한 문장으로 알려줘');
     await box.press('Enter');
 
-    // 스트리밍이라 시간이 걸린다. 모델 표기(제공사 이름)가 뜨면 답변이 끝난 것으로 본다.
+    // 스트리밍이라 시간이 걸린다. 답변이 끝나야 붙는 모델 표기를 신호로 쓴다.
     const done = await page
-      .waitForSelector('text=/DeepSeek|AI 검색 결과는 정확하지/', { timeout: 120_000 })
+      .waitForSelector('text=/DeepSeek/', { timeout: 120_000 })
       .then(() => true)
       .catch(() => false);
-    if (!done) return { warn: '120초 안에 답변이 오지 않았다 (업스트림 지연 가능)' };
+    if (!done) return { warn: '120초 안에 모델 표기가 붙지 않았다 (업스트림 지연 가능)' };
 
-    const text = await page.locator('main').innerText();
-    if (text.length <= 200) {
-      return { warn: `답변이 오지 않았거나 너무 짧다 (${text.length}자) — 업스트림 지연일 수 있다` };
-    }
-    return `${text.length}자 응답`;
+    await page.waitForTimeout(1500);
+    const grew = (await page.locator('main').innerText()).length - before;
+    if (grew < 40) return { warn: `답변이 거의 늘지 않았다 (+${grew}자)` };
+    return `+${grew}자 응답`;
   });
 
   await check('대화가 세션으로 저장된다', async () => {

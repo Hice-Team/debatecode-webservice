@@ -403,7 +403,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-search-placeholder': 'debateAI에게 물어보기',
     'ai-search-submit': 'AI 검색',
     'copy': '복사',
-    'copied': '복사됨',
+    'copied': '복사했습니다',
     'feedback-helpful': '도움이 됐어요',
     'feedback-not-helpful': '도움이 안 됐어요',
     'ai-thinking-done': '사고 과정 정리 완료',
@@ -440,7 +440,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-attach': '첨부',
     'ai-model': '모델',
     'ai-new-chat': '새 대화',
-    'ai-search-disclaimer-short': 'AI 답변은 정확하지 않을 수 있습니다.',
+    'ai-search-disclaimer-short': '본 서비스는 AI이며 일부 정보 제공 시 실수를 할 수 있습니다.',
+    'ai-terms-link': 'debateAI 이용약관',
 
     // AI Search — 첨부 메뉴
     'ai-attach-file': '파일 업로드',
@@ -1073,7 +1074,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-attach': 'Attach',
     'ai-model': 'Model',
     'ai-new-chat': 'New chat',
-    'ai-search-disclaimer-short': 'AI answers may be inaccurate.',
+    'ai-search-disclaimer-short': 'This service is AI and may make mistakes when providing information.',
+    'ai-terms-link': 'debateAI Terms',
 
     // AI Search — attachment menu
     'ai-attach-file': 'Upload file',

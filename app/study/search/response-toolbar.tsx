@@ -20,10 +20,9 @@ import {
 } from '@/app/lib/ai/feedback-reasons';
 import { findSearchModel } from '@/app/lib/ai/search-models';
 import { EFFORT_HINTS, EFFORT_LABELS, asEffort } from '@/app/lib/ai/effort';
-import { useSpeech } from '@/app/lib/speech';
-import SpeechPlayer from '@/app/components/speech-player';
 import { exportSingleAnswer } from './export-session';
 import type { ConversationMessage } from './conversation';
+import Toast from '@/app/components/toast';
 
 type Feedback = FeedbackRating | null;
 
@@ -41,14 +40,11 @@ const REPORT_REASONS = [
 export default function ResponseToolbar({
   message,
   messages,
-  query,
   onRegenerate,
   busy,
 }: {
   message: ConversationMessage;
   messages: ConversationMessage[];
-  /** 구글 검색에 넘길 질의 — 이 답변을 부른 질문 */
-  query: string;
   onRegenerate: () => void;
   busy: boolean;
 }) {
@@ -68,7 +64,6 @@ export default function ResponseToolbar({
   const [reportReason, setReportReason] = useState<string>(REPORT_REASONS[0].value);
   const [reportDetail, setReportDetail] = useState('');
   const [reportResult, setReportResult] = useState<string | null>(null);
-  const speech = useSpeech(language);
   const [pending, startTransition] = useTransition();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -94,17 +89,13 @@ export default function ResponseToolbar({
   async function copyAnswer() {
     try {
       await navigator.clipboard.writeText(message.content);
+      // 아이콘만 잠깐 바뀌던 것을 토스트로 바꾼다 — 답변이 길면 버튼이 화면 밖에 있어
+      // 눌러 놓고도 복사가 됐는지 알 수 없었다.
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       // 클립보드 권한이 없는 환경 — 조용히 무시한다
     }
-  }
-
-  /** 듣기 — 재생 중이면 멈추고, 아니면 이 답변을 처음부터 읽는다. */
-  function toggleSpeech() {
-    if (speech.speaking) speech.stop();
-    else speech.speak(message.content);
   }
 
   /**
@@ -295,16 +286,6 @@ export default function ResponseToolbar({
                 {branching ? t('ai-branching', language) : t('ai-branch-new-chat', language)}
               </button>
 
-              {speech.supported && (
-              <button type="button" role="menuitem" className={menuItemClass} onClick={() => { toggleSpeech(); setMenuOpen(false); }}>
-                <svg viewBox="0 0 24 24" className={MENU_ICON} aria-hidden>
-                  <path d="M4 9v6h3.5L13 19V5L7.5 9H4Z" strokeLinejoin="round" />
-                  <path d="M16.5 9.2a4 4 0 0 1 0 5.6M19 6.7a7.5 7.5 0 0 1 0 10.6" strokeLinecap="round" />
-                </svg>
-                {speech.speaking ? t('ai-tts-stop', language) : t('ai-tts', language)}
-              </button>
-              )}
-
               <button type="button" role="menuitem" className={menuItemClass} onClick={() => { exportSingleAnswer(messages, message.id); setMenuOpen(false); }}>
                 <svg viewBox="0 0 24 24" className={MENU_ICON} aria-hidden>
                   <path d="M12 4v11m0 0 3.5-3.5M12 15l-3.5-3.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -312,21 +293,6 @@ export default function ResponseToolbar({
                 </svg>
                 {t('ai-export-answer', language)}
               </button>
-
-              <a
-                href={`https://www.google.com/search?q=${encodeURIComponent(query || message.content.slice(0, 200))}`}
-                target="_blank"
-                rel="noreferrer"
-                role="menuitem"
-                className={menuItemClass}
-                onClick={() => setMenuOpen(false)}
-              >
-                <svg viewBox="0 0 24 24" className={MENU_ICON} aria-hidden>
-                  <circle cx="11" cy="11" r="6.5" />
-                  <path d="m20 20-3.6-3.6" strokeLinecap="round" />
-                </svg>
-                {t('ai-search-on-google', language)}
-              </a>
 
               <button type="button" role="menuitem" className={menuItemClass} onClick={() => { setReportResult(null); setReportOpen(true); setMenuOpen(false); }}>
                 <svg viewBox="0 0 24 24" className={MENU_ICON} aria-hidden>
@@ -347,7 +313,13 @@ export default function ResponseToolbar({
         </div>
       </div>
 
-      <SpeechPlayer controller={speech} />
+      {/* 복사 알림 — 입력창 바로 위 가운데. 2초 뒤 사라진다. */}
+      <Toast open={copied} placement="above-composer">
+        <span aria-hidden className="mt-0.5 text-emerald-600">
+          ✓
+        </span>
+        <span className="text-sm font-medium text-ink">{t('copied', language)}</span>
+      </Toast>
 
       {/* 사유 패널 — 평가를 누른 직후에만 열린다. 닫아도 평가 자체는 이미 저장돼 있다. */}
       {feedbackPanel && (

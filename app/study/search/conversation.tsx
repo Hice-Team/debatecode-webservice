@@ -388,7 +388,7 @@ export default function Conversation({
           )}
 
           <div className="space-y-8">
-            {messages.map((message, index) =>
+            {messages.map((message) =>
               message.role === 'user' ? (
                 <div key={message.id} className="flex justify-end">
                   <div className="max-w-[92%] sm:max-w-[85%]">
@@ -411,10 +411,6 @@ export default function Conversation({
                   <ResponseToolbar
                     message={message}
                     messages={messages}
-                    query={
-                      [...messages.slice(0, index)].reverse().find((m) => m.role === 'user')?.content ??
-                      message.content.slice(0, 200)
-                    }
                     onRegenerate={() => regenerate(message.id)}
                     busy={busy}
                   />
@@ -509,11 +505,6 @@ export default function Conversation({
               {t('ai-stopped', language)}
             </p>
           )}
-
-          <p className="mt-8 flex items-start gap-1.5 text-[11px] leading-relaxed text-fg-muted">
-            <span aria-hidden className="mt-px shrink-0">⚠</span>
-            {t('ai-search-disclaimer', language)}
-          </p>
 
           <div ref={bottomRef} />
         </div>
