@@ -41,7 +41,7 @@ export default function CommentForm({ postId, parentId, replyToName, autoFocus, 
     <form
       ref={formRef}
       action={formAction}
-      className={`rounded-[var(--radius-panel)] border bg-white p-3 ${parentId ? 'border-brand-200' : 'border-hairline'}`}
+      className={`rounded-[var(--radius-panel)] border bg-surface p-3 ${parentId ? 'border-brand-200' : 'border-hairline'}`}
     >
       <input type="hidden" name="postId" value={postId} />
       {parentId && <input type="hidden" name="parentId" value={parentId} />}
@@ -66,7 +66,7 @@ export default function CommentForm({ postId, parentId, replyToName, autoFocus, 
       {state.errors?.content && <p className="text-xs text-rose-600">{state.errors.content[0]}</p>}
       {state.errors?.form && <p className="text-xs text-rose-600">{state.errors.form[0]}</p>}
 
-      <div className="mt-1 flex items-center justify-between border-t border-ink/5 pt-2">
+      <div className="mt-1 flex items-center justify-between border-t border-hairline pt-2">
         <label className="flex cursor-pointer items-center gap-1.5 font-mono text-[10px] text-fg-muted">
           <input type="checkbox" name="anonymous" className="h-3.5 w-3.5 accent-[var(--color-signal)]" />
           {t('reply-anonymous', language)}
@@ -77,7 +77,7 @@ export default function CommentForm({ postId, parentId, replyToName, autoFocus, 
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-lg px-3 py-1.5 text-xs font-medium text-fg-muted hover:text-ink-soft"
+              className="rounded-lg px-3 py-1.5 text-xs font-medium text-fg-muted hover:text-fg"
             >
               {t('cancel', language)}
             </button>

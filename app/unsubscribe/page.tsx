@@ -21,7 +21,7 @@ export default async function UnsubscribePage({
         {result.ok ? (
           <>
             <p className="text-4xl">✉️</p>
-            <h1 className="mt-4 font-display text-2xl font-bold tracking-tight text-ink">수신거부가 완료되었습니다</h1>
+            <h1 className="mt-4 font-display text-2xl font-bold tracking-tight text-fg">수신거부가 완료되었습니다</h1>
             <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
               {result.email && (
                 <>
@@ -34,7 +34,7 @@ export default async function UnsubscribePage({
         ) : (
           <>
             <p className="text-4xl">🔗</p>
-            <h1 className="mt-4 font-display text-2xl font-bold tracking-tight text-ink">처리할 수 없는 링크입니다</h1>
+            <h1 className="mt-4 font-display text-2xl font-bold tracking-tight text-fg">처리할 수 없는 링크입니다</h1>
             <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
               링크가 만료되었거나 이미 수신거부된 주소일 수 있습니다. 설정에서도 언제든 변경할 수 있습니다.
             </p>

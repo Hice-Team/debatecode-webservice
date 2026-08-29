@@ -8,7 +8,7 @@ import MarkdownToolbar from '@/app/community/write/markdown-toolbar';
 const initialState: LessonFormState = {};
 const LABEL = 'block font-mono text-xs text-fg-secondary tracking-wider mb-1.5';
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
+  'w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
 
 export interface LessonInitial {
   id: number;
@@ -68,7 +68,7 @@ export default function LessonForm({
           required
           defaultValue={initial?.content}
           placeholder={'## 학습 목표\n\n- ...\n\n```python\nprint("hello debateCode")\n```'}
-          className="w-full rounded-b-lg border border-ink/15 bg-paper/50 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
+          className="w-full rounded-b-lg border border-hairline bg-paper/50 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
         />
         {state.errors?.content && <p className="mt-1.5 text-xs text-rose-600">{state.errors.content[0]}</p>}
       </div>

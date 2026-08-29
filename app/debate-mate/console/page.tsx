@@ -12,7 +12,7 @@ import ShopSection from './shop-section';
 
 export const metadata: Metadata = { title: '디베이트메이트 활동 콘솔' };
 
-const CARD = 'rounded-[var(--radius-panel)] border border-hairline bg-white';
+const CARD = 'rounded-[var(--radius-panel)] border border-hairline bg-surface';
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
@@ -21,7 +21,7 @@ function StatusBadge({ status }: { status: string }) {
     rejected: 'bg-rose-50 text-rose-600 border-rose-200',
     requested: 'bg-sky-50 text-sky-700 border-sky-200',
     fulfilled: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    canceled: 'bg-ink/[0.05] text-fg-muted border-hairline',
+    canceled: 'bg-paper text-fg-muted border-hairline',
     failed: 'bg-rose-50 text-rose-600 border-rose-200',
   };
   const labels: Record<string, string> = {
@@ -46,7 +46,7 @@ export default async function MateConsolePage() {
   // 메이트와 관리자만 — 그 외에는 소개 페이지로 돌려보낸다
   if (user.role !== 'debate_mate' && user.role !== 'admin') redirect('/debate-mate');
 
-  const [summary, drafts, ledger, requests, orders, products, snsPosts, debateQCount] = await Promise.all([
+  const [summary, drafts, ledger, requests, orders, snsPosts, debateQCount] = await Promise.all([
     getPointSummary(user.id),
     prisma.problemDraft.findMany({
       where: { authorId: user.id },
@@ -69,7 +69,6 @@ export default async function MateConsolePage() {
       take: 10,
       include: { product: { select: { name: true, brand: true } } },
     }),
-    prisma.shopProduct.findMany({ where: { active: true }, orderBy: [{ order: 'asc' }, { priceKrw: 'asc' }] }),
     // SNS 인증 신청 대상 — 본인이 SNS 게시판에 올린 외부 링크 글
     prisma.post.findMany({
       where: { authorId: user.id, board: 'sns', url: { not: null } },
@@ -108,50 +107,54 @@ export default async function MateConsolePage() {
         }
       />
 
-      {/* 포인트 현황 */}
-      <section className={`${CARD} mb-6 overflow-hidden`} aria-labelledby="points-title">
+      {/* 활동과 포인트를 한 카드로 묶는다.
+          예전에는 위아래 두 줄(포인트 4칸 + 활동 4칸)이었는데, 여덟 칸이 같은 무게로
+          늘어서 있으면 무엇을 먼저 봐야 하는지가 사라진다.
+          왼쪽은 "내가 한 일", 오른쪽은 "그래서 얼마" — 성격이 다른 둘을 나눠 둔다. */}
+      <section className={`${CARD} mb-6 overflow-hidden`} aria-labelledby="summary-title">
         <div className="border-b border-hairline px-5 py-3">
-          <h2 id="points-title" className="font-bold text-ink">디베이트포인트 현황</h2>
+          <h2 id="summary-title" className="font-bold text-fg">내 활동과 포인트</h2>
         </div>
-        <div className="grid grid-cols-2 divide-x divide-y divide-hairline sm:grid-cols-4 sm:divide-y-0">
-          {[
-            { label: '현재 포인트', value: summary.balance, tone: 'text-signal', hint: `${summary.balance.toLocaleString()}원 상당` },
-            { label: '적립 예정', value: summary.pending, tone: 'text-amber-600', hint: '승인 대기 중' },
-            { label: '사용 예정', value: summary.reserved, tone: 'text-sky-700', hint: '발급 대기 주문' },
-            { label: '누적 적립', value: summary.totalEarned, tone: 'text-ink', hint: `누적 사용 ${summary.totalSpent.toLocaleString()}P` },
-          ].map((stat) => (
-            <div key={stat.label} className="px-5 py-4">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
-              <p className={`mt-1 font-display text-2xl font-bold ${stat.tone}`}>
-                {stat.value.toLocaleString()}
-                <span className="ml-0.5 text-sm font-semibold text-fg-quiet">P</span>
-              </p>
-              <p className="mt-0.5 text-[11px] text-fg-muted">{stat.hint}</p>
-            </div>
-          ))}
+        <div className="grid lg:grid-cols-[1.3fr_1fr] lg:divide-x lg:divide-hairline">
+          {/* 내 출제 활동 */}
+          <div className="grid grid-cols-2 divide-x divide-y divide-hairline sm:grid-cols-4 sm:divide-y-0">
+            {[
+              { label: '출제한 문제', value: drafts.length, tone: 'text-fg' },
+              { label: '승인됨', value: approvedDrafts, tone: 'text-emerald-700' },
+              { label: '검토 대기', value: pendingDrafts, tone: pendingDrafts > 0 ? 'text-amber-700' : 'text-fg' },
+              { label: 'debateQ 완료', value: debateQCount, tone: 'text-fg' },
+            ].map((stat) => (
+              <div key={stat.label} className="px-4 py-4">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
+                <p className={`dc-num mt-1 font-display text-2xl font-bold ${stat.tone}`}>{stat.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* 포인트 — 보유와 적립 예정만. 나머지는 아래 내역에서 본다. */}
+          <div className="grid grid-cols-2 divide-x divide-hairline border-t border-hairline lg:border-t-0">
+            {[
+              { label: '보유 포인트', value: summary.balance, tone: 'text-signal', hint: `${summary.balance.toLocaleString()}원 상당` },
+              { label: '적립 예정', value: summary.pending, tone: 'text-amber-700', hint: '승인 대기 중' },
+            ].map((stat) => (
+              <div key={stat.label} className="px-4 py-4">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
+                <p className={`dc-num mt-1 font-display text-2xl font-bold ${stat.tone}`}>
+                  {stat.value.toLocaleString()}
+                  <span className="ml-0.5 text-sm font-semibold text-fg-quiet">P</span>
+                </p>
+                <p className="mt-0.5 text-[11px] text-fg-muted">{stat.hint}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
-
-      {/* 활동 요약 */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          { label: '출제한 문제', value: drafts.length },
-          { label: '승인됨', value: approvedDrafts },
-          { label: '검토 대기', value: pendingDrafts, warn: pendingDrafts > 0 },
-          { label: 'debateQ 완료', value: debateQCount },
-        ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-hairline bg-white px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
-            <p className={`mt-1 font-display text-2xl font-bold ${stat.warn ? 'text-amber-600' : 'text-ink'}`}>{stat.value}</p>
-          </div>
-        ))}
-      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* 내가 만든 문제 + 검토 현황 */}
         <section className={`${CARD} overflow-hidden`}>
           <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
-            <h2 className="font-bold text-ink">내가 만든 문제</h2>
+            <h2 className="font-bold text-fg">내가 만든 문제</h2>
             <Link href="/console/drafts" className="font-mono text-[11px] text-brand-600 hover:underline">
               초안 관리 →
             </Link>
@@ -161,11 +164,11 @@ export default async function MateConsolePage() {
               아직 출제한 문제가 없습니다. 위의 <span className="font-semibold text-signal">문제 만들기</span>로 시작해 보세요.
             </p>
           ) : (
-            <ul className="divide-y divide-ink/5">
+            <ul className="divide-y divide-hairline">
               {drafts.slice(0, 8).map((draft) => (
                 <li key={draft.id} className="px-5 py-3">
                   <div className="flex items-center gap-2">
-                    <span className="min-w-0 flex-1 truncate font-medium text-ink">{draft.title}</span>
+                    <span className="min-w-0 flex-1 truncate font-medium text-fg">{draft.title}</span>
                     <StatusBadge status={draft.status} />
                   </div>
                   <p className="mt-0.5 font-mono text-[11px] text-fg-quiet">
@@ -184,12 +187,12 @@ export default async function MateConsolePage() {
         {/* 포인트 적립 내역 */}
         <section className={`${CARD} overflow-hidden`}>
           <div className="border-b border-hairline px-5 py-3">
-            <h2 className="font-bold text-ink">포인트 내역</h2>
+            <h2 className="font-bold text-fg">포인트 내역</h2>
           </div>
           {ledger.length === 0 ? (
             <p className="px-5 py-10 text-center text-sm text-fg-muted">아직 적립 내역이 없습니다.</p>
           ) : (
-            <ul className="divide-y divide-ink/5">
+            <ul className="divide-y divide-hairline">
               {ledger.map((entry) => (
                 <li key={entry.id} className="flex items-center gap-3 px-5 py-2.5">
                   <span className="w-12 shrink-0 font-mono text-[11px] text-fg-quiet">
@@ -212,7 +215,7 @@ export default async function MateConsolePage() {
       {/* SNS 홍보 인증 신청 */}
       <section className={`${CARD} mt-6 overflow-hidden`}>
         <div className="border-b border-hairline px-5 py-3">
-          <h2 className="font-bold text-ink">SNS 홍보 활동 인증</h2>
+          <h2 className="font-bold text-fg">SNS 홍보 활동 인증</h2>
           <p className="mt-0.5 text-xs text-fg-muted">
             SNS 게시판에 올린 홍보 글을 골라 신청하면 운영진 검토 후 포인트가 지급됩니다.
           </p>
@@ -229,7 +232,7 @@ export default async function MateConsolePage() {
         </div>
 
         {requests.length > 0 && (
-          <ul className="divide-y divide-ink/5 border-t border-hairline">
+          <ul className="divide-y divide-hairline border-t border-hairline">
             {requests.map((request) => {
               const payload = request.payload as { title?: string; platform?: string };
               return (
@@ -253,7 +256,7 @@ export default async function MateConsolePage() {
       </section>
 
       {/* 디베이트샵 */}
-      <ShopSection productCount={products.length} orders={orders} balance={summary.balance} />
+      <ShopSection orders={orders} balance={summary.balance} />
     </PageShell>
   );
 }

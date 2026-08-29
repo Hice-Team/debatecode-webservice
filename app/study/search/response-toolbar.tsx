@@ -181,7 +181,7 @@ export default function ResponseToolbar({
   }
 
   const buttonClass =
-    'grid h-9 w-9 place-items-center rounded-full text-fg-muted transition-colors hover:bg-ink/[0.05] hover:text-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal disabled:opacity-35';
+    'grid h-9 w-9 place-items-center rounded-full text-fg-muted transition-colors hover:bg-paper hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal disabled:opacity-35';
   const menuItemClass =
     'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] text-fg transition-colors hover:bg-paper disabled:opacity-40';
 
@@ -274,7 +274,7 @@ export default function ResponseToolbar({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute bottom-full left-0 z-30 mb-2 w-[15.5rem] overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white py-1.5 shadow-xl shadow-ink/10 animate-in fade-in zoom-in-95 duration-150"
+              className="absolute bottom-full left-0 z-30 mb-2 w-[15.5rem] overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface py-1.5 shadow-xl shadow-ink/10 animate-in fade-in zoom-in-95 duration-150"
             >
               <button type="button" role="menuitem" disabled={pending || branching} className={menuItemClass} onClick={() => { branch(); setMenuOpen(false); }}>
                 <svg viewBox="0 0 24 24" className={MENU_ICON} aria-hidden>
@@ -318,21 +318,21 @@ export default function ResponseToolbar({
         <span aria-hidden className="mt-0.5 text-emerald-600">
           ✓
         </span>
-        <span className="text-sm font-medium text-ink">{t('copied', language)}</span>
+        <span className="text-sm font-medium text-fg">{t('copied', language)}</span>
       </Toast>
 
       {/* 사유 패널 — 평가를 누른 직후에만 열린다. 닫아도 평가 자체는 이미 저장돼 있다. */}
       {feedbackPanel && (
         <div className="mt-3 rounded-[var(--radius-panel)] border border-hairline bg-paper/60 p-3.5 animate-in fade-in slide-in-from-top-1 duration-150">
           <div className="flex items-start gap-2">
-            <p className="text-[13px] font-semibold text-ink">
+            <p className="text-[13px] font-semibold text-fg">
               {t(feedbackPanel === 'up' ? 'feedback-why-up' : 'feedback-why-down', language)}
             </p>
             <button
               type="button"
               onClick={() => setFeedbackPanel(null)}
               aria-label={t('close', language)}
-              className="ml-auto -mr-1 -mt-1 grid h-7 w-7 place-items-center rounded-full text-fg-quiet transition-colors hover:bg-ink/[0.06] hover:text-ink-soft"
+              className="ml-auto -mr-1 -mt-1 grid h-7 w-7 place-items-center rounded-full text-fg-quiet transition-colors hover:bg-paper hover:text-fg"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.6]" aria-hidden>
                 <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />
@@ -352,7 +352,7 @@ export default function ResponseToolbar({
                   className={`rounded-full border px-3 py-1.5 text-[12px] transition-colors ${
                     on
                       ? 'border-signal bg-signal/10 text-signal'
-                      : 'border-hairline text-fg-secondary hover:border-ink/25 hover:text-ink-soft'
+                      : 'border-hairline text-fg-secondary hover:border-ink/25 hover:text-fg'
                   }`}
                 >
                   {reasonLabel(reason, language)}
@@ -367,7 +367,7 @@ export default function ResponseToolbar({
             rows={2}
             maxLength={FEEDBACK_COMMENT_MAX}
             placeholder={t('feedback-comment-placeholder', language)}
-            className="mt-2.5 w-full resize-none rounded-xl border border-hairline bg-white px-3 py-2 text-[13px] text-ink placeholder:text-fg-quiet focus:border-signal focus:outline-none"
+            className="mt-2.5 w-full resize-none rounded-xl border border-hairline bg-surface px-3 py-2 text-[13px] text-fg placeholder:text-fg-quiet focus:border-signal focus:outline-none"
           />
 
           <div className="mt-2 flex items-center justify-end gap-2">
@@ -396,8 +396,8 @@ export default function ResponseToolbar({
       {aboutOpen && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="about-response-title">
           <button type="button" aria-label={t('close', language)} onClick={() => setAboutOpen(false)} className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
-          <section className="relative z-10 w-full max-w-md rounded-[var(--radius-panel)] border border-hairline bg-white p-6 shadow-2xl shadow-ink/25">
-            <h3 id="about-response-title" className="text-lg font-bold text-ink">
+          <section className="relative z-10 w-full max-w-md rounded-[var(--radius-panel)] border border-hairline bg-surface p-6 shadow-2xl shadow-ink/25">
+            <h3 id="about-response-title" className="text-lg font-bold text-fg">
               {t('about-response', language)}
             </h3>
             <dl className="mt-4 space-y-3 text-sm">
@@ -471,8 +471,8 @@ export default function ResponseToolbar({
       {reportOpen && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="report-title">
           <button type="button" aria-label={t('close', language)} onClick={() => setReportOpen(false)} className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
-          <section className="relative z-10 w-full max-w-md rounded-[var(--radius-panel)] border border-hairline bg-white p-6 shadow-2xl shadow-ink/25">
-            <h3 id="report-title" className="text-lg font-bold text-ink">
+          <section className="relative z-10 w-full max-w-md rounded-[var(--radius-panel)] border border-hairline bg-surface p-6 shadow-2xl shadow-ink/25">
+            <h3 id="report-title" className="text-lg font-bold text-fg">
               {t('ai-report-legal', language)}
             </h3>
             <p className="mt-1 text-[12px] leading-relaxed text-fg-muted">{t('ai-report-desc', language)}</p>
@@ -502,7 +502,7 @@ export default function ResponseToolbar({
               rows={3}
               maxLength={1000}
               placeholder={t('report-detail-placeholder', language)}
-              className="mt-3 w-full resize-none rounded-xl border border-hairline bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-fg-quiet focus:border-signal focus:outline-none"
+              className="mt-3 w-full resize-none rounded-xl border border-hairline bg-paper px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-quiet focus:border-signal focus:outline-none"
             />
 
             {reportResult && <p className="mt-2 text-[12px] text-signal">{reportResult}</p>}

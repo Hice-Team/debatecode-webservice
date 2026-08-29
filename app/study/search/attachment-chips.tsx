@@ -30,7 +30,7 @@ const KIND_TILE: Record<string, string> = {
 };
 
 const CARD =
-  'group relative flex w-full items-start gap-2.5 rounded-[var(--radius-panel)] border border-hairline bg-white p-2 transition hover:border-brand-300 sm:w-auto sm:max-w-[17rem]';
+  'group relative flex w-full items-start gap-2.5 rounded-[var(--radius-panel)] border border-hairline bg-surface p-2 transition hover:border-brand-300 sm:w-auto sm:max-w-[17rem]';
 
 function hostOf(url: string): string {
   try {
@@ -58,7 +58,7 @@ function RemoveButton({ label, onRemove }: { label: string; onRemove: () => void
       onClick={onRemove}
       aria-label={`${label} 제거`}
       // 터치 기기에는 호버가 없다 — 작은 화면에서는 항상 보이게 둔다
-      className="absolute -right-1.5 -top-1.5 z-10 grid h-5 w-5 place-items-center rounded-full border border-hairline bg-white text-[11px] leading-none text-fg-muted shadow-sm transition hover:bg-rose-50 hover:text-rose-600 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+      className="absolute -right-1.5 -top-1.5 z-10 grid h-5 w-5 place-items-center rounded-full border border-hairline bg-surface text-[11px] leading-none text-fg-muted shadow-sm transition hover:bg-rose-50 hover:text-rose-600 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
     >
       ×
     </button>
@@ -113,7 +113,7 @@ function LinkChip({ file, onRemove }: { file: PendingAttachment; onRemove?: () =
             <span className="truncate font-mono text-[10px] text-fg-muted">{host}</span>
             <span aria-hidden className="ml-auto shrink-0 text-[10px] text-fg-quiet">↗</span>
           </span>
-          <span className="mt-0.5 line-clamp-2 block text-xs font-medium leading-snug text-ink">{file.name}</span>
+          <span className="mt-0.5 line-clamp-2 block text-xs font-medium leading-snug text-fg">{file.name}</span>
           {excerpt.length > 0 && (
             <span className="mt-1 line-clamp-2 block text-[10px] leading-relaxed text-fg-muted">
               {excerpt.join(' ')}
@@ -183,7 +183,7 @@ export function AttachmentChip({
 
       {/* 이름 · 부가정보 · 발췌 */}
       <span className="pointer-events-none min-w-0 flex-1 py-0.5 pr-1">
-        <span className="block truncate text-xs font-medium text-ink" title={file.name}>
+        <span className="block truncate text-xs font-medium text-fg" title={file.name}>
           {file.name}
         </span>
         {meta && <span className="mt-0.5 block truncate font-mono text-[10px] text-fg-quiet">{meta}</span>}

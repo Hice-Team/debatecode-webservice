@@ -6,7 +6,7 @@ import { createCourse, type CourseFormState } from '@/app/lib/actions/study-admi
 
 const initialState: CourseFormState = {};
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-paper/50 px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
+  'w-full rounded-lg border border-hairline bg-paper/50 px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
 
 export default function CourseForm() {
   const [state, formAction, pending] = useActionState(createCourse, initialState);

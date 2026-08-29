@@ -50,7 +50,7 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
       {draft.caseCount === 0 && (
         <Callout tone="danger" title="테스트케이스가 없습니다">
           이대로 승인하면 채점이 되지 않는 문제가 게시됩니다. 아래 payload의{' '}
-          <code className="rounded bg-white/60 px-1">testCases</code>를 채운 뒤 승인하세요.
+          <code className="rounded bg-surface/60 px-1">testCases</code>를 채운 뒤 승인하세요.
         </Callout>
       )}
 
@@ -121,7 +121,7 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
         ) : (
           <p className="mt-1 text-[11px] text-fg-muted">
             testCases의 input은 <strong>인자 배열</strong>입니다. 예:{' '}
-            <code className="rounded bg-white px-1">{'{"input": [[2,7,11,15], 9], "expected": [0,1]}'}</code>
+            <code className="rounded bg-surface px-1">{'{"input": [[2,7,11,15], 9], "expected": [0,1]}'}</code>
           </p>
         )}
       </div>

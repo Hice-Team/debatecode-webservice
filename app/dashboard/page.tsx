@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   const user = await getUser();
 
   return (
-    <div className="flex flex-col min-h-screen bg-paper text-ink-soft">
+    <div className="flex flex-col min-h-screen bg-paper text-fg">
       <Nav />
       {hasConsoleAccess(user.role) && (
         <div className="border-b border-brand-100 bg-brand-50/70">

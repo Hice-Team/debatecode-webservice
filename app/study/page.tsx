@@ -76,7 +76,7 @@ export default async function StudyPage() {
 
         {/* 진도 요약 — 로그인 + 수강신청 코스가 있을 때만 */}
         {/*{session && totalLessons > 0 && courses.length > 0 && (
-          <section className="mb-12 rounded-[var(--radius-panel)] border border-hairline bg-white p-6 shadow-sm">
+          <section className="mb-12 rounded-[var(--radius-panel)] border border-hairline bg-surface p-6 shadow-sm">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex-1">
                 <p className="text-xs font-bold uppercase tracking-wider text-brand-600">MY PROGRESS</p>
@@ -88,7 +88,7 @@ export default async function StudyPage() {
                     {doneLessons}/{totalLessons} <I18nSlot k="lessons-completed" fallback="강 완료" />
                   </span>
                 </div>
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-ink/5">
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-paper">
                   <div className="h-full rounded-full bg-signal transition-colors" style={{ width: `${overallPct}%` }} />
                 </div>
               </div>
@@ -121,10 +121,10 @@ export default async function StudyPage() {
                   <Link
                     key={c.slug}
                     href={`/study/${c.slug}`}
-                    className="group bg-white rounded-[var(--radius-panel)] border border-hairline p-6 hover:border-brand-400 hover:-translate-y-0.5 hover:shadow-md transition"
+                    className="group bg-surface rounded-[var(--radius-panel)] border border-hairline p-6 hover:border-brand-400 hover:-translate-y-0.5 hover:shadow-md transition"
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="font-mono text-xs px-2 py-1 rounded border border-ink/15 bg-paper text-ink-soft uppercase">
+                      <span className="font-mono text-xs px-2 py-1 rounded border border-hairline bg-paper text-fg uppercase">
                         {c.language}
                       </span>
                       <h3 className="text-lg font-bold">{c.title}</h3>
@@ -137,7 +137,7 @@ export default async function StudyPage() {
                           <span>{done}/{total} <I18nSlot k="lessons-completed" fallback="강 완료" /></span>
                           <span>{pct}%</span>
                         </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink/5">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-paper">
                           <div className="h-full rounded-full bg-signal" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
@@ -170,11 +170,11 @@ export default async function StudyPage() {
         {/* 문서 사이트맵 — 카드 대신 계층형 링크 트리 */}
         <section className="mb-14">
           <h2 className="text-xs font-bold uppercase tracking-wider text-brand-600 mb-4">DOCS SITEMAP</h2>
-          <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-6 sm:p-8">
+          <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-6 sm:p-8">
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
               {DOCS_SITEMAP.map((section) => (
                 <div key={section.group}>
-                  <p className="mb-3 border-b border-hairline pb-2 text-sm font-bold text-ink">
+                  <p className="mb-3 border-b border-hairline pb-2 text-sm font-bold text-fg">
                     <I18nSlot k={section.groupKey} fallback={section.group} />
                   </p>
                   <ul className="space-y-0.5 border-l border-hairline">

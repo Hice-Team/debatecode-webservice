@@ -122,7 +122,7 @@ export default function ChatRoom({
             <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
               <div className="max-w-[85%] min-w-0">
                 {isEditing ? (
-                  <div className="rounded-[var(--radius-panel)] border border-signal bg-white p-2">
+                  <div className="rounded-[var(--radius-panel)] border border-signal bg-surface p-2">
                     <textarea
                       value={editing.content}
                       onChange={(e) => setEditing({ ...editing, content: e.target.value })}
@@ -154,7 +154,7 @@ export default function ChatRoom({
                         ? 'border border-dashed border-hairline text-fg-quiet'
                         : mine
                           ? 'bg-signal text-white'
-                          : 'border border-hairline bg-white text-fg-secondary'
+                          : 'border border-hairline bg-surface text-fg-secondary'
                     }`}
                   >
                     {message.deletedAt ? '삭제된 메시지입니다.' : message.content}
@@ -224,7 +224,7 @@ export default function ChatRoom({
             rows={1}
             maxLength={2000}
             placeholder="메시지를 입력하세요"
-            className="min-h-[42px] flex-1 resize-none rounded-[var(--radius-panel)] border border-hairline bg-white px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-quiet focus:border-signal focus:outline-none"
+            className="min-h-[42px] flex-1 resize-none rounded-[var(--radius-panel)] border border-hairline bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-quiet focus:border-signal focus:outline-none"
           />
           <button
             type="button"

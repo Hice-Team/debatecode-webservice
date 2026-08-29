@@ -21,7 +21,7 @@ interface SetValues {
   published: boolean;
 }
 
-const FIELD = 'w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25';
+const FIELD = 'w-full rounded-lg border border-hairline px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25';
 const LABEL = 'mb-1 block font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-muted';
 
 export default function ProblemSetForm({ mode, set }: { mode: 'create' | 'edit'; set?: SetValues }) {

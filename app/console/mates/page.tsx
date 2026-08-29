@@ -155,7 +155,7 @@ export default async function MateManagementPage({
 
       {/* ---- 신청 대기 ---- */}
       {active === 'pending' && (
-        <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {pending.length === 0 && (
             <EmptyState title="신청 대기 중인 사용자가 없습니다" sub="새 신청이 들어오면 여기에 나타납니다." />
           )}
@@ -164,7 +164,7 @@ export default async function MateManagementPage({
               <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2">
                 <span className="font-mono text-[10px] text-brand-600 group-open:hidden">▶</span>
                 <span className="hidden font-mono text-[10px] text-brand-600 group-open:inline">▼</span>
-                <span className="font-medium text-ink">{maskName(m.user.name)}</span>
+                <span className="font-medium text-fg">{maskName(m.user.name)}</span>
                 <span className="font-mono text-[11px] text-fg-muted">{maskEmail(m.user.email)}</span>
                 <span className="font-mono text-[11px] text-fg-quiet">
                   신청 {m.createdAt.toLocaleDateString('ko-KR')}
@@ -177,26 +177,45 @@ export default async function MateManagementPage({
                 </span>
               </summary>
 
+              {/* 신청서 PDF가 곧 지원서다 — 심사자가 가장 먼저 열어야 하는 것이라 맨 위에 둔다.
+                  지원 동기는 예전 신청서에만 남아 있어 있을 때만 그린다. */}
               <div className="mt-3 rounded-xl border border-hairline bg-paper/40 p-4">
-                <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-fg-muted">지원 동기</p>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg">{m.motivation}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-3">
-                  {m.attachmentUrl && (
-                    <a
-                      href={m.attachmentUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1 font-mono text-[11px] font-semibold text-brand-700 hover:bg-brand-100"
-                    >
-                      📄 {m.attachmentName ?? '신청서 PDF'} ↗
-                    </a>
-                  )}
-                  {m.portfolioUrl && (
-                    <a href={m.portfolioUrl} target="_blank" rel="noreferrer" className="font-mono text-[11px] text-brand-600 hover:underline">
-                      포트폴리오 보기 ↗
-                    </a>
-                  )}
-                </div>
+                {m.attachmentUrl ? (
+                  <a
+                    href={m.attachmentUrl}
+                    download={m.attachmentName ?? '신청서.pdf'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.7]" aria-hidden>
+                      <path d="M12 4v11m0 0 3.5-3.5M12 15l-3.5-3.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M5 17v1.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V17" strokeLinecap="round" />
+                    </svg>
+                    {m.attachmentName ?? '신청서 PDF'} 내려받기
+                  </a>
+                ) : (
+                  <p className="text-sm text-fg-muted">첨부된 신청서가 없습니다.</p>
+                )}
+
+                {m.motivation && (
+                  <div className="mt-3 border-t border-hairline pt-3">
+                    <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
+                      지원 동기 (예전 양식)
+                    </p>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg">{m.motivation}</p>
+                  </div>
+                )}
+                {m.portfolioUrl && (
+                  <a
+                    href={m.portfolioUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-block font-mono text-[11px] text-brand-600 hover:underline"
+                  >
+                    포트폴리오 보기 ↗
+                  </a>
+                )}
               </div>
 
               <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
@@ -207,7 +226,7 @@ export default async function MateManagementPage({
                     name="note"
                     rows={2}
                     placeholder="반려서 — 반려 사유를 적어주세요. 신청자에게 그대로 전달됩니다. (선택)"
-                    className="w-full flex-1 rounded-lg border border-ink/15 bg-white px-3 py-2 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                    className="w-full flex-1 rounded-lg border border-hairline bg-surface px-3 py-2 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                   />
                   <button className={BTN_REJECT}>반려</button>
                 </form>
@@ -224,7 +243,7 @@ export default async function MateManagementPage({
 
       {/* ---- 활동 중 ---- */}
       {active === 'active' && (
-        <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {enriched.length === 0 && <EmptyState title="활동 중인 디베이트메이트가 없습니다" />}
           {enriched.map((m) => (
             <div key={m.id} className="px-5 py-4">
@@ -236,10 +255,10 @@ export default async function MateManagementPage({
                   {(m.name[0] ?? '?').toUpperCase()}
                 </span>
                 <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-1.5 font-medium text-ink">
+                  <p className="flex flex-wrap items-center gap-1.5 font-medium text-fg">
                     {m.name}
                     {m.inactiveDays >= INACTIVE_DAYS && (
-                      <span className="rounded border border-ink/15 bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted">
+                      <span className="rounded border border-hairline bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted">
                         {m.inactiveDays}일 무활동
                       </span>
                     )}
@@ -284,7 +303,7 @@ export default async function MateManagementPage({
 
       {/* ---- 처리 이력 ---- */}
       {active === 'history' && (
-        <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {processed.length === 0 && <EmptyState title="처리한 신청이 아직 없습니다" />}
           {processed.map((m) => {
             const st = STATUS_BADGE[m.status] ?? STATUS_BADGE.rejected;
@@ -294,7 +313,7 @@ export default async function MateManagementPage({
                   <span className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] ${st.cls}`}>
                     {st.label}
                   </span>
-                  <span className="font-medium text-ink">{maskName(m.user.name)}</span>
+                  <span className="font-medium text-fg">{maskName(m.user.name)}</span>
                   <span className="ml-auto font-mono text-[11px] text-fg-muted">
                     {m.reviewedAt?.toLocaleDateString('ko-KR')}
                   </span>

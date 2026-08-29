@@ -42,7 +42,7 @@ export default async function MaintenancePage() {
 
       <div className="mt-10">
         <SectionHeader title="점검 이력" sub="최근 10건 — 켠 사람과 시각이 남습니다." />
-        <div className="divide-y divide-ink/5 rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="divide-y divide-hairline rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {history.length === 0 && <EmptyRow text="점검 모드를 사용한 이력이 없습니다." />}
           {history.map((entry) => (
             <div key={entry.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">

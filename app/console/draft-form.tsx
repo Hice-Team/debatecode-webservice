@@ -6,7 +6,7 @@ import { submitProblemDraft, type DraftState } from '@/app/lib/actions/user-requ
 
 const initial: DraftState = {};
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-paper/40 px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/50';
+  'w-full rounded-lg border border-hairline bg-paper/40 px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/50';
 const CATEGORIES = ['해시', '스택', 'DP', '그리디', '그래프', '자료구조'];
 
 export default function DraftForm() {
@@ -59,7 +59,7 @@ export default function DraftForm() {
         <textarea id="draft-desc" name="description" required rows={6} placeholder="문제 지문, 입출력 형식, 제약 조건, 예제를 마크다운으로 작성하세요" className={`${FIELD}`} />
       </div>
       {/* 저작권 기증 위임서 (선택) */}
-      <div className="rounded-xl border border-ink/15 bg-paper/40 p-4">
+      <div className="rounded-xl border border-hairline bg-paper/40 p-4">
         <label className="flex cursor-pointer items-start gap-2.5 text-sm text-fg">
           <input
             type="checkbox"
@@ -69,7 +69,7 @@ export default function DraftForm() {
             className="mt-0.5 h-4 w-4 accent-[#1800AC]"
           />
           <span>
-            <span className="font-semibold text-ink">저작권 기증 위임서 작성 (선택)</span>
+            <span className="font-semibold text-fg">저작권 기증 위임서 작성 (선택)</span>
             <span className="mt-0.5 block text-[11px] text-fg-muted">
               기본적으로 출제 문제의 저작권은 창작자에게 있습니다. 아래에 동의하면 이 문제에 한해 저작권을 debateCode에 기증·위임합니다.
             </span>
@@ -77,7 +77,7 @@ export default function DraftForm() {
         </label>
         {donate && (
           <div className="mt-3 space-y-2 border-t border-hairline pt-3">
-            <p className="rounded-lg bg-white border border-hairline px-3 py-2 text-[11px] leading-relaxed text-fg-secondary">
+            <p className="rounded-lg bg-surface border border-hairline px-3 py-2 text-[11px] leading-relaxed text-fg-secondary">
               본인은 위 문제의 창작자로서, 해당 저작물(문제 지문·테스트케이스·해설 포함)의 저작재산권을 debateCode 운영주체에
               무상 기증하며, debateCode가 이를 문제 은행 게시·복제·전송·2차적 저작물 작성에 이용하도록 위임합니다.
               저작인격권은 창작자에게 유지됩니다.
@@ -93,7 +93,7 @@ export default function DraftForm() {
         <button type="submit" disabled={pending} className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">
           {pending ? '제출 중…' : '검토큐에 제출'}
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="rounded-xl border border-ink/15 px-4 py-2 text-sm text-fg-secondary hover:border-ink/40">취소</button>
+        <button type="button" onClick={() => setOpen(false)} className="rounded-xl border border-hairline px-4 py-2 text-sm text-fg-secondary hover:border-fg-quiet">취소</button>
       </div>
       <p className="text-[11px] text-fg-muted">테스트케이스·스타터코드는 검토 과정에서 검토자와 함께 보완합니다.</p>
     </form>

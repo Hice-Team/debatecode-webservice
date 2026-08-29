@@ -23,7 +23,7 @@ export default function SpeechPlayer({
 
   const dark = tone === 'dark';
   const btn = `grid h-8 w-8 shrink-0 place-items-center rounded-full transition-colors ${
-    dark ? 'text-fg-on-dark-secondary hover:bg-white/10 hover:text-white' : 'text-fg-muted hover:bg-ink/[0.06] hover:text-ink'
+    dark ? 'text-fg-on-dark-secondary hover:bg-surface/10 hover:text-white' : 'text-fg-muted hover:bg-paper hover:text-fg'
   }`;
 
   return (
@@ -31,7 +31,7 @@ export default function SpeechPlayer({
       role="group"
       aria-label={t('ai-tts', language)}
       className={`mt-3 flex items-center gap-2 rounded-full border px-2 py-1.5 animate-in fade-in slide-in-from-bottom-1 duration-200 ${
-        dark ? 'border-white/10 bg-white/[0.04]' : 'border-hairline bg-white'
+        dark ? 'border-white/10 bg-surface/[0.04]' : 'border-hairline bg-surface'
       }`}
     >
       <button
@@ -67,7 +67,7 @@ export default function SpeechPlayer({
 
       {/* 진행 — 조각 단위라 정확한 시간은 아니지만 "얼마나 남았는지"는 보인다 */}
       <div
-        className={`h-1 min-w-0 flex-1 overflow-hidden rounded-full ${dark ? 'bg-white/10' : 'bg-ink/[0.08]'}`}
+        className={`h-1 min-w-0 flex-1 overflow-hidden rounded-full ${dark ? 'bg-surface/10' : 'bg-paper'}`}
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
@@ -87,7 +87,7 @@ export default function SpeechPlayer({
           value={rate}
           onChange={(e) => setRate(Number(e.target.value) as SpeechRate)}
           className={`rounded-full bg-transparent px-1.5 py-0.5 font-mono text-[11px] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal ${
-            dark ? 'text-fg-on-dark-secondary [&>option]:text-ink' : 'text-fg-secondary'
+            dark ? 'text-fg-on-dark-secondary [&>option]:text-fg' : 'text-fg-secondary'
           }`}
         >
           {SPEECH_RATES.map((value) => (

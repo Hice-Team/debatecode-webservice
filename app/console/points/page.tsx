@@ -77,28 +77,28 @@ export default async function ConsolePointsPage() {
           { label: '발급 대기', value: pendingOrders.length, warn: pendingOrders.length > 0 },
           { label: '최근 원장', value: recentLedger.length },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-hairline bg-white px-4 py-3">
+          <div key={stat.label} className="rounded-xl border border-hairline bg-surface px-4 py-3">
             <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
-            <p className={`mt-1 font-display text-2xl font-bold ${stat.warn ? 'text-rose-600' : 'text-ink'}`}>{stat.value}</p>
+            <p className={`mt-1 font-display text-2xl font-bold ${stat.warn ? 'text-rose-600' : 'text-fg'}`}>{stat.value}</p>
           </div>
         ))}
       </div>
 
       {/* 활동 인증 심사 */}
-      <section className="mb-8 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+      <section className="mb-8 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
         <div className="border-b border-hairline px-5 py-3">
-          <h3 className="font-bold text-ink">활동 인증 신청</h3>
+          <h3 className="font-bold text-fg">활동 인증 신청</h3>
         </div>
         {pendingRequests.length === 0 ? (
           <EmptyRow text="심사 대기 중인 신청이 없습니다." />
         ) : (
-          <ul className="divide-y divide-ink/5">
+          <ul className="divide-y divide-hairline">
             {pendingRequests.map((request) => {
               const payload = request.payload as { title?: string; url?: string; platform?: string; description?: string };
               return (
                 <li key={request.id} className="px-5 py-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-ink">{request.user.name}</span>
+                    <span className="font-semibold text-fg">{request.user.name}</span>
                     <span className="font-mono text-[11px] text-fg-quiet">{request.user.email}</span>
                     <span className="ml-auto rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 font-mono text-[11px] font-semibold text-brand-700">
                       +{request.amount}P
@@ -106,7 +106,7 @@ export default async function ConsolePointsPage() {
                   </div>
 
                   <div className="mt-2 rounded-xl border border-hairline bg-paper/50 p-3 text-sm">
-                    <p className="font-medium text-ink">{payload?.title ?? '제목 없음'}</p>
+                    <p className="font-medium text-fg">{payload?.title ?? '제목 없음'}</p>
                     <p className="mt-0.5 font-mono text-[11px] text-fg-muted">{platformLabel(payload?.platform)}</p>
                     {payload?.url && (
                       <a
@@ -130,7 +130,7 @@ export default async function ConsolePointsPage() {
                       <input
                         name="note"
                         placeholder="반려 사유 (선택)"
-                        className="min-w-0 flex-1 rounded-lg border border-ink/15 px-3 py-1.5 text-xs focus:border-signal focus:outline-none"
+                        className="min-w-0 flex-1 rounded-lg border border-hairline px-3 py-1.5 text-xs focus:border-signal focus:outline-none"
                       />
                       <button type="submit" className={BTN_REJECT}>
                         반려
@@ -152,9 +152,9 @@ export default async function ConsolePointsPage() {
       </section>
 
       {/* 디베이트샵 발급 대기 */}
-      <section className="mb-8 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+      <section className="mb-8 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
         <div className="border-b border-hairline px-5 py-3">
-          <h3 className="font-bold text-ink">디베이트샵 발급 대기</h3>
+          <h3 className="font-bold text-fg">디베이트샵 발급 대기</h3>
           <p className="mt-0.5 text-xs text-fg-muted">
             발급 채널 연동 전에는 쿠폰 코드를 직접 입력해 확정합니다. 실패 처리 시 포인트가 자동 환불됩니다.
           </p>
@@ -162,11 +162,11 @@ export default async function ConsolePointsPage() {
         {pendingOrders.length === 0 ? (
           <EmptyRow text="발급을 기다리는 주문이 없습니다." />
         ) : (
-          <ul className="divide-y divide-ink/5">
+          <ul className="divide-y divide-hairline">
             {pendingOrders.map((order) => (
               <li key={order.id} className="px-5 py-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold text-ink">{order.user.name}</span>
+                  <span className="font-semibold text-fg">{order.user.name}</span>
                   <span className="font-mono text-[11px] text-fg-quiet">{order.user.email}</span>
                   <span className="ml-auto font-mono text-[11px] text-fg-muted">
                     −{order.pointsSpent.toLocaleString()}P
@@ -195,12 +195,12 @@ export default async function ConsolePointsPage() {
                       name="couponCode"
                       required
                       placeholder="쿠폰 코드"
-                      className="min-w-0 flex-1 rounded-lg border border-ink/15 px-3 py-1.5 font-mono text-xs focus:border-signal focus:outline-none"
+                      className="min-w-0 flex-1 rounded-lg border border-hairline px-3 py-1.5 font-mono text-xs focus:border-signal focus:outline-none"
                     />
                     <input
                       name="couponExpiresAt"
                       type="date"
-                      className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs focus:border-signal focus:outline-none"
+                      className="rounded-lg border border-hairline px-3 py-1.5 text-xs focus:border-signal focus:outline-none"
                     />
                     <button type="submit" className={BTN_PRIMARY}>
                       발급 확정
@@ -211,7 +211,7 @@ export default async function ConsolePointsPage() {
                     <input
                       name="reason"
                       placeholder="실패 사유"
-                      className="w-32 rounded-lg border border-ink/15 px-3 py-1.5 text-xs focus:border-signal focus:outline-none"
+                      className="w-32 rounded-lg border border-hairline px-3 py-1.5 text-xs focus:border-signal focus:outline-none"
                     />
                     <button type="submit" className={BTN_REJECT}>
                       실패·환불
@@ -226,14 +226,14 @@ export default async function ConsolePointsPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* 최근 심사 결과 */}
-        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           <div className="border-b border-hairline px-5 py-3">
-            <h3 className="font-bold text-ink">최근 심사</h3>
+            <h3 className="font-bold text-fg">최근 심사</h3>
           </div>
           {reviewedRequests.length === 0 ? (
             <EmptyRow text="심사 이력이 없습니다." />
           ) : (
-            <ul className="divide-y divide-ink/5">
+            <ul className="divide-y divide-hairline">
               {reviewedRequests.map((request) => (
                 <li key={request.id} className="flex items-center gap-3 px-5 py-2.5">
                   <span className="min-w-0 flex-1 truncate text-sm text-fg">
@@ -253,14 +253,14 @@ export default async function ConsolePointsPage() {
         </section>
 
         {/* 원장 최근 기록 */}
-        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           <div className="border-b border-hairline px-5 py-3">
-            <h3 className="font-bold text-ink">최근 포인트 원장</h3>
+            <h3 className="font-bold text-fg">최근 포인트 원장</h3>
           </div>
           {recentLedger.length === 0 ? (
             <EmptyRow text="원장 기록이 없습니다." />
           ) : (
-            <ul className="divide-y divide-ink/5">
+            <ul className="divide-y divide-hairline">
               {recentLedger.map((entry) => (
                 <li key={entry.id} className="flex items-center gap-3 px-5 py-2.5">
                   <span className="w-12 shrink-0 font-mono text-[11px] text-fg-quiet">

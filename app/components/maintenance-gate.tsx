@@ -50,14 +50,14 @@ export default async function MaintenanceGate({ children }: { children: React.Re
           🛠️
         </p>
         <h1
-          className="mt-4 text-2xl font-bold text-ink"
+          className="mt-4 text-2xl font-bold text-fg"
           style={{ fontFamily: 'var(--font-space-grotesk)' }}
         >
           점검 중입니다
         </h1>
         <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">{state.message}</p>
         {state.eta && (
-          <p className="mt-4 inline-block rounded-full border border-hairline bg-white px-3 py-1 font-mono text-xs text-fg-secondary">
+          <p className="mt-4 inline-block rounded-full border border-hairline bg-surface px-3 py-1 font-mono text-xs text-fg-secondary">
             종료 예정 · {state.eta}
           </p>
         )}

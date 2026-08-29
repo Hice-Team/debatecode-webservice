@@ -274,7 +274,7 @@ export default function AttachMenu({
 
   const itemClass =
     'flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-[13px] text-fg transition-colors hover:bg-paper disabled:opacity-40';
-  const panelClass = `absolute left-0 z-50 w-[15rem] max-w-[calc(100vw-2rem)] overflow-visible rounded-[var(--radius-panel)] border border-hairline bg-white py-1.5 shadow-xl shadow-ink/10 animate-in fade-in duration-150 ${
+  const panelClass = `absolute left-0 z-50 w-[15rem] max-w-[calc(100vw-2rem)] overflow-visible rounded-[var(--radius-panel)] border border-hairline bg-surface py-1.5 shadow-xl shadow-ink/10 animate-in fade-in duration-150 ${
     placement === 'top' ? 'bottom-full mb-2 slide-in-from-bottom-1' : 'top-full mt-2 slide-in-from-top-1'
   }`;
 
@@ -335,7 +335,7 @@ export default function AttachMenu({
         className="grid h-10 w-10 place-items-center rounded-full text-fg-muted transition hover:bg-paper hover:text-signal disabled:opacity-40"
       >
         {busy ? (
-          <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-ink/15 border-t-signal motion-reduce:animate-none" />
+          <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-hairline border-t-signal motion-reduce:animate-none" />
         ) : (
           <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-[1.7]" aria-hidden>
             <path d="M12 5v14M5 12h14" strokeLinecap="round" />
@@ -383,7 +383,7 @@ export default function AttachMenu({
                     placement === 'top' ? 'bottom-0' : 'top-0'
                   }`}
                 >
-                  <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white py-1.5 shadow-xl shadow-ink/10">
+                  <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface py-1.5 shadow-xl shadow-ink/10">
                     {subItems}
                   </div>
                 </div>
@@ -407,8 +407,8 @@ export default function AttachMenu({
             onClick={() => setDialog(null)}
             className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
           />
-          <div className="relative z-10 w-full max-w-md rounded-[var(--radius-panel)] border border-hairline bg-white p-5 shadow-2xl shadow-ink/25">
-            <p className="text-sm font-bold text-ink">
+          <div className="relative z-10 w-full max-w-md rounded-[var(--radius-panel)] border border-hairline bg-surface p-5 shadow-2xl shadow-ink/25">
+            <p className="text-sm font-bold text-fg">
               {dialog === 'github' ? t('ai-attach-github', language) : t('ai-attach-url', language)}
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-fg-muted">
@@ -426,7 +426,7 @@ export default function AttachMenu({
                 if (e.key === 'Escape') setDialog(null);
               }}
               placeholder={dialog === 'github' ? 'https://github.com/owner/repo' : 'https://…'}
-              className="mt-3 w-full rounded-xl border border-hairline bg-paper px-3.5 py-2.5 text-sm text-ink placeholder:text-fg-quiet focus:border-signal focus:outline-none"
+              className="mt-3 w-full rounded-xl border border-hairline bg-paper px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-quiet focus:border-signal focus:outline-none"
             />
             <div className="mt-4 flex justify-end gap-2">
               <button

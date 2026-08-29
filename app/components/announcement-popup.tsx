@@ -7,7 +7,7 @@
 //
 // "오늘 하루 보지 않기"는 팝업 단위로 기억한다. 예전에는 키가 하나뿐이라
 // 새 팝업을 올리면 이전에 숨긴 기록이 덮여 버렸다.
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
 const HIDE_KEY = 'dc-popup-hidden'; // { [id]: until(ms) }
 
@@ -123,28 +123,49 @@ export default function AnnouncementPopup({
   }
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="presentation">
+    <PopupShell onClose={close}>
       <div aria-hidden className="absolute inset-0 bg-ink/50 backdrop-blur-[2px]" onClick={close} />
 
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="dc-notice-title"
-        className="relative w-[min(30rem,100%)] overflow-hidden rounded-[var(--radius-panel)] bg-white shadow-2xl shadow-black/30 animate-in fade-in zoom-in-95 duration-200"
+        className="relative flex max-h-[calc(100dvh-2rem)] w-[min(30rem,100%)] flex-col overflow-hidden rounded-[var(--radius-panel)] bg-surface shadow-2xl shadow-black/30 animate-in fade-in zoom-in-95 duration-200"
       >
+        {/* 닫기 — 예전에는 배경을 눌러야만 닫혔다. 배경 클릭은 알아채기 어려운 조작이고,
+            포스터가 화면을 꽉 채우면 누를 배경 자체가 거의 없다. */}
+        <button
+          type="button"
+          onClick={close}
+          aria-label="공지 닫기"
+          className="dc-tap absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-ink/45 text-white backdrop-blur transition-colors hover:bg-ink/65 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[2]" aria-hidden>
+            <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />
+          </svg>
+        </button>
         {/* 여러 건일 때 몇 번째인지 — 닫아도 또 뜨는 이유를 알 수 있게 */}
         {queue.length > 1 && (
-          <div className="flex items-center gap-1.5 bg-ink/[0.04] px-6 py-1.5">
-            <span className="font-mono text-[10px] text-fg-muted">
+          <div className="flex shrink-0 items-center gap-1.5 bg-paper px-6 py-1.5 pr-14">
+            <span className="dc-num font-mono text-[10px] text-fg-muted">
               공지 {index + 1} / {queue.length}
             </span>
+            {/* 점은 표시가 아니라 조작이다 — 놓친 공지로 되돌아갈 길이 있어야 한다 */}
             <div className="ml-auto flex gap-1">
               {queue.map((q, i) => (
-                <span
+                <button
                   key={q.id}
-                  aria-hidden
-                  className={`h-1 w-4 rounded-full ${i === index ? 'bg-brand-600' : 'bg-ink/15'}`}
-                />
+                  type="button"
+                  onClick={() => setIndex(i)}
+                  aria-label={`${i + 1}번째 공지 보기`}
+                  aria-current={i === index}
+                  className="dc-tap grid h-5 w-5 place-items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                >
+                  <span
+                    aria-hidden
+                    className={`h-1 w-4 rounded-full transition-colors ${i === index ? 'bg-brand-600' : 'bg-fg-quiet/40'}`}
+                  />
+                </button>
               ))}
             </div>
           </div>
@@ -157,12 +178,12 @@ export default function AnnouncementPopup({
           <img
             src={item.imageUrl}
             alt={item.title}
-            className={`w-full object-cover ${isPoster ? 'max-h-[60vh] object-contain bg-ink/[0.03]' : 'h-40'}`}
+            className={`w-full shrink-0 object-cover ${isPoster ? 'max-h-[55dvh] object-contain bg-paper' : 'h-40'}`}
           />
         )}
 
         {!isPoster && (
-          <div className="bg-brand-900 px-6 py-4 text-white">
+          <div className="shrink-0 bg-brand-900 px-6 py-4 pr-14 text-white">
             <p className="font-mono text-[10px] tracking-wider text-brand-300">NOTICE</p>
             <h3 id="dc-notice-title" className="mt-0.5 text-lg font-bold leading-snug">
               {item.title}
@@ -171,9 +192,9 @@ export default function AnnouncementPopup({
         )}
 
         {(isPoster || item.content) && (
-          <div className="max-h-[40vh] overflow-y-auto px-6 py-5">
+          <div className="dc-scroll min-h-0 flex-1 overflow-y-auto px-6 py-5">
             {isPoster && (
-              <h3 id="dc-notice-title" className="mb-2 text-lg font-bold leading-snug text-ink">
+              <h3 id="dc-notice-title" className="mb-2 text-lg font-bold leading-snug text-fg">
                 {item.title}
               </h3>
             )}
@@ -183,7 +204,7 @@ export default function AnnouncementPopup({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-3 border-t border-hairline bg-paper/60 px-6 py-3.5">
+        <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-hairline bg-paper/60 px-6 py-3.5">
           <label className="flex cursor-pointer items-center gap-2 text-xs text-fg-secondary">
             <input
               type="checkbox"
@@ -200,7 +221,7 @@ export default function AnnouncementPopup({
                 href={link.href}
                 {...(link.external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
                 onClick={close}
-                className="rounded-full border border-brand-300 bg-white px-4 py-3 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                className="rounded-lg border border-brand-300 bg-surface px-4 py-2 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
               >
                 {link.label} {link.external ? '↗' : '→'}
               </a>
@@ -215,6 +236,39 @@ export default function AnnouncementPopup({
           </div>
         </div>
       </div>
+    </PopupShell>
+  );
+}
+
+/**
+ * 공지 창의 껍데기 — Esc로 닫히고, 열려 있는 동안 뒤 배경이 스크롤되지 않는다.
+ *
+ * 팝업은 페이지가 뜨자마자 초점을 가져가는 유일한 창이라 빠져나갈 길이 분명해야 한다.
+ * 예전에는 배경 클릭 하나뿐이었고, 포스터가 화면을 채우면 그 배경조차 거의 없었다.
+ */
+function PopupShell({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    ref.current?.querySelector<HTMLElement>('button, a')?.focus();
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+
+  return (
+    <div ref={ref} className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="presentation">
+      {children}
     </div>
   );
 }

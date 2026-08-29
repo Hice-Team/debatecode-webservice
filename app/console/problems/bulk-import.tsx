@@ -21,7 +21,7 @@ export default function BulkImport() {
   return (
     <div className="space-y-4">
       <Callout tone="info" title="형식">
-        문제 객체의 배열, 또는 <code className="rounded bg-white/60 px-1">{'{ "problems": [...] }'}</code> 형태를
+        문제 객체의 배열, 또는 <code className="rounded bg-surface/60 px-1">{'{ "problems": [...] }'}</code> 형태를
         받습니다. 한 번에 최대 50건. 각 문제에는 테스트케이스가 최소 1개 있어야 합니다.
       </Callout>
 
@@ -71,7 +71,7 @@ export default function BulkImport() {
             </p>
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-ink/5 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
+                <tr className="border-b border-hairline font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                   <th scope="col" className="px-4 py-2 text-left font-medium">제목</th>
                   <th scope="col" className="px-4 py-2 text-left font-medium">카테고리</th>
                   <th scope="col" className="px-4 py-2 text-left font-medium">난이도</th>
@@ -80,8 +80,8 @@ export default function BulkImport() {
               </thead>
               <tbody>
                 {state.preview.map((p, i) => (
-                  <tr key={i} className="border-b border-ink/5 last:border-0">
-                    <td className="px-4 py-2 font-medium text-ink">{p.title}</td>
+                  <tr key={i} className="border-b border-hairline last:border-0">
+                    <td className="px-4 py-2 font-medium text-fg">{p.title}</td>
                     <td className="px-4 py-2 text-fg-secondary">{p.category}</td>
                     <td className="px-4 py-2 text-fg-secondary">
                       {p.difficulty} · {DIFFICULTY_LABEL[p.difficulty]}

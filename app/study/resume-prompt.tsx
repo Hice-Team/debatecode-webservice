@@ -86,20 +86,20 @@ export default function ResumePrompt({
   if (dismissed) return null;
 
   return (
-    <div className="relative mx-auto mt-6 w-full max-w-3xl rounded-[var(--radius-panel)] border border-brand-200 bg-white p-5">
+    <div className="relative mx-auto mt-6 w-full max-w-3xl rounded-[var(--radius-panel)] border border-brand-200 bg-surface p-5">
       <button
         type="button"
         onClick={dismiss}
         aria-label="이 안내 닫기"
         title="닫기"
-        className="dc-tap absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-fg-quiet transition hover:bg-paper hover:text-ink-soft"
+        className="dc-tap absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-fg-quiet transition hover:bg-paper hover:text-fg"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2" aria-hidden>
           <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />
         </svg>
       </button>
 
-      <p className="pr-8 text-sm font-semibold text-ink">이전 대화를 이어서 할까요?</p>
+      <p className="pr-8 text-sm font-semibold text-fg">이전 대화를 이어서 할까요?</p>
       <p className="mt-1 text-sm text-fg-secondary">
         최근 AI Search 대화가 있습니다.
         {title && <span className="ml-1 font-medium text-fg">「{title}」</span>}
@@ -121,7 +121,7 @@ export default function ResumePrompt({
           type="button"
           onClick={startNew}
           disabled={pending}
-          className="rounded-xl border border-ink/15 bg-white px-5 py-2.5 text-sm font-semibold text-fg transition hover:border-brand-300 hover:text-signal disabled:opacity-50"
+          className="rounded-xl border border-hairline bg-surface px-5 py-2.5 text-sm font-semibold text-fg transition hover:border-brand-300 hover:text-signal disabled:opacity-50"
         >
           {pending ? '정리 중…' : '새로 시작하기'}
         </button>
@@ -129,7 +129,7 @@ export default function ResumePrompt({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={pending}
-          className="rounded-xl border border-ink/15 bg-white px-5 py-2.5 text-sm font-semibold text-fg transition hover:border-brand-300 hover:text-signal disabled:opacity-50"
+          className="rounded-xl border border-hairline bg-surface px-5 py-2.5 text-sm font-semibold text-fg transition hover:border-brand-300 hover:text-signal disabled:opacity-50"
         >
           내보낸 대화 불러오기
         </button>

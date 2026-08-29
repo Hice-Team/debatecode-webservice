@@ -28,8 +28,8 @@ export default function NavFrame({ children }: { children: React.ReactNode }) {
       ? 'mt-3 max-w-4xl rounded-full bg-[#12141C]/90 backdrop-blur-xl border-white/10 shadow-xl shadow-black/30'
       : 'mt-0 max-w-full rounded-none bg-[#12141C]/95 backdrop-blur border-x-transparent border-t-transparent border-b-white/10'
     : pill
-      ? 'mt-3 max-w-4xl rounded-full bg-white/85 backdrop-blur-xl border-hairline shadow-xl shadow-ink/[0.08]'
-      : 'mt-0 max-w-full rounded-none bg-white/90 backdrop-blur border-x-transparent border-t-transparent border-b-ink/[0.06]';
+      ? 'mt-3 max-w-4xl rounded-full bg-surface/85 backdrop-blur-xl border-hairline shadow-xl shadow-ink/[0.08]'
+      : 'mt-0 max-w-full rounded-none bg-surface/90 backdrop-blur border-x-transparent border-t-transparent border-b-ink/[0.06]';
 
   return (
     <div className="sticky top-0 z-50">

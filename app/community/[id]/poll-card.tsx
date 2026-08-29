@@ -22,7 +22,7 @@ export default function PollCard({ poll, currentUserId }: { poll: PollData; curr
         📊 <I18nSlot k="poll-title" fallback="투표 · 총" /> {total}
         <I18nSlot k="poll-votes-unit" fallback="표" />
       </p>
-      {poll.question && <p className="mb-3 font-semibold text-ink-soft">{poll.question}</p>}
+      {poll.question && <p className="mb-3 font-semibold text-fg">{poll.question}</p>}
       <div className={`space-y-2 ${poll.question ? '' : 'mt-2'}`}>
         {poll.options.map((option, i) => {
           const count = counts[i];
@@ -37,13 +37,13 @@ export default function PollCard({ poll, currentUserId }: { poll: PollData; curr
                 disabled={!currentUserId}
                 title={option}
                 className={`relative w-full overflow-hidden rounded-lg border px-4 py-2.5 text-left text-sm transition-colors disabled:cursor-not-allowed ${
-                  mine ? 'border-signal bg-white font-semibold text-ink-soft' : 'border-ink/15 bg-white text-fg-secondary hover:border-ink/40'
+                  mine ? 'border-signal bg-surface font-semibold text-fg' : 'border-hairline bg-surface text-fg-secondary hover:border-fg-quiet'
                 }`}
               >
                 {/* 득표 비율 바 */}
                 <span
                   aria-hidden
-                  className={`absolute inset-y-0 left-0 ${mine ? 'bg-signal/25' : 'bg-ink/5'}`}
+                  className={`absolute inset-y-0 left-0 ${mine ? 'bg-signal/25' : 'bg-paper'}`}
                   style={{ width: `${pct}%` }}
                 />
                 <span className="relative flex items-center justify-between gap-2">
@@ -63,7 +63,7 @@ export default function PollCard({ poll, currentUserId }: { poll: PollData; curr
       </div>
       {!currentUserId && (
         <p className="mt-3 text-xs text-fg-quiet">
-          <Link href="/login" className="underline underline-offset-2 hover:text-ink-soft">
+          <Link href="/login" className="underline underline-offset-2 hover:text-fg">
             <I18nSlot k="login" fallback="로그인" />
           </Link>
           <I18nSlot k="poll-login-suffix" fallback="하면 투표에 참여할 수 있습니다." />

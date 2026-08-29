@@ -73,14 +73,14 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600">JOIN THE DEBATE</span>
           </Link>
           <h1
-            className="mt-2 text-3xl font-bold tracking-tight text-ink-soft"
+            className="mt-2 text-3xl font-bold tracking-tight text-fg"
             style={{ fontFamily: 'var(--font-space-grotesk)' }}
           >
             당신의 코드를 변호하세요
           </h1>
         </div>
 
-        <div className="bg-white/90 backdrop-blur-xl rounded-[var(--radius-panel)] border border-brand-100 shadow-[0_24px_60px_-24px_rgba(24,0,172,0.15)] p-8">
+        <div className="bg-surface/90 backdrop-blur-xl rounded-[var(--radius-panel)] border border-brand-100 shadow-[0_24px_60px_-24px_rgba(24,0,172,0.15)] p-8">
           <SignupWizard
             initialStep={initialStep}
             requiresPassword={requiresPassword}
@@ -97,7 +97,7 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
           이미 계정이 있나요?{' '}
           <Link
             href="/login"
-            className="font-semibold text-ink-soft underline underline-offset-4 hover:text-signal transition-colors"
+            className="font-semibold text-fg underline underline-offset-4 hover:text-signal transition-colors"
           >
             로그인
           </Link>

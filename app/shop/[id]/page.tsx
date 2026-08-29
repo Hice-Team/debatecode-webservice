@@ -64,7 +64,7 @@ export default async function ShopProductPage({ params }: PageProps<'/shop/[id]'
           </div>
 
           <p className="mt-5 font-mono text-[11px] uppercase tracking-wider text-fg-quiet">{product.brand}</p>
-          <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">{product.name}</h1>
+          <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-fg">{product.name}</h1>
           <p className="mt-2 flex items-baseline gap-2">
             <span className="font-display text-2xl font-bold text-signal">{product.priceKrw.toLocaleString()}P</span>
             <span className="font-mono text-sm text-fg-quiet">정가 {product.priceKrw.toLocaleString()}원</span>
@@ -78,7 +78,7 @@ export default async function ShopProductPage({ params }: PageProps<'/shop/[id]'
             ].map(([label, value]) => (
               <div key={label} className="flex items-center justify-between border-b border-hairline py-3">
                 <dt className="text-fg-muted">{label}</dt>
-                <dd className="font-medium text-ink">{value}</dd>
+                <dd className="font-medium text-fg">{value}</dd>
               </div>
             ))}
           </dl>
@@ -96,8 +96,8 @@ export default async function ShopProductPage({ params }: PageProps<'/shop/[id]'
 
         {/* ---------- 신청 ---------- */}
         <aside className="md:sticky md:top-24">
-          <div className="rounded-xl border border-hairline bg-white p-5">
-            <h2 className="font-display text-lg font-bold tracking-tight text-ink">교환 신청</h2>
+          <div className="rounded-xl border border-hairline bg-surface p-5">
+            <h2 className="font-display text-lg font-bold tracking-tight text-fg">교환 신청</h2>
 
             {!session ? (
               <>
@@ -114,15 +114,15 @@ export default async function ShopProductPage({ params }: PageProps<'/shop/[id]'
                 <dl className="mt-3 space-y-2 text-sm">
                   <div className="flex items-center justify-between">
                     <dt className="text-fg-muted">보유 포인트</dt>
-                    <dd className="font-mono font-semibold text-ink">{balance.toLocaleString()}P</dd>
+                    <dd className="font-mono font-semibold text-fg">{balance.toLocaleString()}P</dd>
                   </div>
                   <div className="flex items-center justify-between">
                     <dt className="text-fg-muted">차감 포인트</dt>
                     <dd className="font-mono font-semibold text-rose-600">-{product.priceKrw.toLocaleString()}P</dd>
                   </div>
                   <div className="flex items-center justify-between border-t border-hairline pt-2">
-                    <dt className="font-medium text-ink">신청 후 잔액</dt>
-                    <dd className="font-mono font-bold text-ink">
+                    <dt className="font-medium text-fg">신청 후 잔액</dt>
+                    <dd className="font-mono font-bold text-fg">
                       {Math.max(0, balance - product.priceKrw).toLocaleString()}P
                     </dd>
                   </div>
@@ -135,12 +135,12 @@ export default async function ShopProductPage({ params }: PageProps<'/shop/[id]'
                 )}
 
                 {!allowedScope && (
-                  <p className="mt-3 rounded-lg border border-ink/15 bg-paper/60 px-3 py-2 text-[13px] text-fg-secondary">
+                  <p className="mt-3 rounded-lg border border-hairline bg-paper/60 px-3 py-2 text-[13px] text-fg-secondary">
                     디베이트메이트 전용 상품입니다.
                   </p>
                 )}
                 {soldOut && (
-                  <p className="mt-3 rounded-lg border border-ink/15 bg-paper/60 px-3 py-2 text-[13px] text-fg-secondary">
+                  <p className="mt-3 rounded-lg border border-hairline bg-paper/60 px-3 py-2 text-[13px] text-fg-secondary">
                     재고가 모두 소진되었습니다.
                   </p>
                 )}

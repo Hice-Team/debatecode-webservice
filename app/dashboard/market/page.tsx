@@ -113,7 +113,7 @@ export default async function MarketDashboardPage({ searchParams }: PageProps<'/
       ) : (
         <div className="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
           {/* 대화 목록 */}
-          <ul className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+          <ul className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
             {chats.map((chat) => {
               const amSeller = chat.sellerId === user.id;
               const counterpart = amSeller ? chat.buyer.name : chat.seller.name;
@@ -161,7 +161,7 @@ export default async function MarketDashboardPage({ searchParams }: PageProps<'/
           <div className="flex min-h-[32rem] flex-col overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-paper/40">
             {selected ? (
               <>
-                <div className="shrink-0 border-b border-hairline bg-white px-4 py-3">
+                <div className="shrink-0 border-b border-hairline bg-surface px-4 py-3">
                   <Link
                     href={`/community/${selected.listing.postId}`}
                     className="text-sm font-semibold text-fg hover:text-signal"

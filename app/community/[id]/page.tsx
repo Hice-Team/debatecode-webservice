@@ -150,10 +150,10 @@ export default async function PostPage({ params }: PageProps<'/community/[id]'>)
               </span>
             )}
             {post.secret && (
-              <span className="rounded bg-ink/[0.06] px-2 py-0.5 font-mono text-[10px] text-fg-muted">비밀글</span>
+              <span className="rounded bg-paper px-2 py-0.5 font-mono text-[10px] text-fg-muted">비밀글</span>
             )}
           </div>
-          <h1 className="font-display text-2xl font-bold leading-snug tracking-tight text-ink">
+          <h1 className="font-display text-2xl font-bold leading-snug tracking-tight text-fg">
             {post.bounty && !post.adoptedCommentId && (
               <span
                 className="mr-2 align-middle rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-700"
@@ -174,7 +174,7 @@ export default async function PostPage({ params }: PageProps<'/community/[id]'>)
           </h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-hairline pb-4">
-            <span data-no-translate className="text-sm font-semibold text-ink">{displayName(post.author, post.anonymous)}</span>
+            <span data-no-translate className="text-sm font-semibold text-fg">{displayName(post.author, post.anonymous)}</span>
             <span className="font-mono text-[11px] text-fg-quiet">
               {new Date(post.createdAt).toLocaleString('ko-KR')}
               {post.updatedAt && <span className="ml-1 text-fg-quiet">(수정됨)</span>}
@@ -226,7 +226,7 @@ export default async function PostPage({ params }: PageProps<'/community/[id]'>)
             <PollCard key={poll.id} poll={poll} currentUserId={session?.userId ?? null} />
           ))}
           {codeSnippets.map((snippet) => (
-            <pre key={snippet.id} className="mt-5 overflow-x-auto rounded-lg bg-ink/[0.04] p-4 text-sm text-fg">
+            <pre key={snippet.id} className="mt-5 overflow-x-auto rounded-lg bg-paper p-4 text-sm text-fg">
               {snippet.language && <div className="mb-2 font-mono text-[11px] text-fg-quiet">{snippet.language}</div>}
               <code>{snippet.content}</code>
             </pre>

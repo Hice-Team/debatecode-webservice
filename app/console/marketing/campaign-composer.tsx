@@ -9,7 +9,7 @@ import { AUDIENCE_LABELS, type Audience } from '@/app/lib/marketing-audience';
 const initialState: CampaignState = {};
 
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/30';
+  'w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/30';
 const LABEL = 'block font-mono text-[11px] uppercase tracking-wider text-fg-muted mb-1.5';
 
 const SAMPLE = `# 이번 주 새 기출 세트가 열렸습니다
@@ -53,7 +53,7 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
               <label
                 key={key}
                 className={`cursor-pointer rounded-lg border px-3 py-2.5 text-sm transition-colors ${
-                  audience === key ? 'border-signal bg-signal/10 font-semibold' : 'border-ink/15 hover:border-ink/40'
+                  audience === key ? 'border-signal bg-signal/10 font-semibold' : 'border-hairline hover:border-fg-quiet'
                 }`}
               >
                 <input
@@ -131,12 +131,12 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
       <div className="lg:sticky lg:top-6">
         <p className={LABEL}>미리보기</p>
         <div className="overflow-hidden rounded-xl border border-hairline bg-[#f6f6f7] p-4">
-          <div className="overflow-hidden rounded-xl border border-hairline bg-white">
+          <div className="overflow-hidden rounded-xl border border-hairline bg-surface">
             <div className="border-b border-hairline px-5 py-3">
               <span className="font-mono text-[11px] font-bold tracking-[0.12em] text-signal">DEBATECODE</span>
             </div>
             <div className="px-5 py-4">
-              <p className="mb-3 border-b border-hairline pb-2 text-sm font-semibold text-ink">
+              <p className="mb-3 border-b border-hairline pb-2 text-sm font-semibold text-fg">
                 {subject || '(제목 없음)'}
               </p>
               <MarkdownPreview source={body} />
@@ -182,13 +182,13 @@ function MarkdownPreview({ source }: { source: string }) {
     }
     if (/^###\s+/.test(line)) {
       flushList(`l-${index}`);
-      blocks.push(<h3 key={index} className="mb-1 mt-3 text-sm font-bold text-ink">{line.replace(/^###\s+/, '')}</h3>);
+      blocks.push(<h3 key={index} className="mb-1 mt-3 text-sm font-bold text-fg">{line.replace(/^###\s+/, '')}</h3>);
     } else if (/^##\s+/.test(line)) {
       flushList(`l-${index}`);
-      blocks.push(<h2 key={index} className="mb-1.5 mt-4 text-base font-bold text-ink">{line.replace(/^##\s+/, '')}</h2>);
+      blocks.push(<h2 key={index} className="mb-1.5 mt-4 text-base font-bold text-fg">{line.replace(/^##\s+/, '')}</h2>);
     } else if (/^#\s+/.test(line)) {
       flushList(`l-${index}`);
-      blocks.push(<h1 key={index} className="mb-2 text-lg font-bold text-ink">{line.replace(/^#\s+/, '')}</h1>);
+      blocks.push(<h1 key={index} className="mb-2 text-lg font-bold text-fg">{line.replace(/^#\s+/, '')}</h1>);
     } else if (/^[-*]\s+/.test(line)) {
       list.push(line.replace(/^[-*]\s+/, ''));
     } else {

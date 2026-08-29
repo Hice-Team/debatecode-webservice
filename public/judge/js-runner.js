@@ -48,6 +48,8 @@ function toTransferable(value, depth) {
   return null;
 }
 
+self.postMessage({ type: 'ready' });
+
 self.onmessage = function (e) {
   var msg = e.data;
   if (msg.type !== 'run') return;

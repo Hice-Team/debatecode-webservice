@@ -43,7 +43,7 @@ export default function Toast({
     <div
       role="status"
       aria-live="polite"
-      className={`fixed z-[95] flex items-start gap-2.5 rounded-[var(--radius-panel)] border border-hairline bg-white px-4 py-3 shadow-[0_12px_32px_rgba(8,9,26,0.18)] duration-200 ${PLACEMENT[placement]}`}
+      className={`fixed z-[95] flex items-start gap-2.5 rounded-[var(--radius-panel)] border border-hairline bg-surface px-4 py-3 shadow-[0_12px_32px_rgba(8,9,26,0.18)] duration-200 ${PLACEMENT[placement]}`}
     >
       {children}
     </div>,

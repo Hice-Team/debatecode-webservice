@@ -259,7 +259,7 @@ export default async function SettingsPage() {
           stacked
           control={
             <>
-              <div className="divide-y divide-ink/5 overflow-hidden rounded-xl border border-hairline">
+              <div className="divide-y divide-hairline overflow-hidden rounded-xl border border-hairline">
               {devices.length === 0 ? (
                 <p className="px-4 py-8 text-center text-sm text-fg-muted">활성 세션 정보를 불러올 수 없습니다.</p>
               ) : (
@@ -269,7 +269,7 @@ export default async function SettingsPage() {
                     <div key={d.id} className="flex items-center gap-3 px-4 py-3">
                       <span className={`h-2 w-2 shrink-0 rounded-full ${isCurrent ? 'bg-emerald-500' : 'bg-ink/20'}`} aria-hidden />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-ink">
+                        <p className="text-sm font-medium text-fg">
                           {deviceLabel(d.user_agent)}
                           {isCurrent && (
                             <span className="ml-2 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
@@ -296,7 +296,7 @@ export default async function SettingsPage() {
               )}
               </div>
               <div className="mt-2 text-right">
-                <Link href="/settings/security/logins" className="text-sm text-fg-secondary hover:text-ink-soft">더보기</Link>
+                <Link href="/settings/security/logins" className="text-sm text-fg-secondary hover:text-fg">더보기</Link>
               </div>
             </>
           }
@@ -307,7 +307,7 @@ export default async function SettingsPage() {
           desc="모르는 위치가 있다면 즉시 비밀번호를 변경하세요. IP 원문은 저장하지 않고 마스킹합니다."
           stacked
           control={
-            <div className="divide-y divide-ink/5 overflow-hidden rounded-xl border border-hairline">
+            <div className="divide-y divide-hairline overflow-hidden rounded-xl border border-hairline">
               {loginEvents.length === 0 ? (
                 <p className="px-4 py-8 text-center text-sm text-fg-muted">아직 기록된 로그인이 없습니다.</p>
               ) : (
@@ -315,7 +315,7 @@ export default async function SettingsPage() {
                   <div key={e.id} className="flex items-center gap-3 px-4 py-3">
                     <span className={`h-2 w-2 shrink-0 rounded-full ${e.isNew ? 'bg-amber-500' : 'bg-emerald-500'}`} aria-hidden />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-ink">
+                      <p className="text-sm font-medium text-fg">
                         {deviceLabel(e.userAgent)}
                         {e.isNew && (
                           <span className="ml-2 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">

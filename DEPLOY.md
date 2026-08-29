@@ -14,6 +14,20 @@
 > 배포 빌드는 **WSL(Ubuntu) 또는 CI(리눅스 러너)** 에서 실행할 것.
 > [.github/workflows/deploy.yml](.github/workflows/deploy.yml)이 이 경로를 자동화한다.
 
+> **`npm run build`는 `opennextjs-cloudflare build`다.** `next build`가 아니다.
+>
+> 2026-08-29 배포가 `ERROR Could not find compiled Open Next config`로 실패했다.
+> 원인은 Cloudflare 빌드 파이프라인이 `npm run build`(= 당시 `next build`)만 돌려
+> `.open-next/`가 만들어지지 않았고, 이어지는 `npx wrangler deploy`가 그 안의
+> 컴파일된 설정을 찾지 못한 것이었다.
+>
+> `opennextjs-cloudflare build`는 내부에서 `next build`를 먼저 돌리므로,
+> `build` 하나로 `.next/`와 `.open-next/`가 모두 나온다.
+> Next만 빌드해 타입·컴파일만 보고 싶으면 `npm run build:next`를 쓴다.
+>
+> Cloudflare 프로젝트 설정은 그대로 두면 된다 —
+> 빌드 명령 `npm run build`, 배포 명령 `npx wrangler deploy`.
+
 ---
 
 ## ⚠ 가장 흔한 배포 사고: `NEXT_PUBLIC_*`를 시크릿으로 넣는 것

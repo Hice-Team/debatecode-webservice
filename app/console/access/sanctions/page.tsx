@@ -116,7 +116,7 @@ export default async function SanctionCenterPage({
 
       {/* ---- 활성 제재 ---- */}
       {active === 'active' && (
-        <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {liveList.length === 0 && (
             <EmptyState title="활성 제재가 없습니다" sub="현재 제한 중인 계정이 없습니다." />
           )}
@@ -129,7 +129,7 @@ export default async function SanctionCenterPage({
                   <span className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-rose-700">
                     {sanctionTypeLabel(s.type)} 제한
                   </span>
-                  <span className="font-medium text-ink">{maskName(s.user.name)}</span>
+                  <span className="font-medium text-fg">{maskName(s.user.name)}</span>
                   <span
                     className={`font-mono text-[11px] ${
                       !s.expiresAt ? 'font-semibold text-rose-600' : expiring ? 'text-amber-700' : 'text-fg-muted'
@@ -180,7 +180,7 @@ export default async function SanctionCenterPage({
 
       {/* ---- 이의제기 ---- */}
       {active === 'appeals' && (
-        <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {appealList.length === 0 && (
             <EmptyState
               title="처리할 이의제기가 없습니다"
@@ -191,7 +191,7 @@ export default async function SanctionCenterPage({
             <div key={s.id} className="px-5 py-4">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge label="이의 접수" tone="open" />
-                <span className="font-medium text-ink">{maskName(s.user.name)}</span>
+                <span className="font-medium text-fg">{maskName(s.user.name)}</span>
                 <span className="font-mono text-[11px] text-fg-muted">
                   {sanctionTypeLabel(s.type)} 제한 · {s.expiresAt ? `~${s.expiresAt.toLocaleDateString('ko-KR')}` : '영구'}
                 </span>
@@ -217,7 +217,7 @@ export default async function SanctionCenterPage({
                     <input
                       name="note"
                       placeholder="기각 사유 — 이용자에게 전달됩니다"
-                      className="w-full flex-1 rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-xs placeholder:text-fg-quiet"
+                      className="w-full flex-1 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet"
                     />
                     <button className={BTN_REJECT}>기각</button>
                   </form>
@@ -235,13 +235,13 @@ export default async function SanctionCenterPage({
 
       {/* ---- 해제 이력 ---- */}
       {active === 'history' && (
-        <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {historyList.length === 0 && <EmptyState title="해제된 제재가 없습니다" />}
           {historyList.map((s) => (
             <div key={s.id} className="px-5 py-3.5">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge label="해제됨" tone="done" />
-                <span className="font-medium text-ink">{maskName(s.user.name)}</span>
+                <span className="font-medium text-fg">{maskName(s.user.name)}</span>
                 <span className="font-mono text-[11px] text-fg-muted">{sanctionTypeLabel(s.type)} 제한</span>
                 <span className="ml-auto font-mono text-[11px] text-fg-quiet">
                   {s.liftedAt ? s.liftedAt.toLocaleString('ko-KR') : '만료'}

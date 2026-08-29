@@ -64,7 +64,7 @@ type StreamEvent =
   | { type: 'error'; message: string };
 
 const PROSE =
-  'prose-sm max-w-none text-[15px] leading-[1.85] text-fg [&_a]:text-signal [&_code]:rounded [&_code]:bg-ink/[0.06] [&_code]:px-1 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-ink [&_li]:my-1 [&_p]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-ink [&_pre]:p-4 [&_pre]:text-white [&_ul]:list-disc [&_ul]:pl-5';
+  'prose-sm max-w-none text-[15px] leading-[1.85] text-fg [&_a]:text-signal [&_code]:rounded [&_code]:bg-paper [&_code]:px-1 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-fg [&_li]:my-1 [&_p]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-ink [&_pre]:p-4 [&_pre]:text-white [&_ul]:list-disc [&_ul]:pl-5';
 
 export default function Conversation({
   sessionId,
@@ -339,7 +339,7 @@ export default function Conversation({
               {t('ai-search-back', language)}
             </Link>
             {!liveModel && (
-              <span className="ml-auto rounded-full border border-hairline bg-white px-2.5 py-1 font-mono text-[10px] text-fg-muted">
+              <span className="ml-auto rounded-full border border-hairline bg-surface px-2.5 py-1 font-mono text-[10px] text-fg-muted">
                 {t('ai-search-offline-badge', language)}
               </span>
             )}
@@ -348,7 +348,7 @@ export default function Conversation({
           {/* 분기된 대화 — 어디서 갈라져 나왔는지 한 줄로 밝히고 원본으로 돌아갈 길을 준다.
               이 표시가 없으면 목록에 비슷한 대화가 둘 생긴 이유를 알 수 없다. */}
           {branchedFrom?.sessionId && (
-            <div className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[var(--radius-panel)] border border-hairline bg-white px-4 py-3 text-[12px] text-fg-muted">
+            <div className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[var(--radius-panel)] border border-hairline bg-surface px-4 py-3 text-[12px] text-fg-muted">
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-none stroke-current stroke-[1.6]" aria-hidden>
                 <circle cx="6" cy="6" r="2.5" />
                 <circle cx="6" cy="18" r="2.5" />
@@ -372,9 +372,9 @@ export default function Conversation({
 
           {/* 가져온 세션 카드 — 최초 대화 지점에만 한 번 표시한다 */}
           {importedFrom?.fileName && (
-            <div className="mb-6 rounded-[var(--radius-panel)] border border-hairline bg-white px-5 py-4">
+            <div className="mb-6 rounded-[var(--radius-panel)] border border-hairline bg-surface px-5 py-4">
               <p className="font-mono text-[10px] uppercase tracking-wider text-brand-600">Imported Session</p>
-              <p className="mt-1 truncate font-semibold text-ink">{importedFrom.fileName}</p>
+              <p className="mt-1 truncate font-semibold text-fg">{importedFrom.fileName}</p>
               <p className="mt-0.5 font-mono text-[11px] text-fg-quiet">
                 {importedFrom.messageCount ?? messages.length} messages
               </p>
@@ -392,7 +392,7 @@ export default function Conversation({
               message.role === 'user' ? (
                 <div key={message.id} className="flex justify-end">
                   <div className="max-w-[92%] sm:max-w-[85%]">
-                    <p className="whitespace-pre-wrap break-words rounded-[var(--radius-panel)] bg-brand-50 px-4 py-3 text-[15px] font-medium text-ink sm:px-5">{message.content}</p>
+                    <p className="whitespace-pre-wrap break-words rounded-[var(--radius-panel)] bg-brand-50 px-4 py-3 text-[15px] font-medium text-fg sm:px-5">{message.content}</p>
                     <AttachmentChips files={message.attachments} align="end" className="mt-2" />
                   </div>
                 </div>
@@ -422,7 +422,7 @@ export default function Conversation({
             {/* 전송 중 — 낙관적 말풍선 → 진행 단계 → 흘러나오는 답변 */}
             {pendingQuestion && (
               <div className="flex justify-end">
-                <p className="max-w-[92%] rounded-[var(--radius-panel)] bg-brand-50 px-4 py-3 sm:max-w-[85%] sm:px-5 text-[15px] font-medium text-ink">
+                <p className="max-w-[92%] rounded-[var(--radius-panel)] bg-brand-50 px-4 py-3 sm:max-w-[85%] sm:px-5 text-[15px] font-medium text-fg">
                   {pendingQuestion}
                 </p>
               </div>
@@ -456,7 +456,7 @@ export default function Conversation({
                   <details
                     open={reasoningOpen}
                     onToggle={(e) => setReasoningOpen((e.currentTarget as HTMLDetailsElement).open)}
-                    className="mt-4 rounded-[var(--radius-panel)] border border-hairline bg-white/70 px-4 py-3"
+                    className="mt-4 rounded-[var(--radius-panel)] border border-hairline bg-surface/70 px-4 py-3"
                   >
                     <summary className="cursor-pointer select-none text-[11px] font-semibold text-fg-muted">
                       {t('ai-reasoning-trace', language)} · {reasoning.length.toLocaleString()}자
@@ -501,7 +501,7 @@ export default function Conversation({
           )}
 
           {stopped && !streaming && (
-            <p role="status" className="mt-6 rounded-xl bg-ink/[0.04] px-4 py-3 text-sm text-fg-secondary">
+            <p role="status" className="mt-6 rounded-xl bg-paper px-4 py-3 text-sm text-fg-secondary">
               {t('ai-stopped', language)}
             </p>
           )}
@@ -547,13 +547,13 @@ function ProcessingStepper({ steps }: { steps: Record<string, StepState> }) {
                   ? 'bg-emerald-100 text-emerald-700'
                   : status === 'running'
                     ? 'animate-pulse bg-signal text-white motion-reduce:animate-none'
-                    : 'bg-ink/[0.07] text-fg-quiet'
+                    : 'bg-paper text-fg-quiet'
               }`}
             >
               {status === 'done' ? '✓' : i + 1}
             </span>
             <span className="min-w-0">
-              <span className={`block text-xs font-semibold ${status === 'idle' ? 'text-fg-quiet' : 'text-ink'}`}>
+              <span className={`block text-xs font-semibold ${status === 'idle' ? 'text-fg-quiet' : 'text-fg'}`}>
                 {step.label}
                 {state?.meta && <span className="ml-1.5 font-mono text-[10px] font-normal text-fg-quiet">{state.meta}</span>}
               </span>

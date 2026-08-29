@@ -36,7 +36,7 @@ export function AreaChart({
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[420px]" role="img" aria-label="트래픽 추이">
         {/* 가로 그리드 */}
         {[0.25, 0.5, 0.75].map((f) => (
-          <line key={f} x1={padX} x2={W - padX} y1={padY + f * (H - padY * 2)} y2={padY + f * (H - padY * 2)} stroke="currentColor" className="text-ink/5" strokeWidth={1} />
+          <line key={f} x1={padX} x2={W - padX} y1={padY + f * (H - padY * 2)} y2={padY + f * (H - padY * 2)} stroke="currentColor" className="text-fg/5" strokeWidth={1} />
         ))}
         {series.map((s, si) => (
           <g key={si}>
@@ -76,9 +76,9 @@ export function Gauge({ label, value, unit, tone = '#4531d9' }: { label: string;
   const dash = (pct / 100) * C;
 
   return (
-    <div className="flex flex-col items-center rounded-[var(--radius-panel)] border border-hairline bg-white p-4">
+    <div className="flex flex-col items-center rounded-[var(--radius-panel)] border border-hairline bg-surface p-4">
       <svg viewBox="0 0 100 56" className="w-full max-w-[130px]" role="img" aria-label={`${label} ${Math.round(pct)}${unit ?? '%'}`}>
-        <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="currentColor" className="text-ink/8" strokeWidth={9} strokeLinecap="round" />
+        <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="currentColor" className="text-fg/8" strokeWidth={9} strokeLinecap="round" />
         <path
           d="M 10 50 A 40 40 0 0 1 90 50"
           fill="none"
@@ -127,11 +127,11 @@ export function RadarChart({ axes, size = 220 }: { axes: { label: string; value:
           points={axes.map((_, i) => { const [px, py] = pt(i, R * f); return `${px.toFixed(1)},${py.toFixed(1)}`; }).join(' ')}
           fill="none"
           stroke="currentColor"
-          className="text-ink/8"
+          className="text-fg/8"
           strokeWidth={1}
         />
       ))}
-      {axes.map((_, i) => { const [px, py] = pt(i, R); return <line key={i} x1={cx} y1={cy} x2={px} y2={py} stroke="currentColor" className="text-ink/8" strokeWidth={1} />; })}
+      {axes.map((_, i) => { const [px, py] = pt(i, R); return <line key={i} x1={cx} y1={cy} x2={px} y2={py} stroke="currentColor" className="text-fg/8" strokeWidth={1} />; })}
       <polygon points={poly} fill="#4531d9" fillOpacity={0.15} stroke="#4531d9" strokeWidth={2} strokeLinejoin="round" />
       {axes.map((a, i) => {
         const [px, py] = pt(i, R + 16);
@@ -155,7 +155,7 @@ export function BarDistribution({ items, tone = '#4531d9' }: { items: { label: s
       {items.map((it) => (
         <div key={it.label} role="listitem" className="flex items-center gap-3" aria-label={`${it.label} ${it.value}건`}>
           <span className="w-24 shrink-0 truncate text-xs text-fg-secondary">{it.label}</span>
-          <div className="h-2.5 flex-1 rounded-full bg-ink/5" aria-hidden>
+          <div className="h-2.5 flex-1 rounded-full bg-paper" aria-hidden>
             <div className="h-full rounded-full" style={{ width: `${(it.value / max) * 100}%`, background: tone }} />
           </div>
           <span className="w-8 shrink-0 text-right font-mono text-[11px] text-fg-secondary">{it.value}</span>

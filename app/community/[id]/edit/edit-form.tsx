@@ -32,7 +32,7 @@ const CONTENT_MAX = 10_000;
 
 // 미리보기 본문 서식 — 글쓰기 폼과 같은 규칙을 쓴다
 const PREVIEW =
-  'min-h-[16rem] break-words px-4 py-4 text-[15px] leading-relaxed text-fg [&_p]:my-2 [&_p]:whitespace-pre-wrap [&_li]:whitespace-pre-wrap [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:font-display [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-ink [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:font-bold [&_h3]:text-ink [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:border-brand-300 [&_blockquote]:pl-3 [&_blockquote]:text-fg-secondary [&_code]:rounded [&_code]:bg-ink/[0.06] [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-ink/[0.04] [&_pre]:p-3 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_a]:text-signal [&_a]:underline sm:px-5';
+  'min-h-[16rem] break-words px-4 py-4 text-[15px] leading-relaxed text-fg [&_p]:my-2 [&_p]:whitespace-pre-wrap [&_li]:whitespace-pre-wrap [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:font-display [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-fg [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-fg [&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:font-bold [&_h3]:text-fg [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:border-brand-300 [&_blockquote]:pl-3 [&_blockquote]:text-fg-secondary [&_code]:rounded [&_code]:bg-paper [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-paper [&_pre]:p-3 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_a]:text-signal [&_a]:underline sm:px-5';
 
 interface Props {
   postId: string;
@@ -69,7 +69,7 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
       ))}
 
       {/* 제목·본문·첨부는 한 편의 글이므로 테두리는 하나만 두고 안에서 실선으로 나눈다 */}
-      <div className="overflow-hidden rounded-xl border border-hairline bg-white">
+      <div className="overflow-hidden rounded-xl border border-hairline bg-surface">
         <div className="px-4 pt-4 sm:px-5">
           <label htmlFor="title" className="sr-only">
             {t('post-title', language)}
@@ -82,7 +82,7 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
             maxLength={TITLE_MAX}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full border-0 bg-transparent p-0 pb-3 font-display text-xl font-bold tracking-tight text-ink focus:outline-none"
+            className="w-full border-0 bg-transparent p-0 pb-3 font-display text-xl font-bold tracking-tight text-fg focus:outline-none"
           />
           {state.errors?.title && <p className="pb-2 text-xs text-rose-600">{state.errors.title[0]}</p>}
         </div>
@@ -94,7 +94,7 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
               onClick={() => setPreview(false)}
               aria-pressed={!preview}
               className={`rounded-md px-2.5 py-1 transition-colors ${
-                !preview ? 'font-semibold text-signal' : 'text-fg-muted hover:text-ink'
+                !preview ? 'font-semibold text-signal' : 'text-fg-muted hover:text-fg'
               }`}
             >
               {t('write-tab-edit', language)}
@@ -104,7 +104,7 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
               onClick={() => setPreview(true)}
               aria-pressed={preview}
               className={`rounded-md px-2.5 py-1 transition-colors ${
-                preview ? 'font-semibold text-signal' : 'text-fg-muted hover:text-ink'
+                preview ? 'font-semibold text-signal' : 'text-fg-muted hover:text-fg'
               }`}
             >
               {t('write-tab-preview', language)}
@@ -171,7 +171,7 @@ export default function EditForm({ postId, initialTitle, initialContent, attachm
             {attachments.map((a) => {
               const isRemoved = removed.has(a.id);
               return (
-                <li key={a.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-ink/[0.03]">
+                <li key={a.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-paper">
                   <span className="shrink-0 rounded bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted ring-1 ring-inset ring-ink/10">
                     {KIND_LABEL[a.kind] ?? a.kind}
                   </span>

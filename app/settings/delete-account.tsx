@@ -103,11 +103,11 @@ export default function DeleteAccount({ email, guard }: { email: string; guard: 
           autoComplete="off"
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
-          className="mt-1.5 w-full max-w-xs rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/25"
+          className="mt-1.5 w-full max-w-xs rounded-lg border border-rose-300 bg-surface px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/25"
         />
 
         {needsSecondFactor && (
-          <div className="mt-4 rounded-lg border border-rose-300/70 bg-white/70 p-3">
+          <div className="mt-4 rounded-lg border border-rose-300/70 bg-surface/70 p-3">
             <p className="text-[13px] font-semibold text-rose-900">2차 인증 확인</p>
             <p className="mt-0.5 text-[12px] leading-relaxed text-rose-900/70">
               이 계정에는 2차 인증이 설정되어 있습니다. 삭제는 되돌릴 수 없으므로 본인 확인을 한 번 더 받습니다.
@@ -119,7 +119,7 @@ export default function DeleteAccount({ email, guard }: { email: string; guard: 
                   type="button"
                   onClick={confirmWithKey}
                   disabled={keyPending}
-                  className="rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-[13px] font-medium text-rose-800 disabled:opacity-50"
+                  className="rounded-lg border border-rose-300 bg-surface px-3 py-1.5 text-[13px] font-medium text-rose-800 disabled:opacity-50"
                 >
                   {keyPending ? '확인 중…' : assertion ? '보안키 확인됨 ✓' : '보안키로 확인'}
                 </button>
@@ -145,7 +145,7 @@ export default function DeleteAccount({ email, guard }: { email: string; guard: 
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   placeholder={guard.totp ? '123456' : 'ABCD-EFGH'}
-                  className="mt-1 w-full max-w-[14rem] rounded-lg border border-rose-300 bg-white px-3 py-2 font-mono text-sm tracking-wider focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/25"
+                  className="mt-1 w-full max-w-[14rem] rounded-lg border border-rose-300 bg-surface px-3 py-2 font-mono text-sm tracking-wider focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/25"
                 />
               </div>
             )}
@@ -173,7 +173,7 @@ export default function DeleteAccount({ email, guard }: { email: string; guard: 
               setAssertion('');
               setKeyError(null);
             }}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-fg-secondary transition-colors hover:text-ink"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-fg-secondary transition-colors hover:text-fg"
           >
             취소
           </button>

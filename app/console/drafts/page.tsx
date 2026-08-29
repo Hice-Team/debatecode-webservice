@@ -29,18 +29,18 @@ export default async function DraftsPage() {
     <div>
       <PageHeader eyebrow="DRAFTS" title="내 문제 초안" sub="제출한 초안은 검토자 승인 후 문제 은행에 게시됩니다." />
 
-      <div className="mb-4 rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+      <div className="mb-4 rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
         <DraftForm />
       </div>
 
-      <div className="divide-y divide-ink/5 rounded-[var(--radius-panel)] border border-hairline bg-white">
+      <div className="divide-y divide-hairline rounded-[var(--radius-panel)] border border-hairline bg-surface">
         {myDrafts.length === 0 && <EmptyRow text="아직 제출한 초안이 없습니다." />}
         {myDrafts.map((d) => {
           const st = DRAFT_STATUS[d.status] ?? DRAFT_STATUS.pending;
           return (
             <div key={d.id} className="flex items-center gap-3 px-5 py-3.5">
               <span className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] ${st.cls}`}>{st.label}</span>
-              <span className="truncate font-medium text-ink">{d.title}</span>
+              <span className="truncate font-medium text-fg">{d.title}</span>
               <span className="font-mono text-[11px] text-fg-muted">{d.category} · 난이도 {d.difficulty}</span>
               {(d.copyrightDelegation as { donated?: boolean } | null)?.donated && (
                 <span className="shrink-0 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-mono text-[10px] text-emerald-700">

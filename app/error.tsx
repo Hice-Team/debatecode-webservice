@@ -25,10 +25,10 @@ export default function GlobalError({
 
   return (
     <main className="grid min-h-[70vh] place-items-center bg-paper px-4 py-16">
-      <div className="w-full max-w-md rounded-[var(--radius-panel)] border border-hairline bg-white p-8 text-center shadow-sm">
+      <div className="w-full max-w-md rounded-[var(--radius-panel)] border border-hairline bg-surface p-8 text-center shadow-sm">
         <p className="font-mono text-xs font-bold uppercase tracking-wider text-rose-600">Error</p>
         <h1
-          className="mt-2 text-2xl font-bold tracking-tight text-ink"
+          className="mt-2 text-2xl font-bold tracking-tight text-fg"
           style={{ fontFamily: 'var(--font-space-grotesk)' }}
         >
           화면을 불러오지 못했습니다
@@ -47,7 +47,7 @@ export default function GlobalError({
           </button>
           <Link
             href="/dashboard"
-            className="rounded-xl border border-ink/15 px-4 py-2 text-sm font-medium text-fg-secondary transition hover:border-ink/40"
+            className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-fg-secondary transition hover:border-fg-quiet"
           >
             대시보드로
           </Link>

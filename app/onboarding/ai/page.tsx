@@ -19,7 +19,7 @@ export default async function AiOnboardingPage() {
         <div className="mb-8 text-center">
           <span className="text-xs font-bold uppercase tracking-wider text-brand-600">{'Welcome, ' + user.name}</span>
           <h1
-            className="mt-2 text-3xl font-bold tracking-tight text-ink-soft"
+            className="mt-2 text-3xl font-bold tracking-tight text-fg"
             style={{ fontFamily: 'var(--font-space-grotesk)' }}
           >
             면접관 DebateAI를 골라주세요
@@ -30,7 +30,7 @@ export default async function AiOnboardingPage() {
           </p>
         </div>
 
-        <div className="bg-white rounded-xl border border-hairline shadow-sm p-8">
+        <div className="bg-surface rounded-xl border border-hairline shadow-sm p-8">
           <AiSettingsForm
             initial={{ aiProvider: user.aiProvider, hasKey: !!user.aiApiKey, keyHint: null }}
             redirectTo="/dashboard"
@@ -41,7 +41,7 @@ export default async function AiOnboardingPage() {
         {/* 디베이트메이트 소개 */}
         <section aria-labelledby="ob-mate" className="mt-6 rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-8">
           <span className="text-xs font-bold uppercase tracking-wider text-brand-600">DEBATE MATE</span>
-          <h2 id="ob-mate" className="mt-2 text-xl font-bold tracking-tight text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <h2 id="ob-mate" className="mt-2 text-xl font-bold tracking-tight text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             디베이트메이트 — 함께 문제를 만드는 파트너
           </h2>
           <p className="mt-2 text-sm text-fg-secondary leading-relaxed">
@@ -57,9 +57,9 @@ export default async function AiOnboardingPage() {
         </section>
 
         {/* debateQ 모드 설명 */}
-        <section aria-labelledby="ob-debateq" className="mt-4 rounded-xl border border-hairline bg-white p-8">
+        <section aria-labelledby="ob-debateq" className="mt-4 rounded-xl border border-hairline bg-surface p-8">
           <span className="text-xs font-bold uppercase tracking-wider text-brand-600">debateQ</span>
-          <h2 id="ob-debateq" className="mt-2 text-xl font-bold tracking-tight text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <h2 id="ob-debateq" className="mt-2 text-xl font-bold tracking-tight text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             debateQ — 코드는 AI가, 판단은 당신이
           </h2>
           <p className="mt-2 text-sm text-fg-secondary leading-relaxed">

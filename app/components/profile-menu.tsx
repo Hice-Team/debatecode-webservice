@@ -23,7 +23,7 @@ interface ProfileMenuProps {
   role?: string;
 }
 
-const ITEM = 'block px-4 py-2 text-sm text-fg transition-colors hover:bg-ink/5';
+const ITEM = 'block px-4 py-2 text-sm text-fg transition-colors hover:bg-paper';
 
 export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMenuProps) {
   const { language } = useLanguage();
@@ -60,7 +60,7 @@ export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMen
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-signal bg-ink/5 transition-colors hover:border-brand-400"
+        className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-signal bg-paper transition-colors hover:border-brand-400"
         aria-label={language === 'ko' ? '프로필 메뉴' : 'Profile menu'}
         aria-expanded={isOpen}
       >
@@ -68,9 +68,9 @@ export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMen
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-56 animate-in rounded-xl border border-hairline bg-white py-2 shadow-xl shadow-ink/10 duration-200 fade-in zoom-in-95">
+        <div className="absolute right-0 z-50 mt-2 w-56 animate-in rounded-xl border border-hairline bg-surface py-2 shadow-xl shadow-ink/10 duration-200 fade-in zoom-in-95">
           <div className="border-b border-hairline px-4 py-3">
-            <p data-no-translate className="text-sm font-semibold text-ink-soft">
+            <p data-no-translate className="text-sm font-semibold text-fg">
               {name}
             </p>
             <p data-no-translate className="truncate text-xs text-fg-muted">

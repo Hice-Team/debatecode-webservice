@@ -34,8 +34,8 @@ export default function Pagination({
 
   const base =
     'inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2.5 text-sm transition select-none';
-  const clickable = `${base} border-ink/15 bg-white text-fg-secondary hover:border-brand-400 hover:text-signal`;
-  const disabled = `${base} border-ink/8 bg-paper text-fg-quiet cursor-not-allowed`;
+  const clickable = `${base} border-hairline bg-surface text-fg-secondary hover:border-brand-400 hover:text-signal`;
+  const disabled = `${base} border-hairline bg-paper text-fg-quiet cursor-not-allowed`;
 
   return (
     <nav className="mt-8 flex flex-col items-center gap-3" aria-label="페이지 이동">

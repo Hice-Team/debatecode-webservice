@@ -8,6 +8,7 @@
 //
 // 각 카테고리의 내용은 서버에서 만들어 prop으로 받는다 — 여기서는 무엇을 보여 줄지만 정한다.
 import { useMemo, useState, type ReactNode } from 'react';
+import SettingsSaveBar, { useSaveBar } from './save-bar';
 
 export interface SettingsCategory {
   id: string;
@@ -25,6 +26,23 @@ export default function SettingsShell({
   /** 카테고리 id → 그 화면의 내용 */
   panels: Record<string, ReactNode>;
 }) {
+  // 저장 바가 셸을 감싼다 — 카테고리를 옮길 때 "저장하지 않았다"를 붙잡아야 하는데,
+  // 그 판단은 저장 바만 알고 있다.
+  return (
+    <SettingsSaveBar>
+      <SettingsBody categories={categories} panels={panels} />
+    </SettingsSaveBar>
+  );
+}
+
+function SettingsBody({
+  categories,
+  panels,
+}: {
+  categories: SettingsCategory[];
+  panels: Record<string, ReactNode>;
+}) {
+  const { confirmLeave } = useSaveBar();
   const [active, setActive] = useState(categories[0]?.id ?? '');
   const [query, setQuery] = useState('');
 
@@ -72,7 +90,12 @@ export default function SettingsShell({
               <button
                 key={c.id}
                 type="button"
-                onClick={() => setActive(c.id)}
+                onClick={() => {
+                  // 저장하지 않은 변경이 있으면 먼저 묻는다 — 갈래를 옮기는 순간
+                  // 폼이 통째로 사라져서, 묻지 않으면 되돌릴 방법이 없다.
+                  if (!confirmLeave()) return;
+                  setActive(c.id);
+                }}
                 aria-current={on ? 'true' : undefined}
                 // Liner식 — 선택 상태를 회색이 아니라 브랜드 틴트로 표시한다.
                 // 회색 선택은 "비활성"으로도 읽혀서, 지금 어느 화면인지 한눈에 안 들어온다.
@@ -110,7 +133,8 @@ export default function SettingsShell({
                 </p>
               )}
             </div>
-            <div className="pt-2">{panels[current.id]}</div>
+            {/* 하단 저장 바가 마지막 행을 덮지 않도록 여백을 둔다 */}
+            <div className="pb-24 pt-2">{panels[current.id]}</div>
           </>
         )}
       </section>

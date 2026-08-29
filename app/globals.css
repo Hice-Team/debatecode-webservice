@@ -13,7 +13,10 @@
   --foreground: #14152b;
 }
 
-@theme inline {
+/* `inline`을 뗀 이유 — 다크 테마를 쓰려면 유틸리티가 값을 인라인하지 말고
+   변수를 가리켜야 한다. inline이면 .bg-paper가 `#f5f6fb`로 굳어, 아래에서
+   --color-paper를 다시 정의해도 아무 일도 일어나지 않는다. */
+@theme {
   /* debateCode 브랜드 토큰 — 워드마크 인디고 기반 */
   --color-ink: #08091a;        /* 네이비-블랙 에디터/크롬 배경 */
   --color-ink-soft: #12142c;   /* 패널/텍스트 다크 */
@@ -80,6 +83,133 @@
   --font-sans: "Pretendard Variable", "Pretendard", var(--font-plex-sans), var(--font-geist-sans), ui-sans-serif, sans-serif;
   --font-mono: var(--font-plex-mono), var(--font-geist-mono), ui-monospace, monospace;
   --font-display: var(--font-space-grotesk), "Pretendard", ui-sans-serif, sans-serif;
+}
+
+/* ═══ 다크 테마 ═══════════════════════════════════════════════
+   콘텐츠 표면(페이퍼)만 뒤집는다. **잉크는 뒤집지 않는다** —
+   에디터·네비 크롬은 원래 어두운 캔버스이고, 테마가 아니라 그 화면의 정체다.
+   그래서 --color-ink 계열과 -on-dark 짝은 두 테마에서 같은 값을 유지한다.
+
+   세 갈래를 모두 다룬다.
+     :root                       밝은 팔레트(기본값). 위 @theme이 정의한다.
+     prefers-color-scheme: dark  OS가 다크인데 사용자가 라이트를 고르지 않은 경우
+     [data-theme='dark']         사용자가 직접 고른 경우 — OS보다 우선
+
+   토큰만 바꾸고 컴포넌트는 건드리지 않는다. 화면 코드가 bg-white 같은 리터럴 대신
+   bg-surface·text-fg 같은 토큰을 쓰는 이유가 이것이다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --background: #0b0c1d;
+    --foreground: #f7f8fa;
+  }
+}
+:root[data-theme='dark'] {
+  --background: #0b0c1d;
+  --foreground: #f7f8fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-paper: #0b0c1d;
+    --color-surface: #14162e;
+    --color-fg: #f7f8fa;
+    --color-fg-secondary: #c8ccd8;
+    --color-fg-muted: #9aa0b0;
+    --color-fg-quiet: #7b8092;
+    --color-hairline: rgba(255, 255, 255, 0.10);
+
+    /* 브랜드 저채도 틴트 — 밝은 면에서 배경으로 쓰이던 자리다 */
+    --color-brand-50: #1c1e42;
+    --color-brand-100: #262a56;
+    --color-brand-200: #343a72;
+    --color-brand-700: #a1a2ff;
+    --color-brand-800: #c4c6ff;
+    --color-brand-900: #dfe1ff;
+  }
+}
+:root[data-theme='dark'] {
+  --color-paper: #0b0c1d;
+  --color-surface: #14162e;
+  --color-fg: #f7f8fa;
+  --color-fg-secondary: #c8ccd8;
+  --color-fg-muted: #9aa0b0;
+  --color-fg-quiet: #7b8092;
+  --color-hairline: rgba(255, 255, 255, 0.10);
+  --color-brand-50: #1c1e42;
+  --color-brand-100: #262a56;
+  --color-brand-200: #343a72;
+  --color-brand-700: #a1a2ff;
+  --color-brand-800: #c4c6ff;
+  --color-brand-900: #dfe1ff;
+}
+
+/* 의미색의 연한 배경(-50)과 진한 글자(-700/-900)는 밝은 면 전용으로 고른 값이다.
+   다크에서 그대로 두면 흰 배경에 흰 글자가 된다. 짝을 뒤집어 같은 의미를 유지한다.
+   Tailwind 기본 팔레트라 토큰이 없어, 여기서 유틸리티를 직접 덮는다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --tint-emerald: rgba(5, 150, 105, 0.18);
+    --tint-rose: rgba(225, 29, 72, 0.18);
+    --tint-amber: rgba(245, 158, 11, 0.16);
+    --tint-sky: rgba(2, 132, 199, 0.18);
+    --ink-on-tint-emerald: #6ee7b7;
+    --ink-on-tint-rose: #fda4af;
+    --ink-on-tint-amber: #fcd34d;
+    --ink-on-tint-sky: #7dd3fc;
+  }
+}
+:root[data-theme='dark'] {
+  --tint-emerald: rgba(5, 150, 105, 0.18);
+  --tint-rose: rgba(225, 29, 72, 0.18);
+  --tint-amber: rgba(245, 158, 11, 0.16);
+  --tint-sky: rgba(2, 132, 199, 0.18);
+  --ink-on-tint-emerald: #6ee7b7;
+  --ink-on-tint-rose: #fda4af;
+  --ink-on-tint-amber: #fcd34d;
+  --ink-on-tint-sky: #7dd3fc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .bg-emerald-50 { background-color: var(--tint-emerald); }
+  :root:not([data-theme='light']) .bg-rose-50 { background-color: var(--tint-rose); }
+  :root:not([data-theme='light']) .bg-amber-50 { background-color: var(--tint-amber); }
+  :root:not([data-theme='light']) .bg-sky-50 { background-color: var(--tint-sky); }
+  :root:not([data-theme='light']) .text-emerald-700,
+  :root:not([data-theme='light']) .text-emerald-800,
+  :root:not([data-theme='light']) .text-emerald-900 { color: var(--ink-on-tint-emerald); }
+  :root:not([data-theme='light']) .text-rose-700,
+  :root:not([data-theme='light']) .text-rose-800,
+  :root:not([data-theme='light']) .text-rose-900 { color: var(--ink-on-tint-rose); }
+  :root:not([data-theme='light']) .text-amber-700,
+  :root:not([data-theme='light']) .text-amber-800,
+  :root:not([data-theme='light']) .text-amber-900 { color: var(--ink-on-tint-amber); }
+  :root:not([data-theme='light']) .text-sky-700,
+  :root:not([data-theme='light']) .text-sky-800,
+  :root:not([data-theme='light']) .text-sky-900 { color: var(--ink-on-tint-sky); }
+}
+:root[data-theme='dark'] .bg-emerald-50 { background-color: var(--tint-emerald); }
+:root[data-theme='dark'] .bg-rose-50 { background-color: var(--tint-rose); }
+:root[data-theme='dark'] .bg-amber-50 { background-color: var(--tint-amber); }
+:root[data-theme='dark'] .bg-sky-50 { background-color: var(--tint-sky); }
+:root[data-theme='dark'] .text-emerald-700,
+:root[data-theme='dark'] .text-emerald-800,
+:root[data-theme='dark'] .text-emerald-900 { color: var(--ink-on-tint-emerald); }
+:root[data-theme='dark'] .text-rose-700,
+:root[data-theme='dark'] .text-rose-800,
+:root[data-theme='dark'] .text-rose-900 { color: var(--ink-on-tint-rose); }
+:root[data-theme='dark'] .text-amber-700,
+:root[data-theme='dark'] .text-amber-800,
+:root[data-theme='dark'] .text-amber-900 { color: var(--ink-on-tint-amber); }
+:root[data-theme='dark'] .text-sky-700,
+:root[data-theme='dark'] .text-sky-800,
+:root[data-theme='dark'] .text-sky-900 { color: var(--ink-on-tint-sky); }
+
+/* 테마 전환 순간의 깜빡임을 줄인다. 색만 바꾸고 위치는 건드리지 않는다. */
+@media (prefers-reduced-motion: no-preference) {
+  html.dc-theme-ready body {
+    transition: background-color var(--duration-layout) var(--ease-dc),
+      color var(--duration-layout) var(--ease-dc);
+  }
 }
 
 /* 가로 스크롤 차단.

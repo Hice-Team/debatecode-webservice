@@ -16,7 +16,7 @@ import {
 const initial: CodeState = {};
 
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
+  'w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 
 export default function RecoveryEmail({
   current,
@@ -33,9 +33,9 @@ export default function RecoveryEmail({
   // 등록돼 있고 편집 중이 아니면 현재 상태만 보여 준다
   if (current && !editing && !confirmState.verified) {
     return (
-      <div className="rounded-xl border border-hairline bg-white p-4">
+      <div className="rounded-xl border border-hairline bg-surface p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <h4 className="font-semibold text-ink">복구 이메일</h4>
+          <h4 className="font-semibold text-fg">복구 이메일</h4>
           {verifiedAt ? (
             <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-mono text-[10px] text-emerald-700">
               확인됨
@@ -59,12 +59,12 @@ export default function RecoveryEmail({
               setEmail(current);
               setEditing(true);
             }}
-            className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg hover:border-ink/40"
+            className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-fg-quiet"
           >
             {verifiedAt ? '주소 변경' : '지금 확인하기'}
           </button>
           <form action={removeRecoveryEmail}>
-            <button className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg-secondary hover:border-rose-300 hover:text-rose-700">
+            <button className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-fg-secondary hover:border-rose-300 hover:text-rose-700">
               해제
             </button>
           </form>
@@ -89,8 +89,8 @@ export default function RecoveryEmail({
   }
 
   return (
-    <div className="rounded-xl border border-hairline bg-white p-4">
-      <h4 className="font-semibold text-ink">복구 이메일 (선택)</h4>
+    <div className="rounded-xl border border-hairline bg-surface p-4">
+      <h4 className="font-semibold text-fg">복구 이메일 (선택)</h4>
       <p className="mt-1 text-xs leading-relaxed text-fg-secondary">
         가입 이메일에 접근할 수 없을 때 복구 안내를 받을 주소입니다. 가입 이메일과 <strong>다른</strong> 주소를
         등록하세요.
@@ -165,7 +165,7 @@ export default function RecoveryEmail({
         <button
           type="button"
           onClick={() => setEditing(false)}
-          className="mt-3 text-xs text-fg-muted underline underline-offset-2 hover:text-ink"
+          className="mt-3 text-xs text-fg-muted underline underline-offset-2 hover:text-fg"
         >
           취소
         </button>

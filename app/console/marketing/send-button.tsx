@@ -44,7 +44,7 @@ export default function SendButton({
           <button
             type="button"
             onClick={() => setConfirming(false)}
-            className="text-xs font-medium text-fg-muted transition-colors hover:text-ink"
+            className="text-xs font-medium text-fg-muted transition-colors hover:text-fg"
           >
             취소
           </button>

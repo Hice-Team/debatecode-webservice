@@ -33,7 +33,7 @@ export default function DomainNotice() {
       <span>본 도메인은 비즈니스용 도메인으로 서비스 둘러보기만 가능합니다.</span>
       <a
         href="https://debatecode.org"
-        className="shrink-0 rounded-full border border-current/30 bg-white/20 px-3 py-1 text-[11px] font-semibold transition-colors hover:bg-white/35"
+        className="shrink-0 rounded-full border border-current/30 bg-surface/20 px-3 py-1 text-[11px] font-semibold transition-colors hover:bg-surface/35"
       >
         서비스 이용하러 가기 →
       </a>

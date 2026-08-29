@@ -54,17 +54,17 @@ export default function DataSection({ aiSessionCount }: { aiSessionCount: number
   return (
     <section id="data" aria-labelledby="data-title" className="scroll-mt-24">
       <div className="mb-3">
-        <h2 id="data-title" className="mt-1 text-xl font-bold text-ink">
+        <h2 id="data-title" className="mt-1 text-xl font-bold text-fg">
           데이터 · 약관
         </h2>
         <p className="mt-1 text-sm text-fg-secondary">내 데이터를 정리하고, 적용받는 약관과 방침을 확인합니다.</p>
       </div>
 
       {/* AI Search 대화 정리 */}
-      <div className="rounded-xl border border-hairline bg-white p-5">
+      <div className="rounded-xl border border-hairline bg-surface p-5">
         <div className="flex flex-wrap items-start gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-ink">AI Search 대화</p>
+            <p className="text-sm font-semibold text-fg">AI Search 대화</p>
             <p className="mt-1 text-xs leading-relaxed text-fg-muted">
               최근 1개 세션만 보관됩니다. 보존하려면 대화 화면에서 먼저 내보내기로 JSON 파일을 내려받으세요.
             </p>
@@ -73,14 +73,14 @@ export default function DataSection({ aiSessionCount }: { aiSessionCount: number
             type="button"
             onClick={clearAiSessions}
             disabled={pending || aiSessionCount === 0}
-            className="shrink-0 rounded-lg border border-ink/15 px-3.5 py-2 text-xs font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-40 disabled:hover:bg-transparent"
+            className="shrink-0 rounded-lg border border-hairline px-3.5 py-2 text-xs font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-40 disabled:hover:bg-transparent"
           >
             {pending ? '삭제 중…' : '대화 전체 삭제'}
           </button>
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="shrink-0 rounded-lg border border-ink/15 px-3.5 py-2 text-xs font-semibold text-fg-secondary transition hover:border-ink/40 hover:bg-paper/50"
+            className="shrink-0 rounded-lg border border-hairline px-3.5 py-2 text-xs font-semibold text-fg-secondary transition hover:border-fg-quiet hover:bg-paper/50"
           >
             서비스 이용 데이터 제거
           </button>
@@ -92,7 +92,7 @@ export default function DataSection({ aiSessionCount }: { aiSessionCount: number
 
       {showModal && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-4">
-          <form onSubmit={submitDelete} className="w-full max-w-lg rounded-xl bg-white p-6" method="post">
+          <form onSubmit={submitDelete} className="w-full max-w-lg rounded-xl bg-surface p-6" method="post">
             <h3 className="text-lg font-semibold">서비스 이용 데이터 제거</h3>
             <p className="mt-2 text-sm text-fg-secondary">제거할 데이터 종류를 선택하세요. 삭제한 데이터는 복구할 수 없습니다.</p>
             <div className="mt-4 grid gap-3">
@@ -141,12 +141,12 @@ export default function DataSection({ aiSessionCount }: { aiSessionCount: number
       )}
 
       {/* 약관·방침 */}
-      <ul className="mt-3 divide-y divide-ink/5 overflow-hidden rounded-xl border border-hairline bg-white">
+      <ul className="mt-3 divide-y divide-hairline overflow-hidden rounded-xl border border-hairline bg-surface">
         {DOCS.map((doc) => (
           <li key={doc.href}>
             <Link href={doc.href} className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-brand-50/40">
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium text-ink">{doc.label}</span>
+                <span className="block text-sm font-medium text-fg">{doc.label}</span>
                 <span className="mt-0.5 block text-xs text-fg-muted">{doc.desc}</span>
               </span>
               <span aria-hidden className="shrink-0 text-fg-quiet">

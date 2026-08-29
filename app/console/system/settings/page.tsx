@@ -75,7 +75,7 @@ export default async function RuntimeSettingsPage({
         )}
       </div>
 
-      <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+      <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
         {rows.map((row) => (
           <SettingRow key={row.def.key} def={row.def} value={row.value} overridden={row.overridden} />
         ))}

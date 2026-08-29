@@ -8,6 +8,7 @@ import BannerSlot from '@/app/components/banner-slot';
 import DomainNotice from '@/app/components/domain-notice';
 import AutoTranslate from "./components/auto-translate";
 import ChannelTalk from "./components/channel-talk";
+import { THEME_BOOT_SCRIPT } from './lib/theme';
 
 // Fonts are loaded via Google Fonts stylesheet to avoid Turbopack internal imports
 
@@ -72,7 +73,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`h-full antialiased`}>
+    // suppressHydrationWarning — 테마 부트 스크립트가 하이드레이션 전에
+    // <html>의 data-theme·class를 바꾼다. 그 차이는 의도된 것이라 경고를 끈다.
+    // 이 한 겹에만 적용되고 아래 트리는 평소대로 검사된다.
+    <html lang="ko" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         {/* Monaco 에디터 · Pyodide 런타임 · Pretendard 웹폰트 CDN 선연결 (React 19가 head로 호이스팅) */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
@@ -85,6 +89,9 @@ export default async function RootLayout({
           rel="stylesheet"
         />
         {/* Pretendard — 워드마크와 어울리는 국문 본문 서체 */}
+        {/* 테마는 React가 붙기 전에 찍어야 한다 — 나중에 적용하면 다크를 고른 사람에게
+            흰 화면이 한 번 번쩍인다. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"

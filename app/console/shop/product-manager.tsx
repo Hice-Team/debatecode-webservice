@@ -45,11 +45,11 @@ export default function ProductManager({ products }: { products: ManagedProduct[
       {open && <ProductForm editing={editing} onDone={close} />}
 
       {products.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-ink/15 px-4 py-14 text-center text-sm text-fg-muted">
+        <p className="rounded-xl border border-dashed border-hairline px-4 py-14 text-center text-sm text-fg-muted">
           등록된 상품이 없습니다. 새 상품을 추가해 보세요.
         </p>
       ) : (
-        <ul className="overflow-hidden rounded-xl border border-hairline bg-white">
+        <ul className="overflow-hidden rounded-xl border border-hairline bg-surface">
           {products.map((product) => (
             <li key={product.id} className="flex flex-wrap items-center gap-3 border-b border-hairline px-4 py-3 last:border-b-0">
               <div className="h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-paper">
@@ -64,7 +64,7 @@ export default function ProductManager({ products }: { products: ManagedProduct[
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-ink">
+                <p className="truncate text-sm font-semibold text-fg">
                   {product.brand} {product.name}
                 </p>
                 <p className="font-mono text-[11px] text-fg-muted">
@@ -77,7 +77,7 @@ export default function ProductManager({ products }: { products: ManagedProduct[
 
               <span
                 className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
-                  product.active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-ink/15 bg-paper text-fg-muted'
+                  product.active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-hairline bg-paper text-fg-muted'
                 }`}
               >
                 {product.active ? '노출' : '중지'}
@@ -90,13 +90,13 @@ export default function ProductManager({ products }: { products: ManagedProduct[
                     setEditing(product);
                     setOpen(true);
                   }}
-                  className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:border-ink/40"
+                  className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:border-fg-quiet"
                 >
                   수정
                 </button>
                 <form action={toggleShopProduct}>
                   <input type="hidden" name="id" value={product.id} />
-                  <button className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:border-ink/40">
+                  <button className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:border-fg-quiet">
                     {product.active ? '중지' : '재개'}
                   </button>
                 </form>
@@ -111,7 +111,7 @@ export default function ProductManager({ products }: { products: ManagedProduct[
                   }}
                 >
                   <input type="hidden" name="id" value={product.id} />
-                  <button className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-600">
+                  <button className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-600">
                     삭제
                   </button>
                 </form>

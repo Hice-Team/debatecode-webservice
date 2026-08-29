@@ -30,7 +30,7 @@ export default async function CoursePage({ params }: PageProps<'/study/[courseSl
           ← 학습
         </Link>
         <div className="mt-4 mb-8">
-          <span className="font-mono text-xs px-2 py-1 rounded border border-ink/15 bg-white text-fg-secondary uppercase">
+          <span className="font-mono text-xs px-2 py-1 rounded border border-hairline bg-surface text-fg-secondary uppercase">
             {course.language}
           </span>
           <h1 className="mt-3 text-3xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
@@ -46,7 +46,7 @@ export default async function CoursePage({ params }: PageProps<'/study/[courseSl
                   <span>{done}/{course.lessons.length}강 완료</span>
                   <span>{pct}%</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-ink/5">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-paper">
                   <div className="h-full rounded-full bg-signal transition-colors" style={{ width: `${pct}%` }} />
                 </div>
               </div>
@@ -55,7 +55,7 @@ export default async function CoursePage({ params }: PageProps<'/study/[courseSl
         </div>
 
         {/* 레슨 경로 — 세로 연결선으로 이어지는 학습 순서. 첫 미완료 레슨이 현재 위치다. */}
-        <div className="relative bg-white rounded-[var(--radius-panel)] border border-hairline px-6 py-5">
+        <div className="relative bg-surface rounded-[var(--radius-panel)] border border-hairline px-6 py-5">
           <div aria-hidden className="absolute left-[43px] top-8 bottom-8 w-px bg-ink/10" />
           {(() => {
             const currentIdx = course.lessons.findIndex((l) => (l.progress?.length ?? 0) === 0);
@@ -74,7 +74,7 @@ export default async function CoursePage({ params }: PageProps<'/study/[courseSl
                         ? 'bg-emerald-500 text-white'
                         : current
                           ? 'bg-brand-600 text-white ring-4 ring-brand-100'
-                          : 'border border-ink/15 bg-white text-fg-muted'
+                          : 'border border-hairline bg-surface text-fg-muted'
                     }`}
                   >
                     {completed ? '✓' : i + 1}

@@ -166,7 +166,7 @@ export default async function ConsoleOverviewPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-brand-600">ADMIN CONSOLE</span>
-          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             관리 콘솔
           </h1>
           <p className="mt-1 text-sm text-fg-secondary">
@@ -210,12 +210,12 @@ export default async function ConsoleOverviewPage() {
       {queue.length > 0 && (
         <section
           className={`mt-5 overflow-hidden rounded-[var(--radius-panel)] border ${
-            queueTotal > 0 ? 'border-rose-300 bg-rose-50/60' : 'border-hairline bg-white'
+            queueTotal > 0 ? 'border-rose-300 bg-rose-50/60' : 'border-hairline bg-surface'
           }`}
           aria-label="처리 대기 작업"
         >
           <div className="flex flex-wrap items-center gap-3 px-5 py-3">
-            <p className={`text-sm font-bold ${queueTotal > 0 ? 'text-rose-700' : 'text-ink'}`}>
+            <p className={`text-sm font-bold ${queueTotal > 0 ? 'text-rose-700' : 'text-fg'}`}>
               {queueTotal > 0 ? `처리 대기 ${queueTotal}건` : '처리 대기 없음'}
             </p>
             <p className="text-xs text-fg-muted">
@@ -227,7 +227,7 @@ export default async function ConsoleOverviewPage() {
               <Link
                 key={q.href}
                 href={q.href}
-                className="bg-white/70 px-4 py-3 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal"
+                className="bg-surface/70 px-4 py-3 transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal"
               >
                 <p className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">{q.label}</p>
                 <p className={`mt-0.5 font-display text-2xl font-bold ${q.count > 0 ? 'text-rose-600' : 'text-fg-quiet'}`}>
@@ -242,12 +242,12 @@ export default async function ConsoleOverviewPage() {
       {/* ③ KPI */}
       <div className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
         {kpis.map((c) => (
-          <div key={c.label} className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+          <div key={c.label} className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
             <div className="flex items-center justify-between gap-2">
               <p className="font-mono text-[11px] tracking-wider text-fg-muted">{c.label}</p>
               <DeltaBadge delta={c.delta} />
             </div>
-            <p className="mt-1.5 text-3xl font-bold text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            <p className="mt-1.5 text-3xl font-bold text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
               {c.value}
             </p>
             <p className="mt-1 text-xs text-fg-secondary">{c.sub}</p>
@@ -257,17 +257,17 @@ export default async function ConsoleOverviewPage() {
 
       {/* ④ 추세 + 운영 활동 */}
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+        <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-lg font-bold text-ink">사용자 트래픽 · 최근 {DAYS}일</h3>
+            <h3 className="text-lg font-bold text-fg">사용자 트래픽 · 최근 {DAYS}일</h3>
             <span className="font-mono text-[10px] text-brand-600">일별 활동</span>
           </div>
           <AreaChart series={traffic} labels={labels} />
         </div>
 
-        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white" aria-labelledby="feed-title">
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface" aria-labelledby="feed-title">
           <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
-            <h3 id="feed-title" className="text-sm font-bold text-ink">최근 운영 활동</h3>
+            <h3 id="feed-title" className="text-sm font-bold text-fg">최근 운영 활동</h3>
             {recentAudit.length > 0 && (
               <Link href="/console/access/audit" className="font-mono text-[11px] text-brand-600 hover:underline">
                 전체 →
@@ -279,14 +279,14 @@ export default async function ConsoleOverviewPage() {
               {has('audit.read') ? '아직 기록된 운영 활동이 없습니다.' : '감사 로그 열람 권한이 없습니다.'}
             </p>
           ) : (
-            <ul className="divide-y divide-ink/5">
+            <ul className="divide-y divide-hairline">
               {recentAudit.map((entry) => (
                 <li key={entry.id}>
                   <Link
                     href="/console/access/audit"
                     className="flex items-center gap-2.5 px-5 py-2.5 transition-colors hover:bg-brand-50/40"
                   >
-                    <span className="shrink-0 rounded bg-ink/[0.06] px-1.5 py-0.5 font-mono text-[9px] font-bold text-fg-muted">
+                    <span className="shrink-0 rounded bg-paper px-1.5 py-0.5 font-mono text-[9px] font-bold text-fg-muted">
                       {auditActionLabel(entry.action)}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-xs text-fg">{entry.summary}</span>

@@ -110,8 +110,8 @@ const COPY: Record<Lang, {
     f2Title: '몰입형 온라인 코드 에디터',
     f2Desc: (
       <>
-        좌측 패널의 <strong className="text-ink-soft">내비게이션 바</strong>로 문제사항·문제분석·시도횟수·DebateAI
-        대화창을 자유롭게 전환하고, 우측 패널의 넓은 <strong className="text-ink-soft">VS Code 스타일 워크스페이스</strong>에서
+        좌측 패널의 <strong className="text-fg">내비게이션 바</strong>로 문제사항·문제분석·시도횟수·DebateAI
+        대화창을 자유롭게 전환하고, 우측 패널의 넓은 <strong className="text-fg">VS Code 스타일 워크스페이스</strong>에서
         문제 분석부터 코딩, 채점, AI 토론까지 하나의 화면 안에서 완벽하게 몰입할 수 있습니다. 아래 탭을 직접 눌러보세요.
       </>
     ),
@@ -158,7 +158,7 @@ const COPY: Record<Lang, {
       },
       {
         q: '어떤 AI 모델을 쓸 수 있나요?',
-        a: '키를 등록하지 않아도 기본 제공 토큰 제한 모델을 바로 씁니다 — EXAONE, DeepSeek, Qwen, Kimi, Kanana, Solar. 추론·빠른 답변·코드 생성·에이전트 용도에 맞춰 고르면 되고, 절반은 한국어에 강한 국내 모델입니다. 보유한 API 키가 있다면 Pro Tier로 ChatGPT, Gemini, Claude, Grok, Perplexity를 붙일 수 있습니다. 이때 요금은 그 키의 계정으로 청구됩니다.',
+        a: '키를 등록하지 않아도 기본 제공 토큰 제한 모델을 바로 씁니다 — DeepSeek V4, DeepSeek R1, Qwen 3.6, Qwen3-Coder. 추론·빠른 답변·코드·에이전트 용도에 맞춰 고르면 됩니다. 보유한 API 키가 있다면 Pro Tier로 ChatGPT, Gemini, Claude, Grok, Perplexity를 붙일 수 있습니다. 이때 요금은 그 키의 계정으로 청구됩니다. 제공 모델은 업스트림 사정에 따라 바뀔 수 있고, 바뀌면 이 목록도 함께 고칩니다.',
         proNote: true,
       },
       {
@@ -220,8 +220,8 @@ const COPY: Record<Lang, {
     f2Desc: (
       <>
         Switch freely between problem statement, analysis, attempts, and the DebateAI chat via the{' '}
-        <strong className="text-ink-soft">left navigation bar</strong>, and stay fully immersed in a wide{' '}
-        <strong className="text-ink-soft">VS Code–style workspace</strong> — analysis, coding, judging, and AI debate
+        <strong className="text-fg">left navigation bar</strong>, and stay fully immersed in a wide{' '}
+        <strong className="text-fg">VS Code–style workspace</strong> — analysis, coding, judging, and AI debate
         all on one screen. Try clicking the tabs below.
       </>
     ),
@@ -268,7 +268,7 @@ const COPY: Record<Lang, {
       },
       {
         q: 'Which AI models can I use?',
-        a: 'Token-limited models are included with no key to register — EXAONE, DeepSeek, Qwen, Kimi, Kanana, and Solar. Choose by job: reasoning, fast answers, code generation, or agent work; half of them are Korean-first models. If you already have an API key, Pro Tier connects ChatGPT, Gemini, Claude, Grok, and Perplexity, with billing going to that key’s account.',
+        a: 'Token-limited models are included with no key to register — DeepSeek V4, DeepSeek R1, Qwen 3.6, and Qwen3-Coder. Choose by job: reasoning, fast answers, code, or agent work. If you already have an API key, Pro Tier connects ChatGPT, Gemini, Claude, Grok, and Perplexity, with billing going to that key’s account. The lineup can change with upstream availability, and this list changes with it.',
         proNote: true,
       },
       {
@@ -369,11 +369,11 @@ export default function LandingContent() {
       {/* ============================================================= */}
       {/* 토픽 타일 — 핵심 기능 4종 */}
       {/* ============================================================= */}
-      <section className="py-24 sm:py-32 bg-white">
+      <section className="py-24 sm:py-32 bg-surface">
         <div className="max-w-6xl mx-auto px-6 sm:px-8">
           <div className="max-w-2xl mx-auto text-center mb-12">
             <Eyebrow className="justify-center">{c.whyEyebrow}</Eyebrow>
-            <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
+            <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-fg">
               {c.whyTitle}
             </h2>
             <p className="mt-4 text-fg-secondary leading-relaxed">{c.whyDesc}</p>
@@ -383,7 +383,7 @@ export default function LandingContent() {
             {c.features.map((card) => (
               <div
                 key={card.title}
-                className="group rounded-[var(--radius-panel)] border border-hairline bg-white p-6 transition-[color,background-color,border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-12px_rgba(20,21,43,0.18)] hover:border-brand-200"
+                className="group rounded-[var(--radius-panel)] border border-hairline bg-surface p-6 transition-[color,background-color,border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-12px_rgba(20,21,43,0.18)] hover:border-brand-200"
               >
                 <div
                   aria-hidden
@@ -391,7 +391,7 @@ export default function LandingContent() {
                 >
                   {card.icon}
                 </div>
-                <h3 className="text-base font-bold text-ink-soft mb-2">{card.title}</h3>
+                <h3 className="text-base font-bold text-fg mb-2">{card.title}</h3>
                 <p className="text-sm text-fg-secondary leading-relaxed">{card.desc}</p>
               </div>
             ))}
@@ -406,7 +406,7 @@ export default function LandingContent() {
         <div className="max-w-6xl mx-auto px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="space-y-4">
             <Eyebrow index={1}>{c.f1Eyebrow}</Eyebrow>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-fg">
               {c.f1Title}
             </h2>
             <p className="text-fg-secondary leading-relaxed">{c.f1Desc}</p>
@@ -419,7 +419,7 @@ export default function LandingContent() {
             </div>
 
             {/* AI 제공자 선택 */}
-            <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+            <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
               <p className="text-xs font-semibold text-fg-muted mb-3">{c.f1ProvLabel}</p>
               <div className="grid sm:grid-cols-3 gap-2.5">
                 {c.f1Providers.map((p) => (
@@ -427,7 +427,7 @@ export default function LandingContent() {
                     <span className="inline-block font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 mb-2">
                       {p.tag}
                     </span>
-                    <p className="text-sm font-bold text-ink-soft">{p.title}</p>
+                    <p className="text-sm font-bold text-fg">{p.title}</p>
                     <p className="mt-1 text-xs text-fg-muted leading-relaxed">{p.desc}</p>
                   </div>
                 ))}
@@ -484,13 +484,13 @@ export default function LandingContent() {
       {/* ============================================================= */}
       {/* Feature 03 — 인터랙티브 에디터 (센터 정렬 데모) */}
       {/* ============================================================= */}
-      <section className="py-20 sm:py-24 bg-white">
+      <section className="py-20 sm:py-24 bg-surface">
         <div className="max-w-6xl mx-auto px-6 sm:px-8">
           <div className="max-w-2xl mx-auto text-center mb-12">
             <Eyebrow index={3} className="justify-center">
               {c.f2Eyebrow}
             </Eyebrow>
-            <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
+            <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-fg">
               {c.f2Title}
             </h2>
             <p className="mt-4 text-fg-secondary leading-relaxed">{c.f2Desc}</p>
@@ -508,12 +508,12 @@ export default function LandingContent() {
         <div className="max-w-6xl mx-auto px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="space-y-4">
             <Eyebrow index={4}>{c.f3Eyebrow}</Eyebrow>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-fg">
               {c.f3Title}
             </h2>
             <p className="text-fg-secondary leading-relaxed">{c.f3Desc}</p>
           </div>
-          <div className="bg-white border border-hairline rounded-[var(--radius-panel)] p-6 font-mono text-xs space-y-1 shadow-[0_12px_32px_-16px_rgba(20,21,43,0.15)]">
+          <div className="bg-surface border border-hairline rounded-[var(--radius-panel)] p-6 font-mono text-xs space-y-1 shadow-[0_12px_32px_-16px_rgba(20,21,43,0.15)]">
             <div className="flex justify-between font-bold border-b border-hairline pb-2 text-fg-quiet text-[11px]">
               {c.caseHeader.map((h) => (
                 <span key={h}>{h}</span>
@@ -535,11 +535,11 @@ export default function LandingContent() {
       {/* ============================================================= */}
       {/* Feature 05 — 문제집: 난이도별 + 기업 변형문제 + 언어 로드맵 */}
       {/* ============================================================= */}
-      <section className="py-20 sm:py-24 bg-white">
+      <section className="py-20 sm:py-24 bg-surface">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="lg:order-2 space-y-4">
             <Eyebrow index={5}>{c.f4Eyebrow}</Eyebrow>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-fg">
               {c.f4Title}
             </h2>
             <p className="text-fg-secondary leading-relaxed">{c.f4Desc}</p>
@@ -567,7 +567,7 @@ export default function LandingContent() {
                 {LANGS_SOON.map((l) => (
                   <span
                     key={l}
-                    className="font-mono px-3 py-1.5 rounded-full bg-white border border-hairline text-fg-muted text-sm"
+                    className="font-mono px-3 py-1.5 rounded-full bg-surface border border-hairline text-fg-muted text-sm"
                   >
                     {l}
                   </span>
@@ -588,7 +588,7 @@ export default function LandingContent() {
                 {companies.map((name) => (
                   <span
                     key={name}
-                    className="px-3 py-1.5 rounded-full bg-white border border-hairline text-fg-secondary text-sm font-medium"
+                    className="px-3 py-1.5 rounded-full bg-surface border border-hairline text-fg-secondary text-sm font-medium"
                   >
                     {name}
                   </span>
@@ -611,7 +611,7 @@ export default function LandingContent() {
         <div className="max-w-6xl mx-auto px-6 sm:px-8">
           <div className="max-w-2xl mx-auto text-center">
             <Eyebrow index={6} className="justify-center">{c.osEyebrow}</Eyebrow>
-            <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft">
+            <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold tracking-tight text-fg">
               {c.osTitle}
             </h2>
             <p className="mt-4 text-fg-secondary leading-relaxed">{c.osDesc}</p>
@@ -619,11 +619,11 @@ export default function LandingContent() {
 
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
             {c.osPoints.map((p, i) => (
-              <div key={i} className="rounded-[var(--radius-panel)] border border-hairline bg-white p-6">
+              <div key={i} className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-6">
                 <div className="w-8 h-8 rounded-full bg-brand-50 text-brand-600 text-sm font-bold flex items-center justify-center mb-4">
                   {i + 1}
                 </div>
-                <h3 className="text-base font-bold text-ink-soft mb-1.5">{p.title}</h3>
+                <h3 className="text-base font-bold text-fg mb-1.5">{p.title}</h3>
                 <p className="text-sm text-fg-secondary leading-relaxed">{p.desc}</p>
               </div>
             ))}
@@ -639,7 +639,7 @@ export default function LandingContent() {
       {/* ============================================================= */}
       {/* 통계 밴드 — 브릴리언트식 신뢰 지표 */}
       {/* ============================================================= */}
-      <section className="py-16 sm:py-20 bg-white border-y border-hairline">
+      <section className="py-16 sm:py-20 bg-surface border-y border-hairline">
         <div className="max-w-5xl mx-auto px-6 sm:px-8 grid grid-cols-1 sm:grid-cols-3 gap-10 text-center">
           {c.stats.map((s) => (
             <div key={s.label}>
@@ -653,15 +653,15 @@ export default function LandingContent() {
       {/* ============================================================= */}
       {/* FAQ — 네이티브 아코디언 */}
       {/* ============================================================= */}
-      <section className="py-20 sm:py-24 bg-white">
+      <section className="py-20 sm:py-24 bg-surface">
         <div className="max-w-3xl mx-auto px-6 sm:px-8">
-          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-ink-soft text-center mb-10">
+          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-fg text-center mb-10">
             {c.faqTitle}
           </h2>
           <div className="divide-y divide-hairline border-y border-hairline">
             {faqs.map((f) => (
               <details key={f.q} className="group py-1">
-                <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none text-base font-semibold text-ink-soft hover:text-brand-600 transition-colors [&::-webkit-details-marker]:hidden">
+                <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none text-base font-semibold text-fg hover:text-brand-600 transition-colors [&::-webkit-details-marker]:hidden">
                   {f.q}
                   <svg
                     viewBox="0 0 20 20"

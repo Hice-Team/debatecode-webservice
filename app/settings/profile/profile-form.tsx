@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import { updateProfile, updateRankBadgeVisible, type ProfileFormState } from '@/app/lib/actions/profile';
 import Avatar from '@/app/components/avatar';
+import { useSettingsForm } from '../save-bar';
 
 const initialState: ProfileFormState = {};
 
@@ -17,8 +18,11 @@ export default function ProfileForm({ initial }: { initial: { name: string; avat
     if (file) setPreview(URL.createObjectURL(file));
   }
 
+  // 저장은 하단 바가 맡는다(app/settings/save-bar.tsx)
+  const settingsForm = useSettingsForm();
+
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} {...settingsForm} className="space-y-6">
       <div className="flex items-center gap-4">
         <Avatar src={preview || null} alt="아바타 미리보기" className="h-16 w-16 rounded-full border border-hairline" />
         <div>
@@ -35,7 +39,7 @@ export default function ProfileForm({ initial }: { initial: { name: string; avat
           type="text"
           defaultValue={initial.name}
           required
-          className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
+          className="w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
         />
         {state.errors?.name && <p className="mt-1.5 text-xs text-rose-600">{state.errors.name[0]}</p>}
       </div>
@@ -76,7 +80,7 @@ export default function ProfileForm({ initial }: { initial: { name: string; avat
               className="mt-0.5 h-4 w-4 accent-[var(--color-signal)]"
             />
             <span>
-              <span className="font-medium text-ink">{option.label}</span>
+              <span className="font-medium text-fg">{option.label}</span>
               <span className="mt-0.5 block text-xs text-fg-muted">{option.desc}</span>
             </span>
           </label>

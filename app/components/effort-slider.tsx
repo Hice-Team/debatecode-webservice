@@ -46,7 +46,7 @@ export default function EffortSlider({
           <path d="M6 4v16M18 4v16" strokeLinecap="round" />
           <path d="M9 9h6M9 15h6" strokeLinecap="round" />
         </svg>
-        <span className={`text-[12px] font-medium ${dark ? 'text-fg-on-dark' : 'text-ink'}`}>Effort</span>
+        <span className={`text-[12px] font-medium ${dark ? 'text-fg-on-dark' : 'text-fg'}`}>Effort</span>
         <span className={`text-[11px] ${dark ? 'text-fg-on-dark-quiet' : 'text-fg-muted'}`}>
           ({EFFORT_LABELS_EN[value]})
         </span>
@@ -56,7 +56,7 @@ export default function EffortSlider({
           <span
             aria-hidden
             className={`absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full ${
-              dark ? 'bg-white/10' : 'bg-ink/10'
+              dark ? 'bg-surface/10' : 'bg-ink/10'
             }`}
           />
           {/* 지나온 구간 */}
@@ -71,7 +71,7 @@ export default function EffortSlider({
               key={step}
               aria-hidden
               className={`absolute top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full ${
-                i <= index ? 'bg-transparent' : dark ? 'bg-white/25' : 'bg-ink/20'
+                i <= index ? 'bg-transparent' : dark ? 'bg-surface/25' : 'bg-ink/20'
               }`}
               style={{ left: `${(i / last) * 100}%` }}
             />
@@ -80,7 +80,7 @@ export default function EffortSlider({
           <span
             aria-hidden
             className={`absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border shadow-sm transition-[left] duration-100 ${
-              dark ? 'border-white/20 bg-white' : 'border-hairline bg-white'
+              dark ? 'border-white/20 bg-surface' : 'border-hairline bg-surface'
             }`}
             style={{ left: `${percent}%` }}
           />

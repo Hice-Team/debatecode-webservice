@@ -59,7 +59,7 @@ export default function AccessibilitySection() {
           <select
             value={rate}
             onChange={(e) => setSpeechRate(Number(e.target.value) as SpeechRate)}
-            className="rounded-[var(--radius-card)] border border-hairline bg-white px-3 py-1.5 text-sm text-fg focus:border-signal focus:outline-none"
+            className="rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-1.5 text-sm text-fg focus:border-signal focus:outline-none"
           >
             {SPEECH_RATES.map((value) => (
               <option key={value} value={value}>

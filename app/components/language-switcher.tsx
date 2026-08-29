@@ -9,7 +9,7 @@ export default function LanguageSwitcher() {
   return (
     <button
       onClick={() => setLanguage(language === 'ko' ? 'en' : 'ko')}
-      className="flex h-10 w-10 items-center justify-center rounded-lg text-fg-secondary hover:bg-ink/5 transition-colors text-sm font-medium"
+      className="flex h-10 w-10 items-center justify-center rounded-lg text-fg-secondary hover:bg-paper transition-colors text-sm font-medium"
       title={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
     >
       {language === 'ko' ? 'EN' : 'KO'}

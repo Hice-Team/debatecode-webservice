@@ -275,7 +275,7 @@ export default function InteractiveHero() {
   const showUser = reduced || phase === 'answer' || phase === 'refactor' || phase === 'score' || phase === 'hold';
 
   return (
-    <section className="relative overflow-hidden bg-white pt-20 pb-14 sm:pt-28 sm:pb-20">
+    <section className="relative overflow-hidden bg-surface pt-20 pb-14 sm:pt-28 sm:pb-20">
       {/* 은은한 브랜드 배경 워시 */}
       <div
         aria-hidden
@@ -292,7 +292,7 @@ export default function InteractiveHero() {
           {copy.badge}
         </span>
 
-        <h1 className="mt-6 font-display text-4xl sm:text-6xl font-bold tracking-tight leading-[1.12] text-ink-soft">
+        <h1 className="mt-6 font-display text-4xl sm:text-6xl font-bold tracking-tight leading-[1.12] text-fg">
           {copy.titleA}
           <br />
           {copy.titleB}
@@ -313,7 +313,7 @@ export default function InteractiveHero() {
           </Link>
           <Link
             href="/problems"
-            className="w-full sm:w-auto px-9 py-4 rounded-full border border-ink/15 bg-white text-base font-semibold text-ink-soft hover:bg-paper active:scale-[0.98] transition text-center"
+            className="w-full sm:w-auto px-9 py-4 rounded-full border border-hairline bg-surface text-base font-semibold text-fg hover:bg-paper active:scale-[0.98] transition text-center"
           >
             {copy.ctaSecondary}
           </Link>
@@ -335,9 +335,9 @@ export default function InteractiveHero() {
       {/* ---- 자동 재생 디베이트 패널 (히어로 비주얼) ---- */}
       <div className="relative max-w-3xl mx-auto px-6 sm:px-8 mt-14">
         <div className="rounded-[var(--radius-panel)] border border-hairline bg-paper p-2.5 shadow-[0_24px_60px_-24px_rgba(20,21,43,0.25)]">
-          <div className="relative bg-ink border border-ink/40 rounded-[var(--radius-panel)] overflow-hidden font-mono text-[12.5px]">
+          <div className="relative bg-ink border border-fg-quiet rounded-[var(--radius-panel)] overflow-hidden font-mono text-[12.5px]">
             {/* 타이틀바 */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-white/[0.02]">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-surface/[0.02]">
               <span className="text-fg-on-dark-quiet text-[11px]">{sc.file}</span>
               <span className="flex items-center gap-3">
                 {displayScore !== null && (

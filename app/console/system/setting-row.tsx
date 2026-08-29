@@ -34,7 +34,7 @@ export default function SettingRow({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-ink">{def.label}</p>
+            <p className="font-semibold text-fg">{def.label}</p>
             {def.danger && (
               <span className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-rose-700">
                 주의
@@ -74,7 +74,7 @@ export default function SettingRow({
               >
                 <span
                   aria-hidden
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-colors ${
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-surface shadow transition-colors ${
                     draft === 'true' ? 'left-[1.375rem]' : 'left-0.5'
                   }`}
                 />
@@ -146,7 +146,7 @@ export default function SettingRow({
                 setConfirming(false);
                 setDraft(current);
               }}
-              className="shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs text-fg-secondary"
+              className="shrink-0 rounded-xl border border-hairline px-3 py-1.5 text-xs text-fg-secondary"
             >
               취소
             </button>

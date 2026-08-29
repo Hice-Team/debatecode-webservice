@@ -170,7 +170,7 @@ export default function SearchShowcase() {
       >
         {/* 내 질문 */}
         <div className="flex justify-end">
-          <p className="max-w-[88%] rounded-[var(--radius-panel)] bg-brand-50 px-4 py-3 text-[14px] font-medium text-ink">
+          <p className="max-w-[88%] rounded-[var(--radius-panel)] bg-brand-50 px-4 py-3 text-[14px] font-medium text-fg">
             {active.query}
           </p>
         </div>
@@ -224,7 +224,7 @@ export default function SearchShowcase() {
         </p>
 
         {/* 컴포저 — 실제 화면의 필 모양 입력줄 */}
-        <div className="mt-5 flex items-center gap-1 rounded-[1.75rem] border border-hairline bg-white p-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.12)]">
+        <div className="mt-5 flex items-center gap-1 rounded-[1.75rem] border border-hairline bg-surface p-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.12)]">
           <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center text-fg-muted">
             <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-[1.6]">
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />

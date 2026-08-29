@@ -87,7 +87,7 @@ export default function AttachmentPreview({
 
   const kind = previewKindOf(file);
   const navBtn =
-    'grid h-10 w-10 shrink-0 place-items-center rounded-full text-fg-on-dark-secondary transition-colors hover:bg-white/10 hover:text-white';
+    'grid h-10 w-10 shrink-0 place-items-center rounded-full text-fg-on-dark-secondary transition-colors hover:bg-surface/10 hover:text-white';
 
   return (
     // z-[100] — 전역 헤더(z-50)보다 위. 헤더에 가려지지 않도록 항상 화면 기준으로 띄운다.
@@ -101,7 +101,7 @@ export default function AttachmentPreview({
       <header className="flex shrink-0 items-center gap-3 px-4 py-3 sm:px-6">
         <span
           aria-hidden
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/10 font-mono text-[10px] font-bold text-fg-on-dark-secondary"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-surface/10 font-mono text-[10px] font-bold text-fg-on-dark-secondary"
         >
           {extLabel(file.name)}
         </span>
@@ -128,7 +128,7 @@ export default function AttachmentPreview({
           type="button"
           onClick={onClose}
           aria-label={t('close', language)}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-fg-on-dark-secondary transition-colors hover:bg-white/10 hover:text-white"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-fg-on-dark-secondary transition-colors hover:bg-surface/10 hover:text-white"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-[1.6]" aria-hidden>
             <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />
@@ -168,7 +168,7 @@ export default function AttachmentPreview({
           )}
 
           {kind === 'audio' && (
-            <div className="w-full max-w-lg rounded-[var(--radius-panel)] bg-white/[0.06] p-6 text-center">
+            <div className="w-full max-w-lg rounded-[var(--radius-panel)] bg-surface/[0.06] p-6 text-center">
               <p className="mb-4 truncate text-sm text-fg-on-dark-secondary">{file.name}</p>
               <audio src={file.url} controls className="w-full">
                 <track kind="captions" />
@@ -180,7 +180,7 @@ export default function AttachmentPreview({
             <iframe
               src={file.url}
               title={file.name}
-              className="h-full w-full rounded-xl border-0 bg-white"
+              className="h-full w-full rounded-xl border-0 bg-surface"
             />
           )}
 
@@ -191,13 +191,13 @@ export default function AttachmentPreview({
           )}
 
           {kind === null && (
-            <div className="rounded-[var(--radius-panel)] border border-white/10 bg-white/[0.04] px-8 py-12 text-center">
+            <div className="rounded-[var(--radius-panel)] border border-white/10 bg-surface/[0.04] px-8 py-12 text-center">
               <p className="text-sm text-fg-on-dark-secondary">{t('preview-unsupported', language)}</p>
               <a
                 href={file.url}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="mt-4 inline-block rounded-xl bg-white/10 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-white/20"
+                className="mt-4 inline-block rounded-xl bg-surface/10 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-surface/20"
               >
                 {t('preview-open-new-tab', language)}
               </a>

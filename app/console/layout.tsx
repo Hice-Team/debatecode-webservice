@@ -73,7 +73,7 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper text-ink-soft">
+    <div className="flex min-h-screen flex-col bg-paper text-fg">
       <Nav />
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <ConsoleSidebar

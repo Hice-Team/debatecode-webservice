@@ -207,7 +207,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
             type="checkbox"
             checked={remember}
             onChange={(e) => setRememberInput(e.target.checked)}
-            className="h-4 w-4 rounded border-ink/30 text-signal accent-[#4531d9] focus:ring-signal/40"
+            className="h-4 w-4 rounded border-fg-quiet text-signal accent-[#4531d9] focus:ring-signal/40"
           />
           아이디 저장
         </label>

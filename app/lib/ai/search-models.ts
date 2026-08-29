@@ -33,11 +33,11 @@ export const SEARCH_MODELS: SearchModel[] = [
     reasoning: true,
   },
   {
-    id: 'deepseek-coder-v2',
-    label: 'DeepSeek Coder-V2',
-    vendor: 'DeepSeek',
+    id: 'qwen3-coder-next',
+    label: 'Qwen3 Coder',
+    vendor: 'Alibaba',
     hint: '코드 특화 — 구현·디버깅 질문에 강합니다',
-    repo: 'deepseek-ai/DeepSeek-Coder-V2-Instruct',
+    repo: 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
     reasoning: false,
   },
 ];

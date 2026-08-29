@@ -13,8 +13,8 @@ export default function TestMail({ defaultTo }: { defaultTo: string }) {
   const [state, formAction, pending] = useActionState(sendTestMail, initial);
 
   return (
-    <div className="rounded-xl border border-hairline bg-white p-4">
-      <h3 className="text-sm font-semibold text-ink">메일 도달 확인</h3>
+    <div className="rounded-xl border border-hairline bg-surface p-4">
+      <h3 className="text-sm font-semibold text-fg">메일 도달 확인</h3>
       <p className="mt-1 text-xs leading-relaxed text-fg-muted">
         지금 설정된 전송 수단으로 실제 한 통을 보냅니다. <strong>스팸함까지</strong> 확인하세요 — 받은편지함에
         오지 않으면 발신 계정의 SPF/DKIM부터 봐야 합니다.
@@ -29,7 +29,7 @@ export default function TestMail({ defaultTo }: { defaultTo: string }) {
             name="to"
             type="email"
             defaultValue={defaultTo}
-            className="w-full rounded-lg border border-ink/15 bg-paper/50 px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+            className="w-full rounded-lg border border-hairline bg-paper/50 px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
           />
         </div>
         <button

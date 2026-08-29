@@ -26,7 +26,7 @@ export interface EditableProduct {
 
 const LABEL = 'block font-mono text-[11px] uppercase tracking-wider text-fg-muted mb-1.5';
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/30';
+  'w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/30';
 
 export default function ProductForm({ editing, onDone }: { editing: EditableProduct | null; onDone: () => void }) {
   const [state, formAction, pending] = useActionState(saveShopProduct, initialState);
@@ -39,10 +39,10 @@ export default function ProductForm({ editing, onDone }: { editing: EditableProd
   }, [state.saved, onDone]);
 
   return (
-    <form action={formAction} key={editing?.id ?? 'new'} className="rounded-xl border border-hairline bg-white p-5">
+    <form action={formAction} key={editing?.id ?? 'new'} className="rounded-xl border border-hairline bg-surface p-5">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-bold text-ink">{editing ? '상품 수정' : '새 상품 등록'}</h3>
-        <button type="button" onClick={onDone} className="text-sm text-fg-muted transition-colors hover:text-ink">
+        <h3 className="font-bold text-fg">{editing ? '상품 수정' : '새 상품 등록'}</h3>
+        <button type="button" onClick={onDone} className="text-sm text-fg-muted transition-colors hover:text-fg">
           닫기
         </button>
       </div>
@@ -57,7 +57,7 @@ export default function ProductForm({ editing, onDone }: { editing: EditableProd
             <label
               key={sc}
               className={`flex flex-1 cursor-pointer items-start gap-2 rounded-lg border px-3 py-2.5 transition-colors ${
-                scope === sc ? 'border-signal bg-brand-50/50' : 'border-ink/15 hover:border-ink/30'
+                scope === sc ? 'border-signal bg-brand-50/50' : 'border-hairline hover:border-fg-quiet'
               }`}
             >
               <input
@@ -69,7 +69,7 @@ export default function ProductForm({ editing, onDone }: { editing: EditableProd
                 className="mt-0.5 h-4 w-4 accent-[var(--color-signal)]"
               />
               <span className="min-w-0">
-                <span className="block text-sm font-semibold text-ink">{SHOP_SCOPE_LABELS[sc]}</span>
+                <span className="block text-sm font-semibold text-fg">{SHOP_SCOPE_LABELS[sc]}</span>
                 <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">{SHOP_SCOPE_DESC[sc]}</span>
               </span>
             </label>

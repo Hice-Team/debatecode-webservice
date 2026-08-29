@@ -16,21 +16,19 @@ interface Order {
 }
 
 export default function ShopSection({
-  productCount,
   orders,
   balance,
 }: {
-  productCount: number;
   orders: Order[];
   balance: number;
 }) {
   const pending = orders.filter((o) => o.status === 'requested').length;
 
   return (
-    <section className="mt-6 rounded-[var(--radius-panel)] border border-hairline bg-white" aria-labelledby="shop-title">
+    <section className="mt-6 rounded-[var(--radius-panel)] border border-hairline bg-surface" aria-labelledby="shop-title">
       <div className="flex flex-wrap items-center gap-3 border-b border-hairline px-5 py-3">
         <div className="min-w-0">
-          <h2 id="shop-title" className="font-bold text-ink">
+          <h2 id="shop-title" className="font-bold text-fg">
             디베이트샵
           </h2>
           <p className="mt-0.5 text-xs text-fg-muted">{POINT_TO_KRW_NOTE} · 모은 포인트로 기프티콘을 교환하세요.</p>
@@ -40,31 +38,38 @@ export default function ShopSection({
         </span>
       </div>
 
+      {/* 상점은 아직 열리지 않았다.
+          "교환 가능한 상품 0개"는 재고가 없다는 뜻으로 읽히고, "상점 열기"를 누르면
+          빈 화면이 나온다 — 무엇이 없는 상태인지 그대로 말하고 버튼은 잠근다. */}
       <div className="flex flex-wrap items-center gap-3 px-5 py-4">
-        <p className="text-sm text-fg-secondary">
-          교환 가능한 상품 <strong className="text-ink">{productCount}</strong>개
-          {pending > 0 && (
-            <>
-              {' · '}
-              발급 대기 <strong className="text-amber-700">{pending}</strong>건
-            </>
-          )}
+        <p className="flex items-start gap-2 text-sm text-fg-secondary">
+          <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+          <span>
+            디베이트포인트샵은 정식 오픈 준비 중입니다. 포인트는 지금도 정상 적립됩니다.
+            {pending > 0 && (
+              <>
+                {' '}
+                발급 대기 <strong className="text-amber-700">{pending}</strong>건은 오픈 후 순서대로 처리합니다.
+              </>
+            )}
+          </span>
         </p>
         <div className="ml-auto flex shrink-0 items-center gap-2">
           {orders.length > 0 && (
             <Link
               href="/shop/orders"
-              className="rounded-lg border border-ink/15 px-3.5 py-2 text-sm font-medium text-fg-secondary transition-colors hover:border-ink/40"
+              className="rounded-lg border border-hairline px-3.5 py-2 text-sm font-medium text-fg-secondary transition-colors hover:border-fg-quiet"
             >
               교환 내역
             </Link>
           )}
-          <Link
-            href="/shop"
-            className="rounded-lg bg-signal px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-600"
+          <span
+            aria-disabled="true"
+            title="정식 오픈 준비 중입니다"
+            className="cursor-not-allowed rounded-lg bg-paper px-4 py-2 text-sm font-semibold text-fg-quiet"
           >
-            상점 열기
-          </Link>
+            준비 중
+          </span>
         </div>
       </div>
 

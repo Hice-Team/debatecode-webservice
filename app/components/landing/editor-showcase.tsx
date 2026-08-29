@@ -126,7 +126,7 @@ export default function EditorShowcase() {
                 <p>{c.problemDesc}</p>
                 <div className="pt-1 flex flex-wrap gap-1.5">
                   {c.problemTags.map((t) => (
-                    <span key={t} className="font-mono text-[9px] text-fg-on-dark-quiet bg-white/5 border border-white/10 rounded-full px-2 py-0.5">
+                    <span key={t} className="font-mono text-[9px] text-fg-on-dark-quiet bg-surface/5 border border-white/10 rounded-full px-2 py-0.5">
                       {t}
                     </span>
                   ))}

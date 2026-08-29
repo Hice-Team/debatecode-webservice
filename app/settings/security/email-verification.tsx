@@ -52,7 +52,7 @@ export default function EmailVerification({
   }
 
   return (
-    <div className="rounded-xl border border-hairline bg-white p-4">
+    <div className="rounded-xl border border-hairline bg-surface p-4">
       <div className="flex flex-wrap items-center gap-2">
         <h4 className="font-semibold">이메일 인증</h4>
         <span

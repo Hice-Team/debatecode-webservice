@@ -65,14 +65,14 @@ export default async function SeasonsPage() {
 
       <section className="mt-8">
         <SectionHeader title="시즌 번호" sub="번호만 다시 매깁니다 — 순위는 그대로 남습니다." />
-        <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+        <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
           <SeasonNumberForm currentIndex={season.index} />
         </div>
       </section>
 
       <section className="mt-8">
         <SectionHeader title="전체 랭킹 초기화" sub="이 시각 이전 활동을 집계에서 뺍니다 — 모두의 순위가 0에서 시작합니다." />
-        <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+        <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
           <Callout tone="warn">
             시즌 초기화와 다릅니다. 시즌 초기화는 <strong>번호만</strong> 다시 매기고, 이 동작은{' '}
             <strong>순위를</strong> 다시 셉니다. 기록은 남으므로 언제든 되돌릴 수 있습니다.
@@ -88,7 +88,7 @@ export default async function SeasonsPage() {
           title="특정 계정 랭킹 초기화"
           sub="부정행위가 확인된 계정을 이번 집계 구간의 순위에서 제외합니다."
         />
-        <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+        <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
           <UserResetForm />
 
           <div className="mt-5 divide-y divide-hairline overflow-hidden rounded-xl border border-hairline">
@@ -97,7 +97,7 @@ export default async function SeasonsPage() {
             ) : (
               resets.map((reset) => (
                 <div key={reset.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
-                  <span className="min-w-0 text-sm font-semibold text-ink">{reset.user.name}</span>
+                  <span className="min-w-0 text-sm font-semibold text-fg">{reset.user.name}</span>
                   <span className="min-w-0 truncate font-mono text-[11px] text-fg-quiet">{reset.user.email}</span>
                   <span className="min-w-0 flex-1 truncate text-[12px] text-fg-secondary">{reset.reason}</span>
                   <span className="shrink-0 font-mono text-[10px] text-fg-quiet">

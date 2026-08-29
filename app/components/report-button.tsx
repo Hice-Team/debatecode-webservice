@@ -139,7 +139,7 @@ export default function ReportButton({
     (variant === 'icon'
       ? 'grid h-8 w-8 place-items-center rounded-lg border border-hairline text-fg-muted transition-colors hover:border-rose-200 hover:text-rose-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600'
       : variant === 'button'
-        ? 'inline-flex items-center gap-1.5 rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600'
+        ? 'inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600'
         : 'font-mono text-[11px] text-fg-muted transition-colors hover:text-rose-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600');
 
   return (
@@ -192,10 +192,10 @@ export default function ReportButton({
             role="dialog"
             aria-modal="true"
             aria-labelledby={`report-title-${targetId}`}
-            className="relative flex max-h-full w-[min(28rem,100%)] flex-col overflow-hidden rounded-[var(--radius-panel)] bg-white shadow-2xl shadow-black/30 animate-in fade-in zoom-in-95 duration-200"
+            className="relative flex max-h-full w-[min(28rem,100%)] flex-col overflow-hidden rounded-[var(--radius-panel)] bg-surface shadow-2xl shadow-black/30 animate-in fade-in zoom-in-95 duration-200"
           >
             <div className="shrink-0 border-b border-hairline px-6 py-4 pr-14">
-              <h3 id={`report-title-${targetId}`} className="text-lg font-bold text-ink">
+              <h3 id={`report-title-${targetId}`} className="text-lg font-bold text-fg">
                 {REPORT_TARGET_TITLES[targetType]}
               </h3>
               <p className="mt-0.5 text-xs leading-relaxed text-fg-secondary">{REPORT_TARGET_DESC[targetType]}</p>
@@ -203,7 +203,7 @@ export default function ReportButton({
                 type="button"
                 onClick={close}
                 aria-label="닫기"
-                className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-fg-quiet transition-colors hover:bg-ink/[0.06] hover:text-ink-soft"
+                className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-fg-quiet transition-colors hover:bg-paper hover:text-fg"
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.7]" aria-hidden>
                   <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />
@@ -225,7 +225,7 @@ export default function ReportButton({
                       // 작은 라디오 점 하나만으로는 무엇을 골랐는지 잘 보이지 않는다.
                       <label
                         key={reason.value}
-                        className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-hairline px-3 py-2 text-sm transition-colors hover:border-ink/30 has-[:checked]:border-signal has-[:checked]:bg-brand-50/60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-signal"
+                        className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-hairline px-3 py-2 text-sm transition-colors hover:border-fg-quiet has-[:checked]:border-signal has-[:checked]:bg-brand-50/60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-signal"
                       >
                         <input
                           type="radio"
@@ -256,7 +256,7 @@ export default function ReportButton({
                         ? '예: 예제 2번을 그대로 넣었는데 오답으로 나옵니다. 파이썬 3.11 기준으로 로컬에서는 맞습니다.'
                         : '신고 사유를 조금 더 설명해 주세요.'
                     }
-                    className="w-full rounded-lg border border-ink/15 bg-paper/40 px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/50"
+                    className="w-full rounded-lg border border-hairline bg-paper/40 px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/50"
                   />
                   {needsContext && autoContext && (
                     <p className="mt-1.5 rounded-lg bg-paper/60 px-2.5 py-1.5 font-mono text-[10px] leading-relaxed text-fg-muted">
@@ -269,11 +269,11 @@ export default function ReportButton({
                 </div>
 
                 {/* 버튼 줄은 스크롤 밖에 고정한다 — 사유가 많아도 "신고하기"를 찾아 내려갈 필요가 없다 */}
-                <div className="flex shrink-0 items-center justify-end gap-2 border-t border-hairline bg-white px-6 py-4">
+                <div className="flex shrink-0 items-center justify-end gap-2 border-t border-hairline bg-surface px-6 py-4">
                   <button
                     type="button"
                     onClick={close}
-                    className="rounded-lg border border-ink/15 px-4 py-2 text-sm text-fg-secondary hover:border-ink/40"
+                    className="rounded-lg border border-hairline px-4 py-2 text-sm text-fg-secondary hover:border-fg-quiet"
                   >
                     취소
                   </button>
@@ -297,20 +297,20 @@ export default function ReportButton({
         <div
           role="status"
           aria-live="polite"
-          className="fixed right-4 top-20 z-[95] flex items-start gap-2.5 rounded-[var(--radius-panel)] border border-emerald-200 bg-white px-4 py-3 shadow-[0_12px_32px_rgba(8,9,26,0.18)] animate-in fade-in slide-in-from-top-2 duration-200"
+          className="fixed right-4 top-20 z-[95] flex items-start gap-2.5 rounded-[var(--radius-panel)] border border-emerald-200 bg-surface px-4 py-3 shadow-[0_12px_32px_rgba(8,9,26,0.18)] animate-in fade-in slide-in-from-top-2 duration-200"
         >
           <span aria-hidden className="mt-0.5 text-emerald-600">
             ✓
           </span>
           <span>
-            <span className="block text-sm font-semibold text-ink">신고가 접수되었습니다.</span>
+            <span className="block text-sm font-semibold text-fg">신고가 접수되었습니다.</span>
             <span className="mt-0.5 block text-xs text-fg-muted">확인 후 처리하겠습니다.</span>
           </span>
           <button
             type="button"
             onClick={() => setToast(false)}
             aria-label="알림 닫기"
-            className="dc-tap -mr-1 ml-1 grid h-6 w-6 shrink-0 place-items-center rounded-full text-fg-quiet transition-colors hover:bg-ink/[0.06] hover:text-ink-soft"
+            className="dc-tap -mr-1 ml-1 grid h-6 w-6 shrink-0 place-items-center rounded-full text-fg-quiet transition-colors hover:bg-paper hover:text-fg"
           >
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-[2]" aria-hidden>
               <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />

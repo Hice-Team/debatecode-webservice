@@ -78,7 +78,7 @@ export default function TradePanel({
   return (
     <section
       aria-label="거래 정보"
-      className="mb-6 rounded-[var(--radius-panel)] border border-hairline bg-white p-5"
+      className="mb-6 rounded-[var(--radius-panel)] border border-hairline bg-surface p-5"
     >
       {/* 가격 · 상태 */}
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">

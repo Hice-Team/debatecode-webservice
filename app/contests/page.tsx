@@ -137,7 +137,7 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
           className={`shrink-0 rounded-full border px-4 py-3 text-sm font-semibold transition-colors ${
             !activeKind
               ? 'border-signal bg-signal text-white'
-              : 'border-hairline bg-white text-fg-secondary hover:border-brand-300 hover:text-signal'
+              : 'border-hairline bg-surface text-fg-secondary hover:border-brand-300 hover:text-signal'
           }`}
         >
           <I18nSlot k="set-kind-all" fallback="전체" />
@@ -150,7 +150,7 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
             className={`shrink-0 rounded-full border px-4 py-3 text-sm font-semibold transition-colors ${
               activeKind === k
                 ? 'border-signal bg-signal text-white'
-                : 'border-hairline bg-white text-fg-secondary hover:border-brand-300 hover:text-signal'
+                : 'border-hairline bg-surface text-fg-secondary hover:border-brand-300 hover:text-signal'
             }`}
           >
             <I18nSlot k={`set-kind-${k}`} fallback={SET_KIND_LABELS[k]} />
@@ -170,7 +170,7 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
       </div>
 
       {sets.length === 0 ? (
-        <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-16 text-center text-fg-quiet">
+        <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-16 text-center text-fg-quiet">
           <I18nSlot k="no-matched-contests" fallback="조건에 맞는 문제집 세트가 없습니다." />
         </div>
       ) : (
@@ -182,7 +182,7 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
               <Link
                 key={set.id}
                 href={`/contests/${set.slug}`}
-                className="group flex flex-col rounded-[var(--radius-panel)] border border-hairline bg-white p-5 transition hover:-translate-y-0.5 hover:border-brand-400/60 hover:shadow-lg hover:shadow-brand-500/10"
+                className="group flex flex-col rounded-[var(--radius-panel)] border border-hairline bg-surface p-5 transition hover:-translate-y-0.5 hover:border-brand-400/60 hover:shadow-lg hover:shadow-brand-500/10"
               >
                 <div className="mb-3 flex items-center gap-2">
                   <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${SET_KIND_BADGE[kindKey]}`}>
@@ -199,7 +199,7 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
                   </span>
                 </div>
 
-                <h2 className="font-bold text-ink transition-colors group-hover:text-signal">{set.title}</h2>
+                <h2 className="font-bold text-fg transition-colors group-hover:text-signal">{set.title}</h2>
                 <p className="mt-1.5 line-clamp-2 text-sm text-fg-muted">{set.description}</p>
 
                 <ul className="mt-3 space-y-1">

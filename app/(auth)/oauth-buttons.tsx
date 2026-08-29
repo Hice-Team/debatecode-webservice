@@ -57,7 +57,7 @@ interface ProviderDef {
 
 // 고정 노출 5종 — 확장/더보기 없음. 순서: 구글 · 네이버 · 카카오 · 깃허브 · 디스코드
 const PROVIDERS: ProviderDef[] = [
-  { key: 'google', label: '구글로 계속하기', className: 'bg-white border border-[#dadce0] hover:bg-gray-50', symbol: <GoogleSymbol /> },
+  { key: 'google', label: '구글로 계속하기', className: 'bg-surface border border-[#dadce0] hover:bg-gray-50', symbol: <GoogleSymbol /> },
   { key: 'naver', label: '네이버로 계속하기', className: 'bg-[#03C75A] hover:brightness-95', symbol: <NaverSymbol /> },
   { key: 'kakao', label: '카카오로 계속하기', className: 'bg-[#FEE500] hover:brightness-95', symbol: <KakaoSymbol /> },
   { key: 'github', label: '깃허브로 계속하기', className: 'bg-[#181717] hover:bg-[#2b2a2a]', symbol: <GitHubSymbol /> },

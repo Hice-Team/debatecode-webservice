@@ -79,7 +79,7 @@ export default function ModelPicker({
         <div
           role="listbox"
           aria-label="모델 선택"
-          className={`absolute right-0 z-50 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white py-1.5 shadow-xl shadow-ink/10 animate-in fade-in duration-150 ${
+          className={`absolute right-0 z-50 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface py-1.5 shadow-xl shadow-ink/10 animate-in fade-in duration-150 ${
             placement === 'top'
               ? 'bottom-full mb-2 slide-in-from-bottom-1'
               : 'top-full mt-2 slide-in-from-top-1'
@@ -109,13 +109,13 @@ export default function ModelPicker({
                 <span
                   aria-hidden
                   className={`mt-1 grid h-3.5 w-3.5 shrink-0 place-items-center rounded-full border text-[8px] ${
-                    selected ? 'border-signal bg-signal text-white' : 'border-ink/20 text-transparent'
+                    selected ? 'border-signal bg-signal text-white' : 'border-hairline text-transparent'
                   }`}
                 >
                   ✓
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-sm font-medium text-ink">
+                  <span className="block text-sm font-medium text-fg">
                     {model.label}
                     <span className="ml-1.5 font-mono text-[10px] font-normal text-fg-quiet">{model.vendor}</span>
                   </span>

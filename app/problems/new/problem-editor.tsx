@@ -30,9 +30,9 @@ const initialState: ProblemFormState = {};
 
 const LABEL = 'block font-mono text-xs text-fg-secondary tracking-wider mb-1.5';
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
+  'w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
 const CODE_FIELD =
-  'w-full rounded-lg border border-ink/15 bg-ink text-emerald-100 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-fg-on-dark-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
+  'w-full rounded-lg border border-hairline bg-ink text-emerald-100 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-fg-on-dark-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
 
 const CATEGORIES = ['해시', '스택', 'DP', '그리디', '그래프', '자료구조'];
 
@@ -144,7 +144,7 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
           required
           defaultValue={initial?.description}
           placeholder={'문제 설명을 마크다운으로 작성하세요.\n\n### 입력\n- nums: 정수 배열\n\n### 출력\n- 두 수의 인덱스 배열'}
-          className="w-full rounded-b-lg border border-ink/15 bg-paper/50 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
+          className="w-full rounded-b-lg border border-hairline bg-paper/50 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
         />
         {err(state.errors?.description)}
       </div>
@@ -167,7 +167,7 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
                 className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors ${
                   on
                     ? 'border-brand-300 bg-brand-50 text-brand-700'
-                    : 'border-hairline bg-white text-fg-muted hover:border-brand-300 hover:text-signal'
+                    : 'border-hairline bg-surface text-fg-muted hover:border-brand-300 hover:text-signal'
                 }`}
               >
                 <input
@@ -233,7 +233,7 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
         </div>
         <div className="space-y-3">
           {tcRows.map((row, i) => (
-            <div key={row.key} className="rounded-lg border border-hairline bg-white p-3">
+            <div key={row.key} className="rounded-lg border border-hairline bg-surface p-3">
               <div className="mb-2 flex items-center justify-between">
                 <span className="font-mono text-[11px] text-fg-quiet">CASE {i + 1}</span>
                 <div className="flex items-center gap-3">

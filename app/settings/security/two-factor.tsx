@@ -188,7 +188,7 @@ export default function TwoFactor({
       {/* 복구 이메일 — 코드 확인을 거쳐야 저장된다(app/settings/security/recovery-email.tsx) */}
       <RecoveryEmail current={initialEmail ?? null} verifiedAt={recoveryVerifiedAt ?? null} />
 
-      <div className="rounded-xl border border-hairline bg-white p-4">
+      <div className="rounded-xl border border-hairline bg-surface p-4">
         <div className="flex flex-wrap items-center gap-2">
           <h4 className="font-semibold">인증 앱 (TOTP)</h4>
           <span
@@ -263,7 +263,7 @@ export default function TwoFactor({
             </p>
             <ul className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
               {backupCodes.map((c) => (
-                <li key={c} className="rounded bg-white/70 px-2 py-1 text-center font-mono text-[12px] tracking-wider">
+                <li key={c} className="rounded bg-surface/70 px-2 py-1 text-center font-mono text-[12px] tracking-wider">
                   {c}
                 </li>
               ))}
@@ -287,7 +287,7 @@ export default function TwoFactor({
       </div>
 
       {/* 보안키 — 등록 함수는 있는데 부르는 버튼이 없어서 그동안 쓸 수 없었다 */}
-      <div className="rounded-xl border border-hairline bg-white p-4">
+      <div className="rounded-xl border border-hairline bg-surface p-4">
         <div className="flex flex-wrap items-center gap-2">
           <h4 className="font-semibold">보안키 (WebAuthn)</h4>
           <span
@@ -306,7 +306,7 @@ export default function TwoFactor({
         </p>
 
         {keys.length > 0 && (
-          <ul className="mt-3 divide-y divide-ink/5 rounded-lg border border-hairline">
+          <ul className="mt-3 divide-y divide-hairline rounded-lg border border-hairline">
             {keys.map((key) => (
               <KeyRow
                 key={key.id}
@@ -393,7 +393,7 @@ function KeyRow({ item, isLastFactor }: { item: WebauthnKeySummary; isLastFactor
         <button
           onClick={handleDelete}
           disabled={busy}
-          className="rounded border border-ink/15 px-2 py-1 text-xs text-fg-secondary hover:border-rose-300 hover:text-rose-700 disabled:opacity-50"
+          className="rounded border border-hairline px-2 py-1 text-xs text-fg-secondary hover:border-rose-300 hover:text-rose-700 disabled:opacity-50"
         >
           {busy ? '확인 중…' : '삭제'}
         </button>

@@ -30,7 +30,7 @@ export default function MaintenanceForm({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-      <form action={formAction} className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5" onSubmit={() => setConfirming(false)}>
+      <form action={formAction} className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5" onSubmit={() => setConfirming(false)}>
         <input type="hidden" name="enabled" value={String(enabled)} />
 
         <div className="flex items-start gap-4">
@@ -49,13 +49,13 @@ export default function MaintenanceForm({
           >
             <span
               aria-hidden
-              className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-colors ${
+              className={`absolute top-0.5 h-6 w-6 rounded-full bg-surface shadow transition-colors ${
                 enabled ? 'left-[1.625rem]' : 'left-0.5'
               }`}
             />
           </button>
           <div className="min-w-0">
-            <p className="font-semibold text-ink">유지보수 모드 {enabled ? '켬' : '끔'}</p>
+            <p className="font-semibold text-fg">유지보수 모드 {enabled ? '켬' : '끔'}</p>
             <p className="mt-0.5 text-xs leading-relaxed text-fg-secondary">
               켜면 일반 이용자에게는 점검 안내 화면만 보입니다. 콘솔 권한이 있는 계정은 그대로 서비스에 접속할 수
               있으므로, 켠 채로 확인 작업을 이어갈 수 있습니다.
@@ -124,7 +124,7 @@ export default function MaintenanceForm({
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="rounded-xl border border-ink/15 px-4 py-2 text-sm text-fg-secondary"
+              className="rounded-xl border border-hairline px-4 py-2 text-sm text-fg-secondary"
             >
               취소
             </button>
@@ -144,8 +144,8 @@ export default function MaintenanceForm({
       {/* 이용자에게 실제로 보일 화면 */}
       <div>
         <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">이용자에게 보이는 화면</p>
-        <div className="overflow-hidden rounded-[var(--radius-panel)] border border-ink/15 bg-paper">
-          <div className="flex items-center gap-1.5 border-b border-hairline bg-white px-3 py-2">
+        <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-paper">
+          <div className="flex items-center gap-1.5 border-b border-hairline bg-surface px-3 py-2">
             <span aria-hidden className="h-2 w-2 rounded-full bg-rose-400" />
             <span aria-hidden className="h-2 w-2 rounded-full bg-amber-400" />
             <span aria-hidden className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -153,7 +153,7 @@ export default function MaintenanceForm({
           <div className="grid min-h-[16rem] place-items-center px-6 py-10 text-center">
             <div>
               <p aria-hidden className="text-3xl">🛠️</p>
-              <p className="mt-3 text-lg font-bold text-ink">점검 중입니다</p>
+              <p className="mt-3 text-lg font-bold text-fg">점검 중입니다</p>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
                 {message || '(안내 문구를 입력하세요)'}
               </p>

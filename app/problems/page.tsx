@@ -126,8 +126,16 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
           desc="테스트를 전부 통과하면 AI 면접관과의 디베이트가 시작됩니다."
           actions={
             session && (
-              <Link href="/problems/mine" className="inline-flex items-center gap-1.5 font-mono text-xs text-signal hover:underline whitespace-nowrap">
-                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" /></svg>
+              // 글자 링크였을 때는 헤더 오른쪽 구석에 묻혀 있었다. 문제집에서 두 번째로
+              // 자주 가는 곳이라 누를 것처럼 보여야 한다 — 다만 채워진 버튼은 아니다.
+              // 이 화면의 주요 행동은 문제를 고르는 것이고, 채운 버튼은 한 화면에 하나다.
+              <Link
+                href="/problems/mine"
+                className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full border border-brand-200 bg-brand-50 px-4 text-sm font-semibold text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden>
+                  <path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />
+                </svg>
                 <I18nSlot k="my-problems" fallback="내 문제집" />
               </Link>
             )
@@ -144,17 +152,22 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
           activeQuery={queryStr}
         />
 
-        <div className="mt-6 bg-white rounded-[var(--radius-panel)] border border-hairline overflow-hidden overflow-x-auto">
-          <table className="w-full min-w-[760px] text-sm">
+        {/* 목록은 카드가 아니라 줄이다(DESIGN.md §5). 밀도를 위해 좌우 여백을 px-6→px-4로
+            줄이고, 칸마다 다르던 정렬을 하나로 맞춘다 —
+            글자는 왼쪽, 배지·숫자는 가운데, 성공률만 오른쪽. */}
+        <div className="mt-6 overflow-hidden overflow-x-auto rounded-[var(--radius-panel)] border border-hairline bg-surface">
+          <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="border-b border-hairline font-mono text-[11px] text-fg-muted tracking-wider">
-                <th className="text-left px-6 py-3 font-medium">STATUS</th>
-                {session && <th className="text-left px-2 py-3 font-medium w-8" />}
-                <th className="text-left px-4 py-3 font-medium w-full">TITLE</th>
-                <th className="text-left px-4 py-3 font-medium whitespace-nowrap">LANG</th>
-                <th className="text-left px-4 py-3 font-medium whitespace-nowrap">CATEGORY</th>
-                <th className="text-left px-4 py-3 font-medium whitespace-nowrap">LEVEL</th>
-                <th className="text-right px-6 py-3 font-medium whitespace-nowrap">
+              <tr className="border-b border-hairline font-mono text-[11px] tracking-wider text-fg-muted">
+                <th className="w-10 px-4 py-2.5 text-center font-medium">
+                  <span className="sr-only">해결 여부</span>
+                </th>
+                {session && <th className="w-8 px-1 py-2.5 font-medium" />}
+                <th className="w-full px-3 py-2.5 text-left font-medium">TITLE</th>
+                <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap">LANG</th>
+                <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap">CATEGORY</th>
+                <th className="px-3 py-2.5 text-center font-medium whitespace-nowrap">LEVEL</th>
+                <th className="px-4 py-2.5 text-right font-medium whitespace-nowrap">
                   <I18nSlot k="defense-success-rate" fallback="방어 성공률" />
                 </th>
               </tr>
@@ -163,16 +176,16 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
               {problems.map((p) => {
                 const solved = solvedMap.get(p.id);
                 return (
-                  <tr key={p.id} className="border-b border-ink/5 last:border-0 hover:bg-paper/60 transition-colors">
-                    <td className="px-6 py-4">
+                  <tr key={p.id} className="border-b border-hairline transition-colors last:border-0 hover:bg-paper">
+                    <td className="px-4 py-2.5 text-center">
                       {solved?.passed ? (
                         <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span>
                       ) : (
-                        <span className="inline-block w-5 h-5 rounded-full border border-ink/15" />
+                        <span className="inline-block w-5 h-5 rounded-full border border-hairline" />
                       )}
                     </td>
                     {session && (
-                      <td className="px-2 py-4">
+                      <td className="px-1 py-2.5 text-center">
                         <WorkbookBookmark
                           problemId={p.id}
                           workbooks={workbooks.map((book) => ({
@@ -185,8 +198,8 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
                         />
                       </td>
                     )}
-                    <td className="px-4 py-4">
-                      <Link href={`/problems/${p.id}`} className="font-semibold hover:text-signal transition-colors">
+                    <td className="px-3 py-2.5">
+                      <Link href={`/problems/${p.id}`} className="font-medium transition-colors hover:text-signal">
                         {p.title}
                       </Link>
                       {p.company && (
@@ -195,7 +208,7 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-3 py-2.5 text-center whitespace-nowrap">
                       {(() => {
                         const langs = problemLanguages(p.starterCodes);
                         // 스타터 코드가 하나도 없는 문제 — 조용히 비우면 "왜 못 푸는지"를
@@ -204,11 +217,11 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
                           return <span className="font-mono text-[11px] text-fg-quiet">준비 중</span>;
                         }
                         return (
-                          <span className="flex flex-wrap gap-1">
+                          <span className="flex flex-wrap justify-center gap-1">
                             {langs.map((l) => (
                               <span
                                 key={l}
-                                className="rounded-full border border-hairline bg-paper px-2 py-0.5 font-mono text-[10px] font-medium text-fg-secondary"
+                                className="rounded-[var(--radius-control)] bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted"
                               >
                                 {LANGUAGE_LABELS[l]}
                               </span>
@@ -217,13 +230,13 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
                         );
                       })()}
                     </td>
-                    <td className="px-4 py-4 font-mono text-xs text-fg-secondary whitespace-nowrap">{p.category}</td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <span className={`inline-block px-2 py-0.5 rounded-full border text-[11px] font-medium ${DIFFICULTY_BADGE[p.difficulty]}`}>
+                    <td className="px-3 py-2.5 text-center font-mono text-xs whitespace-nowrap text-fg-muted">{p.category}</td>
+                    <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                      <span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-medium ${DIFFICULTY_BADGE[p.difficulty]}`}>
                         <I18nSlot k={p.difficulty === 1 ? 'beginner' : p.difficulty === 2 ? 'easy' : p.difficulty === 3 ? 'medium' : 'hard'} fallback={DIFFICULTY_LABELS[p.difficulty]} />
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right font-mono text-xs whitespace-nowrap">
+                    <td className="dc-num px-4 py-2.5 text-right font-mono text-xs whitespace-nowrap">
                       {solved?.bestScore != null ? (
                         <span className={solved.bestScore >= 70 ? 'text-emerald-600' : 'text-brand-600'}>
                           {solved.bestScore}%
@@ -237,7 +250,7 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
               })}
               {problems.length === 0 && (
                 <tr>
-                  <td colSpan={session ? 7 : 6} className="px-6 py-16 text-center text-fg-quiet">
+                  <td colSpan={session ? 7 : 6} className="px-6 py-16 text-center text-fg-muted">
                     <I18nSlot k="no-matched-problems" fallback="조건에 맞는 문제가 없습니다." />
                   </td>
                 </tr>
@@ -246,12 +259,16 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
           </table>
         </div>
 
-        <Pagination
-          page={currentPage}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          hrefFor={(p) => buildPageHref(p, params)}
-        />
+        {/* 페이지네이션 아래에 여백을 둔다 — 마지막 줄이 화면 바닥에 붙으면
+            목록이 더 있는지 끝난 것인지 알 수 없다. */}
+        <div className="pb-16">
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            hrefFor={(p) => buildPageHref(p, params)}
+          />
+        </div>
     </PageShell>
   );
 }

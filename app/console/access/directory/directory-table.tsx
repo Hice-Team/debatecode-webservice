@@ -82,7 +82,7 @@ export default function DirectoryTable({
   return (
     <section>
       {/* 필터 바 */}
-      <div className="mb-4 flex flex-col gap-3 rounded-[var(--radius-panel)] border border-hairline bg-white p-4 lg:flex-row lg:items-center">
+      <div className="mb-4 flex flex-col gap-3 rounded-[var(--radius-panel)] border border-hairline bg-surface p-4 lg:flex-row lg:items-center">
         <div role="search" className="flex-1">
           <label htmlFor={searchId} className="sr-only">
             이름·로그인 방식으로 회원 검색
@@ -107,7 +107,7 @@ export default function DirectoryTable({
               setRoleFilter(e.target.value);
               setPage(1);
             }}
-            className={`rounded-lg border border-ink/15 bg-white px-2.5 py-2 text-sm ${FOCUS}`}
+            className={`rounded-lg border border-hairline bg-surface px-2.5 py-2 text-sm ${FOCUS}`}
           >
             <option value="all">전체 역할</option>
             {ROLES.map((r) => (
@@ -123,7 +123,7 @@ export default function DirectoryTable({
               setStatus(e.target.value as typeof status);
               setPage(1);
             }}
-            className={`rounded-lg border border-ink/15 bg-white px-2.5 py-2 text-sm ${FOCUS}`}
+            className={`rounded-lg border border-hairline bg-surface px-2.5 py-2 text-sm ${FOCUS}`}
           >
             <option value="all">전체 상태</option>
             <option value="sanctioned">제재 중</option>
@@ -132,7 +132,7 @@ export default function DirectoryTable({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+      <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-sm">
             <caption className="sr-only">
@@ -168,7 +168,7 @@ export default function DirectoryTable({
               {pageItems.map((u) => {
                 const isSelf = u.id === currentUserId;
                 return (
-                  <tr key={u.id} className="border-b border-ink/5 align-top last:border-0 hover:bg-brand-50/20">
+                  <tr key={u.id} className="border-b border-hairline align-top last:border-0 hover:bg-brand-50/20">
                     <td className="px-3 py-3">
                       <input
                         type="checkbox"
@@ -188,7 +188,7 @@ export default function DirectoryTable({
                           {(u.name?.[0] ?? '?').toUpperCase()}
                         </span>
                         <div className="min-w-0">
-                          <p className="truncate font-medium text-ink">
+                          <p className="truncate font-medium text-fg">
                             {u.name}
                             {isSelf && <span className="ml-1.5 font-mono text-[10px] text-brand-600">(나)</span>}
                           </p>
@@ -278,7 +278,7 @@ export default function DirectoryTable({
 
         {/* 선택 시 나타나는 일괄 작업 바 */}
         {selectedUsers.length > 0 && (
-          <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 border-t border-hairline bg-white px-4 py-3">
+          <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 border-t border-hairline bg-surface px-4 py-3">
             <p className="font-mono text-sm text-fg-secondary">선택 {selectedUsers.length}명</p>
             <div className="ml-auto flex items-center gap-2">
               {canGrantRole && (
@@ -305,7 +305,7 @@ export default function DirectoryTable({
                 setPerPage(Number(e.target.value));
                 setPage(1);
               }}
-              className="rounded border border-ink/15 bg-white px-2 py-1 text-sm"
+              className="rounded border border-hairline bg-surface px-2 py-1 text-sm"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>

@@ -66,11 +66,11 @@ export default function WorkbookBookmark({
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="workbook-modal-title">
           <button type="button" aria-label="닫기" onClick={() => setOpen(false)} className="absolute inset-0 bg-ink/35 backdrop-blur-sm" />
 
-          <section className="relative z-10 w-full max-w-sm rounded-[var(--radius-panel)] border border-hairline bg-white p-5 shadow-2xl shadow-ink/25">
+          <section className="relative z-10 w-full max-w-sm rounded-[var(--radius-panel)] border border-hairline bg-surface p-5 shadow-2xl shadow-ink/25">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <p className="font-mono text-[10px] font-semibold tracking-wider text-signal">MY WORKBOOK</p>
-                <h2 id="workbook-modal-title" className="mt-1 text-lg font-bold text-ink">
+                <h2 id="workbook-modal-title" className="mt-1 text-lg font-bold text-fg">
                   문제집에 저장
                 </h2>
                 <p className="mt-1 text-sm text-fg-muted">
@@ -79,7 +79,7 @@ export default function WorkbookBookmark({
                     : '저장할 문제집을 선택해 주세요. 여러 문제집에 함께 담을 수 있어요.'}
                 </p>
               </div>
-              <button type="button" onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-lg text-fg-muted hover:bg-ink/5" aria-label="닫기">
+              <button type="button" onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-lg text-fg-muted hover:bg-paper" aria-label="닫기">
                 ×
               </button>
             </div>
@@ -88,7 +88,7 @@ export default function WorkbookBookmark({
               <p
                 role="status"
                 className={`mb-3 rounded-lg px-3 py-2 text-xs font-medium ${
-                  flash.kind === 'added' ? 'bg-brand-50 text-brand-700' : 'bg-ink/[0.05] text-fg-secondary'
+                  flash.kind === 'added' ? 'bg-brand-50 text-brand-700' : 'bg-paper text-fg-secondary'
                 }`}
               >
                 {flash.kind === 'added' ? `‘${flash.book}’에 담았습니다.` : `‘${flash.book}’에서 뺐습니다.`}
@@ -114,12 +114,12 @@ export default function WorkbookBookmark({
                     <span
                       aria-hidden
                       className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] font-bold ${
-                        book.saved ? 'bg-signal text-white' : 'border border-ink/15 text-transparent'
+                        book.saved ? 'bg-signal text-white' : 'border border-hairline text-transparent'
                       }`}
                     >
                       ✓
                     </span>
-                    <span className={`truncate font-medium ${book.saved ? 'text-brand-800' : 'text-ink'}`}>{book.name}</span>
+                    <span className={`truncate font-medium ${book.saved ? 'text-brand-800' : 'text-fg'}`}>{book.name}</span>
                   </span>
 
                   <span className="flex shrink-0 items-center gap-1.5">
@@ -149,7 +149,7 @@ export default function WorkbookBookmark({
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="min-w-0 flex-1 rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-signal focus:outline-none"
+                  className="min-w-0 flex-1 rounded-lg border border-hairline px-3 py-2 text-sm focus:border-signal focus:outline-none"
                   placeholder="새 문제집 이름"
                 />
                 <button disabled={pending} className="rounded-lg bg-signal px-3 text-sm font-semibold text-white disabled:opacity-50">

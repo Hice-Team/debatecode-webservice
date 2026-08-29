@@ -107,8 +107,8 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
       {defaults && <input type="hidden" name="id" value={defaults.id} />}
 
       {/* 기본 정보 */}
-      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
-        <h3 className="mb-4 text-sm font-bold text-ink">기본 정보</h3>
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
+        <h3 className="mb-4 text-sm font-bold text-fg">기본 정보</h3>
         <div className="grid gap-4 sm:grid-cols-[1fr_8rem_10rem]">
           <div>
             <label htmlFor="p-title" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
@@ -181,9 +181,9 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
       </section>
 
       {/* 지문 */}
-      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-ink">문제 지문 (마크다운)</h3>
+          <h3 className="text-sm font-bold text-fg">문제 지문 (마크다운)</h3>
           <button type="button" onClick={() => setShowPreview((v) => !v)} className={BTN_NEUTRAL}>
             {showPreview ? '편집으로' : '미리보기'}
           </button>
@@ -206,8 +206,8 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
       </section>
 
       {/* 스타터 코드 */}
-      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
-        <h3 className="mb-1 text-sm font-bold text-ink">스타터 코드</h3>
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
+        <h3 className="mb-1 text-sm font-bold text-fg">스타터 코드</h3>
         <p className="mb-3 text-xs text-fg-muted">
           이용자가 에디터를 열었을 때 처음 보이는 코드입니다. 함수명은 테스트케이스가 호출하는 이름과
           같아야 합니다.
@@ -222,7 +222,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
                 className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors ${
                   on
                     ? 'border-brand-300 bg-brand-50 text-brand-700'
-                    : 'border-hairline bg-white text-fg-muted hover:border-brand-300 hover:text-signal'
+                    : 'border-hairline bg-surface text-fg-muted hover:border-brand-300 hover:text-signal'
                 }`}
               >
                 <input
@@ -270,12 +270,12 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
       </section>
 
       {/* 테스트케이스 */}
-      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
-        <h3 className="mb-1 text-sm font-bold text-ink">테스트케이스</h3>
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
+        <h3 className="mb-1 text-sm font-bold text-fg">테스트케이스</h3>
         <div className="mb-3">
           <Callout tone="info" title="입력은 인자 배열입니다">
-            <code className="rounded bg-white/60 px-1">[[2,7,11,15], 9]</code>는 인자가 두 개(배열 하나 + 숫자
-            하나)라는 뜻입니다. <code className="rounded bg-white/60 px-1">[2,7,11,15]</code>로 쓰면 인자 네 개가
+            <code className="rounded bg-surface/60 px-1">[[2,7,11,15], 9]</code>는 인자가 두 개(배열 하나 + 숫자
+            하나)라는 뜻입니다. <code className="rounded bg-surface/60 px-1">[2,7,11,15]</code>로 쓰면 인자 네 개가
             되어 채점이 전부 실패합니다.
           </Callout>
         </div>

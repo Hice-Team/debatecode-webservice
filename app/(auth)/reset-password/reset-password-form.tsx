@@ -21,7 +21,7 @@ export default function ResetPasswordForm() {
           autoComplete="new-password"
           required
           placeholder="영문 + 숫자, 8자 이상"
-          className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
+          className="w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm text-fg placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
         />
         {state.errors?.password && <p className="mt-1.5 text-xs text-rose-600">{state.errors.password[0]}</p>}
       </div>

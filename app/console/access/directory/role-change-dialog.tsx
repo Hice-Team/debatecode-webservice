@@ -85,7 +85,7 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
                     className="mt-0.5 h-4 w-4 accent-[#1800AC]"
                   />
                   <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-ink">{ROLE_LABELS[r]}</span>
+                    <span className="block text-sm font-semibold text-fg">{ROLE_LABELS[r]}</span>
                     <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">
                       {ROLE_DESCRIPTIONS[r]}
                     </span>
@@ -158,7 +158,7 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
         </div>
 
         <Footer>
-          <button type="button" onClick={onClose} className={`rounded-xl border border-ink/15 px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}>
+          <button type="button" onClick={onClose} className={`rounded-xl border border-hairline px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}>
             취소
           </button>
           <button
@@ -198,15 +198,15 @@ export function Shell({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative w-[min(34rem,100%)] overflow-hidden rounded-[var(--radius-panel)] bg-white shadow-2xl shadow-black/30"
+        className="relative w-[min(34rem,100%)] overflow-hidden rounded-[var(--radius-panel)] bg-surface shadow-2xl shadow-black/30"
       >
         <div className="flex items-center justify-between border-b border-hairline px-6 py-4">
-          <h3 className="text-lg font-bold text-ink">{title}</h3>
+          <h3 className="text-lg font-bold text-fg">{title}</h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="grid h-7 w-7 place-items-center rounded-full text-fg-muted hover:bg-ink/5"
+            className="grid h-7 w-7 place-items-center rounded-full text-fg-muted hover:bg-paper"
           >
             ✕
           </button>

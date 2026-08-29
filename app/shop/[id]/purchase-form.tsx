@@ -12,7 +12,7 @@ import { CONTACT_TYPES, type ContactType } from '@/app/lib/shop-scope';
 const initialState: MateActionState = {};
 
 const INPUT =
-  'w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
+  'w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 
 export default function PurchaseForm({
   productId,
@@ -77,7 +77,7 @@ export default function PurchaseForm({
               className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
                 contactType === c.value
                   ? 'border-signal bg-brand-50 text-brand-700'
-                  : 'border-ink/15 text-fg-secondary hover:border-ink/30'
+                  : 'border-hairline text-fg-secondary hover:border-fg-quiet'
               }`}
             >
               {c.label}
@@ -96,10 +96,10 @@ export default function PurchaseForm({
       </fieldset>
 
       {confirming ? (
-        <div className="rounded-lg border border-ink/15 bg-paper/60 p-3">
+        <div className="rounded-lg border border-hairline bg-paper/60 p-3">
           <p className="text-[13px] leading-relaxed text-fg">
-            <strong className="text-ink">{productLabel}</strong>을(를) 신청합니다. 포인트가 즉시 차감되고,
-            승인 후 <strong className="text-ink">{contact}</strong>(으)로 발송됩니다.
+            <strong className="text-fg">{productLabel}</strong>을(를) 신청합니다. 포인트가 즉시 차감되고,
+            승인 후 <strong className="text-fg">{contact}</strong>(으)로 발송됩니다.
           </p>
           <div className="mt-3 flex gap-2">
             <button
@@ -112,7 +112,7 @@ export default function PurchaseForm({
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="rounded-lg px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors hover:text-ink"
+              className="rounded-lg px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors hover:text-fg"
             >
               취소
             </button>

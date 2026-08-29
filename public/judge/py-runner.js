@@ -12,6 +12,12 @@ var pyodideReadyPromise = loadPyodide({
 }).then(function (py) {
   self.postMessage({ type: 'ready' });
   return py;
+}).catch(function (err) {
+  self.postMessage({
+    type: 'worker-error',
+    errorMessage: String(err && err.message ? err.message : err),
+  });
+  throw err;
 });
 
 // Pyodide Proxy → 순수 JS 값 변환 (tuple→array, dict→object, int 유지)

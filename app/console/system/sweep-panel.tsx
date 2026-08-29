@@ -16,8 +16,8 @@ export default function SweepPanel() {
   const [state, formAction, pending] = useActionState(async () => sweepExpiredData(), initial);
 
   return (
-    <div className="rounded-xl border border-hairline bg-white p-4">
-      <h3 className="text-sm font-semibold text-ink">만료 데이터 정리</h3>
+    <div className="rounded-xl border border-hairline bg-surface p-4">
+      <h3 className="text-sm font-semibold text-fg">만료 데이터 정리</h3>
       <p className="mt-1 text-xs leading-relaxed text-fg-muted">
         수명이 지난 레이트리밋 카운터·AI 사용량·채점 세션·이메일 인증 코드·가입 초안을 지웁니다. 진행 중인
         이용자에게는 영향이 없습니다.

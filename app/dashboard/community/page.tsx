@@ -68,7 +68,7 @@ export default async function CommunityAdminPage() {
         </section>
       )}
 
-      <div className="bg-white rounded-xl border border-hairline divide-y divide-ink/5">
+      <div className="bg-surface rounded-xl border border-hairline divide-y divide-hairline">
         {posts.map((p) => {
           const isSuspended = p.author.suspendedUntil && p.author.suspendedUntil > new Date();
           return (

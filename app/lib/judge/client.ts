@@ -32,13 +32,22 @@ const slots = new Map<Language, WorkerSlot>();
 function spawn(language: Language, onLoading?: (loading: boolean) => void): WorkerSlot {
   const worker = new Worker(WORKER_URLS[language]);
   let resolveReady: () => void;
-  const ready = new Promise<void>((res) => (resolveReady = res));
+  let rejectReady: (reason?: unknown) => void;
+  const ready = new Promise<void>((res, reject) => {
+    resolveReady = res;
+    rejectReady = reject;
+  });
   onLoading?.(true);
   const handleReady = (e: MessageEvent<JudgeWorkerMessage>) => {
     if (e.data.type === 'ready') {
       onLoading?.(false);
       worker.removeEventListener('message', handleReady);
       resolveReady!();
+    }
+    if (e.data.type === 'worker-error') {
+      onLoading?.(false);
+      worker.removeEventListener('message', handleReady);
+      rejectReady!(new JudgeError(e.data.errorMessage ?? '실행기를 불러오지 못했습니다.'));
     }
   };
   worker.addEventListener('message', handleReady);
@@ -198,6 +207,21 @@ function executeInWorker(opts: {
 
       worker.addEventListener('message', handler);
       worker.postMessage({ type: 'run', code, cases, timeLimitMs });
+    }).catch((error) => {
+      if (finished) return;
+      finished = true;
+      slots.delete(language);
+      onRuntimeLoading?.(false);
+      slot.worker.terminate();
+      resolve(
+        cases.map((c) => ({
+          id: c.id,
+          outcome: 'error' as const,
+          stdout: '',
+          timeMs: 0,
+          errorMessage: error instanceof Error ? error.message : '실행기를 불러오지 못했습니다.',
+        })),
+      );
     });
   });
 }

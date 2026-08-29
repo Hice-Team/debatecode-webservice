@@ -66,7 +66,7 @@ async function load(userId: string) {
   return { posts, comments, listings, inquiries };
 }
 
-const CARD = 'overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white';
+const CARD = 'overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface';
 const ROW = 'block px-4 py-3 transition-colors hover:bg-paper';
 
 function Empty({ text }: { text: string }) {

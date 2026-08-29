@@ -81,9 +81,9 @@ export default async function InquiryManagementPage() {
         <div className="mb-5">
           <Callout tone="warn" title="메일 전송 수단이 설정되지 않았습니다">
             답변은 저장되지만 회신 메일은 실제로 발송되지 않습니다(dry-run). 이용자는 답변을 확인할 수 없으므로,
-            운영 전에 <code className="rounded bg-white/60 px-1">SMTP_HOST</code> ·{' '}
-            <code className="rounded bg-white/60 px-1">SMTP_USER</code> ·{' '}
-            <code className="rounded bg-white/60 px-1">SMTP_PASS</code>를 설정하세요.
+            운영 전에 <code className="rounded bg-surface/60 px-1">SMTP_HOST</code> ·{' '}
+            <code className="rounded bg-surface/60 px-1">SMTP_USER</code> ·{' '}
+            <code className="rounded bg-surface/60 px-1">SMTP_PASS</code>를 설정하세요.
           </Callout>
         </div>
       )}

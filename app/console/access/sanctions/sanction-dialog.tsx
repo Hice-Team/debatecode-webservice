@@ -76,7 +76,7 @@ export default function SanctionDialog({
                   ? 'bg-signal text-white'
                   : step > i + 1
                     ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-ink/[0.06] text-fg-muted'
+                    : 'bg-paper text-fg-muted'
               }`}
             >
               {i + 1}. {label}
@@ -147,7 +147,7 @@ export default function SanctionDialog({
                         className="mt-0.5 h-4 w-4 accent-rose-600"
                       />
                       <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-ink">{SANCTION_TYPE_LABEL[t]} 제한</span>
+                        <span className="block text-sm font-semibold text-fg">{SANCTION_TYPE_LABEL[t]} 제한</span>
                         <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">
                           {SANCTION_TYPE_DESC[t]}
                         </span>
@@ -170,7 +170,7 @@ export default function SanctionDialog({
                           ? p.days === 0
                             ? 'border-rose-500 bg-rose-600 text-white'
                             : 'border-signal bg-signal text-white'
-                          : 'border-ink/15 text-fg-secondary hover:border-ink/40'
+                          : 'border-hairline text-fg-secondary hover:border-fg-quiet'
                       }`}
                     >
                       {p.label}
@@ -216,7 +216,7 @@ export default function SanctionDialog({
                 <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                   이용자에게 표시되는 문구
                 </p>
-                <pre className="whitespace-pre-wrap rounded-xl border border-ink/15 bg-white px-3.5 py-3 font-sans text-xs leading-relaxed text-fg">
+                <pre className="whitespace-pre-wrap rounded-xl border border-hairline bg-surface px-3.5 py-3 font-sans text-xs leading-relaxed text-fg">
                   {sanctionNotice(type, days, reason)}
                 </pre>
               </div>
@@ -233,12 +233,12 @@ export default function SanctionDialog({
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className={`mr-auto rounded-xl border border-ink/15 px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}
+              className={`mr-auto rounded-xl border border-hairline px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}
             >
               ← 이전
             </button>
           )}
-          <button type="button" onClick={onClose} className={`rounded-xl border border-ink/15 px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}>
+          <button type="button" onClick={onClose} className={`rounded-xl border border-hairline px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}>
             취소
           </button>
           {step < 3 ? (

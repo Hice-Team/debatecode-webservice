@@ -53,7 +53,7 @@ export default async function AiSearchPage({ searchParams }: PageProps<'/study/s
     (restored?.branchedFrom as { sessionId?: string; title?: string | null } | null) ?? null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper text-ink-soft">
+    <div className="flex min-h-screen flex-col bg-paper text-fg">
       <Nav />
       {/* key — 세션이 바뀌면 대화 화면을 통째로 새로 마운트해 이전 세션 상태가 남지 않게 한다 */}
       <Conversation

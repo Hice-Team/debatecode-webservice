@@ -99,7 +99,7 @@ export default async function AuditLogPage({
       </div>
 
       {/* 필터 — GET 폼이라 결과가 주소에 남는다 */}
-      <form method="get" className="mb-4 flex flex-wrap items-end gap-2 rounded-[var(--radius-panel)] border border-hairline bg-white p-4">
+      <form method="get" className="mb-4 flex flex-wrap items-end gap-2 rounded-[var(--radius-panel)] border border-hairline bg-surface p-4">
         <div className="min-w-[10rem] flex-1">
           <label htmlFor="audit-q" className="mb-1.5 block font-mono text-[11px] tracking-wider text-fg-muted">
             검색 (내용·행위자·대상 ID)
@@ -109,7 +109,7 @@ export default async function AuditLogPage({
             name="q"
             defaultValue={q}
             placeholder="예: 제재 / 강*호 / cmxxxx"
-            className={`w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm ${FOCUS}`}
+            className={`w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm ${FOCUS}`}
           />
         </div>
         <div>
@@ -120,7 +120,7 @@ export default async function AuditLogPage({
             id="audit-domain"
             name="domain"
             defaultValue={domain}
-            className={`rounded-lg border border-ink/15 bg-white px-2.5 py-2 text-sm ${FOCUS}`}
+            className={`rounded-lg border border-hairline bg-surface px-2.5 py-2 text-sm ${FOCUS}`}
           >
             {DOMAINS.map((d) => (
               <option key={d.value} value={d.value}>
@@ -137,7 +137,7 @@ export default async function AuditLogPage({
             id="audit-days"
             name="days"
             defaultValue={days}
-            className={`rounded-lg border border-ink/15 bg-white px-2.5 py-2 text-sm ${FOCUS}`}
+            className={`rounded-lg border border-hairline bg-surface px-2.5 py-2 text-sm ${FOCUS}`}
           >
             {PERIODS.map((p) => (
               <option key={p.value} value={p.value}>
@@ -156,14 +156,14 @@ export default async function AuditLogPage({
         )}
       </form>
 
-      <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+      <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
         {entries.length === 0 ? (
           <EmptyState
             title="조건에 맞는 기록이 없습니다"
             sub="기간을 넓히거나 영역 필터를 해제해 보세요."
           />
         ) : (
-          <ul className="divide-y divide-ink/5">
+          <ul className="divide-y divide-hairline">
             {entries.map((entry) => (
               <li key={entry.id} className="px-5 py-3.5">
                 <div className="flex flex-wrap items-center gap-2">
@@ -173,7 +173,7 @@ export default async function AuditLogPage({
                         ? 'bg-rose-100 text-rose-800'
                         : entry.action.startsWith('maintenance.') || entry.action.startsWith('setting.')
                           ? 'bg-amber-100 text-amber-900'
-                          : 'bg-ink/[0.06] text-fg-muted'
+                          : 'bg-paper text-fg-muted'
                     }`}
                   >
                     {auditActionLabel(entry.action)}

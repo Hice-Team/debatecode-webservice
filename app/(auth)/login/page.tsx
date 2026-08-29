@@ -29,20 +29,20 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600">WELCOME BACK</span>
           </Link>
           <h1
-            className="mt-2 text-3xl font-bold tracking-tight text-ink-soft"
+            className="mt-2 text-3xl font-bold tracking-tight text-fg"
             style={{ fontFamily: 'var(--font-space-grotesk)' }}
           >
             다시 논증할 시간입니다
           </h1>
         </div>
 
-        <div className="bg-white/90 backdrop-blur-xl rounded-[var(--radius-panel)] border border-brand-100 shadow-[0_24px_60px_-24px_rgba(24,0,172,0.15)] p-8">
+        <div className="bg-surface/90 backdrop-blur-xl rounded-[var(--radius-panel)] border border-brand-100 shadow-[0_24px_60px_-24px_rgba(24,0,172,0.15)] p-8">
           <LoginForm oauthError={typeof oauthError === 'string' ? oauthError : undefined} />
         </div>
 
         <p className="mt-6 text-center text-sm text-fg-secondary">
           아직 계정이 없나요?{' '}
-          <Link href="/signup" className="font-semibold text-ink-soft underline underline-offset-4 hover:text-signal transition-colors">
+          <Link href="/signup" className="font-semibold text-fg underline underline-offset-4 hover:text-signal transition-colors">
             회원가입
           </Link>
         </p>

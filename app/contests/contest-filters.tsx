@@ -71,11 +71,11 @@ export default function ContestFilters({
 const chipBase =
   'px-3.5 py-2.5 rounded-full border text-xs font-medium transition-colors cursor-pointer';
   const on = 'bg-brand-50 text-brand-700 border-brand-300 shadow-[inset_0_0_0_1px_rgba(69,49,217,0.15)]';
-  const off = 'bg-white text-fg-secondary border-hairline hover:border-brand-300 hover:text-signal';
+  const off = 'bg-surface text-fg-secondary border-hairline hover:border-brand-300 hover:text-signal';
   const groupLabel = 'font-mono text-[10px] uppercase tracking-wider text-fg-quiet w-20 shrink-0 pt-1.5';
 
   return (
-    <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white shadow-[0_1px_2px_rgba(20,21,43,0.04)]">
+    <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface shadow-[0_1px_2px_rgba(20,21,43,0.04)]">
       <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center">
         <label className="relative flex-1">
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-fg-quiet">
@@ -89,7 +89,7 @@ const chipBase =
             value={q}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder={t('search-contests-placeholder', language)}
-            className="w-full rounded-[var(--radius-card)] border border-hairline bg-paper px-4 py-3 pl-10 text-sm placeholder:text-fg-quiet focus:border-signal focus:bg-white focus:outline-none focus:ring-2 focus:ring-signal/25"
+            className="w-full rounded-[var(--radius-card)] border border-hairline bg-paper px-4 py-3 pl-10 text-sm placeholder:text-fg-quiet focus:border-signal focus:bg-surface focus:outline-none focus:ring-2 focus:ring-signal/25"
           />
         </label>
         <button
@@ -114,7 +114,7 @@ const chipBase =
       </div>
 
       {showFilters && (
-        <div className="space-y-3 border-t border-ink/8 bg-paper/50 p-4">
+        <div className="space-y-3 border-t border-hairline bg-paper/50 p-4">
           {companies.length > 0 && (
             <div className="flex flex-wrap items-start gap-2">
               <span className={groupLabel}>Company</span>
@@ -136,7 +136,7 @@ const chipBase =
             </div>
           )}
           {activeCount > 0 && (
-            <div className="flex justify-end border-t border-ink/8 pt-3">
+            <div className="flex justify-end border-t border-hairline pt-3">
               <button type="button" onClick={resetFilters} className="inline-flex items-center gap-1.5 text-sm font-medium text-signal hover:underline">
                 <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current stroke-2"><path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" /></svg>
                 {t('filter-reset', language)} ({activeCount})

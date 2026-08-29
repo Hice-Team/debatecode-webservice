@@ -2,16 +2,16 @@
 export const BTN_APPROVE =
   'rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700';
 export const BTN_REJECT =
-  'rounded-xl border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg hover:border-rose-300 hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600';
+  'rounded-xl border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-rose-300 hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600';
 export const BTN_PRIMARY =
   'rounded-xl bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 export const BTN_NEUTRAL =
-  'rounded-xl border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg hover:border-ink/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
+  'rounded-xl border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 export const BTN_DANGER =
   'rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600';
 
 export const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
+  'w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 export const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 
 // 신고 사유·대상 라벨은 app/lib/report-targets.ts가 원본이다.
@@ -91,7 +91,7 @@ export function PageHeader({
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         <span className="text-xs font-bold uppercase tracking-wider text-brand-600">{eyebrow}</span>
-        <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           {title}
         </h1>
         {sub && <p className="mt-1 text-sm text-fg-secondary">{sub}</p>}
@@ -104,7 +104,7 @@ export function PageHeader({
 export function SectionHeader({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="mb-4">
-      <h3 className="text-xl font-bold text-ink">{title}</h3>
+      <h3 className="text-xl font-bold text-fg">{title}</h3>
       {sub && <p className="mt-1 text-sm text-fg-secondary">{sub}</p>}
     </div>
   );
@@ -137,9 +137,9 @@ export function StatGrid({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {stats.map((stat) => (
-        <div key={stat.label} className="rounded-xl border border-hairline bg-white px-4 py-3">
+        <div key={stat.label} className="rounded-xl border border-hairline bg-surface px-4 py-3">
           <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
-          <p className={`mt-1 font-display text-2xl font-bold ${stat.warn ? 'text-rose-600' : 'text-ink'}`}>
+          <p className={`mt-1 font-display text-2xl font-bold ${stat.warn ? 'text-rose-600' : 'text-fg'}`}>
             {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
           </p>
           {stat.sub && <p className="mt-0.5 text-[11px] text-fg-muted">{stat.sub}</p>}
@@ -173,14 +173,14 @@ export function LinkTabs({ items }: { items: TabItem[] }) {
           className={`-mb-px flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
             tab.active
               ? 'border-signal text-signal'
-              : 'border-transparent text-fg-secondary hover:border-ink/20 hover:text-ink'
+              : 'border-transparent text-fg-secondary hover:border-hairline hover:text-fg'
           }`}
         >
           {tab.label}
           {tab.count != null && tab.count > 0 && (
             <span
               className={`rounded-full px-1.5 py-0.5 font-mono text-[10px] font-bold ${
-                tab.active ? 'bg-signal text-white' : 'bg-ink/5 text-fg-muted'
+                tab.active ? 'bg-signal text-white' : 'bg-paper text-fg-muted'
               }`}
             >
               {tab.count}

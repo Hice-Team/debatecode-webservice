@@ -108,7 +108,7 @@ export default function Composer({
               onClick={() => exportConversation(messages)}
               disabled={disabled}
               title={t('ai-export-all-hint', language)}
-              className="rounded-lg border border-hairline bg-white px-3 py-1.5 text-[11px] font-semibold text-fg-secondary transition hover:border-brand-300 hover:text-signal disabled:opacity-40 disabled:hover:border-hairline disabled:hover:text-fg-secondary"
+              className="rounded-lg border border-hairline bg-surface px-3 py-1.5 text-[11px] font-semibold text-fg-secondary transition hover:border-brand-300 hover:text-signal disabled:opacity-40 disabled:hover:border-hairline disabled:hover:text-fg-secondary"
             >
               {t('ai-export-all', language)}
             </button>
@@ -130,7 +130,7 @@ export default function Composer({
             정렬은 items-center다. items-end로 두면 높이가 다른 컨트롤(40px 버튼과
             한 줄짜리 입력)의 바닥만 맞아, 알약 안에서 아이콘이 아래로 처져 보였다.
             좌우 여백도 px로 맞춰 '+'와 전송 버튼이 모서리에서 같은 거리에 놓인다. */}
-        <div className="flex flex-wrap items-center gap-1.5 rounded-[1.75rem] border border-hairline bg-white px-2 py-1.5 sm:flex-nowrap sm:px-2.5 sm:py-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.12)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.18)]">
+        <div className="flex flex-wrap items-center gap-1.5 rounded-[1.75rem] border border-hairline bg-surface px-2 py-1.5 sm:flex-nowrap sm:px-2.5 sm:py-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.12)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.18)]">
           <AttachMenu
             placement="top"
             disabled={disabled}
@@ -162,7 +162,7 @@ export default function Composer({
               disabled={disabled}
               placeholder={t('ai-search-followup-placeholder', language)}
               aria-label={t('ai-search-followup-placeholder', language)}
-              className="dc-scroll min-w-0 flex-1 resize-none bg-transparent px-1.5 py-3 text-[15px] leading-6 text-ink placeholder:text-fg-quiet focus:outline-none disabled:cursor-not-allowed disabled:text-fg-quiet"
+              className="dc-scroll min-w-0 flex-1 resize-none bg-transparent px-1.5 py-3 text-[15px] leading-6 text-fg placeholder:text-fg-quiet focus:outline-none disabled:cursor-not-allowed disabled:text-fg-quiet"
             />
           )}
 
@@ -201,7 +201,7 @@ export default function Composer({
                 {/* 정지 — 사각형 둘레에 진행 링을 돌려 "아직 도는 중"임을 남긴다 */}
                 <span aria-hidden className="relative grid h-full w-full place-items-center">
                   <span className="absolute inset-[3px] animate-spin rounded-full border-2 border-white/15 border-t-white/70 motion-reduce:animate-none" />
-                  <span className="block h-[9px] w-[9px] rounded-[2px] bg-white" />
+                  <span className="block h-[9px] w-[9px] rounded-[2px] bg-surface" />
                 </span>
               </button>
             ) : (
@@ -210,7 +210,7 @@ export default function Composer({
                 disabled={!text.trim() || busy}
                 aria-label={t('ai-search-submit', language)}
                 title={t('ai-search-submit', language)}
-                className="group/send grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.28)] transition-[color,background-color,border-color,box-shadow,transform] hover:shadow-[0_3px_12px_rgba(24,0,172,0.4)] active:scale-95 disabled:bg-none disabled:bg-ink/[0.07] disabled:text-fg-quiet disabled:shadow-none"
+                className="group/send grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.28)] transition-[color,background-color,border-color,box-shadow,transform] hover:shadow-[0_3px_12px_rgba(24,0,172,0.4)] active:scale-95 disabled:bg-none disabled:bg-paper disabled:text-fg-quiet disabled:shadow-none"
               >
                 {busy ? (
                   <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none" />

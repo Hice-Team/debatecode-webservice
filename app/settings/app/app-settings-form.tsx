@@ -11,6 +11,7 @@ import {
 } from '@/app/lib/ai/debateai-models';
 import { useLanguage } from '@/app/context/language-context';
 import { t } from '@/app/lib/i18n';
+import { useSettingsForm } from '../save-bar';
 
 const initialState: AppSettingsFormState = {};
 
@@ -22,8 +23,11 @@ export default function AppSettingsForm({
   const [state, formAction, pending] = useActionState(updateAppSettings, initialState);
   const { language: uiLanguage, setLanguage: setUiLanguage } = useLanguage();
 
+  // 저장은 하단 바가 맡는다(app/settings/save-bar.tsx)
+  const settingsForm = useSettingsForm();
+
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} {...settingsForm} className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <label className="flex items-center gap-3 text-sm cursor-pointer">
           <input type="checkbox" name="emailNotifications" defaultChecked={initial.emailNotifications} className="accent-[#4531d9]" />
@@ -57,7 +61,7 @@ export default function AppSettingsForm({
             id="preferredLanguage"
             name="preferredLanguage"
             defaultValue={initial.preferredLanguage}
-            className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
+            className="w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
           >
             <option value="">{t('settings-use-default', uiLanguage)}</option>
             {(Object.keys(LANGUAGE_LABELS) as Language[]).map((l) => (
@@ -77,7 +81,7 @@ export default function AppSettingsForm({
             id="aiCodeModel"
             name="aiCodeModel"
             defaultValue={initial.aiCodeModel}
-            className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
+            className="w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
           >
             <option value="">
               기본값 — {findDebateAiModel(DEFAULT_CODE_MODEL_ID).label}
@@ -109,7 +113,7 @@ export default function AppSettingsForm({
           id="aiCodeModel"
           name="aiCodeModel"
           defaultValue={initial.aiCodeModel}
-          className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
+          className="w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
         >
           <option value="">
             기본값 — {findDebateAiModel(DEFAULT_CODE_MODEL_ID).label}

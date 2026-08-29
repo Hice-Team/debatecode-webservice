@@ -300,7 +300,7 @@ export default async function CommunityPage({
           {/* 모바일에서는 우측 레일이 사라지므로 명예의 전당을 여기에 붙인다 */}
           <Link
             href="/hall-of-fame"
-            className="mt-4 flex items-center gap-2 rounded-[var(--radius-card)] border border-hairline bg-white px-3.5 py-3 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50/40 xl:hidden"
+            className="mt-4 flex items-center gap-2 rounded-[var(--radius-card)] border border-hairline bg-surface px-3.5 py-3 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50/40 xl:hidden"
           >
             <span aria-hidden>🏆</span>
             <span className="min-w-0 flex-1 truncate font-medium text-fg">
@@ -317,7 +317,7 @@ export default async function CommunityPage({
           <section>
             {/* 게시판 이름과 설명 — 좌측에서 고른 곳이 어디인지 본문에서 다시 확인된다 */}
             <div className="mb-3">
-              <h2 className="font-display text-lg font-bold tracking-tight text-ink">
+              <h2 className="font-display text-lg font-bold tracking-tight text-fg">
                 {listTitle}
                 <span className="ml-1.5 font-mono text-xs font-normal text-fg-quiet">
                   {totalCount}
@@ -342,7 +342,7 @@ export default async function CommunityPage({
                   className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                     !activePlatform
                       ? "bg-brand-50 font-semibold text-signal"
-                      : "text-fg-muted hover:text-ink"
+                      : "text-fg-muted hover:text-fg"
                   }`}
                 >
                   <I18nSlot k="all-platforms" fallback="전체 플랫폼" />
@@ -358,7 +358,7 @@ export default async function CommunityPage({
                     className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                       activePlatform === pf.key
                         ? "bg-brand-50 font-semibold text-signal"
-                        : "text-fg-muted hover:text-ink"
+                        : "text-fg-muted hover:text-fg"
                     }`}
                   >
                     {pf.label}
@@ -393,19 +393,19 @@ export default async function CommunityPage({
                   defaultValue={query}
                   aria-label="게시글 검색"
                   placeholder="게시글 검색"
-                  className="w-full rounded-lg border border-hairline bg-white py-3 pl-9 pr-3 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/20"
+                  className="w-full rounded-lg border border-hairline bg-surface py-3 pl-9 pr-3 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/20"
                 />
               </form>
 
               {/* 정렬 드롭다운 */}
               <details className="relative shrink-0">
-                <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-hairline bg-white px-3 py-2 text-sm text-fg-secondary transition-colors marker:content-none hover:border-ink/25">
+                <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-fg-secondary transition-colors marker:content-none hover:border-ink/25">
                   {SORTS.find((s) => s.key === activeSort)!.label}
                   <span aria-hidden className="text-fg-quiet">
                     ▾
                   </span>
                 </summary>
-                <div className="absolute right-0 top-full z-20 mt-1 min-w-[12rem] overflow-hidden rounded-lg border border-hairline bg-white py-1 shadow-lg shadow-ink/5">
+                <div className="absolute right-0 top-full z-20 mt-1 min-w-[12rem] overflow-hidden rounded-lg border border-hairline bg-surface py-1 shadow-lg shadow-ink/5">
                   {SORTS.map((s) => (
                     <Link
                       key={s.key}
@@ -481,7 +481,7 @@ export default async function CommunityPage({
         <aside className="hidden xl:block xl:sticky xl:top-6 xl:self-start">
           <Link
             href="/hall-of-fame"
-            className="group flex items-center gap-2 rounded-xl border border-hairline bg-white px-3.5 py-3 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50/40"
+            className="group flex items-center gap-2 rounded-xl border border-hairline bg-surface px-3.5 py-3 text-sm transition-colors hover:border-brand-300 hover:bg-brand-50/40"
           >
             <span aria-hidden>🏆</span>
             <span className="min-w-0 flex-1">
@@ -502,11 +502,11 @@ export default async function CommunityPage({
 
           {/* 이번 주 인기글 — 목록을 훑지 않아도 볼 만한 글에 닿게 한다 */}
           {trending.length > 0 && (
-            <section className="mt-4 overflow-hidden rounded-xl border border-hairline bg-white">
+            <section className="mt-4 overflow-hidden rounded-xl border border-hairline bg-surface">
               <h2 className="border-b border-hairline px-3.5 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-widest text-fg-quiet">
                 이번 주 많이 읽은 글
               </h2>
-              <ol className="divide-y divide-ink/5">
+              <ol className="divide-y divide-hairline">
                 {trending.map((t, i) => (
                   <li key={t.id}>
                     <Link
@@ -585,7 +585,7 @@ function BoardLink({
       {fresh > 0 && (
         <span
           className={`shrink-0 rounded-full px-1.5 font-mono text-[10px] font-bold ${
-            active ? 'bg-white/20 text-white' : 'bg-brand-100 text-brand-700'
+            active ? 'bg-surface/20 text-white' : 'bg-brand-100 text-brand-700'
           }`}
           title="최근 24시간 새 글"
         >

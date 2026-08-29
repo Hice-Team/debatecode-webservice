@@ -13,19 +13,19 @@ export default function ForgotPasswordPage() {
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600">FORGOT PASSWORD</span>
           </Link>
           <h1
-            className="mt-2 text-3xl font-bold tracking-tight text-ink-soft"
+            className="mt-2 text-3xl font-bold tracking-tight text-fg"
             style={{ fontFamily: 'var(--font-space-grotesk)' }}
           >
             비밀번호를 재설정하세요
           </h1>
         </div>
 
-        <div className="bg-white rounded-xl border border-hairline shadow-sm p-8">
+        <div className="bg-surface rounded-xl border border-hairline shadow-sm p-8">
           <ForgotPasswordForm />
         </div>
 
         <p className="mt-6 text-center text-sm text-fg-secondary">
-          <Link href="/login" className="font-semibold text-ink-soft underline underline-offset-4 hover:text-signal transition-colors">
+          <Link href="/login" className="font-semibold text-fg underline underline-offset-4 hover:text-signal transition-colors">
             로그인으로 돌아가기
           </Link>
         </p>

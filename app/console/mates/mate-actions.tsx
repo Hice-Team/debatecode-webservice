@@ -16,7 +16,7 @@ export function WarnForm({ userId, name }: { userId: string; name: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg hover:border-amber-300 hover:text-amber-800 ${FOCUS}`}
+        className={`shrink-0 rounded-xl border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-amber-300 hover:text-amber-800 ${FOCUS}`}
       >
         경고
       </button>
@@ -32,12 +32,12 @@ export function WarnForm({ userId, name }: { userId: string; name: string }) {
         autoFocus
         aria-label={`${name} 경고 사유`}
         placeholder="경고 사유 (활동 이력에 남습니다)"
-        className={`min-w-0 flex-1 rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-xs placeholder:text-fg-quiet ${FOCUS}`}
+        className={`min-w-0 flex-1 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet ${FOCUS}`}
       />
       <button className="shrink-0 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100">
         경고 발급
       </button>
-      <button type="button" onClick={() => setOpen(false)} className="shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs text-fg-secondary">
+      <button type="button" onClick={() => setOpen(false)} className="shrink-0 rounded-xl border border-hairline px-3 py-1.5 text-xs text-fg-secondary">
         취소
       </button>
     </form>
@@ -53,7 +53,7 @@ export function RevokeForm({ userId, name }: { userId: string; name: string }) {
       <button
         type="button"
         onClick={() => setStep(1)}
-        className={`shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg hover:border-rose-300 hover:text-rose-700 ${FOCUS}`}
+        className={`shrink-0 rounded-xl border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-rose-300 hover:text-rose-700 ${FOCUS}`}
       >
         권한 회수
       </button>
@@ -71,10 +71,10 @@ export function RevokeForm({ userId, name }: { userId: string; name: string }) {
         onChange={(e) => setReason(e.target.value)}
         aria-label={`${name} 권한 회수 사유`}
         placeholder="회수 사유 (본인 요청 / 활동 위반 등) — 본인에게 표시됩니다"
-        className={`w-full rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-xs placeholder:text-fg-quiet ${FOCUS}`}
+        className={`w-full rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet ${FOCUS}`}
       />
       {step === 2 && (
-        <p className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-[11px] leading-relaxed text-rose-900">
+        <p className="rounded-lg border border-rose-300 bg-surface px-3 py-2 text-[11px] leading-relaxed text-rose-900">
           <strong>{name}</strong>의 디베이트메이트 권한을 회수합니다. 일반 사용자로 돌아가며 debateQ와 문제 출제가
           즉시 닫힙니다. 재신청은 가능합니다.
         </p>
@@ -97,7 +97,7 @@ export function RevokeForm({ userId, name }: { userId: string; name: string }) {
         <button
           type="button"
           onClick={() => setStep(0)}
-          className="rounded-xl border border-ink/15 px-3 py-1.5 text-xs text-fg-secondary"
+          className="rounded-xl border border-hairline px-3 py-1.5 text-xs text-fg-secondary"
         >
           취소
         </button>

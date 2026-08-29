@@ -29,7 +29,7 @@ export default function ForgotPasswordForm() {
           autoComplete="email"
           required
           placeholder="you@example.com"
-          className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
+          className="w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm text-fg placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
         />
         {state.errors?.email && <p className="mt-1.5 text-xs text-rose-600">{state.errors.email[0]}</p>}
       </div>

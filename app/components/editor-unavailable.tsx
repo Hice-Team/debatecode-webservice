@@ -24,17 +24,17 @@ export default function EditorUnavailable({
   backLabel?: string;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-paper text-ink-soft">
+    <div className="flex min-h-screen flex-col bg-paper text-fg">
       <Nav />
       <main className="mx-auto w-full max-w-md flex-grow px-5 py-14">
-        <span aria-hidden className="grid h-12 w-12 place-items-center rounded-[var(--radius-panel)] bg-white text-signal shadow-sm">
+        <span aria-hidden className="grid h-12 w-12 place-items-center rounded-[var(--radius-panel)] bg-surface text-signal shadow-sm">
           <svg viewBox="0 0 24 24" className="h-6 w-6 fill-none stroke-current stroke-[1.6]">
             <rect x="6" y="2.5" width="12" height="19" rx="2.5" />
             <path d="M10.5 18.5h3" strokeLinecap="round" />
           </svg>
         </span>
 
-        <h1 className="mt-4 font-display text-xl font-bold text-ink">{title}</h1>
+        <h1 className="mt-4 font-display text-xl font-bold text-fg">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-fg-secondary">{detail}</p>
 
         <p className="mt-7 font-mono text-[10px] uppercase tracking-wider text-fg-quiet">
@@ -45,10 +45,10 @@ export default function EditorUnavailable({
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex items-center gap-3 rounded-[var(--radius-panel)] border border-hairline bg-white px-4 py-3 transition hover:border-brand-300"
+                className="flex items-center gap-3 rounded-[var(--radius-panel)] border border-hairline bg-surface px-4 py-3 transition hover:border-brand-300"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-ink">{item.label}</span>
+                  <span className="block text-sm font-semibold text-fg">{item.label}</span>
                   <span className="block truncate text-[11px] text-fg-muted">{item.desc}</span>
                 </span>
                 <span aria-hidden className="text-fg-quiet">›</span>

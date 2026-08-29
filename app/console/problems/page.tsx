@@ -125,7 +125,7 @@ export default async function ProblemUploadPage({
               defaultValue={search}
               placeholder="제목·카테고리·기업으로 검색"
               aria-label="문제 검색"
-              className="min-w-0 flex-1 rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm sm:max-w-xs"
+              className="min-w-0 flex-1 rounded-lg border border-hairline bg-surface px-3 py-2 text-sm sm:max-w-xs"
             />
             <button className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500">
               검색
@@ -133,14 +133,14 @@ export default async function ProblemUploadPage({
             {search && (
               <Link
                 href="/console/problems?tab=bank"
-                className="rounded-xl border border-ink/15 px-3 py-2 text-xs text-fg-secondary"
+                className="rounded-xl border border-hairline px-3 py-2 text-xs text-fg-secondary"
               >
                 초기화
               </Link>
             )}
           </form>
 
-          <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+          <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
             {bankRows.length === 0 && (
               <EmptyRow text={search ? '검색 결과가 없습니다.' : '등록된 문제가 없습니다.'} />
             )}
@@ -149,7 +149,7 @@ export default async function ProblemUploadPage({
                 <span className="shrink-0 font-mono text-[11px] text-fg-quiet">#{p.id}</span>
                 <Link
                   href={`/problems/${p.id}`}
-                  className="min-w-0 flex-1 truncate font-medium text-ink hover:text-signal"
+                  className="min-w-0 flex-1 truncate font-medium text-fg hover:text-signal"
                 >
                   {p.title}
                 </Link>
@@ -169,7 +169,7 @@ export default async function ProblemUploadPage({
                 <span className="shrink-0 font-mono text-[10px] text-fg-quiet">제출 {p._count.submissions}</span>
                 <Link
                   href={`/console/problems/${p.id}`}
-                  className="shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg hover:border-ink/40"
+                  className="shrink-0 rounded-xl border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-fg-quiet"
                 >
                   수정·삭제
                 </Link>
@@ -188,15 +188,15 @@ export default async function ProblemUploadPage({
       {/* 최근 등록 — 방금 올린 것이 실제로 들어갔는지 확인하는 자리 */}
       {active !== 'bank' && (
         <div className="mt-10">
-          <h3 className="mb-3 text-lg font-bold text-ink">최근 등록된 문제</h3>
-          <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+          <h3 className="mb-3 text-lg font-bold text-fg">최근 등록된 문제</h3>
+          <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
             {recent.length === 0 && <EmptyRow text="등록된 문제가 없습니다." />}
             {recent.map((p) => (
               <div key={p.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
                 <span className="shrink-0 font-mono text-[11px] text-fg-quiet">#{p.id}</span>
                 <Link
                   href={`/problems/${p.id}`}
-                  className="min-w-0 flex-1 truncate font-medium text-ink hover:text-signal"
+                  className="min-w-0 flex-1 truncate font-medium text-fg hover:text-signal"
                 >
                   {p.title}
                 </Link>

@@ -104,12 +104,12 @@ function EditCommentForm({ comment, onDone }: { comment: CommentNode; onDone: ()
         rows={2}
         required
         defaultValue={comment.content}
-        className="w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
+        className="w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60"
       />
       {state.errors?.content && <p className="text-xs text-rose-600">{state.errors.content[0]}</p>}
       {state.errors?.form && <p className="text-xs text-rose-600">{state.errors.form[0]}</p>}
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onDone} className="px-3 py-1.5 text-xs font-medium text-fg-muted hover:text-ink-soft">
+        <button type="button" onClick={onDone} className="px-3 py-1.5 text-xs font-medium text-fg-muted hover:text-fg">
           {t('cancel', language)}
         </button>
         <button
@@ -157,7 +157,7 @@ function CommentItem({
         <div className="min-w-0 flex-1">
           {/* 헤더: 이름 · 상대시간 */}
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-            <AuthorBadges author={node.author} anonymous={node.anonymous} className="[&>span:first-child]:font-semibold [&>span:first-child]:text-ink" />
+            <AuthorBadges author={node.author} anonymous={node.anonymous} className="[&>span:first-child]:font-semibold [&>span:first-child]:text-fg" />
             {adoptedCommentId === node.id && (
               <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                 {t('adopted-answer', language)}
@@ -196,7 +196,7 @@ function CommentItem({
                 </form>
               )}
               {isMine && (
-                <button type="button" onClick={() => setEditing(true)} className="hover:bg-ink/5 hover:text-ink-soft">
+                <button type="button" onClick={() => setEditing(true)} className="hover:bg-paper hover:text-fg">
                   {t('comment-edit', language)}
                 </button>
               )}
@@ -287,7 +287,7 @@ export default function CommentSection({
 
   return (
     <div className="mt-8">
-      <h2 className="mb-3 flex items-center gap-2 text-base font-bold text-ink">
+      <h2 className="mb-3 flex items-center gap-2 text-base font-bold text-fg">
         {t('comments', language)}
         <span className="rounded-full bg-brand-50 px-2 py-0.5 font-mono text-xs font-bold text-brand-700">{total}</span>
       </h2>
@@ -299,7 +299,7 @@ export default function CommentSection({
       ) : replyPermission.allowed ? (
         <CommentForm postId={postId} />
       ) : (
-        <p className="border-l-2 border-ink/15 pl-3 text-sm text-fg-muted">
+        <p className="border-l-2 border-hairline pl-3 text-sm text-fg-muted">
           {t(
             replyPermission.reason === 'adopted'
               ? 'reply-locked-adopted'

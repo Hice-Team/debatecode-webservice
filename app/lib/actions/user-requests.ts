@@ -91,24 +91,14 @@ export async function submitInquiry(_prev: InquiryState, formData: FormData): Pr
 /* ---------- 디베이트메이트 신청 ---------- */
 
 export interface MateApplyState {
-  errors?: { motivation?: string[]; portfolioUrl?: string[]; attachment?: string[]; form?: string[] };
+  errors?: { motivation?: string[]; attachment?: string[]; form?: string[] };
   saved?: boolean;
 }
 
+// 신청서 PDF가 곧 지원서다. 예전에는 동기 20자를 폼 밖에서 요구해
+// "제출을 눌러도 아무 일이 없는" 상태를 만들었다 — 이제 받지 않는 값은 검증도 하지 않는다.
 const mateSchema = z.object({
-  motivation: z.string().trim().min(20, '지원 동기를 20자 이상 작성해 주세요.').max(2000),
-  // 이 값은 콘솔에서 관리자가 누르는 <a href>로 그대로 렌더된다.
-  // zod의 .url()은 javascript:·data:·file: 스킴도 통과시키므로, 그대로 두면 신청자가
-  // 심사자의 브라우저에서 스크립트를 돌릴 수 있다 — http/https로 못 박는다.
-  // (커뮤니티 첨부도 같은 이유로 같은 제약을 둔다 — app/lib/actions/community.ts)
-  portfolioUrl: z
-    .string()
-    .trim()
-    .max(500)
-    .url('올바른 URL이 아닙니다.')
-    .refine((v) => /^https?:\/\//i.test(v), 'http/https 주소만 등록할 수 있습니다.')
-    .optional()
-    .or(z.literal('')),
+  motivation: z.string().trim().max(2000).optional().or(z.literal('')),
 });
 
 const MATE_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
@@ -121,10 +111,7 @@ export async function applyDebateMate(_prev: MateApplyState, formData: FormData)
   const blocked = await featureBlockMessage('flag.mate_application', '디베이트메이트 신청이 현재 마감되었습니다.');
   if (blocked) return { errors: { form: [blocked] } };
 
-  const parsed = mateSchema.safeParse({
-    motivation: formData.get('motivation'),
-    portfolioUrl: formData.get('portfolioUrl') ?? '',
-  });
+  const parsed = mateSchema.safeParse({ motivation: formData.get('motivation') ?? '' });
   if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors };
 
   // 신청서 PDF — 폼에서 필수로 안내하므로 서버에서도 필수/형식/용량을 강제한다.
@@ -145,18 +132,21 @@ export async function applyDebateMate(_prev: MateApplyState, formData: FormData)
   const { data: uploaded } = supabase.storage.from('community-uploads').getPublicUrl(path);
 
   // 재신청 시 이전 신청을 덮어써 pending으로 되돌린다.
+  // 값이 없으면 필드를 **넣지 않는다**. null을 넘기면 컬럼이 NOT NULL이던 시절의
+  // 클라이언트에서 입력 형태 자체가 어긋나 "user가 없다"는 엉뚱한 오류로 나온다.
+  // 넣지 않으면 새 스키마에서는 null이 되고, 옛 클라이언트에서도 탈이 없다.
+  const motivation = parsed.data.motivation?.trim() || undefined;
+
   await prisma.debateMateApplication.upsert({
     where: { userId: user.id },
     create: {
       userId: user.id,
-      motivation: parsed.data.motivation,
-      portfolioUrl: parsed.data.portfolioUrl || null,
+      ...(motivation ? { motivation } : {}),
       attachmentUrl: uploaded.publicUrl,
       attachmentName: attachment.name,
     },
     update: {
-      motivation: parsed.data.motivation,
-      portfolioUrl: parsed.data.portfolioUrl || null,
+      ...(motivation ? { motivation } : {}),
       attachmentUrl: uploaded.publicUrl,
       attachmentName: attachment.name,
       status: 'pending',

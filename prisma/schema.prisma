@@ -312,7 +312,9 @@ model DebateMateApplication {
   id             String    @id @default(cuid())
   userId         String    @unique @db.Uuid
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  motivation     String
+  // 신청서 PDF가 지원 동기를 대신한다 — 폼에서 두 칸을 뺐으므로 선택값이다.
+  // (예전 신청서의 본문은 그대로 남아 있어 nullable로 바꾸기만 한다)
+  motivation     String?
   portfolioUrl   String?
   attachmentUrl  String? // 신청서 PDF (Storage 공개 URL)
   attachmentName String? // 업로드 원본 파일명 (표시용)

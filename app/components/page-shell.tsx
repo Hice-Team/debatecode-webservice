@@ -21,7 +21,7 @@ export function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col min-h-screen bg-paper text-ink-soft">
+    <div className="flex flex-col min-h-screen bg-paper text-fg">
       <Nav />
       <main className={`flex-grow ${WIDTHS[width]} w-full mx-auto px-6 sm:px-8 py-12`}>
         {children}
@@ -47,7 +47,11 @@ export function PageHeader({
   return (
     <div className={`flex flex-wrap items-end justify-between gap-4 ${className}`}>
       <div>
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-600">{slug.replace(/-/g, ' ')}</span>
+        {/* 아이브로우는 "여기가 어디인지"만 조용히 알린다. 예전에는 굵기·크기가 제목과
+            비슷해 둘이 서로 경쟁했다 — 위계는 색이 아니라 명도와 무게로 만든다. */}
+        <span className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-fg-muted">
+          {slug.replace(/-/g, ' ')}
+        </span>
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">
           <I18nSlot k={`page-${slug}-title`} fallback={title} />
         </h1>

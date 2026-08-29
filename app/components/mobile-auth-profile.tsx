@@ -25,7 +25,7 @@ const PROFILE_LINKS = [
 ];
 
 const row =
-  'block rounded-lg px-3 py-2.5 text-sm font-medium text-fg-secondary hover:bg-ink/5 hover:text-ink-soft transition-colors';
+  'block rounded-lg px-3 py-2.5 text-sm font-medium text-fg-secondary hover:bg-paper hover:text-fg transition-colors';
 
 export default function MobileAuthProfile({ name, email, avatarUrl }: Props) {
   const { language } = useLanguage();
@@ -39,13 +39,13 @@ export default function MobileAuthProfile({ name, email, avatarUrl }: Props) {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-ink/5"
+          className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-paper"
         >
-          <span className="h-9 w-9 shrink-0 overflow-hidden rounded-full border-2 border-signal bg-ink/5">
+          <span className="h-9 w-9 shrink-0 overflow-hidden rounded-full border-2 border-signal bg-paper">
             <Avatar src={avatarUrl} alt={name} className="h-full w-full" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold text-ink-soft">{name}</span>
+            <span className="block truncate text-sm font-semibold text-fg">{name}</span>
             <span className="block truncate text-xs text-fg-muted">{email}</span>
           </span>
           <svg

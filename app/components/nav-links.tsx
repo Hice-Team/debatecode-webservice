@@ -15,7 +15,7 @@ export default function NavLinks({ links }: Props) {
     <ul className="hidden md:flex items-center gap-7 text-sm font-medium text-fg-secondary [.dc-nav-dark_&]:text-fg-on-dark-secondary">
       {links.map((m) => (
         <li key={m.href}>
-          <Link href={m.href} className="transition-colors hover:text-ink-soft [.dc-nav-dark_&]:hover:text-fg-on-dark">
+          <Link href={m.href} className="transition-colors hover:text-fg [.dc-nav-dark_&]:hover:text-fg-on-dark">
             {t(m.key, language)}
           </Link>
         </li>

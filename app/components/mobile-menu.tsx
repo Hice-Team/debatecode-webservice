@@ -31,7 +31,7 @@ export default function MobileMenu({ links, authSlot }: Props) {
         aria-label={open ? t('close-menu', language) : t('open-menu', language)}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-10 w-10 items-center justify-center rounded-lg text-fg hover:bg-ink/5 transition-colors"
+        className="flex h-10 w-10 items-center justify-center rounded-lg text-fg hover:bg-paper transition-colors"
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2">
           {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -39,13 +39,13 @@ export default function MobileMenu({ links, authSlot }: Props) {
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full mt-2 mx-3 rounded-[var(--radius-panel)] border border-hairline bg-white/95 backdrop-blur-xl p-4 shadow-2xl shadow-ink/15 z-50">
+        <div className="absolute left-0 right-0 top-full mt-2 mx-3 rounded-[var(--radius-panel)] border border-hairline bg-surface/95 backdrop-blur-xl p-4 shadow-2xl shadow-ink/15 z-50">
           <ul className="space-y-1">
             {links.map((m) => (
               <li key={m.href}>
                 <Link
                   href={m.href}
-                  className="block rounded-lg px-3 py-2.5 text-sm font-medium text-fg-secondary hover:bg-ink/5 hover:text-ink-soft transition-colors"
+                  className="block rounded-lg px-3 py-2.5 text-sm font-medium text-fg-secondary hover:bg-paper hover:text-fg transition-colors"
                 >
                   {t(m.key, language)}
                 </Link>
@@ -60,7 +60,7 @@ export default function MobileMenu({ links, authSlot }: Props) {
           <div className="mt-4 border-t border-hairline pt-4">
             <button
               onClick={() => setLanguage(language === 'ko' ? 'en' : 'ko')}
-              className="flex w-full items-center justify-center gap-2 px-3 py-2.5 bg-ink/[0.04] hover:bg-ink/[0.07] rounded-lg transition-colors text-sm font-medium text-fg-secondary hover:text-ink-soft"
+              className="flex w-full items-center justify-center gap-2 px-3 py-2.5 bg-paper hover:bg-paper rounded-lg transition-colors text-sm font-medium text-fg-secondary hover:text-fg"
               title={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

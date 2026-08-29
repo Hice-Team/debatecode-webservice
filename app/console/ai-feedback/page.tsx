@@ -94,7 +94,7 @@ export default async function AiFeedbackPage() {
             {topReasons.map(([reason, count]) => (
               <span
                 key={reason}
-                className="rounded-full border border-hairline bg-white px-3 py-1.5 text-[13px] text-fg"
+                className="rounded-full border border-hairline bg-surface px-3 py-1.5 text-[13px] text-fg"
               >
                 {reasonLabel(reason, 'ko')}
                 <span className="ml-1.5 font-mono text-[11px] font-semibold text-rose-600">{count}</span>
@@ -106,7 +106,7 @@ export default async function AiFeedbackPage() {
 
       <section className="mt-8">
         <SectionHeader title="최근 부정 평가" sub="어떤 답변이 왜 낮은 평가를 받았는지 확인합니다." />
-        <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {recent.length === 0 ? (
             <EmptyState title="부정 평가가 없습니다" sub="이용자가 👎를 누르면 여기에 쌓입니다." />
           ) : (

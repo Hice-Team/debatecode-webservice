@@ -73,7 +73,7 @@ export default async function RolesPage({ searchParams }: { searchParams: Promis
         sub="역할을 바꾸면 이 표대로 권한이 따라갑니다. 개별 예외는 아래에서 얹습니다."
       />
 
-      <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+      <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] text-sm">
             <caption className="sr-only">역할별 권한 매트릭스</caption>
@@ -97,7 +97,7 @@ export default async function RolesPage({ searchParams }: { searchParams: Promis
                 if (perms.length === 0) return null;
                 return (
                   <>
-                    <tr key={`h-${group}`} className="border-b border-ink/5 bg-paper/30">
+                    <tr key={`h-${group}`} className="border-b border-hairline bg-paper/30">
                       <th
                         scope="colgroup"
                         colSpan={ROLES.length + 1}
@@ -109,10 +109,10 @@ export default async function RolesPage({ searchParams }: { searchParams: Promis
                     {perms.map((p) => {
                       const def = PERMISSIONS[p] as { label: string; description: string; sensitive?: boolean };
                       return (
-                        <tr key={p} className="border-b border-ink/5 last:border-0 hover:bg-brand-50/20">
+                        <tr key={p} className="border-b border-hairline last:border-0 hover:bg-brand-50/20">
                           <th scope="row" className="px-5 py-2.5 text-left align-top font-normal">
                             <span className="flex items-center gap-1.5">
-                              <span className="font-medium text-ink">{def.label}</span>
+                              <span className="font-medium text-fg">{def.label}</span>
                               {def.sensitive && (
                                 <span className="shrink-0 rounded border border-rose-200 bg-rose-50 px-1 py-0.5 font-mono text-[9px] text-rose-700">
                                   민감
@@ -134,7 +134,7 @@ export default async function RolesPage({ searchParams }: { searchParams: Promis
                                       ? def.sensitive
                                         ? 'bg-rose-100 text-rose-700'
                                         : 'bg-emerald-100 text-emerald-700'
-                                      : 'bg-ink/[0.05] text-fg-quiet'
+                                      : 'bg-paper text-fg-quiet'
                                   }`}
                                 >
                                   {has ? '✓' : '·'}
@@ -155,8 +155,8 @@ export default async function RolesPage({ searchParams }: { searchParams: Promis
 
       <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {ROLES.map((r) => (
-          <div key={r} className="rounded-xl border border-hairline bg-white px-3.5 py-2.5">
-            <p className="text-xs font-semibold text-ink">{ROLE_LABELS[r as Role]}</p>
+          <div key={r} className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5">
+            <p className="text-xs font-semibold text-fg">{ROLE_LABELS[r as Role]}</p>
             <p className="mt-0.5 text-[11px] leading-relaxed text-fg-muted">{ROLE_DESCRIPTIONS[r as Role]}</p>
           </div>
         ))}
@@ -182,7 +182,7 @@ export default async function RolesPage({ searchParams }: { searchParams: Promis
       {/* ---- 현재 걸려 있는 오버라이드 ---- */}
       <div className="mt-8">
         <SectionHeader title={`적용 중인 오버라이드 (${grants.length})`} />
-        <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {grants.length === 0 && <EmptyRow text="역할 기본값을 벗어난 계정이 없습니다." />}
           {grants.map((g) => {
             const expired = g.expiresAt != null && g.expiresAt.getTime() <= now;
@@ -197,7 +197,7 @@ export default async function RolesPage({ searchParams }: { searchParams: Promis
                 >
                   {g.effect === 'allow' ? '허용' : '차단'}
                 </span>
-                <span className="font-medium text-ink">{maskName(g.user.name)}</span>
+                <span className="font-medium text-fg">{maskName(g.user.name)}</span>
                 <span className="font-mono text-[11px] text-fg-muted">{roleLabel(g.user.role)}</span>
                 <span className="text-sm text-fg">{permissionLabel(g.permission)}</span>
                 {g.reason && <span className="truncate text-xs text-fg-muted">— {g.reason}</span>}

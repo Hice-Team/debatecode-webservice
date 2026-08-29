@@ -47,7 +47,7 @@ export default async function AdminProblemsPage({ searchParams }: PageProps<'/da
         <p className="mb-4 text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-4 py-2.5">{error}</p>
       )}
 
-      <div className="bg-white rounded-xl border border-hairline divide-y divide-ink/5">
+      <div className="bg-surface rounded-xl border border-hairline divide-y divide-hairline">
         {problems.map((p) => (
           <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 text-sm">
             <span className="font-mono text-[11px] text-fg-quiet w-8 shrink-0">#{p.id}</span>

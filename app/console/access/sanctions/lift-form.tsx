@@ -14,7 +14,7 @@ export default function LiftForm({ id, name }: { id: string; name: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg hover:border-emerald-300 hover:text-emerald-700 ${FOCUS}`}
+        className={`shrink-0 rounded-xl border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-emerald-300 hover:text-emerald-700 ${FOCUS}`}
       >
         해제
       </button>
@@ -30,7 +30,7 @@ export default function LiftForm({ id, name }: { id: string; name: string }) {
         autoFocus
         aria-label={`${name} 제재 해제 사유`}
         placeholder="해제 사유 (예: 이의 인정 / 오탐)"
-        className={`min-w-0 flex-1 rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-xs placeholder:text-fg-quiet lg:w-56 lg:flex-none ${FOCUS}`}
+        className={`min-w-0 flex-1 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet lg:w-56 lg:flex-none ${FOCUS}`}
       />
       <button
         type="submit"
@@ -41,7 +41,7 @@ export default function LiftForm({ id, name }: { id: string; name: string }) {
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="shrink-0 rounded-xl border border-ink/15 px-3 py-1.5 text-xs text-fg-secondary"
+        className="shrink-0 rounded-xl border border-hairline px-3 py-1.5 text-xs text-fg-secondary"
       >
         취소
       </button>

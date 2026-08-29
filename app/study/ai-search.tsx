@@ -73,7 +73,7 @@ export default function AiSearch({ liveModel, authed }: { liveModel: boolean; au
 
         <h2
           id="ai-search-title"
-          className="text-center font-display text-2xl font-medium tracking-tight text-ink sm:text-[1.75rem]"
+          className="text-center font-display text-2xl font-medium tracking-tight text-fg sm:text-[1.75rem]"
         >
           {t('ai-search-title', language)}
         </h2>
@@ -87,7 +87,7 @@ export default function AiSearch({ liveModel, authed }: { liveModel: boolean; au
           className="mx-auto mt-7 w-full max-w-3xl"
         >
           {/* 넓은 화면은 알약 한 줄, 폰은 입력 아래로 컨트롤이 내려간다(둥근 모서리도 함께 완화) */}
-          <div className="flex flex-wrap items-center gap-0.5 rounded-[var(--radius-panel)] border border-hairline bg-white p-1.5 sm:flex-nowrap sm:gap-1 sm:rounded-full sm:py-2 sm:pl-3 sm:pr-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.10)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.16)]">
+          <div className="flex flex-wrap items-center gap-0.5 rounded-[var(--radius-panel)] border border-hairline bg-surface p-1.5 sm:flex-nowrap sm:gap-1 sm:rounded-full sm:py-2 sm:pl-3 sm:pr-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.10)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.16)]">
             <AttachMenu
               placement="bottom"
               // 첨부는 업로드 API가 로그인을 요구한다 — 눌러 보고 실패하게 두지 않는다
@@ -119,7 +119,7 @@ export default function AiSearch({ liveModel, authed }: { liveModel: boolean; au
                 }}
                 placeholder={t('ai-search-placeholder', language)}
                 aria-label={t('ai-search-title', language)}
-                className="min-w-0 flex-1 bg-transparent px-2 py-3.5 text-[15px] text-ink placeholder:text-fg-quiet focus:outline-none"
+                className="min-w-0 flex-1 bg-transparent px-2 py-3.5 text-[15px] text-fg placeholder:text-fg-quiet focus:outline-none"
               />
             )}
 

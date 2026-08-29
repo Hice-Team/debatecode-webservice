@@ -24,7 +24,7 @@ export function SettingRow({
       }`}
     >
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-ink">{label}</p>
+        <p className="text-sm font-medium text-fg">{label}</p>
         {desc && <p className="mt-0.5 max-w-prose text-[13px] leading-relaxed text-fg-muted">{desc}</p>}
       </div>
       {control && <div className={stacked ? 'mt-3' : 'shrink-0'}>{control}</div>}

@@ -37,8 +37,8 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 // 시상대 톤 — 1위에 강조는 두되, 숫자·배경의 시각적 무게를 낮춰 균형을 맞춘다
 const PODIUM_TONE = [
   'rounded-[var(--radius-panel)] border border-amber-200 bg-gradient-to-b from-amber-50 to-white shadow-sm shadow-amber-200/10',
-  'rounded-[var(--radius-panel)] border border-ink/6 bg-white',
-  'rounded-[var(--radius-panel)] border border-ink/6 bg-white',
+  'rounded-[var(--radius-panel)] border border-ink/6 bg-surface',
+  'rounded-[var(--radius-panel)] border border-ink/6 bg-surface',
 ];
 
 function formatMinutes(minutes: number) {
@@ -155,7 +155,7 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
             <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-brand-600">
               {allTime ? 'ALL TIME' : `SEASON ${season.index}`}
             </p>
-            <p className="mt-1 font-display text-lg font-bold tracking-tight text-ink">
+            <p className="mt-1 font-display text-lg font-bold tracking-tight text-fg">
               {allTime ? (
                 <I18nSlot k="rank-range-all-title" fallback="전체 기간 누적 순위" />
               ) : (
@@ -204,7 +204,7 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
 
         {/* 시즌 진행 바 — 남은 시간을 숫자와 길이 두 가지로 읽게 한다 */}
         {!allTime && (
-          <div className="h-1 overflow-hidden rounded-full bg-ink/[0.06]" role="presentation">
+          <div className="h-1 overflow-hidden rounded-full bg-paper" role="presentation">
             <div
               className="h-full bg-gradient-to-r from-brand-500 to-signal transition-[width]"
               style={{ width: `${Math.round(progress * 100)}%` }}
@@ -226,7 +226,7 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
                 className={`shrink-0 rounded-full border px-4 py-3 text-sm font-semibold transition-colors ${
                   on
                     ? 'border-signal bg-signal text-white shadow-sm shadow-brand-500/25'
-                    : 'border-hairline bg-white text-fg-secondary hover:border-brand-300 hover:text-signal'
+                    : 'border-hairline bg-surface text-fg-secondary hover:border-brand-300 hover:text-signal'
                 }`}
               >
                 <I18nSlot k={`rank-tab-${t.key}`} fallback={t.label} />
@@ -283,16 +283,16 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
                     <I18nSlot k="rank-unit-people" fallback="명" />
                   </span>
                 </div>
-                <ol className="divide-y divide-ink/5">
+                <ol className="divide-y divide-hairline">
                   {group.members.map((u, i) => (
                     <li key={u.userId} className="flex items-center gap-3 px-2 py-2.5 transition-colors hover:bg-brand-50/40">
                       <span className="w-6 shrink-0 text-center font-mono text-xs text-fg-quiet">
                         {i < 3 ? MEDALS[i] : i + 1}
                       </span>
-                      <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-ink/5">
+                      <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-paper">
                         <Avatar src={u.avatarUrl} alt={u.name} className="h-full w-full" />
                       </div>
-                      <span data-no-translate className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{u.name}</span>
+                      <span data-no-translate className="min-w-0 flex-1 truncate text-sm font-medium text-fg">{u.name}</span>
                       <span className="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline">
                         {metricsFor(active, u).map((m) => m.value).join(' · ')}
                       </span>
@@ -323,7 +323,7 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
                 {/* 순위 워터마크 — 숫자를 크게 깔아 시상대라는 것을 한눈에 */}
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute -right-2 -top-3 font-display text-5xl font-bold text-ink/[0.03]"
+                  className="pointer-events-none absolute -right-2 -top-3 font-display text-5xl font-bold text-fg/[0.03]"
                 >
                   {i + 1}
                 </span>
@@ -333,14 +333,14 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
                     {MEDALS[i]}
                   </span>
                   <div
-                    className={`shrink-0 overflow-hidden rounded-full bg-ink/5 ${
+                    className={`shrink-0 overflow-hidden rounded-full bg-paper ${
                       i === 0 ? 'h-12 w-12 border-2 border-amber-300/50' : 'h-10 w-10 border-2 border-hairline'
                     }`}
                   >
                     <Avatar src={u.avatarUrl} alt={u.name} className="h-full w-full" />
                   </div>
                   <div className="min-w-0">
-                    <p data-no-translate className="flex items-center gap-1.5 truncate font-bold text-ink">
+                    <p data-no-translate className="flex items-center gap-1.5 truncate font-bold text-fg">
                       {u.name}
                       <RankDelta delta={deltas?.get(u.userId)} />
                     </p>
@@ -379,18 +379,18 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
                 return (
                   <li
                     key={u.userId}
-                    className="flex items-center gap-3 border-b border-ink/5 px-2 py-3 transition-colors last:border-b-0 hover:bg-brand-50/40 sm:px-3"
+                    className="flex items-center gap-3 border-b border-hairline px-2 py-3 transition-colors last:border-b-0 hover:bg-brand-50/40 sm:px-3"
                   >
                     <span className="w-7 shrink-0 text-right font-mono text-xs font-semibold text-fg-quiet">
                       {i + 4}
                     </span>
-                    <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-ink/5">
+                    <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-paper">
                       <Avatar src={u.avatarUrl} alt={u.name} className="h-full w-full" />
                     </div>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span data-no-translate className="truncate text-sm font-medium text-ink">{u.name}</span>
+                        <span data-no-translate className="truncate text-sm font-medium text-fg">{u.name}</span>
                         {u.rankBadgeVisible && (
                           <span className="shrink-0 rounded-full bg-brand-50 px-1.5 py-0.5 font-mono text-[9px] font-bold text-brand-700">
                             ★ {u.rankName}
@@ -407,7 +407,7 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
 
                     {/* 점수 막대 — 1위 대비 상대 길이. 숫자만으로는 격차가 잘 안 읽힌다 */}
                     <div className="hidden w-28 shrink-0 sm:block" aria-hidden>
-                      <div className="h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
+                      <div className="h-1.5 overflow-hidden rounded-full bg-paper">
                         <div className="h-full rounded-full bg-signal/70" style={{ width: `${share}%` }} />
                       </div>
                     </div>

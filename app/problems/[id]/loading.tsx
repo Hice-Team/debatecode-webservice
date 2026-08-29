@@ -5,14 +5,14 @@ export default function ProblemLoading() {
       <div className="h-16 border-b border-white/10 bg-ink/95" />
       <div className="flex-grow flex flex-col lg:flex-row min-h-0 animate-pulse">
         <div className="lg:w-[44%] border-r border-white/10 p-6 space-y-4">
-          <div className="h-5 w-2/3 bg-white/10 rounded" />
-          <div className="h-3 w-full bg-white/5 rounded" />
-          <div className="h-3 w-5/6 bg-white/5 rounded" />
-          <div className="h-3 w-4/6 bg-white/5 rounded" />
-          <div className="h-24 w-full bg-white/5 rounded-lg mt-6" />
+          <div className="h-5 w-2/3 bg-surface/10 rounded" />
+          <div className="h-3 w-full bg-surface/5 rounded" />
+          <div className="h-3 w-5/6 bg-surface/5 rounded" />
+          <div className="h-3 w-4/6 bg-surface/5 rounded" />
+          <div className="h-24 w-full bg-surface/5 rounded-lg mt-6" />
         </div>
         <div className="flex-grow flex flex-col">
-          <div className="h-11 border-b border-white/10 bg-white/[0.02]" />
+          <div className="h-11 border-b border-white/10 bg-surface/[0.02]" />
           <div className="flex-grow flex items-center justify-center font-mono text-xs text-fg-on-dark-quiet">
             워크스페이스 준비 중…
           </div>

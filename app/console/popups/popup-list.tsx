@@ -24,14 +24,14 @@ export default function PopupList({ items }: { items: PopupRow[] }) {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-[var(--radius-panel)] border border-hairline bg-white">
+      <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface">
         <EmptyState title="등록된 팝업이 없습니다" sub="위에서 첫 팝업을 만들어 보세요." />
       </div>
     );
   }
 
   return (
-    <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+    <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
       {items.map((item) =>
         editingId === item.id ? (
           <div key={item.id} className="p-5">
@@ -57,7 +57,7 @@ export default function PopupList({ items }: { items: PopupRow[] }) {
             )}
 
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-ink">{item.title}</p>
+              <p className="truncate text-sm font-medium text-fg">{item.title}</p>
               <p className="font-mono text-[10px] text-fg-muted">
                 #{item.order} · {item.variant === 'poster' ? '포스터형' : '텍스트형'}
                 {item.linkType !== 'none' && ` · ${POPUP_LINK_LABELS[item.linkType as PopupLinkType]}`}
@@ -79,7 +79,7 @@ export default function PopupList({ items }: { items: PopupRow[] }) {
               </form>
               <form action={deletePopup}>
                 <input type="hidden" name="id" value={item.id} />
-                <button className="rounded-xl border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg-secondary hover:border-rose-300 hover:text-rose-700">
+                <button className="rounded-xl border border-hairline px-3 py-1.5 text-xs font-medium text-fg-secondary hover:border-rose-300 hover:text-rose-700">
                   삭제
                 </button>
               </form>

@@ -145,7 +145,7 @@ export default function VerifyForm({
                   className={`flex items-baseline gap-2 rounded-[var(--radius-card)] border px-3 py-2.5 text-left transition-colors ${
                     method === m
                       ? 'border-signal bg-brand-50/70'
-                      : 'border-hairline bg-white hover:border-ink/25'
+                      : 'border-hairline bg-surface hover:border-ink/25'
                   }`}
                 >
                   <span className="text-sm font-semibold text-fg">{LABELS[m].title}</span>
@@ -168,7 +168,7 @@ export default function VerifyForm({
                   type="button"
                   onClick={runSecurityKey}
                   disabled={keyBusy}
-                  className="w-full rounded-[var(--radius-card)] border border-hairline bg-white px-4 py-3 text-sm font-medium text-fg-secondary transition-colors hover:border-ink/25 disabled:opacity-50"
+                  className="w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-4 py-3 text-sm font-medium text-fg-secondary transition-colors hover:border-ink/25 disabled:opacity-50"
                 >
                   {keyBusy ? '확인 중…' : assertion ? '보안키 확인됨 ✓' : '보안키로 확인하기'}
                 </button>
@@ -198,7 +198,7 @@ export default function VerifyForm({
                   autoComplete="one-time-code"
                   autoFocus
                   placeholder={method === 'backup' ? 'ABCD-EFGH' : '123456'}
-                  className="mt-1.5 w-full rounded-[var(--radius-card)] border border-hairline bg-white px-4 py-3 text-center font-mono text-lg tracking-[0.3em] focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25"
+                  className="mt-1.5 w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-4 py-3 text-center font-mono text-lg tracking-[0.3em] focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25"
                 />
 
                 {method === 'recovery_email' && (

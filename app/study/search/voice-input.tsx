@@ -297,7 +297,7 @@ export function VoiceConsentDialog({
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="voice-consent-title">
       <button type="button" aria-label={strings.cancel} onClick={onDecline} className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
-      <section className="relative z-10 w-full max-w-sm rounded-[var(--radius-panel)] border border-hairline bg-white p-6 shadow-2xl shadow-ink/25">
+      <section className="relative z-10 w-full max-w-sm rounded-[var(--radius-panel)] border border-hairline bg-surface p-6 shadow-2xl shadow-ink/25">
         <span aria-hidden className="grid h-11 w-11 place-items-center rounded-full bg-brand-50 text-signal">
           <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-[1.7]">
             <rect x="9" y="3" width="6" height="11" rx="3" />
@@ -305,7 +305,7 @@ export function VoiceConsentDialog({
           </svg>
         </span>
 
-        <h3 id="voice-consent-title" className="mt-3 text-base font-bold text-ink">
+        <h3 id="voice-consent-title" className="mt-3 text-base font-bold text-fg">
           {strings.title}
         </h3>
         <p className="mt-1.5 text-[13px] leading-relaxed text-fg-secondary">{strings.body}</p>
@@ -363,7 +363,7 @@ export function VoiceButton({
 }) {
   const idle =
     tone === 'dark'
-      ? 'text-fg-on-dark-muted hover:bg-white/10 hover:text-white'
+      ? 'text-fg-on-dark-muted hover:bg-surface/10 hover:text-white'
       : 'text-fg-muted hover:bg-paper hover:text-signal';
   return (
     <button
@@ -460,7 +460,7 @@ export function VoiceWaveform({
       </div>
       <p
         className={`mt-1 line-clamp-3 text-center text-[13px] leading-relaxed ${
-          tone === 'dark' ? 'text-white' : 'text-ink'
+          tone === 'dark' ? 'text-white' : 'text-fg'
         }`}
       >
         {transcript}

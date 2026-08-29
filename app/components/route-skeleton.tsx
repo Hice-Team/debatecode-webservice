@@ -15,13 +15,13 @@ export default function RouteSkeleton({
   rows?: number;
 }) {
   return (
-    <div className="flex flex-col min-h-screen bg-paper text-ink-soft">
-      <div className="h-16 bg-white border-b border-hairline" />
+    <div className="flex flex-col min-h-screen bg-paper text-fg">
+      <div className="h-16 bg-surface border-b border-hairline" />
       <main className={`flex-grow ${WIDTHS[width]} w-full mx-auto px-6 sm:px-8 py-12`}>
         <div className="animate-pulse">
           <div className="h-3 w-24 rounded bg-ink/10" />
           <div className="mt-3 h-8 w-56 rounded bg-ink/10" />
-          <div className="mt-8 rounded-[var(--radius-panel)] border border-hairline bg-white divide-y divide-ink/5">
+          <div className="mt-8 rounded-[var(--radius-panel)] border border-hairline bg-surface divide-y divide-hairline">
             {Array.from({ length: rows }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 px-6 py-5">
                 <div className="h-5 w-5 rounded-full bg-ink/10" />

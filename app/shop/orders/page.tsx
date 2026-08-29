@@ -38,7 +38,7 @@ export default async function ShopOrdersPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">MY ORDERS</p>
-          <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">교환 내역</h1>
+          <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-fg">교환 내역</h1>
         </div>
         <div className="shrink-0 text-right">
           <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">보유 포인트</p>
@@ -62,7 +62,7 @@ export default async function ShopOrdersPage() {
             <li key={order.id} className="border-b border-hairline py-4">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-ink">
+                  <p className="truncate text-sm font-semibold text-fg">
                     {order.product.brand} {order.product.name}
                   </p>
                   <p className="mt-0.5 font-mono text-[11px] text-fg-quiet">
@@ -73,7 +73,7 @@ export default async function ShopOrdersPage() {
 
                 <span
                   className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
-                    ORDER_STATUS_TONES[order.status] ?? 'border-ink/15 bg-paper text-fg-muted'
+                    ORDER_STATUS_TONES[order.status] ?? 'border-hairline bg-paper text-fg-muted'
                   }`}
                 >
                   {ORDER_STATUS_LABELS[order.status] ?? order.status}
@@ -83,7 +83,7 @@ export default async function ShopOrdersPage() {
                 {order.status === 'requested' && (
                   <form action={cancelShopOrder} className="shrink-0">
                     <input type="hidden" name="orderId" value={order.id} />
-                    <button className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-600">
+                    <button className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-600">
                       취소
                     </button>
                   </form>

@@ -29,25 +29,27 @@ export const FREE_AI_DAILY_LIMIT = 100_000;
 export const FREE_FALLBACK_REPO = 'deepseek-ai/DeepSeek-V3.1';
 
 /** 기본 모델 — 이 서비스는 코드를 다루므로 코드 특화 모델을 기본으로 둔다. */
-export const FREE_AI_DEFAULT_MODEL_ID = 'deepseek-coder-v2';
+export const FREE_AI_DEFAULT_MODEL_ID = 'qwen3-coder-next';
 
-/** debateAI 모델 id → Hugging Face 저장소 경로. */
+/**
+ * debateAI 모델 id → Hugging Face 저장소 경로.
+ *
+ * **라우터가 지금 실제로 서빙하는 저장소만 둔다.** 2026-09-04 확인 결과
+ * EXAONE·Solar·Kanana는 `400 not supported`, Kimi는 `402 크레딧 소진`이었다.
+ * 못 부르는 모델을 목록에 남겨 두면 이용자가 고른 모델과 답한 모델이 달라진다 —
+ * 폴백이 대신 답해 주니 화면은 멀쩡해 보이고, 그래서 더 오래 들키지 않는다.
+ *
+ * 다시 열리면 여기에 한 줄을 되살리고 debateai-models.ts의 카탈로그에도 같이 넣는다.
+ * 살아 있는지는 scripts/check-ai-models.mjs로 확인한다.
+ */
 export const FREE_AI_REPOS: Record<string, string> = {
   // NOTE: DeepSeek V4는 아직 공개 배포본이 없어 현재 최신 플래그십에 매핑해 둔다.
   //       공개되면 이 표만 바꾸면 되고, 저장된 모델 id는 그대로 쓸 수 있다.
   'deepseek-v4-pro': 'deepseek-ai/DeepSeek-V3.1',
   'deepseek-v4-flash': 'deepseek-ai/DeepSeek-V3.1',
-  'deepseek-coder-v2': 'deepseek-ai/DeepSeek-Coder-V2-Instruct',
   'deepseek-r1': 'deepseek-ai/DeepSeek-R1',
   'qwen-3.6': 'Qwen/Qwen3-235B-A22B-Instruct-2507',
   'qwen3-coder-next': 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
-  'kimi-k3': 'moonshotai/Kimi-K2-Instruct',
-  'k-exaone-2.0': 'LGAI-EXAONE/EXAONE-4.0-32B',
-  'exaone-4.5': 'LGAI-EXAONE/EXAONE-4.0-32B',
-  'exaone-deep': 'LGAI-EXAONE/EXAONE-Deep-32B',
-  'solar-pro': 'upstage/solar-pro-preview-instruct',
-  'solar-mini': 'upstage/SOLAR-10.7B-Instruct-v1.0',
-  'kanana-2': 'kakaocorp/kanana-1.5-8b-instruct',
 };
 
 /** 모델 id를 저장소 경로로 옮긴다. 모르는 id면 기본 모델로 떨어진다. */

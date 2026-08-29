@@ -56,7 +56,7 @@ export default function OverrideForm({
   const ready = userIds.length > 0 && permissions.length > 0 && reason.trim().length >= 4;
 
   return (
-    <form action={formAction} className="space-y-4 rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+    <form action={formAction} className="space-y-4 rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
       <input type="hidden" name="userIds" value={userIds.join(',')} />
       <input type="hidden" name="permissions" value={permissions.join(',')} />
 
@@ -74,7 +74,7 @@ export default function OverrideForm({
             aria-label="계정 검색"
             className={`${FIELD} mb-2`}
           />
-          <div className="max-h-56 overflow-y-auto rounded-xl border border-hairline divide-y divide-ink/5">
+          <div className="max-h-56 overflow-y-auto rounded-xl border border-hairline divide-y divide-hairline">
             {filtered.length === 0 && (
               <p className="px-3 py-6 text-center text-xs text-fg-muted">해당하는 계정이 없습니다.</p>
             )}
@@ -91,7 +91,7 @@ export default function OverrideForm({
                   onChange={() => toggle(userIds, setUserIds, c.id)}
                   className="h-4 w-4 accent-[#1800AC]"
                 />
-                <span className="min-w-0 flex-1 truncate text-ink">{c.name}</span>
+                <span className="min-w-0 flex-1 truncate text-fg">{c.name}</span>
                 <span className="shrink-0 font-mono text-[10px] text-fg-muted">{c.role}</span>
               </label>
             ))}
@@ -100,7 +100,7 @@ export default function OverrideForm({
             <button
               type="button"
               onClick={() => setUserIds([])}
-              className="mt-1.5 font-mono text-[11px] text-fg-muted underline underline-offset-2 hover:text-ink"
+              className="mt-1.5 font-mono text-[11px] text-fg-muted underline underline-offset-2 hover:text-fg"
             >
               선택 해제
             </button>
@@ -137,7 +137,7 @@ export default function OverrideForm({
                           className="mt-0.5 h-4 w-4 accent-[#1800AC]"
                         />
                         <span className="min-w-0">
-                          <span className="flex items-center gap-1.5 text-sm text-ink">
+                          <span className="flex items-center gap-1.5 text-sm text-fg">
                             {def.label}
                             {def.sensitive && (
                               <span className="rounded border border-rose-200 bg-rose-50 px-1 py-0.5 font-mono text-[9px] text-rose-700">
@@ -160,7 +160,7 @@ export default function OverrideForm({
             <button
               type="button"
               onClick={() => setPermissions([])}
-              className="mt-1.5 font-mono text-[11px] text-fg-muted underline underline-offset-2 hover:text-ink"
+              className="mt-1.5 font-mono text-[11px] text-fg-muted underline underline-offset-2 hover:text-fg"
             >
               선택 해제
             </button>
@@ -198,7 +198,7 @@ export default function OverrideForm({
                   className="mt-0.5 h-4 w-4"
                 />
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-ink">{o.label}</span>
+                  <span className="block text-sm font-semibold text-fg">{o.label}</span>
                   <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">{o.desc}</span>
                 </span>
               </label>

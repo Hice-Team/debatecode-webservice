@@ -79,7 +79,7 @@ export default async function ProblemReviewPage() {
         />
       </div>
 
-      <div className="divide-y divide-ink/5 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+      <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
         {withMeta.length === 0 && (
           <EmptyState
             title="검토 대기 중인 문제가 없습니다"
@@ -95,7 +95,7 @@ export default async function ProblemReviewPage() {
           <details key={d.id} className="group px-5 py-4">
             <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-center">
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-ink">
+                <p className="truncate font-medium text-fg">
                   <span className="mr-1.5 font-mono text-[10px] text-brand-600 group-open:hidden">▶</span>
                   <span className="mr-1.5 hidden font-mono text-[10px] text-brand-600 group-open:inline">▼</span>
                   {d.title}
@@ -168,7 +168,7 @@ export default async function ProblemReviewPage() {
                 <input
                   name="note"
                   placeholder="반려 사유 (선택 — 출제자에게 표시됩니다)"
-                  className="w-full flex-1 rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                  className="w-full flex-1 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                 />
                 <button className={BTN_REJECT}>반려</button>
               </form>
@@ -185,7 +185,7 @@ export default async function ProblemReviewPage() {
       {/* 최근 처리 이력 */}
       <div className="mt-10">
         <SectionHeader title="최근 처리 이력" sub="최근 승인/반려된 초안 15건입니다." />
-        <div className="divide-y divide-ink/5 rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <div className="divide-y divide-hairline rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {processed.length === 0 && (
             <p className="px-5 py-8 text-center text-sm text-fg-muted">처리한 초안이 아직 없습니다.</p>
           )}
@@ -196,7 +196,7 @@ export default async function ProblemReviewPage() {
                 <span className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] ${st.cls}`}>
                   {st.label}
                 </span>
-                <span className="truncate font-medium text-ink">{d.title}</span>
+                <span className="truncate font-medium text-fg">{d.title}</span>
                 <span className="font-mono text-[11px] text-fg-muted">
                   {maskName(d.author.name)} · {d.category}
                 </span>

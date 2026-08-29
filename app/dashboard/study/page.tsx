@@ -42,8 +42,8 @@ export default async function StudyAdminPage({ searchParams }: PageProps<'/dashb
 
       <div className="space-y-6">
         {courses.map((course) => (
-          <section key={course.id} className="bg-white rounded-xl border border-hairline overflow-hidden">
-            <div className="flex items-center gap-3 border-b border-ink/5 px-5 py-4">
+          <section key={course.id} className="bg-surface rounded-xl border border-hairline overflow-hidden">
+            <div className="flex items-center gap-3 border-b border-hairline px-5 py-4">
               <div className="min-w-0">
                 <h3 className="font-bold truncate">{course.title}</h3>
                 <p className="font-mono text-[11px] text-fg-quiet">
@@ -66,7 +66,7 @@ export default async function StudyAdminPage({ searchParams }: PageProps<'/dashb
                 </button>
               </form>
             </div>
-            <div className="divide-y divide-ink/5">
+            <div className="divide-y divide-hairline">
               {course.lessons.map((lesson) => (
                 <div key={lesson.id} className="flex items-center gap-3 px-5 py-3 text-sm">
                   <span className="font-mono text-[11px] text-fg-quiet w-6 shrink-0">{lesson.order}</span>
@@ -99,7 +99,7 @@ export default async function StudyAdminPage({ searchParams }: PageProps<'/dashb
           </section>
         ))}
         {courses.length === 0 && (
-          <p className="rounded-xl border border-hairline bg-white px-6 py-16 text-center text-sm text-fg-quiet">
+          <p className="rounded-xl border border-hairline bg-surface px-6 py-16 text-center text-sm text-fg-quiet">
             코스가 없습니다. 위에서 첫 코스를 추가해 보세요.
           </p>
         )}

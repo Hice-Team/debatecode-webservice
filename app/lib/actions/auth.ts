@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { z } from 'zod';
+import type { AuthError } from '@supabase/supabase-js';
 import { createClient } from '../supabase/server';
 import { clientIp } from '../rate-limit';
 import { durableRateLimit, retryAfterLabel } from '../rate-limit-durable';
@@ -52,6 +53,7 @@ const emailSchema = z.object({
 });
 
 const passwordSchema = z.object({ password: PASSWORD_RULES });
+const PASSWORD_RESET_TIMEOUT_MS = 15_000;
 
 async function origin() {
   const h = await headers();
@@ -142,12 +144,22 @@ export async function requestPasswordReset(
 
   const supabase = await createClient();
   const site = await origin();
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+  const resetRequest = supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: `${site}/auth/confirm?next=/reset-password`,
   });
+  const result = await Promise.race([
+    resetRequest,
+    new Promise<{ error: Error }>((resolve) =>
+      setTimeout(() => resolve({ error: new Error('password_reset_timeout') }), PASSWORD_RESET_TIMEOUT_MS),
+    ),
+  ]);
+  const { error } = result;
 
   if (error) {
-    return { errors: { form: [mapAuthError(error)] } };
+    if (error.message === 'password_reset_timeout') {
+      return { errors: { form: ['재설정 메일 서버가 응답하지 않습니다. 잠시 후 다시 시도해 주세요.'] } };
+    }
+    return { errors: { form: [mapAuthError(error as AuthError)] } };
   }
 
   return { sent: true };

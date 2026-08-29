@@ -182,14 +182,34 @@ async function login(context, email) {
   return { page, errors };
 }
 
-/** 로그인에 실패해도 나머지 단계를 계속 볼 수 있게 감싼다. */
-async function tryLogin(context, email, label) {
+/**
+ * 계정마다 **한 번만** 로그인하고 그 컨텍스트를 계속 쓴다.
+ *
+ * 단계마다 새로 로그인하면 한 번 실행에 예닐곱 번을 시도하게 되는데,
+ * 앱은 IP당 5분에 10회로 막는다(app/lib/actions/auth.ts) — 정상 동작인 그 방어에
+ * 하네스가 스스로 걸려서, 있지도 않은 결함처럼 보였다.
+ * 실제 이용자도 한 번 로그인해 여러 화면을 돈다 — 그쪽이 더 현실에 가깝다.
+ */
+const sessions = new Map();
+
+async function tryLogin(browser, email, label) {
+  const cached = sessions.get(email);
+  if (cached) return cached;
   try {
-    return await login(context, email);
+    const context = await browser.newContext();
+    const session = await login(context, email);
+    sessions.set(email, { ...session, context });
+    return sessions.get(email);
   } catch (e) {
     record(`${label} 로그인`, 'fail', String(e.message).slice(0, 220));
     return null;
   }
+}
+
+/** 끝날 때 한꺼번에 닫는다 */
+async function closeSessions() {
+  for (const { context } of sessions.values()) await context.close().catch(() => {});
+  sessions.clear();
 }
 
 /* ================= 1. 회원가입 ================= */
@@ -286,39 +306,36 @@ async function qaSignup(browser) {
     expect(errors.length === 0, errors.slice(0, 3).join(' / '));
   });
 
-  await context.close();
 }
 
 /* ================= 2. 로그인 ================= */
 
 async function qaLogin(browser) {
   head('2. 로그인 절차');
-  const context = await browser.newContext();
-
   let page;
   await check('가입한 계정으로 로그인된다', async () => {
-    const r = await login(context, USER.email);
-    page = r.page;
+    const session = await tryLogin(browser, USER.email, phase);
+    if (!session) throw new Error('로그인하지 못했다');
+    page = session.page;
     return page.url().replace(BASE, '') || '/';
   });
-  if (!page) return context.close();
+  if (!page) return;
 
   await check('로그인 상태에서 대시보드가 열린다', async () => {
     await page.goto(`${BASE}/dashboard`, { waitUntil: 'domcontentloaded' });
     expect(!page.url().includes('/login'), '대시보드가 로그인으로 되돌렸다');
   });
 
-  await context.close();
 }
 
 /* ================= 3. AI 검색 ================= */
 
 async function qaAiSearch(browser) {
   head('3. AI 검색');
-  const context = await browser.newContext();
-  const session = await tryLogin(context, USER.email, phase);
-  if (!session) return context.close();
+  const session = await tryLogin(browser, USER.email, phase);
+  if (!session) return;
   const { page, errors } = session;
+  errors.length = 0; // 이 단계에서 새로 난 것만 본다
 
   await check('AI 검색 화면이 열린다', async () => {
     await page.goto(`${BASE}/study/search`, { waitUntil: 'domcontentloaded' });
@@ -330,7 +347,7 @@ async function qaAiSearch(browser) {
     if (!(await box.count())) return { skip: '입력창을 찾지 못했다' };
     // 보내기 전 본문 길이를 재 둔다 — 늘어난 만큼이 답변이다.
     // 화면 전체 길이를 기준으로 두면 안내 문구를 줄이는 것만으로 검사가 깨진다.
-    const before = (await page.locator('main').innerText()).length;
+    const before = (await page.locator('main').first().innerText()).length;
     await box.fill('파이썬에서 리스트를 정렬하는 방법을 한 문장으로 알려줘');
     await box.press('Enter');
 
@@ -342,7 +359,7 @@ async function qaAiSearch(browser) {
     if (!done) return { warn: '120초 안에 모델 표기가 붙지 않았다 (업스트림 지연 가능)' };
 
     await page.waitForTimeout(1500);
-    const grew = (await page.locator('main').innerText()).length - before;
+    const grew = (await page.locator('main').first().innerText()).length - before;
     if (grew < 40) return { warn: `답변이 거의 늘지 않았다 (+${grew}자)` };
     return `+${grew}자 응답`;
   });
@@ -358,7 +375,6 @@ async function qaAiSearch(browser) {
     expect(errors.length === 0, errors.slice(0, 3).join(' / '));
   });
 
-  await context.close();
 }
 
 /* ================= 문제 픽스처 ================= */
@@ -447,10 +463,10 @@ async function selectSegment(page, key) {
 
 async function qaSolveModes(browser, problemId) {
   head('4. 풀이 · 실행 · AI · 면접');
-  const context = await browser.newContext();
-  const session = await tryLogin(context, USER.email, phase);
-  if (!session) return context.close();
+  const session = await tryLogin(browser, USER.email, phase);
+  if (!session) return;
   const { page, errors } = session;
+  errors.length = 0; // 이 단계에서 새로 난 것만 본다
 
   await check('워크스페이스가 열린다', async () => {
     await page.goto(`${BASE}/problems/${problemId}`, { waitUntil: 'domcontentloaded' });
@@ -601,17 +617,16 @@ async function qaSolveModes(browser, problemId) {
     expect(errors.length === 0, errors.slice(0, 3).join(' / '));
   });
 
-  await context.close();
 }
 
 /* ================= 5. 디베이트메이트 신청 ================= */
 
 async function qaMateApply(browser) {
   head('5. 디베이트메이트 신청');
-  const context = await browser.newContext();
-  const session = await tryLogin(context, USER.email, phase);
-  if (!session) return context.close();
+  const session = await tryLogin(browser, USER.email, phase);
+  if (!session) return;
   const { page, errors } = session;
+  errors.length = 0; // 이 단계에서 새로 난 것만 본다
 
   const dir = mkdtempSync(join(tmpdir(), 'qa-mate-'));
   const pdfPath = join(dir, 'qa-application.pdf');
@@ -624,15 +639,22 @@ async function qaMateApply(browser) {
 
   await check('신청 화면이 열린다', async () => {
     await page.goto(`${BASE}/debate-mate`, { waitUntil: 'domcontentloaded' });
-    await page.getByRole('button', { name: /디베이트메이트 신청하기/ }).click({ timeout: 30_000 });
-    await page.waitForSelector('input[name="attachment"]', { timeout: 20_000 });
+    // 하이드레이션 전에 누르면 클릭이 씹힌다 — 폼이 뜰 때까지 몇 번 다시 누른다.
+    const openBtn = page.getByRole('button', { name: /디베이트메이트 신청하기/ });
+    for (let i = 0; i < 5; i += 1) {
+      if (await page.locator('input[name="attachment"]').count()) break;
+      await openBtn.click({ timeout: 10_000 }).catch(() => {});
+      await page.waitForTimeout(1200);
+    }
+    // 파일 입력은 sr-only다(라벨이 눌리는 자리를 대신한다) — 보일 때까지 기다리면 안 된다.
+    await page.waitForSelector('input[name="attachment"]', { state: 'attached', timeout: 20_000 });
+    // 2단계 흐름이 실제로 그려지는지 — 양식 내려받기 링크가 1단계다
+    const form = await page.locator('a[download][href$=".pdf"]').count();
+    expect(form > 0, '신청서 양식 내려받기 링크가 없다');
   });
 
   await check('PDF를 첨부하고 제출한다', async () => {
-    await page.fill(
-      'textarea[name="motivation"]',
-      'QA 자동 점검이 제출한 신청입니다. 알고리즘 문제를 꾸준히 출제하고 커뮤니티 답변에도 참여하고 싶습니다.',
-    );
+    // 신청서는 PDF 한 장이다 — 지원 동기 칸은 양식 안으로 들어갔다.
     await page.setInputFiles('input[name="attachment"]', pdfPath);
     await page.check('input[name="submissionConsent"]');
     await page.getByRole('button', { name: '신청 제출' }).click();
@@ -664,7 +686,6 @@ async function qaMateApply(browser) {
     expect(errors.length === 0, errors.slice(0, 3).join(' / '));
   });
 
-  await context.close();
 }
 
 /* ================= 6. 관리자 승인 ================= */
@@ -695,10 +716,10 @@ async function qaAdminApprove(browser) {
     return ADMIN.email;
   });
 
-  const context = await browser.newContext();
-  const session = await tryLogin(context, ADMIN.email, phase);
-  if (!session) return context.close();
+  const session = await tryLogin(browser, ADMIN.email, phase);
+  if (!session) return;
   const { page, errors } = session;
+  errors.length = 0;
 
   await check('콘솔 › 메이트 화면이 열린다', async () => {
     await page.goto(`${BASE}/console/mates`, { waitUntil: 'domcontentloaded' });
@@ -747,8 +768,6 @@ async function qaAdminApprove(browser) {
     expect(errors.length === 0, errors.slice(0, 3).join(' / '));
   });
 
-  await context.close();
-  return { page: null };
 }
 
 /* ================= 7. 문제 추가 ================= */
@@ -758,10 +777,10 @@ async function qaAuthoring(browser) {
 
   /* --- 메이트: 초안 제출 --- */
   {
-    const context = await browser.newContext();
-    const session = await tryLogin(context, USER.email, phase);
-    if (!session) return context.close();
+    const session = await tryLogin(browser, USER.email, phase);
+    if (!session) return;
     const { page, errors } = session;
+    errors.length = 0;
 
     await check('메이트 콘솔에서 초안 폼이 열린다', async () => {
       await page.goto(`${BASE}/console/drafts`, { waitUntil: 'domcontentloaded' });
@@ -806,15 +825,14 @@ async function qaAuthoring(browser) {
       expect(errors.length === 0, errors.slice(0, 3).join(' / '));
     });
 
-    await context.close();
   }
 
   /* --- 관리자: 문제 등록 (지원 언어 선택) --- */
   {
-    const context = await browser.newContext();
-    const session = await tryLogin(context, ADMIN.email, phase);
-    if (!session) return context.close();
+    const session = await tryLogin(browser, ADMIN.email, phase);
+    if (!session) return;
     const { page, errors } = session;
+    errors.length = 0;
 
     await check('관리자 문제 등록 화면이 열린다', async () => {
       await page.goto(`${BASE}/problems/new`, { waitUntil: 'domcontentloaded' });
@@ -900,7 +918,6 @@ async function qaAuthoring(browser) {
       expect(errors.length === 0, errors.slice(0, 3).join(' / '));
     });
 
-    await context.close();
   }
 }
 
@@ -921,6 +938,7 @@ async function main() {
     await qaAdminApprove(browser);
     await qaAuthoring(browser);
   } finally {
+    await closeSessions();
     await browser.close();
     await cleanup();
     await prisma.$disconnect();

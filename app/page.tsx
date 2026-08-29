@@ -12,7 +12,7 @@ import LandingContent from './components/landing/landing-content';
 
 export default async function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-white text-ink-soft">
+    <div className="flex flex-col min-h-screen bg-surface text-fg">
       <Nav />
       <main className="flex-grow">
         <InteractiveHero />

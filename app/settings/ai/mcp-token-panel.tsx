@@ -18,7 +18,7 @@ export default function McpTokenPanel(_props: Props) {
           <h2 className="text-xl font-bold">MCP · 로컬 연동</h2>
           <p className="mt-1 text-sm text-fg-secondary">로컬 연동 기능은 현재 준비 중입니다. 곧 베타로 공개할 예정입니다.</p>
         </div>
-        <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium bg-ink/5 text-fg-muted">준비중</span>
+        <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium bg-paper text-fg-muted">준비중</span>
       </div>
 
       <div className="mt-6 rounded-xl border border-hairline bg-paper/60 p-6 text-sm text-fg-muted">

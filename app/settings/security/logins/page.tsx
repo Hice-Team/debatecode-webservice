@@ -48,7 +48,7 @@ export default async function LoginList({ searchParams }: { searchParams?: { q?:
 
       <div className="mt-4 flex items-center justify-center gap-2">
         {Array.from({ length: totalPages }).map((_, i) => (
-          <Link key={i} href={`/settings/security/logins?page=${i + 1}${q ? `&q=${encodeURIComponent(q)}` : ''}`} className={`px-3 py-1 rounded ${i + 1 === page ? 'bg-ink/10' : 'bg-white'}`}>
+          <Link key={i} href={`/settings/security/logins?page=${i + 1}${q ? `&q=${encodeURIComponent(q)}` : ''}`} className={`px-3 py-1 rounded ${i + 1 === page ? 'bg-ink/10' : 'bg-surface'}`}>
             {i + 1}
           </Link>
         ))}

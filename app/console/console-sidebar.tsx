@@ -102,7 +102,7 @@ function ItemBadge({ count, label }: { count: number; label: string }) {
   return (
     <span
       className={`rounded-full px-1.5 py-0.5 font-mono text-[10px] font-bold ${
-        count > 0 ? 'bg-rose-600 text-white' : 'bg-ink/5 text-fg-muted'
+        count > 0 ? 'bg-rose-600 text-white' : 'bg-paper text-fg-muted'
       }`}
       aria-label={`${label} ${count}`}
     >
@@ -194,7 +194,7 @@ export default function ConsoleSidebar({
       {/* 모바일: 가로 스크롤 칩 — 묶음 없이 한 줄로 흐른다 */}
       <nav
         aria-label={t('console-menu-aria', language)}
-        className="dc-scroll-none lg:hidden sticky top-0 z-10 overflow-x-auto border-b border-hairline bg-white/95 px-4 py-2 backdrop-blur"
+        className="dc-scroll-none lg:hidden sticky top-0 z-10 overflow-x-auto border-b border-hairline bg-surface/95 px-4 py-2 backdrop-blur"
       >
         {maintenanceOn && (
           <p className="mb-2 rounded-lg bg-amber-100 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900">
@@ -207,7 +207,7 @@ export default function ConsoleSidebar({
               key={item.href}
               href={item.href}
               className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                isActive(item) ? 'bg-signal text-white' : 'text-fg-secondary hover:bg-paper hover:text-ink'
+                isActive(item) ? 'bg-signal text-white' : 'text-fg-secondary hover:bg-paper hover:text-fg'
               }`}
             >
               {t(item.labelKey, language)}
@@ -218,9 +218,9 @@ export default function ConsoleSidebar({
       </nav>
 
       {/* 데스크톱: 좌측 고정 레일 */}
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-hairline bg-white lg:sticky lg:top-0 lg:h-screen">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-hairline bg-surface lg:sticky lg:top-0 lg:h-screen">
         <div className="px-6 pb-4 pt-7">
-          <p className="text-lg font-bold text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <p className="text-lg font-bold text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             {t('console-title', language)}
           </p>
           <p className="mt-0.5 text-sm text-fg-muted">{t('console-sub', language)}</p>
@@ -277,7 +277,7 @@ export default function ConsoleSidebar({
                           href={item.href}
                           aria-current={active ? 'page' : undefined}
                           className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal ${
-                            active ? 'bg-signal text-white shadow-sm shadow-brand-600/30' : 'text-fg hover:bg-paper hover:text-ink'
+                            active ? 'bg-signal text-white shadow-sm shadow-brand-600/30' : 'text-fg hover:bg-paper hover:text-fg'
                           }`}
                         >
                           <svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" aria-hidden className="shrink-0">
@@ -302,7 +302,7 @@ export default function ConsoleSidebar({
               {(userName[0] ?? 'A').toUpperCase()}
             </span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink">{userName}</p>
+              <p className="truncate text-sm font-semibold text-fg">{userName}</p>
               <p className="flex items-center gap-1.5 font-mono text-[10px] text-fg-muted">
                 {roleName}
                 <span aria-hidden className="h-1 w-1 rounded-full bg-emerald-500" />

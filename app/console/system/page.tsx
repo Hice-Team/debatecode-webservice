@@ -22,7 +22,7 @@ const STATUS_META: Record<Status, { label: string; dot: string; cls: string }> =
   ok: { label: '정상', dot: 'bg-emerald-500', cls: 'border-emerald-200 bg-emerald-50/50' },
   degraded: { label: '주의', dot: 'bg-amber-500', cls: 'border-amber-200 bg-amber-50/50' },
   down: { label: '장애', dot: 'bg-rose-500', cls: 'border-rose-300 bg-rose-50/60' },
-  unconfigured: { label: '미설정', dot: 'bg-ink/25', cls: 'border-hairline bg-white' },
+  unconfigured: { label: '미설정', dot: 'bg-ink/25', cls: 'border-hairline bg-surface' },
 };
 
 function configured(...names: string[]): boolean {
@@ -206,7 +206,7 @@ export default async function SystemHealthPage() {
 
       {/* 의존성 점검 */}
       <div className="mt-8">
-        <h3 className="mb-3 text-lg font-bold text-ink">의존성</h3>
+        <h3 className="mb-3 text-lg font-bold text-fg">의존성</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           {checks.map((check) => {
             const meta = STATUS_META[check.status];
@@ -214,14 +214,14 @@ export default async function SystemHealthPage() {
               <div key={check.key} className={`rounded-[var(--radius-panel)] border p-4 ${meta.cls}`}>
                 <div className="flex items-center gap-2">
                   <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${meta.dot}`} />
-                  <p className="font-semibold text-ink">{check.label}</p>
+                  <p className="font-semibold text-fg">{check.label}</p>
                   <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                     {meta.label}
                   </span>
                 </div>
                 <p className="mt-1.5 break-words text-xs text-fg-secondary">{check.detail}</p>
                 {check.hint && (
-                  <p className="mt-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] leading-relaxed text-fg">
+                  <p className="mt-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-[11px] leading-relaxed text-fg">
                     → {check.hint}
                   </p>
                 )}
@@ -239,10 +239,10 @@ export default async function SystemHealthPage() {
 
       {/* 런타임 설정 요약 + 최근 변경 */}
       <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
-          <h3 className="text-lg font-bold text-ink">런타임 설정</h3>
+        <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
+          <h3 className="text-lg font-bold text-fg">런타임 설정</h3>
           <p className="mt-1 text-xs text-fg-muted">
-            전체 {SETTING_DEFS.length}개 중 <strong className="text-ink">{overrideCount}개</strong>가 기본값에서 변경돼
+            전체 {SETTING_DEFS.length}개 중 <strong className="text-fg">{overrideCount}개</strong>가 기본값에서 변경돼
             있습니다.
           </p>
           <p className="mt-3 rounded-xl bg-paper/60 px-3 py-2.5 text-[11px] leading-relaxed text-fg-secondary">
@@ -261,9 +261,9 @@ export default async function SystemHealthPage() {
           )}
         </section>
 
-        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white">
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
-            <h3 className="text-sm font-bold text-ink">최근 운영 변경</h3>
+            <h3 className="text-sm font-bold text-fg">최근 운영 변경</h3>
             <Link href="/console/access/audit" className="font-mono text-[11px] text-brand-600 hover:underline">
               전체 감사 로그 →
             </Link>
@@ -271,10 +271,10 @@ export default async function SystemHealthPage() {
           {recentAudit.length === 0 ? (
             <EmptyRow text="아직 기록된 변경이 없습니다." />
           ) : (
-            <ul className="divide-y divide-ink/5">
+            <ul className="divide-y divide-hairline">
               {recentAudit.map((entry) => (
                 <li key={entry.id} className="flex items-start gap-2.5 px-5 py-2.5">
-                  <span className="shrink-0 rounded bg-ink/[0.06] px-1.5 py-0.5 font-mono text-[9px] font-bold text-fg-muted">
+                  <span className="shrink-0 rounded bg-paper px-1.5 py-0.5 font-mono text-[9px] font-bold text-fg-muted">
                     {auditActionLabel(entry.action)}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-xs text-fg">{entry.summary}</span>

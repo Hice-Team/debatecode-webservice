@@ -442,6 +442,10 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-new-chat': '새 대화',
     'ai-search-disclaimer-short': '본 서비스는 AI이며 일부 정보 제공 시 실수를 할 수 있습니다.',
     'ai-terms-link': 'debateAI 이용약관',
+    'theme-label': '화면 테마',
+    'theme-system': '시스템 설정',
+    'theme-light': '라이트',
+    'theme-dark': '다크',
 
     // AI Search — 첨부 메뉴
     'ai-attach-file': '파일 업로드',
@@ -1076,6 +1080,10 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-new-chat': 'New chat',
     'ai-search-disclaimer-short': 'This service is AI and may make mistakes when providing information.',
     'ai-terms-link': 'debateAI Terms',
+    'theme-label': 'Theme',
+    'theme-system': 'System',
+    'theme-light': 'Light',
+    'theme-dark': 'Dark',
 
     // AI Search — attachment menu
     'ai-attach-file': 'Upload file',

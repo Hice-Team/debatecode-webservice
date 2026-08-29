@@ -105,7 +105,7 @@ export default function InquiryWorkspace({
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
       {/* ---------- 좌: 큐 ---------- */}
-      <aside className="flex min-h-0 flex-col overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-white lg:sticky lg:top-6 lg:max-h-[calc(100vh-9rem)]">
+      <aside className="flex min-h-0 flex-col overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface lg:sticky lg:top-6 lg:max-h-[calc(100vh-9rem)]">
         <div className="border-b border-hairline p-3">
           <div className="grid grid-cols-2 gap-1">
             {(
@@ -130,7 +130,7 @@ export default function InquiryWorkspace({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 divide-y divide-ink/5 overflow-y-auto">
+        <div className="min-h-0 flex-1 divide-y divide-hairline overflow-y-auto">
           {visible.length === 0 && <EmptyState title="해당하는 문의가 없습니다" />}
           {visible.map((q) => {
             const on = selected?.id === q.id;
@@ -152,7 +152,7 @@ export default function InquiryWorkspace({
                     <SlaBadge since={q.createdAt} done={q.status !== 'open'} />
                   </span>
                 </div>
-                <p className="mt-1 truncate text-xs font-medium text-ink">{q.subject}</p>
+                <p className="mt-1 truncate text-xs font-medium text-fg">{q.subject}</p>
                 <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-fg-muted">{q.body}</p>
                 {q.assigneeName && <p className="mt-1 font-mono text-[9px] text-brand-600">@{q.assigneeName}</p>}
               </button>
@@ -171,7 +171,7 @@ export default function InquiryWorkspace({
             currentUserId={currentUserId}
           />
         ) : (
-          <div className="rounded-[var(--radius-panel)] border border-hairline bg-white">
+          <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface">
             <EmptyState title="문의가 없습니다" sub="새 문의가 들어오면 왼쪽 목록에 나타납니다." />
           </div>
         )}
@@ -199,28 +199,28 @@ function InquiryDetail({
   return (
     <div className="space-y-4">
       {/* 헤더 + 트리아지 */}
-      <div className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+      <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge
             label={item.status === 'open' ? '미답변' : item.status === 'answered' ? '답변됨' : '보관'}
             tone={item.status === 'open' ? 'open' : item.status === 'answered' ? 'done' : 'muted'}
           />
           <PriorityBadge priority={item.priority} />
-          <h2 className="min-w-0 flex-1 truncate text-lg font-bold text-ink">{item.subject}</h2>
+          <h2 className="min-w-0 flex-1 truncate text-lg font-bold text-fg">{item.subject}</h2>
         </div>
         <p className="mt-1 font-mono text-[11px] text-fg-muted">
           {item.contact} · 접수 {new Date(item.createdAt).toLocaleString('ko-KR')}
           {item.firstResponseAt && ` · 첫 응답 ${new Date(item.firstResponseAt).toLocaleString('ko-KR')}`}
         </p>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-ink/5 pt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">
           <form action={classifyInquiry} className="flex items-center gap-1.5">
             <input type="hidden" name="id" value={item.id} />
             <select
               name="category"
               aria-label="분류"
               defaultValue={item.category ?? 'etc'}
-              className={`rounded-lg border border-ink/15 bg-white px-2 py-1 text-xs ${FOCUS}`}
+              className={`rounded-lg border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
             >
               {Object.entries(CATEGORY_LABEL).map(([k, v]) => (
                 <option key={k} value={k}>
@@ -232,7 +232,7 @@ function InquiryDetail({
               name="priority"
               aria-label="우선순위"
               defaultValue={item.priority}
-              className={`rounded-lg border border-ink/15 bg-white px-2 py-1 text-xs ${FOCUS}`}
+              className={`rounded-lg border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
             >
               {PRIORITIES.map((p) => (
                 <option key={p} value={p}>
@@ -240,7 +240,7 @@ function InquiryDetail({
                 </option>
               ))}
             </select>
-            <button className="rounded-lg border border-ink/15 px-2 py-1 text-[11px] text-fg-secondary hover:border-ink/40">
+            <button className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
               분류 저장
             </button>
           </form>
@@ -251,7 +251,7 @@ function InquiryDetail({
               name="assigneeId"
               aria-label="담당자"
               defaultValue={item.assigneeId ?? ''}
-              className={`rounded-lg border border-ink/15 bg-white px-2 py-1 text-xs ${FOCUS}`}
+              className={`rounded-lg border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
             >
               <option value="">담당 미지정</option>
               {responders.map((r) => (
@@ -261,7 +261,7 @@ function InquiryDetail({
                 </option>
               ))}
             </select>
-            <button className="rounded-lg border border-ink/15 px-2 py-1 text-[11px] text-fg-secondary hover:border-ink/40">
+            <button className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
               지정
             </button>
           </form>
@@ -285,7 +285,7 @@ function InquiryDetail({
       </div>
 
       {/* 문의 본문 */}
-      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
         <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">문의 내용</h3>
         <p className="whitespace-pre-wrap rounded-xl bg-paper/50 px-4 py-3 text-sm leading-relaxed text-fg">
           {item.body}
@@ -293,7 +293,7 @@ function InquiryDetail({
       </section>
 
       {/* 답변 */}
-      <section className="rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">답변</h3>
           {item.answer && !editing && (

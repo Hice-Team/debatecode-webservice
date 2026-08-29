@@ -68,7 +68,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-      <form action={formAction} className="space-y-4 rounded-[var(--radius-panel)] border border-hairline bg-white p-5">
+      <form action={formAction} className="space-y-4 rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
         {draft && <input type="hidden" name="id" value={draft.id} />}
         <input type="hidden" name="existingImageUrl" value={draft?.imageUrl ?? ''} />
 
@@ -91,7 +91,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
                   className="mt-0.5 h-4 w-4 accent-[#1800AC]"
                 />
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-ink">{label}</span>
+                  <span className="block text-sm font-semibold text-fg">{label}</span>
                   <span className="mt-0.5 block text-[11px] leading-relaxed text-fg-muted">{desc}</span>
                 </span>
               </label>
@@ -256,13 +256,13 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
       {/* 미리보기 — 실제 팝업과 같은 배치 */}
       <div>
         <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">방문자에게 보이는 모습</p>
-        <div className="overflow-hidden rounded-[var(--radius-panel)] border border-ink/15 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface shadow-sm">
           {preview && (
              
             <img
               src={preview}
               alt=""
-              className={variant === 'poster' ? 'max-h-64 w-full bg-ink/[0.03] object-contain' : 'h-28 w-full object-cover'}
+              className={variant === 'poster' ? 'max-h-64 w-full bg-paper object-contain' : 'h-28 w-full object-cover'}
             />
           )}
           {variant !== 'poster' && (
@@ -272,7 +272,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
             </div>
           )}
           <div className="px-5 py-4">
-            {variant === 'poster' && <p className="mb-1.5 text-base font-bold text-ink">{title || '(제목)'}</p>}
+            {variant === 'poster' && <p className="mb-1.5 text-base font-bold text-fg">{title || '(제목)'}</p>}
             <p className="whitespace-pre-line text-xs leading-relaxed text-fg">
               {content || (variant === 'poster' ? '' : '(내용)')}
             </p>
@@ -281,7 +281,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
             <span className="text-[11px] text-fg-muted">오늘 하루 보지 않기</span>
             <span className="ml-auto flex gap-1.5">
               {linkType !== 'none' && linkTarget && (
-                <span className="rounded-lg border border-brand-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-brand-700">
+                <span className="rounded-lg border border-brand-300 bg-surface px-2.5 py-1.5 text-[11px] font-semibold text-brand-700">
                   {linkLabel || DEFAULT_LINK_LABEL[linkType]}
                 </span>
               )}

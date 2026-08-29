@@ -13,14 +13,14 @@ export default function ResetPasswordPage() {
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600">RESET PASSWORD</span>
           </Link>
           <h1
-            className="mt-2 text-3xl font-bold tracking-tight text-ink-soft"
+            className="mt-2 text-3xl font-bold tracking-tight text-fg"
             style={{ fontFamily: 'var(--font-space-grotesk)' }}
           >
             새 비밀번호를 설정하세요
           </h1>
         </div>
 
-        <div className="bg-white rounded-xl border border-hairline shadow-sm p-8">
+        <div className="bg-surface rounded-xl border border-hairline shadow-sm p-8">
           <ResetPasswordForm />
         </div>
       </div>
