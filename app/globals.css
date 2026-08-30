@@ -478,3 +478,35 @@ textarea {
 .dc-nav-dark .border-hairline {
   border-color: var(--color-hairline-on-dark);
 }
+
+/* ═══ 고대비 ═══════════════════════════════════════════════════
+   명도 계단을 더 벌리고 경계선을 진하게 한다. 의미색(성공·주의·위험)은 건드리지 않는다 —
+   전부 흑백으로 만들면 "무엇이 실패했는지"를 색으로 읽던 사람이 오히려 못 읽는다.
+   기기별 설정이라 계정이 아니라 브라우저에 저장한다(app/lib/ui-preferences.ts). */
+:root[data-contrast='high'] {
+  --color-fg-secondary: #14162b;
+  --color-fg-muted: #2b3049;
+  --color-fg-quiet: #454a63;
+  --color-hairline: rgba(8, 9, 26, 0.28);
+}
+/* 다크에서의 고대비 — 세 갈래를 테마와 같은 방식으로 다룬다.
+   `:not([data-theme='light'])`만 쓰면 표식이 없는 기본 상태(=라이트)에도 걸려
+   흰 바탕에 흰 글자가 된다. 반드시 미디어 쿼리 안에 둬야 한다. */
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast='high']:not([data-theme='light']) {
+    --color-fg-secondary: #f2f4f8;
+    --color-fg-muted: #dfe3ec;
+    --color-fg-quiet: #c3c8d6;
+    --color-hairline: rgba(255, 255, 255, 0.34);
+  }
+}
+:root[data-contrast='high'][data-theme='dark'] {
+  --color-fg-secondary: #f2f4f8;
+  --color-fg-muted: #dfe3ec;
+  --color-fg-quiet: #c3c8d6;
+  --color-hairline: rgba(255, 255, 255, 0.34);
+}
+/* 초점 링도 함께 굵힌다 — 키보드로만 쓰는 사람에게 지금 위치가 가장 중요한 정보다 */
+:root[data-contrast='high'] :focus-visible {
+  outline-width: 3px;
+}

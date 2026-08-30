@@ -10,9 +10,25 @@ export default function ForgotPasswordForm() {
 
   if (state.sent) {
     return (
-      <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
-        비밀번호 재설정 링크를 이메일로 보냈습니다. 받은편지함을 확인해 주세요.
-      </p>
+      <div className="space-y-3">
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          비밀번호 재설정 링크를 이메일로 보냈습니다. 받은편지함을 확인해 주세요.
+          <span className="mt-1 block text-xs text-emerald-700/80">
+            링크는 30분간 유효하며 한 번만 쓸 수 있습니다. 메일이 보이지 않으면 스팸함도 확인해 주세요.
+          </span>
+        </p>
+
+        {/* 메일 발송이 꺼진 개발 환경에서만 나온다 — 운영에서는 devUrl이 채워지지 않는다.
+            이 줄이 없으면 로컬에서 재설정 흐름을 끝까지 따라갈 방법이 없다. */}
+        {state.devUrl && (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs break-all text-amber-900">
+            <span className="font-semibold">개발 환경 — 메일 발송이 꺼져 있습니다.</span>
+            <a href={state.devUrl} className="mt-1 block font-mono underline">
+              {state.devUrl}
+            </a>
+          </p>
+        )}
+      </div>
     );
   }
 

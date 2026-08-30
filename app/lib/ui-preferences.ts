@@ -91,3 +91,51 @@ export function setSpeechRate(rate: SpeechRate): void {
   }
   window.dispatchEvent(new Event(RATE_EVENT));
 }
+
+/* ---------- 고대비 ---------- */
+
+const CONTRAST_KEY = 'dc-high-contrast';
+const CONTRAST_EVENT = 'dc:high-contrast';
+
+let contrastSnapshot = false;
+
+export function readHighContrast(): boolean {
+  try {
+    contrastSnapshot = window.localStorage.getItem(CONTRAST_KEY) === 'on';
+  } catch {
+    // 저장소를 못 읽으면 끈 상태로 둔다
+  }
+  return contrastSnapshot;
+}
+
+export function subscribeHighContrast(onChange: () => void): () => void {
+  window.addEventListener(CONTRAST_EVENT, onChange);
+  window.addEventListener('storage', onChange);
+  return () => {
+    window.removeEventListener(CONTRAST_EVENT, onChange);
+    window.removeEventListener('storage', onChange);
+  };
+}
+
+/**
+ * 고대비 켜기 — 명도 계단을 더 벌리고 경계선을 진하게 한다.
+ *
+ * 색상 자체를 바꾸지는 않는다. 의미색(성공·주의·위험)까지 흑백으로 만들면
+ * "무엇이 실패했는지"를 색으로 읽던 사람이 오히려 못 읽는다.
+ * 손대는 것은 회색 계단과 hairline뿐이다(globals.css의 [data-contrast='high']).
+ */
+export function setHighContrast(on: boolean): void {
+  contrastSnapshot = on;
+  try {
+    window.localStorage.setItem(CONTRAST_KEY, on ? 'on' : 'off');
+  } catch {
+    // 저장하지 못해도 이번 세션에는 적용된다
+  }
+  document.documentElement.dataset.contrast = on ? 'high' : 'normal';
+  window.dispatchEvent(new Event(CONTRAST_EVENT));
+}
+
+/** 첫 로드에 저장된 값을 html에 반영한다 — 테마 부트 스크립트가 함께 호출한다. */
+export function applyStoredHighContrast(): void {
+  document.documentElement.dataset.contrast = readHighContrast() ? 'high' : 'normal';
+}

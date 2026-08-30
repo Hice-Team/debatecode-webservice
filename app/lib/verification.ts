@@ -17,13 +17,19 @@ export const MAX_ATTEMPTS = 5;
 /** 같은 주소로 코드를 다시 받기까지 기다려야 하는 시간 */
 export const RESEND_COOLDOWN_SECONDS = 60;
 
-export type VerificationPurpose = 'signup' | 'recovery_email' | 'email_change' | 'login_2fa';
+export type VerificationPurpose =
+  | 'signup'
+  | 'recovery_email'
+  | 'email_change'
+  | 'login_2fa'
+  | 'password_reset';
 
 const PURPOSE_SUBJECT: Record<VerificationPurpose, string> = {
   signup: '[debateCode] 이메일 인증 코드',
   recovery_email: '[debateCode] 복구 이메일 확인 코드',
   email_change: '[debateCode] 이메일 변경 확인 코드',
   login_2fa: '[debateCode] 로그인 확인 코드',
+  password_reset: '[debateCode] 비밀번호 재설정',
 };
 
 const PURPOSE_INTRO: Record<VerificationPurpose, string> = {
@@ -31,6 +37,7 @@ const PURPOSE_INTRO: Record<VerificationPurpose, string> = {
   recovery_email: '이 주소를 복구 이메일로 등록하려면 아래 코드를 입력해 주세요.',
   email_change: '이메일 변경을 확인하려면 아래 코드를 입력해 주세요.',
   login_2fa: '로그인을 마치려면 아래 코드를 입력해 주세요. 본인이 로그인한 것이 아니라면 비밀번호를 즉시 바꿔 주세요.',
+  password_reset: '아래 버튼을 눌러 새 비밀번호를 설정해 주세요.',
 };
 
 /** 숫자 6자리 — 헷갈리는 문자를 섞지 않으려고 숫자만 쓴다. */
@@ -127,6 +134,132 @@ function codeEmailHtml(code: string, intro: string): string {
         코드는 ${CODE_TTL_MINUTES}분간 유효합니다. 본인이 요청하지 않았다면 이 메일을 무시해 주세요.
       </p>
     </div>`;
+}
+
+/* ---------- 링크 토큰 (비밀번호 재설정) ---------- */
+
+/** 링크 토큰은 사람이 옮겨 적지 않는다 — 짧게 만들 이유가 없으므로 32바이트로 둔다. */
+export const LINK_TOKEN_TTL_MINUTES = 30;
+
+function generateLinkToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  // base64url — 주소에 그대로 넣을 수 있어야 한다
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+export interface IssueLinkResult {
+  ok: boolean;
+  error?: string;
+  dryRun?: boolean;
+  /** dry-run일 때만 — 개발 중에 흐름이 막히지 않도록 */
+  devUrl?: string;
+}
+
+/**
+ * 재설정 링크 발급 후 메일 발송.
+ *
+ * 코드(6자리) 대신 토큰을 쓰는 이유 — 비밀번호 재설정은 "메일함을 실제로 여는 사람"만
+ * 통과해야 하고, 그 확인은 링크 한 번이면 끝난다. 6자리를 옮겨 적게 하면 단계만 늘어난다.
+ * 저장은 코드와 같다: 평문은 남기지 않고 sha256만 둔다.
+ *
+ * **주소가 가입돼 있는지는 알려 주지 않는다.** 호출부가 언제나 "보냈다"고 답하고,
+ * 없는 주소면 여기서 조용히 아무것도 하지 않는다 — 가입 여부를 캐는 통로를 막는다.
+ */
+export async function issueResetLink(
+  email: string,
+  userId: string,
+  siteUrl: string,
+): Promise<IssueLinkResult> {
+  const normalized = email.trim().toLowerCase();
+  const token = generateLinkToken();
+  const codeHash = await hashCode(token, normalized);
+
+  await prisma.$transaction([
+    prisma.emailVerification.updateMany({
+      where: { email: normalized, purpose: 'password_reset', consumedAt: null },
+      data: { consumedAt: new Date() },
+    }),
+    prisma.emailVerification.create({
+      data: {
+        email: normalized,
+        codeHash,
+        purpose: 'password_reset',
+        userId,
+        expiresAt: new Date(Date.now() + LINK_TOKEN_TTL_MINUTES * 60_000),
+      },
+    }),
+  ]);
+
+  const url = `${siteUrl.replace(/\/$/, '')}/reset-password?token=${token}&email=${encodeURIComponent(normalized)}`;
+
+  if (!(await isEnabled('integration.email_enabled'))) {
+    return { ok: true, dryRun: true, devUrl: url };
+  }
+
+  const result = await sendMail({
+    to: normalized,
+    subject: PURPOSE_SUBJECT.password_reset,
+    html: resetEmailHtml(url),
+  }).catch(() => null);
+
+  if (!result) return { ok: false, error: '메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.' };
+  return { ok: true, dryRun: result.dryRun, devUrl: result.dryRun ? url : undefined };
+}
+
+function resetEmailHtml(url: string): string {
+  return `
+    <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.7;color:#1a1d23;max-width:480px">
+      <h2 style="font-size:18px;margin:0 0 8px">비밀번호 재설정</h2>
+      <p style="margin:0 0 20px;font-size:14px;color:#4b5563">${PURPOSE_INTRO.password_reset}</p>
+      <a href="${url}" style="display:inline-block;background:#4531d9;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:999px">
+        새 비밀번호 설정하기
+      </a>
+      <p style="margin:20px 0 0;font-size:12px;color:#6b7280;word-break:break-all">
+        버튼이 눌리지 않으면 이 주소를 복사해 여세요.<br />${url}
+      </p>
+      <p style="margin:12px 0 0;font-size:12px;color:#6b7280">
+        링크는 ${LINK_TOKEN_TTL_MINUTES}분간 유효하며 한 번만 쓸 수 있습니다.
+        본인이 요청하지 않았다면 이 메일을 무시해 주세요 — 비밀번호는 그대로입니다.
+      </p>
+    </div>`;
+}
+
+/**
+ * 재설정 토큰 확인. 성공하면 그 토큰은 즉시 소모되고 대상 계정 id를 돌려준다.
+ *
+ * 소모를 먼저 하는 이유 — 비밀번호 변경이 실패하더라도 토큰은 이미 쓴 것으로 본다.
+ * 같은 링크를 여러 번 시도하게 두면 무차별 대입의 창이 열린다.
+ */
+export async function consumeResetToken(
+  email: string,
+  token: string,
+): Promise<{ ok: boolean; userId?: string; error?: string }> {
+  const normalized = email.trim().toLowerCase();
+  if (!token || token.length < 20) return { ok: false, error: '링크가 올바르지 않습니다. 다시 요청해 주세요.' };
+
+  const record = await prisma.emailVerification.findFirst({
+    where: { email: normalized, purpose: 'password_reset', consumedAt: null },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!record) return { ok: false, error: '링크가 만료되었거나 이미 사용되었습니다. 다시 요청해 주세요.' };
+
+  if (record.expiresAt < new Date()) {
+    await prisma.emailVerification.update({ where: { id: record.id }, data: { consumedAt: new Date() } });
+    return { ok: false, error: '링크가 만료되었습니다. 다시 요청해 주세요.' };
+  }
+
+  const hash = await hashCode(token, normalized);
+  if (hash !== record.codeHash) {
+    await prisma.emailVerification.update({
+      where: { id: record.id },
+      data: { attempts: { increment: 1 } },
+    });
+    return { ok: false, error: '링크가 올바르지 않습니다. 다시 요청해 주세요.' };
+  }
+  if (!record.userId) return { ok: false, error: '계정을 찾지 못했습니다. 다시 요청해 주세요.' };
+
+  await prisma.emailVerification.update({ where: { id: record.id }, data: { consumedAt: new Date() } });
+  return { ok: true, userId: record.userId };
 }
 
 export interface VerifyResult {

@@ -1,15 +1,23 @@
 'use client';
 
 import { useActionState } from 'react';
-import { updatePassword, type UpdatePasswordState } from '@/app/lib/actions/auth';
+import { resetPasswordWithToken, type UpdatePasswordState } from '@/app/lib/actions/auth';
 
 const initialState: UpdatePasswordState = {};
 
-export default function ResetPasswordForm() {
-  const [state, formAction, pending] = useActionState(updatePassword, initialState);
+export default function ResetPasswordForm({ token, email }: { token: string; email: string }) {
+  const [state, formAction, pending] = useActionState(resetPasswordWithToken, initialState);
 
   return (
     <form action={formAction} className="space-y-5">
+      {/* 링크가 곧 신원이다 — 폼과 함께 그대로 넘긴다 */}
+      <input type="hidden" name="token" value={token} />
+      <input type="hidden" name="email" value={email} />
+
+      <p className="rounded-lg border border-hairline bg-paper px-4 py-2.5 text-xs text-fg-secondary">
+        <span className="text-fg-muted">계정</span> <strong className="font-medium text-fg">{email}</strong>
+      </p>
+
       <div>
         <label htmlFor="password" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">
           NEW PASSWORD

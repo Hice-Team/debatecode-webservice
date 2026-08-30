@@ -10,7 +10,7 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
   // 이미 로그인한 사용자는 대시보드로 (proxy.ts가 하던 최적화 리다이렉트를 대체).
   if (await getSessionOptional()) redirect('/dashboard');
 
-  const { oauthError } = await searchParams;
+  const { oauthError, reset } = await searchParams;
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-paper">
       {/* Premium Background Mesh / Radial Gradient */}
@@ -37,6 +37,19 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
         </div>
 
         <div className="bg-surface/90 backdrop-blur-xl rounded-[var(--radius-panel)] border border-brand-100 shadow-[0_24px_60px_-24px_rgba(24,0,172,0.15)] p-8">
+          {/* 비밀번호를 막 바꾸고 온 사람 — 바뀐 것이 맞는지 확인할 자리가 필요하다.
+              바뀐 비밀번호로 다시 로그인해야 한다는 것도 여기서 알린다. */}
+          {reset === '1' && (
+            <p
+              role="status"
+              className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+            >
+              비밀번호를 변경했습니다. 새 비밀번호로 로그인해 주세요.
+              <span className="mt-1 block text-xs text-emerald-700/80">
+                안전을 위해 기존에 로그인돼 있던 기기는 모두 로그아웃되었습니다.
+              </span>
+            </p>
+          )}
           <LoginForm oauthError={typeof oauthError === 'string' ? oauthError : undefined} />
         </div>
 

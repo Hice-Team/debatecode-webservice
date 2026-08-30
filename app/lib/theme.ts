@@ -15,13 +15,13 @@ function isChoice(v: unknown): v is ThemeChoice {
 }
 
 /**
- * 첫 페인트 전에 <html>에 테마를 찍는 스크립트.
+ * 첫 페인트 전에 <html>에 화면 설정을 찍는 스크립트 — 테마·고대비·움직임 줄이기.
  *
  * layout.tsx의 <head>에 그대로 넣는다. React가 붙기 전에 실행돼야 한다 —
  * 나중에 적용하면 다크를 고른 사람에게 흰 화면이 한 번 번쩍인다.
  * 예외를 삼키는 이유는 스토리지가 막힌 환경(사생활 보호 모드)에서도 화면이 떠야 하기 때문이다.
  */
-export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('${THEME_STORAGE_KEY}');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;}}catch(e){}document.documentElement.classList.add('dc-theme-ready');})();`;
+export const THEME_BOOT_SCRIPT = `(function(){var d=document.documentElement;try{var t=localStorage.getItem('${THEME_STORAGE_KEY}');if(t==='light'||t==='dark'){d.dataset.theme=t;}}catch(e){}try{if(localStorage.getItem('dc-high-contrast')==='on'){d.dataset.contrast='high';}}catch(e){}try{if(localStorage.getItem('dc-reduce-motion')==='on'){d.dataset.reduceMotion='on';}}catch(e){}d.classList.add('dc-theme-ready');})();`;
 
 /* ---------- 구독 (useSyncExternalStore) ---------- */
 
