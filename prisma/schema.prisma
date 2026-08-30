@@ -29,6 +29,17 @@ model User {
   // 면접·리팩토링 모드에서 쓸 debateAI 모델 (app/lib/ai/debateai-models.ts의 id)
   // 비어 있으면 DEFAULT_CODE_MODEL_ID(deepseek-coder-v2)를 쓴다
   aiCodeModel                      String?
+  // AI Search에서 기본으로 열 모델 (app/lib/ai/search-models.ts의 id).
+  // aiCodeModel(면접·리팩토링)과 나눠 둔다 — 코드를 따지는 일과 개념을 찾는 일은
+  // 잘하는 모델이 다르고, 하나로 묶으면 한쪽은 늘 아쉬운 선택이 된다.
+  aiSearchModel                    String?
+  // 이용자가 직접 적는 지침 — string[]. 대화마다 앞에 붙는다.
+  //
+  // 한 덩어리 텍스트가 아니라 목록인 이유: 지침은 하나씩 추가되고 하나씩 후회된다.
+  // 텍스트 상자로 두면 "이 줄만 빼고 싶다"에 전체를 다시 쓰게 된다.
+  aiInstructions                   Json?
+  // 대화에 실어 보낼 맥락의 양 — full | balanced | lean
+  aiContextMode                    String?
   // 이용자가 등록한 상용 API 키(Pro Tier). AES-256-GCM 이중 암호화 저장 — app/lib/crypto.ts.
   // ⚠ AI_SECRET_KEY가 비어 있으면 encryptSecret이 평문을 그대로 돌려준다. 운영에서 그 상태가
   //   되면 이용자 키가 평문으로 쌓인다 — 콘솔 › 시스템 › 상태의 "개인정보 암호화 키"가
@@ -84,6 +95,24 @@ model User {
   avatarUrl                        String? // Storage 버킷 avatars의 공개 URL
   emailNotifications               Boolean                @default(true)
   preferredLanguage                String? // 코드 에디터 기본 언어
+  // 시간·지역 표기 — 서버가 아니라 이용자 기준으로 시각을 그린다.
+  // 비어 있으면 브라우저가 알려 주는 값을 쓴다(대부분 그게 맞다). 여행·이주처럼
+  // 브라우저 값과 실제 생활권이 다를 때만 직접 고르는 자리다.
+  timezone                         String? // IANA 시간대 (예: Asia/Seoul)
+  dateFormat                       String? // ymd | ymdDot | mdy | dmy
+  country                          String? // ISO 3166-1 alpha-2
+  // 에디터 기본값 — { fontSize, tabSize, fontFamily, autocomplete, minimap, wordWrap }
+  //
+  // 컬럼 여섯 개로 펼치지 않는 이유는, 이 값들이 늘 함께 읽히고 함께 저장되며
+  // 어느 하나로도 조회하지 않기 때문이다. 검색 조건이 되는 값만 컬럼으로 둔다.
+  editorPrefs                      Json?
+  // 알림 채널 — { comment, adopted, mateApply, mateResult, points, marketing }
+  // emailNotifications는 이 전체를 덮는 주 스위치로 남는다(끄면 아래 값과 무관하게 안 보낸다).
+  notifyPrefs                      Json?
+  // 개인 맞춤 — 학습 목표, 프로필 공개 범위, AI가 답할 언어
+  profileGoal                      String? // 자유 입력 (최대 120자)
+  profileVisibility                String  @default("public") // public | members | private
+  chatLanguage                     String? // auto | ko | en — 비어 있으면 auto
   starScore                        Int                    @default(0)
   rankBadgeVisible                 Boolean                @default(true) // 커뮤니티 글/답글에 등급 배지 노출 여부
   // 등급 비공개(rankBadgeVisible=false) 사용자를 명예의 전당에 표시할 때 쓰는 고정 익명 식별자.

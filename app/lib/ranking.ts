@@ -32,6 +32,13 @@ export interface RankedUser {
   starScore: number;
   rankName: string;
   rankBadgeVisible: boolean;
+  /**
+   * 프로필 공개 범위 — 'members'면 로그인하지 않은 방문자에게는 이름을 가린다.
+   * 가리는 판단은 화면이 한다(여기서는 방문자가 누구인지 알 수 없다).
+   */
+  profileVisibility: string;
+  /** 이름을 가릴 때 대신 쓸 식별자 */
+  anonymousTag: string | null;
   /** 부문 점수 (정렬 기준) */
   score: number;
   // 상세 지표 — 카드/테이블에 함께 노출한다
@@ -121,7 +128,10 @@ const collectScoreboard = cache(async (sinceMs: number, untilMs: number) => {
   const [users, passedGroups, submissionGroups, interviews, posts, comments, likes, drafts, debateQ, runAttempts] =
     await Promise.all([
       prisma.user.findMany({
-        select: { id: true, name: true, anonymousTag: true, avatarUrl: true, role: true, starScore: true, rankBadgeVisible: true, createdAt: true },
+        select: {
+          id: true, name: true, anonymousTag: true, avatarUrl: true, role: true,
+          starScore: true, rankBadgeVisible: true, profileVisibility: true, createdAt: true,
+        },
       }),
       // 서로 다른 문제 PASS 수 — distinct 조합을 세기 위해 groupBy 사용
       prisma.submission.groupBy({
@@ -174,6 +184,8 @@ const collectScoreboard = cache(async (sinceMs: number, untilMs: number) => {
       starScore: u.starScore,
       rankName: rankForScore(u.starScore).name,
       rankBadgeVisible: u.rankBadgeVisible,
+      profileVisibility: u.profileVisibility,
+      anonymousTag: u.anonymousTag,
       score: 0,
       solvedCount: 0,
       submissionCount: 0,

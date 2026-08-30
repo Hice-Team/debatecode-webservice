@@ -45,6 +45,7 @@ import {
   type WorkspaceMode,
 } from '@/app/lib/solve-session';
 import EditorPanel from './editor-panel';
+import { EDITOR_DEFAULTS, type EditorPrefs } from '@/app/lib/user-prefs';
 import OutputPanel from './output-panel';
 import InterviewPanel, { type InterviewMode } from './interview-panel';
 import {
@@ -183,6 +184,7 @@ export default function Workspace({
   builtinLive,
   defaultChatModel = DEFAULT_CHAT_MODEL_ID,
   aiAccess = { hasOwnKey: false, hasLocalEndpoint: false },
+  editorPrefs = EDITOR_DEFAULTS,
 }: {
   problem: WorkspaceProblem;
   isLoggedIn: boolean;
@@ -192,6 +194,8 @@ export default function Workspace({
   defaultChatModel?: DebateAiModelId;
   /** BYOK/Local 모델을 쓸 수 있는지 판단할 재료 — 서버에서 내려준다 */
   aiAccess?: { hasOwnKey: boolean; hasLocalEndpoint: boolean };
+  /** 설정 › 일반 › 코드 에디터에서 고른 값 */
+  editorPrefs?: EditorPrefs;
 }) {
   const { language: uiLang } = useLanguage();
   const [mode, setMode] = useState<Mode>('SOLVING');
@@ -1573,7 +1577,7 @@ export default function Workspace({
           {/* 에디터/터미널 — 세로 스플리터로 높이 조절 */}
           <div ref={editorColRef} className="flex min-h-0 flex-grow flex-col">
             <div style={{ height: `${100 - termPct}%` }} className="min-h-0 overflow-hidden">
-              <EditorPanel language={language} value={code} onChange={setCode} />
+              <EditorPanel language={language} value={code} onChange={setCode} prefs={editorPrefs} />
             </div>
             <SplitHandle
               axis="y"

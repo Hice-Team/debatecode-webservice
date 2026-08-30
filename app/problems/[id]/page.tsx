@@ -11,6 +11,7 @@ import { DEFAULT_CODE_MODEL_ID } from '@/app/lib/ai/debateai-models';
 import type { StarterCodes } from '@/app/lib/types';
 import Workspace from './workspace';
 import { readEntrySource, type ProblemEntryContext } from './entry-context';
+import { parseEditorPrefs } from '@/app/lib/user-prefs';
 
 export default async function ProblemPage({ params, searchParams }: PageProps<'/problems/[id]'>) {
   // 스마트폰은 에디터를 띄우기 전에 되돌린다 — 무거운 번들을 내려받게 두지 않는다
@@ -40,7 +41,7 @@ export default async function ProblemPage({ params, searchParams }: PageProps<'/
   const aiRow = session
     ? await prisma.user.findUnique({
         where: { id: session.userId },
-        select: { role: true, aiApiKey: true, aiBaseUrl: true, aiCodeModel: true },
+        select: { role: true, aiApiKey: true, aiBaseUrl: true, aiCodeModel: true, editorPrefs: true },
       })
     : null;
   const aiAccess = {
@@ -116,6 +117,7 @@ export default async function ProblemPage({ params, searchParams }: PageProps<'/
         entry={entry}
         defaultChatModel={aiRow?.aiCodeModel ?? DEFAULT_CODE_MODEL_ID}
         aiAccess={aiAccess}
+        editorPrefs={parseEditorPrefs(aiRow?.editorPrefs)}
       />
     </div>
   );

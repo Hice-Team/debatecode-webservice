@@ -17,6 +17,34 @@ export interface WebauthnKeySummary {
   createdAt: string;
 }
 
+/**
+ * 백업 코드를 텍스트 파일로 저장한다.
+ *
+ * "옮겨 적으세요"만 두면 대부분 화면을 캡처하는데, 그 이미지는 잠기지 않은 사진첩에
+ * 남는다. 파일로 내려 주면 최소한 어디에 두었는지 아는 상태가 된다.
+ * 서버를 거치지 않는다 — 코드는 이미 브라우저에 있고, 다시 보내면 경로만 하나 늘어난다.
+ */
+function downloadBackupCodes(codes: string[]) {
+  const nl = String.fromCharCode(10);
+  const body = [
+    'debateCode 백업 코드',
+    '발급 ' + new Date().toLocaleString('ko-KR'),
+    '',
+    '· 인증 앱을 쓸 수 없을 때 6자리 코드 대신 입력합니다.',
+    '· 코드 하나는 한 번만 쓸 수 있습니다.',
+    '· 다시 발급하면 아래 코드는 모두 무효가 됩니다.',
+    '',
+    ...codes,
+    '',
+  ].join(nl);
+  const url = URL.createObjectURL(new Blob([body], { type: 'text/plain;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'debatecode-backup-codes.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function TwoFactor({
   initialEmail,
   recoveryVerifiedAt,
@@ -210,7 +238,7 @@ export default function TwoFactor({
           되돌릴 수 없는 동작에도 같은 확인이 붙습니다. 확인은 기기별로 30일 동안 유지됩니다.
         </p>
         <div className="mt-3 flex items-center gap-3">
-          <button onClick={beginSetup} disabled={provisioning} className="px-3 py-2 rounded bg-brand-600 text-white">{provisioning ? '생성 중…' : '설정 시작'}</button>
+          <button onClick={beginSetup} disabled={provisioning} className="dc-tap min-h-10 shrink-0 rounded-[var(--radius-card)] bg-signal px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-40">{provisioning ? '생성 중…' : '설정 시작'}</button>
           <span className="text-sm text-fg-secondary">이미 등록된 경우 새로 발급하면 이전 앱의 등록은 무효화됩니다.</span>
         </div>
 
@@ -225,9 +253,18 @@ export default function TwoFactor({
                   QR을 못 찍는다면 이 키를 앱에 직접 입력: {secret}
                 </p>
               )}
-              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" className="mt-2 w-full rounded-lg border px-3 py-2" />
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="123456"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                aria-label="인증 앱에 표시된 6자리 코드"
+                className="mt-2 w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-2 font-mono text-sm tracking-[0.2em] text-fg focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/20"
+              />
               <div className="mt-3 flex items-center gap-3">
-                <button onClick={verify} disabled={verifyPending} className="px-3 py-2 rounded bg-emerald-600 text-white">{verifyPending ? '확인 중…' : '확인 및 활성화'}</button>
+                <button onClick={verify} disabled={verifyPending} className="dc-tap min-h-10 shrink-0 rounded-[var(--radius-card)] bg-signal px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-40">{verifyPending ? '확인 중…' : '확인 및 활성화'}</button>
                 {verifyError && <p className="text-sm text-rose-600">{verifyError}</p>}
               </div>
             </div>
@@ -237,14 +274,14 @@ export default function TwoFactor({
           <button
             onClick={generateBackup}
             disabled={backupPending}
-            className="rounded bg-ink/10 px-3 py-2 disabled:opacity-50"
+            className="dc-tap min-h-10 shrink-0 rounded-[var(--radius-card)] border border-hairline px-4 text-sm font-semibold text-fg-secondary transition-colors hover:border-fg-quiet hover:text-fg disabled:opacity-40"
           >
             {backupPending ? '만드는 중…' : backupCodes ? '백업 코드 다시 발급' : '백업 코드 발급'}
           </button>
           {enabled && (
             <button
               onClick={disableTwoFactor}
-              className="px-3 py-2 rounded bg-rose-50 text-rose-700 border border-rose-100"
+              className="dc-tap min-h-10 shrink-0 rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100"
             >
               2단계 인증 해제
             </button>
@@ -271,13 +308,19 @@ export default function TwoFactor({
             <div className="mt-2 flex flex-wrap gap-2">
               <button
                 onClick={() => navigator.clipboard?.writeText(backupCodes.join(String.fromCharCode(10)))}
-                className="rounded border border-amber-300 px-2 py-1 text-[11px] text-amber-900"
+                className="dc-tap rounded-[var(--radius-control)] border border-amber-300 px-2.5 py-1.5 text-[11px] font-medium text-amber-900 hover:bg-amber-100"
               >
                 모두 복사
               </button>
               <button
+                onClick={() => downloadBackupCodes(backupCodes)}
+                className="dc-tap rounded-[var(--radius-control)] border border-amber-300 px-2.5 py-1.5 text-[11px] font-medium text-amber-900 hover:bg-amber-100"
+              >
+                파일로 저장
+              </button>
+              <button
                 onClick={() => setBackupCodes(null)}
-                className="rounded border border-amber-300 px-2 py-1 text-[11px] text-amber-900"
+                className="dc-tap rounded-[var(--radius-control)] border border-amber-300 px-2.5 py-1.5 text-[11px] font-medium text-amber-900 hover:bg-amber-100"
               >
                 옮겨 적었습니다 — 닫기
               </button>

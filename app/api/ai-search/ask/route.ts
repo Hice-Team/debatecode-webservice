@@ -22,6 +22,12 @@ import { fallbackAnswer, getSearchLlmConfig, streamSearchAnswer } from '@/app/li
 import { hasOwnFunding } from '@/app/lib/ai/funding';
 import { EFFORTS, asEffort } from '@/app/lib/ai/effort';
 import { estimateTokens } from '@/app/lib/ai/free-ai';
+import {
+  DEFAULT_CONTEXT_MODE,
+  contextTurns,
+  isContextMode,
+  parseInstructions,
+} from '@/app/lib/user-prefs';
 
 const bodySchema = z.object({
   sessionId: z.string().min(1).optional(),
@@ -72,7 +78,10 @@ export async function POST(request: Request) {
   // 이용자 AI 설정 — 개인 키가 있으면 그 키로 부르고 한도를 걸지 않는다.
   const aiRow = await prisma.user.findUnique({
     where: { id: userId },
-    select: { aiProvider: true, aiModel: true, aiApiKey: true, aiBaseUrl: true },
+    select: {
+      aiProvider: true, aiModel: true, aiApiKey: true, aiBaseUrl: true,
+      aiInstructions: true, aiContextMode: true, chatLanguage: true, aiSearchModel: true,
+    },
   });
   const userKeys = {
     provider: aiRow?.aiProvider ?? 'builtin_ai',
@@ -81,6 +90,17 @@ export async function POST(request: Request) {
     baseUrl: await decryptSecret(aiRow?.aiBaseUrl),
   };
   const serviceFunded = !hasOwnFunding(userKeys);
+  const defaultSearchModel = isSearchModelId(aiRow?.aiSearchModel)
+    ? aiRow.aiSearchModel
+    : DEFAULT_SEARCH_MODEL_ID;
+
+  // 설정 › AI에서 정한 답변 방식 — 지침, 함께 보낼 대화의 양, 답할 언어
+  const instructions = parseInstructions(aiRow?.aiInstructions);
+  const historyTurns = contextTurns(
+    isContextMode(aiRow?.aiContextMode) ? aiRow.aiContextMode : DEFAULT_CONTEXT_MODE,
+  );
+  const answerLanguage =
+    aiRow?.chatLanguage === 'ko' || aiRow?.chatLanguage === 'en' ? aiRow.chatLanguage : undefined;
 
   const raw = await request.json().catch(() => null);
   const parsed = bodySchema.safeParse(raw ?? {});
@@ -141,14 +161,19 @@ export async function POST(request: Request) {
       orderBy: { updatedAt: 'desc' },
       select: { id: true },
     });
-    sessionId = existing?.id ?? (await prisma.aiSession.create({ data: { userId, model: DEFAULT_SEARCH_MODEL_ID } })).id;
+    sessionId =
+      existing?.id ??
+      // 새 대화는 설정에서 고른 기본 모델로 연다 — 매번 다시 고르지 않게
+      (await prisma.aiSession.create({ data: { userId, model: defaultSearchModel } })).id;
   }
 
   const sessionRow = await prisma.aiSession.findUnique({
     where: { id: sessionId },
     select: { model: true, effort: true },
   });
-  const modelId = isSearchModelId(parsed.data.model) ? parsed.data.model : (sessionRow?.model ?? DEFAULT_SEARCH_MODEL_ID);
+  const modelId = isSearchModelId(parsed.data.model)
+    ? parsed.data.model
+    : (sessionRow?.model ?? defaultSearchModel);
   const model = findSearchModel(modelId);
   // 강도도 모델처럼 세션에 기억된다 — 매번 다시 고르게 하지 않는다
   const effort = asEffort(parsed.data.effort ?? sessionRow?.effort);
@@ -218,6 +243,9 @@ export async function POST(request: Request) {
               modelId,
               effort,
               user: userKeys,
+              instructions,
+              historyTurns,
+              answerLanguage,
               // 이용자가 중단하거나 브라우저가 연결을 끊으면 모델 호출도 함께 끊는다
               signal: request.signal,
               onUsage: (u) => {

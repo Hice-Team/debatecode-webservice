@@ -1,39 +1,35 @@
 import type { Metadata } from 'next';
 import { prisma } from '@/app/lib/prisma';
-import Link from 'next/link';
-import { getUser, verifySession } from '@/app/lib/dal';
+import { verifySession, getUser } from '@/app/lib/dal';
 import { createClient } from '@/app/lib/supabase/server';
 import { maskSecret } from '@/app/lib/crypto';
 import { getFreeUsageSummary } from '@/app/lib/ai/usage-summary';
 import { getTwoFactorState } from '@/app/lib/two-factor';
-import { signOutDevice } from '@/app/lib/actions/settings';
 import { PageShell, PageHeader } from '@/app/components/page-shell';
 import ProfileForm from './profile/profile-form';
 import { ensureAnonymousTag } from '@/app/lib/identity';
-import PasswordForm from './account/password-form';
 import AppSettingsForm from './app/app-settings-form';
 import AiSettingsForm from './ai/settings-form';
+import AiPersonalization from './ai/personalization';
 import McpTokenPanel from './ai/mcp-token-panel';
-import TwoFactor from './security/two-factor';
-import EmailVerification from './security/email-verification';
 import SettingsShell from './settings-shell';
-import { SettingRow, SettingValue } from './ui';
-import DeleteAccount from './delete-account';
 import DataSection from './data-section';
+import AccountSecurity, { type DeviceRow } from './account-security';
 import AccessibilitySection from './accessibility-section';
+import {
+  DEFAULT_CONTEXT_MODE,
+  DEFAULT_DATE_FORMAT,
+  isContextMode,
+  parseEditorPrefs,
+  parseInstructions,
+  parseNotifyPrefs,
+  type ChatLanguage,
+  type ProfileVisibility,
+} from '@/app/lib/user-prefs';
 
 export const metadata: Metadata = { title: '설정' };
 
-// user-agent → 사람이 읽기 쉬운 기기/브라우저 라벨 (간단 휴리스틱)
-function deviceLabel(ua: string | null): string {
-  if (!ua) return '알 수 없는 기기';
-  const os = /Windows/.test(ua) ? 'Windows' : /Mac OS X|Macintosh/.test(ua) ? 'macOS' : /Android/.test(ua) ? 'Android' : /iPhone|iPad|iOS/.test(ua) ? 'iOS' : /Linux/.test(ua) ? 'Linux' : '기타 OS';
-  const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : '브라우저';
-  return `${browser} · ${os}`;
-}
-
-
-// 통합 설정 — 계정 / 커뮤니티 프로필 / 서비스 / AI 제공자를 한 페이지에서 관리한다.
+// 통합 설정 — 한 번에 한 갈래만 보여 주고, 각 갈래의 내용은 여기서 만들어 넘긴다.
 export default async function SettingsPage() {
   const { userId, email } = await verifySession();
   // 앱 쪽 계정 행이 있는지 먼저 확인한다. 없으면 아래 조회들이 차례로 터지는데,
@@ -55,25 +51,36 @@ export default async function SettingsPage() {
   } catch {
     currentSessionId = null;
   }
+
   const devices = await prisma
-    .$queryRaw<{ id: string; created_at: Date; updated_at: Date; user_agent: string | null; ip: string | null }[]>`
+    .$queryRaw<DeviceRow[]>`
       SELECT id::text AS id, created_at, updated_at, user_agent, ip::text AS ip
       FROM auth.sessions WHERE user_id = ${userId}::uuid ORDER BY updated_at DESC LIMIT 5`
-    .catch(() => [] as { id: string; created_at: Date; updated_at: Date; user_agent: string | null; ip: string | null }[]);
+    .catch(() => [] as DeviceRow[]);
+
+  // 연결된 소셜 계정 — 어떤 길로 이 계정에 들어올 수 있는지 보여 준다
+  const identities = await prisma
+    .$queryRaw<{ provider: string; created_at: Date }[]>`
+      SELECT provider, created_at FROM auth.identities
+      WHERE user_id = ${userId}::uuid ORDER BY created_at ASC`
+    .catch(() => [] as { provider: string; created_at: Date }[]);
 
   const freeQuota = await getFreeUsageSummary(userId);
   // 탈퇴 화면이 어떤 2차 인증 수단을 물어볼지 미리 알아야 한다
   const twoFactor = await getTwoFactorState(userId);
-  const aiSessionCount = await prisma.aiSession.count({ where: { userId } });
   // 익명 식별자는 설정 화면에서 처음 보여줄 수 있으므로 여기서 확보해 둔다
   const anonymousTag = await ensureAnonymousTag(userId);
 
-  const [user, loginEvents, webauthnKeys] = await Promise.all([
+  const [user, loginEvents, webauthnKeys, counts] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
-        name: true, avatarUrl: true, rankBadgeVisible: true, anonymousTag: true, aiTrainingConsentAt: true,
-        emailNotifications: true, preferredLanguage: true, aiCodeModel: true,
+        name: true, avatarUrl: true, rankBadgeVisible: true, anonymousTag: true,
+        aiTrainingConsentAt: true, createdAt: true,
+        emailNotifications: true, preferredLanguage: true, aiCodeModel: true, aiSearchModel: true,
+        aiInstructions: true, aiContextMode: true,
+        timezone: true, dateFormat: true, country: true, editorPrefs: true, notifyPrefs: true,
+        profileGoal: true, profileVisibility: true, chatLanguage: true,
         aiProvider: true, aiModel: true, aiApiKey: true, aiBaseUrl: true,
         mcpTokenPrefix: true, mcpTokenCreatedAt: true,
         twoFactorRecoveryEmail: true,
@@ -93,6 +100,18 @@ export default async function SettingsPage() {
       orderBy: { createdAt: 'desc' },
       select: { id: true, name: true, createdAt: true },
     }),
+    // 데이터 제어가 "무엇이 얼마나 있는지"를 먼저 보여 준다 — 모르고 지우게 두지 않는다
+    Promise.all([
+      prisma.runAttempt.count({ where: { userId } }),
+      prisma.submission.count({ where: { userId } }),
+      prisma.post.count({ where: { authorId: userId } }),
+      prisma.comment.count({ where: { authorId: userId } }),
+      prisma.aiSession.count({ where: { userId } }),
+      prisma.debateAiChat.count({ where: { userId } }),
+      prisma.bookmark.count({ where: { userId } }),
+    ]).then(([activityLogs, submissions, posts, comments, aiSessions, debateChats, bookmarks]) => ({
+      activityLogs, submissions, posts, comments, aiSessions, debateChats, bookmarks,
+    })),
   ]);
 
   const icon = (path: string) => (
@@ -105,50 +124,44 @@ export default async function SettingsPage() {
     {
       id: 'general',
       label: '일반',
-      keywords: ['언어', '알림', '이메일', '테마', 'language', 'notification'],
+      keywords: ['언어', '알림', '이메일', '시간대', '날짜', '에디터', '글꼴', 'language', 'notification'],
       icon: icon('M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17ZM12 8v4l2.5 2.5'),
     },
     {
       id: 'profile',
       label: '개인 맞춤 설정',
-      keywords: ['프로필', '이름', '아바타', '등급', '익명', 'profile'],
+      keywords: ['프로필', '이름', '아바타', '등급', '익명', '공개 범위', '목표', 'profile'],
       icon: icon('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0'),
     },
     {
       id: 'ai',
       label: 'AI 설정',
-      keywords: ['AI', 'API', '키', '모델', 'free tier', 'perplexity', 'openai', 'claude', 'gemini', 'grok'],
+      keywords: ['AI', 'API', '키', '모델', '지침', '맥락', 'free tier', 'openai', 'claude', 'gemini'],
       icon: icon('M12 4v3M12 17v3M4 12h3M17 12h3M7.8 7.8 6 6M16.2 7.8 18 6M7.8 16.2 6 18M16.2 16.2 18 18M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z'),
     },
     {
       id: 'integration',
       label: '로컬 연동',
-      keywords: ['MCP', '토큰', 'bridge', 'ollama', 'debateNetwork', '연동'],
+      keywords: ['MCP', '토큰', 'bridge', 'ollama', 'debateNetwork', '파일시스템', '연동'],
       icon: icon('M9 7H7a5 5 0 0 0 0 10h2M15 7h2a5 5 0 0 1 0 10h-2M8.5 12h7'),
     },
     {
       id: 'accessibility',
       label: '접근성 및 표시',
-      keywords: ['애니메이션', '움직임', '모션', '낭독', 'TTS', '속도', '접근성', 'motion', 'accessibility'],
+      keywords: ['테마', '다크', '고대비', '움직임', '모션', '낭독', 'TTS', '접근성', 'accessibility'],
       icon: icon('M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17ZM8.5 12h7M12 8.5v7'),
     },
     {
       id: 'data',
       label: '데이터 제어',
-      keywords: ['데이터', '삭제', '약관', '방침', '개인정보', 'AI Search 대화'],
+      keywords: ['데이터', '내보내기', '삭제', '캐시', '약관', '방침', '개인정보', '학습 활용'],
       icon: icon('M12 4.5c-4 0-7 1.2-7 2.7v9.6c0 1.5 3 2.7 7 2.7s7-1.2 7-2.7V7.2c0-1.5-3-2.7-7-2.7ZM5 7.2c0 1.5 3 2.7 7 2.7s7-1.2 7-2.7'),
     },
     {
       id: 'security',
-      label: '보안 및 로그인',
-      keywords: ['비밀번호', '기기', '세션', '로그인 기록', 'IP', 'password', 'device'],
+      label: '계정 및 보안',
+      keywords: ['비밀번호', '이메일', '2단계', '기기', '세션', '로그인 기록', '소셜', '탈퇴', 'password'],
       icon: icon('M12 3.5 5 6.3v5.2c0 4.2 2.9 7.4 7 9 4.1-1.6 7-4.8 7-9V6.3L12 3.5Z'),
-    },
-    {
-      id: 'account',
-      label: '계정',
-      keywords: ['이메일', '탈퇴', '계정 삭제', 'account', 'delete'],
-      icon: icon('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0'),
     },
   ];
 
@@ -158,42 +171,60 @@ export default async function SettingsPage() {
         initial={{
           emailNotifications: user.emailNotifications,
           preferredLanguage: user.preferredLanguage ?? '',
-          aiCodeModel: user.aiCodeModel ?? '',
+          timezone: user.timezone ?? '',
+          dateFormat: user.dateFormat ?? DEFAULT_DATE_FORMAT,
+          country: user.country ?? '',
+          editor: parseEditorPrefs(user.editorPrefs),
+          notify: parseNotifyPrefs(user.notifyPrefs),
         }}
       />
     ),
 
     profile: (
-      <div className="pt-4">
-        <ProfileForm
-          initial={{
-            name: user.name,
-            avatarUrl: user.avatarUrl ?? '',
-            rankBadgeVisible: user.rankBadgeVisible,
-            anonymousTag,
-          }}
-        />
-      </div>
+      <ProfileForm
+        initial={{
+          name: user.name,
+          email,
+          joinedAt: user.createdAt.toLocaleDateString('ko-KR', { dateStyle: 'long' }),
+          avatarUrl: user.avatarUrl ?? '',
+          rankBadgeVisible: user.rankBadgeVisible,
+          anonymousTag,
+          goal: user.profileGoal ?? '',
+          visibility: (user.profileVisibility ?? 'public') as ProfileVisibility,
+          chatLanguage: (user.chatLanguage ?? 'auto') as ChatLanguage,
+        }}
+      />
     ),
 
     ai: (
       <div className="pt-4">
-        <AiSettingsForm
-          initial={{ aiProvider: user.aiProvider, hasKey: !!user.aiApiKey, keyHint: maskSecret(user.aiApiKey) }}
-          freeQuota={{
-            used: freeQuota.used,
-            limit: freeQuota.limit,
-            resetAt: freeQuota.resetAt ? freeQuota.resetAt.toISOString() : null,
-            models: freeQuota.models,
-            allowance: {
-              ...freeQuota.allowance,
-              aiSearch: {
-                ...freeQuota.allowance.aiSearch,
-                resetAt: freeQuota.allowance.aiSearch.resetAt?.toISOString() ?? null,
-              },
-            },
+        <AiPersonalization
+          initial={{
+            codeModel: user.aiCodeModel ?? '',
+            searchModel: user.aiSearchModel ?? '',
+            contextMode: isContextMode(user.aiContextMode) ? user.aiContextMode : DEFAULT_CONTEXT_MODE,
+            instructions: parseInstructions(user.aiInstructions),
           }}
+          sessionCount={counts.aiSessions}
         />
+        <div className="mt-10 border-t border-hairline pt-6">
+          <AiSettingsForm
+            initial={{ aiProvider: user.aiProvider, hasKey: !!user.aiApiKey, keyHint: maskSecret(user.aiApiKey) }}
+            freeQuota={{
+              used: freeQuota.used,
+              limit: freeQuota.limit,
+              resetAt: freeQuota.resetAt ? freeQuota.resetAt.toISOString() : null,
+              models: freeQuota.models,
+              allowance: {
+                ...freeQuota.allowance,
+                aiSearch: {
+                  ...freeQuota.allowance.aiSearch,
+                  resetAt: freeQuota.allowance.aiSearch.resetAt?.toISOString() ?? null,
+                },
+              },
+            }}
+          />
+        </div>
       </div>
     ),
 
@@ -203,167 +234,39 @@ export default async function SettingsPage() {
           prefix={user.mcpTokenPrefix}
           createdAt={user.mcpTokenCreatedAt ? user.mcpTokenCreatedAt.toISOString() : null}
         />
-        <ul className="mt-4 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-fg-muted">
-          <li>로컬 LLM은 debateBridge 또는 debateNetwork로 연결하며 위 토큰이 필요합니다.</li>
-          <li>AI를 연결하지 않아도 채점 시스템과 내장 면접관은 그대로 사용할 수 있습니다.</li>
-        </ul>
       </div>
     ),
 
     accessibility: <AccessibilitySection />,
 
-    data: <DataSection aiSessionCount={aiSessionCount} />,
-
-    security: (
-      <>
-        <SettingRow
-          label="비밀번호 변경"
-          desc="주기적으로 바꾸면 계정을 더 안전하게 지킬 수 있습니다."
-          stacked
-          control={<PasswordForm email={email} />}
-        />
-
-        <SettingRow
-          label="이메일 인증"
-          desc="이 주소를 실제로 받아볼 수 있는지 확인합니다. 중고 거래와 일부 게시판 답변에 필요합니다."
-          stacked
-          control={
-            <EmailVerification
-              email={email}
-              verifiedAt={user.emailVerifiedAt?.toISOString() ?? null}
-            />
-          }
-        />
-
-        <SettingRow
-          label="2단계 인증"
-          desc="복구 이메일 · 인증 앱(TOTP) · 보안키(WebAuthn)를 함께 관리합니다."
-          stacked
-          control={
-            <TwoFactor
-              initialEmail={user.twoFactorRecoveryEmail}
-              recoveryVerifiedAt={user.twoFactorRecoveryEmailVerifiedAt?.toISOString() ?? null}
-              initialEnabled={user.twoFactorEnabled}
-              keys={webauthnKeys.map((k) => ({
-                id: k.id,
-                name: k.name,
-                createdAt: k.createdAt.toISOString(),
-              }))}
-            />
-          }
-        />
-
-        <SettingRow
-          label="로그인된 기기"
-          desc="모르는 기기가 있다면 로그아웃시키고 비밀번호를 변경하세요."
-          stacked
-          control={
-            <>
-              <div className="divide-y divide-hairline overflow-hidden rounded-xl border border-hairline">
-              {devices.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-fg-muted">활성 세션 정보를 불러올 수 없습니다.</p>
-              ) : (
-                devices.map((d) => {
-                  const isCurrent = d.id === currentSessionId;
-                  return (
-                    <div key={d.id} className="flex items-center gap-3 px-4 py-3">
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${isCurrent ? 'bg-emerald-500' : 'bg-ink/20'}`} aria-hidden />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-fg">
-                          {deviceLabel(d.user_agent)}
-                          {isCurrent && (
-                            <span className="ml-2 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                              현재 기기
-                            </span>
-                          )}
-                        </p>
-                        <p className="font-mono text-[11px] text-fg-muted">
-                          {d.ip ? `IP ${d.ip.replace(/(\d+\.\d+\.\d+)\.\d+/, '$1.x')} · ` : ''}
-                          마지막 활동 {new Date(d.updated_at).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' })}
-                        </p>
-                      </div>
-                      {!isCurrent && (
-                        <form action={signOutDevice} className="ml-auto shrink-0">
-                          <input type="hidden" name="sessionId" value={d.id} />
-                          <button className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100">
-                            로그아웃
-                          </button>
-                        </form>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-              </div>
-              <div className="mt-2 text-right">
-                <Link href="/settings/security/logins" className="text-sm text-fg-secondary hover:text-fg">더보기</Link>
-              </div>
-            </>
-          }
-        />
-
-        <SettingRow
-          label="로그인 기록"
-          desc="모르는 위치가 있다면 즉시 비밀번호를 변경하세요. IP 원문은 저장하지 않고 마스킹합니다."
-          stacked
-          control={
-            <div className="divide-y divide-hairline overflow-hidden rounded-xl border border-hairline">
-              {loginEvents.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-fg-muted">아직 기록된 로그인이 없습니다.</p>
-              ) : (
-                loginEvents.map((e) => (
-                  <div key={e.id} className="flex items-center gap-3 px-4 py-3">
-                    <span className={`h-2 w-2 shrink-0 rounded-full ${e.isNew ? 'bg-amber-500' : 'bg-emerald-500'}`} aria-hidden />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-fg">
-                        {deviceLabel(e.userAgent)}
-                        {e.isNew && (
-                          <span className="ml-2 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                            새 위치
-                          </span>
-                        )}
-                      </p>
-                      <p className="font-mono text-[11px] text-fg-muted">IP {e.ipMasked}</p>
-                    </div>
-                    <span className="ml-auto shrink-0 font-mono text-[11px] text-fg-muted">
-                      {new Date(e.createdAt).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' })}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          }
-        />
-      </>
+    data: (
+      <DataSection counts={counts} trainingConsent={!!user.aiTrainingConsentAt} />
     ),
 
-    account: (
-      <>
-        <SettingRow
-          label="이메일"
-          desc="이메일은 인증 계정이 관리하며 이 화면에서 변경할 수 없습니다."
-          control={
-            <SettingValue>
-              <span data-no-translate>{email}</span>
-            </SettingValue>
-          }
-        />
-        <SettingRow
-          label="회원 탈퇴"
-          desc="계정과 관련된 모든 데이터가 즉시 삭제됩니다. 되돌릴 수 없습니다."
-          stacked
-          control={
-            <DeleteAccount
-              email={email}
-              guard={{
-                totp: twoFactor.totp,
-                securityKeys: twoFactor.securityKeys,
-                backupCodesLeft: twoFactor.backupCodesLeft,
-              }}
-            />
-          }
-        />
-      </>
+    security: (
+      <AccountSecurity
+        email={email}
+        identities={identities.map((i) => ({ provider: i.provider, createdAt: i.created_at }))}
+        emailVerifiedAt={user.emailVerifiedAt?.toISOString() ?? null}
+        twoFactor={{
+          recoveryEmail: user.twoFactorRecoveryEmail,
+          recoveryVerifiedAt: user.twoFactorRecoveryEmailVerifiedAt?.toISOString() ?? null,
+          enabled: user.twoFactorEnabled,
+        }}
+        webauthnKeys={webauthnKeys.map((k) => ({
+          id: k.id,
+          name: k.name,
+          createdAt: k.createdAt.toISOString(),
+        }))}
+        devices={devices}
+        currentSessionId={currentSessionId}
+        loginEvents={loginEvents}
+        deleteGuard={{
+          totp: twoFactor.totp,
+          securityKeys: twoFactor.securityKeys,
+          backupCodesLeft: twoFactor.backupCodesLeft,
+        }}
+      />
     ),
   };
 

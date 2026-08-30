@@ -78,7 +78,10 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
       prisma.comment.count({ where: { post: { authorId: userId }, authorId: { not: userId } } }),
       prisma.debateMateApplication.findUnique({ where: { userId }, select: { status: true } }),
       prisma.debateQSession.count({ where: { userId, status: 'COMPLETED' } }),
-      prisma.user.findUnique({ where: { id: userId }, select: { starScore: true, rankBadgeVisible: true } }),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { starScore: true, rankBadgeVisible: true, profileGoal: true },
+      }),
       getMyRanks(userId),
       // 포인트가 전 회원에게 열렸으므로 대시보드에서 잔액과 상점 진입을 함께 보여 준다
       getPointSummary(userId),
@@ -162,6 +165,14 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
                 {name}
                 <I18nSlot k="dash-title-suffix" fallback="님의 디베이트 현황" />
               </h1>
+              {/* 지금의 목표 — 설정 › 개인 맞춤에서 적은 한 줄.
+                  적어 둔 사람에게만 보인다. 비어 있으면 자리도 만들지 않는다. */}
+              {profile?.profileGoal && (
+                <p className="mt-3 flex items-start gap-2 text-sm font-medium text-fg">
+                  <span aria-hidden className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-signal" />
+                  <span className="min-w-0">{profile.profileGoal}</span>
+                </p>
+              )}
               <p className="mt-2 text-sm text-fg-secondary">
                 {streak > 0 ? (
                   <>

@@ -9,7 +9,7 @@
 //   6) 두 줄로 쪼개진 클릭 대상
 import { chromium } from 'playwright';
 
-const BASE = 'http://localhost:3000';
+const BASE = process.env.QA_BASE ?? 'http://localhost:3000';
 const WIDTHS = [320, 375, 414, 768, 1280];
 const PAGES = [
   '/',

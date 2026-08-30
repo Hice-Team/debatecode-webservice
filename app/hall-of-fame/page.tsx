@@ -14,6 +14,8 @@ import {
 } from '@/app/lib/ranking';
 import { RANK_BADGE } from '@/app/lib/star-score';
 import { roleLabel } from '@/app/lib/roles';
+import { getSessionOptional } from '@/app/lib/dal';
+import { visibleRankingName } from '@/app/lib/display-name';
 import {
   formatRemaining,
   msUntilSeasonEnd,
@@ -107,10 +109,26 @@ export default async function HallOfFamePage({ searchParams }: PageProps<'/hall-
   // 콘솔에서 "랭킹 초기화"를 누르면 그 시각 이전 활동은 세지 않는다
   const window = await withRankingFloor(allTime ? undefined : { since: season.start, until: season.end });
 
-  const [boards, tierGroups] = await Promise.all([
+  // 공개 범위를 "회원 공개"로 둔 사람은 로그인하지 않은 방문자에게 이름을 가린다.
+  // 가리는 일을 화면 하나에서 끝내는 이유 — 이름은 아래에서 열 군데 넘게 쓰인다.
+  // 그리는 자리마다 조건을 붙이면 언젠가 한 군데를 빠뜨리고, 그 한 군데가 곧 유출이다.
+  const [viewer, boards, tierGroups] = await Promise.all([
+    getSessionOptional(),
     getAllRankings(50, window),
     getRankingsByTier(active, 10, window),
   ]);
+  const viewerLoggedIn = !!viewer;
+  const mask = (u: RankedUser): RankedUser => {
+    const shown = visibleRankingName(u, viewerLoggedIn);
+    if (shown === u.name) return u;
+    return { ...u, name: shown, avatarUrl: null };
+  };
+  for (const key of Object.keys(boards) as RankingCategory[]) {
+    boards[key] = boards[key].map(mask);
+  }
+  for (const group of tierGroups) {
+    group.members = group.members.map(mask);
+  }
   const list = boards[active];
   const meta = TABS.find((t) => t.key === active)!;
 
