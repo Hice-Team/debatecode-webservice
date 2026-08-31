@@ -2,16 +2,23 @@
 
 // AI Search 컴포저 — 알약 입력 안에 [+ 첨부] [입력] [모델] [음성] [전송]을 함께 둔다.
 //
-// 첨부는 "붙일 수 있는가"와 "모델이 이해하는가"를 분리해 다룬다.
-// 파일은 메타데이터로만 보관하고, 실제 내용 해석은 모델 지원 범위에 맞춰 나중에 붙인다.
+// 첨부는 알약 **안쪽**에 산다. 히어로 검색바(app/study/ai-search.tsx)와 같은 규칙이다.
+//   · 업로드한 파일·Drive → 입력줄 위 정사각 썸네일 캐러셀
+//   · GitHub·Local 프로젝트·URL → 같은 캐러셀에 덩어리 하나당 카드 하나
+// 파일은 끌어다 놓아도 붙는다(폴더째로도).
+// 붙인 파일의 원문은 서버가 읽어 모델 프롬프트에 싣는다(app/lib/ai/attachment-context.ts).
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/app/context/language-context';
 import { t } from '@/app/lib/i18n';
 import ModelPicker from './model-picker';
+import { findSearchModel } from '@/app/lib/ai/search-models';
+import { thumbKindOf } from './pending-attachments';
 import type { Effort } from '@/app/lib/ai/effort';
 import AttachMenu from './attach-menu';
-import AttachmentChips from './attachment-chips';
+import AttachmentCarousel from './attachment-carousel';
+import { useAttachmentSlots } from './attachment-slots';
+import { useFileDrop } from './use-file-drop';
 import { VoiceButton, VoiceConsentDialog, VoiceWaveform, useVoiceInput } from './voice-input';
 import { voiceConsentStrings } from './voice-strings';
 import { exportConversation } from './export-session';
@@ -32,6 +39,7 @@ export default function Composer({
   liveModel,
   onSend,
   onStop,
+  centered = false,
 }: {
   sessionId: string;
   messages: ConversationMessage[];
@@ -44,12 +52,28 @@ export default function Composer({
   onSend: (question: string, attachments: PendingAttachment[]) => void;
   /** 생성 중일 때 눌리는 중단 — disabled가 true인 동안에만 노출된다 */
   onStop: () => void;
+  /** 빈 대화 — 화면 가운데에서 시작한다(맨 아래 칸이 아니라) */
+  centered?: boolean;
 }) {
   const { language } = useLanguage();
   const [text, setText] = useState('');
-  const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const attachments = useAttachmentSlots({ onNotice: setNotice });
+
+  // 끌어다 놓기 — 폴더면 그 이름으로 묶어 참조 하나가 된다
+  const drop = useFileDrop({
+    disabled,
+    onDrop: ({ files, folder, limited }) => {
+      if (limited) setNotice('파일이 많아 앞의 40개만 첨부합니다.');
+      void attachments.upload(
+        files.map((entry) => ({ file: entry.file, name: entry.path })),
+        folder ? 'project' : 'local',
+        folder,
+      );
+    },
+  });
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -67,31 +91,34 @@ export default function Composer({
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [text]);
 
-  // 미리보기 objectURL 정리 — 화면을 떠날 때 한 번만 푼다.
-  // (attachments를 의존성에 넣으면 두 번째 파일을 붙이는 순간 첫 번째 미리보기가
-  //  해제돼 썸네일이 깨진다. 그래서 최신 목록을 effect 안에서만 따라간다.)
-  const attachmentsRef = useRef(attachments);
-  useEffect(() => {
-    attachmentsRef.current = attachments;
-  }, [attachments]);
-  useEffect(
-    () => () => {
-      attachmentsRef.current.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl));
-    },
-    [],
-  );
-
   function submit() {
-    if (!text.trim() || disabled || busy) return;
+    // 올라가는 중에 보내면 그 첨부는 빠진 채로 질문이 간다
+    if (!text.trim() || disabled || busy || attachments.uploading) return;
     if (voice.listening) voice.stop();
-    onSend(text, attachments);
+    onSend(text, attachments.files);
     setText('');
-    setAttachments([]);
+    attachments.clear();
     setNotice(null);
   }
 
+  // 그림을 붙였는데 지금 모델이 그림을 못 보는 경우 — 보내기 전에 알린다.
+  // 그냥 보내면 모델은 그림을 보지 못한 채 답하고, 이용자는 왜 엉뚱한 답이 왔는지 모른다.
+  const hasImage = attachments.files.some((file) => thumbKindOf(file) === 'image');
+  const blindToImages = hasImage && !findSearchModel(model).vision;
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-paper via-paper/95 to-transparent px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-8 sm:px-4 sm:pb-6 sm:pt-10">
+    // 화면에 고정(fixed)하지 않는다. 대화 열의 마지막 칸으로 앉아 있으면 레일 폭을
+    // 따로 계산해 비켜 줄 일도, 스크롤 영역과 어긋날 일도 없다.
+    //
+    // 빈 대화(centered)에서는 맨 아래가 아니라 인사말 바로 아래에 놓인다 — 아직 읽을
+    // 것이 없는 화면에서 입력창만 바닥에 붙어 있으면 화면 한가운데가 텅 빈다.
+    <div
+      className={
+        centered
+          ? 'w-full'
+          : 'shrink-0 border-t border-hairline bg-paper px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-4'
+      }
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -115,29 +142,45 @@ export default function Composer({
           </div>
         )}
 
-        <AttachmentChips
-          files={attachments}
-          onRemove={(index) => setAttachments((prev) => prev.filter((_, i) => i !== index))}
-          className="mb-2"
-        />
-
         {(notice || voice.error) && <p className="mb-2 text-[11px] text-rose-600">{notice ?? voice.error}</p>}
 
-        {/* 알약 입력 — 첨부 · 입력 · 모델(강도 포함) · 음성 · 전송.
-            넓은 화면은 한 줄, 좁은 화면(스마트폰)은 컨트롤 묶음이 아랫줄로 내려간다.
-            여섯 개를 360px 안에 억지로 우겨넣으면 입력창이 손톱만 해지기 때문이다.
+        {/* 그림을 못 보는 모델 — 무엇을 하면 되는지까지 적는다 */}
+        {blindToImages && !notice && (
+          <p className="mb-2 text-[11px] leading-relaxed text-amber-700">{t('ai-model-no-vision', language)}</p>
+        )}
 
-            정렬은 items-center다. items-end로 두면 높이가 다른 컨트롤(40px 버튼과
-            한 줄짜리 입력)의 바닥만 맞아, 알약 안에서 아이콘이 아래로 처져 보였다.
-            좌우 여백도 px로 맞춰 '+'와 전송 버튼이 모서리에서 같은 거리에 놓인다. */}
-        <div className="flex flex-wrap items-center gap-1.5 rounded-[1.75rem] border border-hairline bg-surface px-2 py-1.5 sm:flex-nowrap sm:px-2.5 sm:py-2 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.12)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.18)]">
-          <AttachMenu
-            placement="top"
-            disabled={disabled}
-            onNotice={setNotice}
-            onBusyChange={setBusy}
-            onAdd={(files) => setAttachments((prev) => [...prev, ...files])}
-          />
+        {/* 입력 상자는 두 줄이다.
+              1줄  쓰는 곳 — 폭을 통째로 쓴다
+              2줄  [+ 첨부] [모델·강도] ····· [음성] [전송]
+
+            한 줄에 여섯 개를 늘어놓던 예전 알약은, 글이 두 줄만 넘어가도 컨트롤이
+            아래로 밀리며 버튼 자리가 매번 달라졌다. 쓰는 칸과 누르는 칸을 나누면
+            글이 아무리 길어져도 버튼은 늘 같은 자리에 있다. */}
+        <div
+          {...drop.handlers}
+          className={`relative flex flex-col rounded-[var(--radius-panel)] border bg-surface px-2 pb-2 pt-1 shadow-[0_2px_10px_rgba(24,0,172,0.06),0_10px_36px_rgba(24,0,172,0.12)] transition focus-within:shadow-[0_2px_12px_rgba(24,0,172,0.10),0_14px_44px_rgba(24,0,172,0.18)] ${
+            drop.dragging ? 'border-signal' : 'border-hairline'
+          }`}
+        >
+          {/* 끌어다 놓는 중 — 어디에 놓으면 되는지 입력창 위에 그대로 덮어 보여 준다 */}
+          {drop.dragging && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-20 grid place-items-center rounded-[var(--radius-panel)] bg-surface/95 text-[13px] font-semibold text-signal"
+            >
+              {t('ai-attach-drop-here', language)}
+            </div>
+          )}
+          {/* 붙인 파일 — 알약 안에서 가로로만 흐른다. 몇 개를 붙이든 높이가 한 줄이다. */}
+          {(attachments.files.length > 0 || attachments.tasks.length > 0) && (
+            <AttachmentCarousel
+              files={attachments.files}
+              tasks={attachments.tasks}
+              onRemove={attachments.remove}
+              onRemoveGroup={attachments.removeGroup}
+              className="px-1 pt-1.5"
+            />
+          )}
 
           {/* 듣는 중에는 입력 자리를 파형이 대신한다 — 받아쓰기가 그 아래로 쌓인다 */}
           {voice.listening ? (
@@ -162,12 +205,21 @@ export default function Composer({
               disabled={disabled}
               placeholder={t('ai-search-followup-placeholder', language)}
               aria-label={t('ai-search-followup-placeholder', language)}
-              className="dc-scroll min-w-0 flex-1 resize-none bg-transparent px-1.5 py-3 text-[15px] leading-6 text-fg placeholder:text-fg-quiet focus:outline-none disabled:cursor-not-allowed disabled:text-fg-quiet"
+              className="dc-scroll w-full resize-none bg-transparent px-2 pb-1 pt-2.5 text-[15px] leading-6 text-fg placeholder:text-fg-quiet focus:outline-none disabled:cursor-not-allowed disabled:text-fg-quiet"
             />
           )}
 
-          {/* 모델 · 음성 · 전송 — 폰에서는 이 묶음이 통째로 아랫줄로 내려간다 */}
-          <div className="flex w-full items-center gap-1.5 sm:w-auto sm:gap-2 sm:pr-0.5">
+          {/* 2줄 — 왼쪽은 붙이고 고르는 것, 오른쪽은 보내는 것 */}
+          <div className="flex items-center gap-1">
+            <AttachMenu
+              placement="top"
+              disabled={disabled}
+              onNotice={setNotice}
+              onBusyChange={setBusy}
+              onAdd={attachments.add}
+              onUpload={attachments.upload}
+            />
+
             {/* 강도(Effort)는 이 메뉴 안에 함께 들어 있다 */}
             <ModelPicker
               value={model}
@@ -178,8 +230,8 @@ export default function Composer({
               live={liveModel}
             />
 
-            {/* 폰에서만 — 전송 버튼을 오른쪽 끝으로 민다 */}
-            <span aria-hidden className="flex-1 sm:hidden" />
+            {/* 보내는 쪽을 오른쪽 끝으로 민다 */}
+            <span aria-hidden className="flex-1" />
 
             <VoiceButton
               listening={voice.listening}
@@ -207,7 +259,7 @@ export default function Composer({
             ) : (
               <button
                 type="submit"
-                disabled={!text.trim() || busy}
+                disabled={!text.trim() || busy || attachments.uploading}
                 aria-label={t('ai-search-submit', language)}
                 title={t('ai-search-submit', language)}
                 className="group/send grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.28)] transition-[color,background-color,border-color,box-shadow,transform] hover:shadow-[0_3px_12px_rgba(24,0,172,0.4)] active:scale-95 disabled:bg-none disabled:bg-paper disabled:text-fg-quiet disabled:shadow-none"
@@ -233,7 +285,7 @@ export default function Composer({
           </div>
         </div>
 
-        <p className="mt-2 text-center text-[11px] text-fg-quiet">
+        <p className="mt-2 px-1 text-[11px] text-fg-quiet">
           {disabled ? (
             t('ai-generating-hint', language)
           ) : (

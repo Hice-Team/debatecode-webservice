@@ -198,7 +198,17 @@ export async function* llmChatStream(
   config: LlmConfig,
   systemPrompt: string,
   userPrompt: string,
-  options: LlmChatOptions & { signal?: AbortSignal } = {},
+  options: LlmChatOptions & {
+    signal?: AbortSignal;
+    /**
+     * 함께 보낼 그림 — data: URL(base64)이다.
+     *
+     * 스토리지에 있는 원본 주소를 그대로 넘길 수 없다. 그 주소는 우리 세션 쿠키가 있어야
+     * 열리는데, 모델 공급자에게는 그 쿠키가 없다. 그래서 서버가 내려받아 인라인으로 싣는다.
+     * 그림을 볼 수 없는 모델에는 호출부가 아예 넘기지 않는다(SearchModel.vision).
+     */
+    images?: string[];
+  } = {},
 ): AsyncGenerator<LlmChunk> {
   if (config.kind !== 'openai-compatible') {
     const text = await llmChat(config, systemPrompt, userPrompt, options);
@@ -224,7 +234,18 @@ export async function* llmChatStream(
       ...(options.maxTokens ? { max_tokens: options.maxTokens } : {}),
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        {
+          role: 'user',
+          // 그림이 있으면 OpenAI 호환 멀티모달 형식(파트 배열)으로, 없으면 평범한 문자열로.
+          // 파트 배열은 그림을 못 받는 공급자에서 400을 내므로 필요할 때만 쓴다.
+          content:
+            options.images && options.images.length > 0
+              ? [
+                  { type: 'text', text: userPrompt },
+                  ...options.images.map((url) => ({ type: 'image_url', image_url: { url } })),
+                ]
+              : userPrompt,
+        },
       ],
     }),
   });

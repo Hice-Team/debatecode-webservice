@@ -83,7 +83,14 @@ export function fallbackAnswer(reason: 'no-key' | 'failed'): string {
 export interface AnswerInput {
   question: string;
   history: ChatTurn[];
-  attachmentNames?: string[];
+  /**
+   * 첨부 원문을 담은 블록 — app/lib/ai/attachment-context.ts가 만든다.
+   * 예전에는 파일 **이름만** 실었다. 그러면 "이 코드 왜 안 돼요?"라는 질문에
+   * 모델이 파일명만 보고 답한다. 지금은 내용을 넣고, 잘렸으면 잘렸다고 적는다.
+   */
+  attachmentContext?: string;
+  /** 첨부한 그림 — data: URL. 모델이 그림을 볼 수 있을 때만 채워 넘긴다. */
+  attachmentImages?: string[];
   modelId?: string | null;
   /** 사고 강도 — 출력 길이와 답의 결을 정한다 */
   effort?: Effort;
@@ -111,11 +118,6 @@ function buildPrompt(input: AnswerInput): string {
     .map((turn) => `${turn.role === 'user' ? '사용자' : '어시스턴트'}: ${turn.content}`)
     .join('\n\n');
 
-  const attachmentNote =
-    input.attachmentNames && input.attachmentNames.length > 0
-      ? `\n\n[첨부된 파일] ${input.attachmentNames.join(', ')}\n(파일 내용은 아직 모델에 전달되지 않습니다. 파일 이름만 참고하세요.)`
-      : '';
-
   // 이용자 지침은 질문 바로 앞에 둔다 — 시스템 프롬프트에 섞으면 서비스가 정한 규칙과
   // 구분되지 않아, 지침 하나가 안전 규칙을 덮으려 할 때 막을 자리가 없어진다.
   const instructions =
@@ -134,7 +136,10 @@ function buildPrompt(input: AnswerInput): string {
     transcript ? `[이전 대화]\n${transcript}` : '',
     instructions,
     languageNote,
-    `[질문]\n${input.question}${attachmentNote}`,
+    // 첨부는 질문 바로 앞에 둔다 — 원문이 길어도 질문이 프롬프트의 마지막에 남아야
+    // 모델이 "무엇을 물었는지"를 놓치지 않는다.
+    input.attachmentContext ?? '',
+    `[질문]\n${input.question}`,
   ]
     .filter(Boolean)
     .join('\n\n');
@@ -161,6 +166,7 @@ export async function* streamSearchAnswer(input: AnswerInput): AsyncGenerator<Ll
     maxTokens: effortMaxTokens(effort),
     signal: input.signal,
     onUsage: input.onUsage,
+    images: input.attachmentImages,
   })) {
     if (chunk.kind === 'reasoning') {
       yield chunk;

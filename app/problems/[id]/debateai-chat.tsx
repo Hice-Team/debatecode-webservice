@@ -7,6 +7,11 @@
 // 모델 셀렉터는 상단 바가 아니라 입력바 안에 둔다. 무엇으로 답할지 고르는 일과
 // 무엇을 물을지 쓰는 일이 같은 자리에서 끝나야 하기 때문이다.
 //
+// 첨부는 AI Search와 같은 부품을 쓴다(어두운 표면이라 tone="dark").
+//   · 업로드한 파일·Drive → 입력창 위 정사각 썸네일 캐러셀
+//   · GitHub·Local 프로젝트·URL → 같은 캐러셀에 덩어리 하나당 카드 하나
+// 붙인 파일의 원문은 서버가 읽어 프롬프트에 싣는다(app/lib/ai/attachment-context.ts).
+//
 // Ask   답만 만든다. 답에 코드가 있으면 [복사] [에디터로]가 달린 블록으로 나온다.
 // Agent 답을 만들면서 에디터 코드까지 고친다.
 //
@@ -21,6 +26,11 @@ import remarkGfm from 'remark-gfm';
 import { DEBATEAI_MODELS, findDebateAiModel, type DebateAiModelId } from '@/app/lib/ai/debateai-models';
 import type { Language } from '@/app/lib/types';
 import { VoiceButton, VoiceConsentDialog, VoiceWaveform, useVoiceInput } from '@/app/study/search/voice-input';
+import AttachMenu from '@/app/study/search/attach-menu';
+import AttachmentCarousel from '@/app/study/search/attachment-carousel';
+import { useAttachmentSlots } from '@/app/study/search/attachment-slots';
+import { useFileDrop } from '@/app/study/search/use-file-drop';
+import { toWireAttachment } from '@/app/study/search/pending-attachments';
 import { voiceConsentStrings } from '@/app/study/search/voice-strings';
 import { useLanguage } from '@/app/context/language-context';
 import PromptSuggestions from './prompt-suggestions-bar';
@@ -164,6 +174,21 @@ export default function DebateAiChat({
   const { language: uiLang } = useLanguage();
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState('');
+  const [attachNotice, setAttachNotice] = useState<string | null>(null);
+  const attachments = useAttachmentSlots({ onNotice: setAttachNotice });
+
+  // 끌어다 놓기 — 폴더면 그 이름으로 묶어 참조 하나가 된다
+  const drop = useFileDrop({
+    disabled: readOnly,
+    onDrop: ({ files, folder, limited }) => {
+      if (limited) setAttachNotice('파일이 많아 앞의 40개만 첨부합니다.');
+      void attachments.upload(
+        files.map((entry) => ({ file: entry.file, name: entry.path })),
+        folder ? 'project' : 'local',
+        folder,
+      );
+    },
+  });
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string>();
   /** 오늘 이 문제에서 남은 대화 수. null이면 아직 모르거나 한도가 걸리지 않는 계정이다. */
@@ -343,13 +368,19 @@ export default function DebateAiChat({
 
   async function send(text?: string) {
     const value = (text ?? input).trim();
-    if (!value || sending || readOnly) return;
+    // 올라가는 중에 보내면 그 첨부는 빠진 채로 질문이 간다
+    if (!value || sending || readOnly || attachments.uploading) return;
     if (voice.listening) voice.stop();
+
+    // 이번 턴에 실어 보낼 첨부 — 보내고 나면 입력창과 함께 비운다
+    const sentAttachments = attachments.files.map(toWireAttachment);
 
     const asAgent = agenting;
     const nextTurns: ChatTurn[] = [...turns, { role: 'user', content: value, command: asAgent }];
     setTurns(nextTurns);
     setInput('');
+    attachments.clear();
+    setAttachNotice(null);
     setSending(true);
     setError(undefined);
     setResumed(false);
@@ -379,6 +410,7 @@ export default function DebateAiChat({
           mode: asAgent ? 'agent' : mode === 'refactor-why' ? 'general' : mode,
           effort,
           code: getCode(),
+          attachments: sentAttachments,
           messages: nextTurns.slice(-20).map((t) => ({ role: t.role, content: t.content })),
         }),
       });
@@ -615,6 +647,13 @@ export default function DebateAiChat({
           </p>
         )}
 
+        {/* 첨부 안내 — 업로드 실패·상한 같은 것들. AI 오류와 자리를 나눠 둔다 */}
+        {attachNotice && (
+          <p className="mb-2 text-xs leading-relaxed text-amber-300" role="status">
+            {attachNotice}
+          </p>
+        )}
+
         {/* 남은 횟수 — 세 번 이하로 떨어졌을 때만 말한다.
             매번 띄우면 잔소리가 되고, 다 쓴 뒤에 알리면 늦다. */}
         {remaining !== null && remaining <= 3 && (
@@ -639,10 +678,33 @@ export default function DebateAiChat({
             />
 
             <div
-              className={`rounded-[var(--radius-panel)] border bg-white/5 transition-colors focus-within:border-signal/60 ${
-                agenting ? 'border-brand-400/35' : 'border-white/10'
+              {...drop.handlers}
+              className={`relative rounded-[var(--radius-panel)] border bg-white/5 transition-colors focus-within:border-signal/60 ${
+                drop.dragging ? 'border-signal' : agenting ? 'border-brand-400/35' : 'border-white/10'
               }`}
             >
+              {/* 끌어다 놓는 중 — 어디에 놓으면 되는지 입력창 위에 그대로 덮어 보여 준다 */}
+              {drop.dragging && (
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 z-20 grid place-items-center rounded-[var(--radius-panel)] bg-ink/95 text-[13px] font-semibold text-signal"
+                >
+                  여기에 놓으면 첨부됩니다
+                </div>
+              )}
+
+              {/* 붙인 파일 — 입력창 안에서 가로로만 흐른다 */}
+              {(attachments.files.length > 0 || attachments.tasks.length > 0) && (
+                <AttachmentCarousel
+                  files={attachments.files}
+                  tasks={attachments.tasks}
+                  onRemove={attachments.remove}
+                  onRemoveGroup={attachments.removeGroup}
+                  tone="dark"
+                  className="px-2 pt-2"
+                />
+              )}
+
               {voice.listening ? (
                 <div className="px-2 pt-2">
                   <VoiceWaveform
@@ -677,6 +739,16 @@ export default function DebateAiChat({
 
               {/* 하단 줄 — [모델] [Ask|Agent] ····· [음성] [전송] */}
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 px-2 pb-2">
+                {/* 첨부 — 파일·Drive·GitHub·프로젝트·URL. 어두운 표면이라 메뉴까지 함께 어둡다 */}
+                <AttachMenu
+                  placement="top"
+                  tone="dark"
+                  disabled={busy}
+                  onNotice={setAttachNotice}
+                  onAdd={attachments.add}
+                  onUpload={attachments.upload}
+                />
+
                 {/* 강도(Effort)는 이 메뉴 안에 함께 들어 있다 */}
                 <ModelMenu
                   value={model}
@@ -770,7 +842,7 @@ export default function DebateAiChat({
                 ? '생성 중입니다 — 멈추려면 중단 버튼을 눌러 주세요'
                 : agenting
                   ? (commandHint ?? 'Enter 전송 · 답변과 함께 에디터의 코드가 다시 쓰입니다')
-                  : 'Enter 전송 · Shift+Enter 줄바꿈 · 파일 첨부는 지원하지 않습니다'}
+                  : 'Enter 전송 · Shift+Enter 줄바꿈 · 파일은 끌어다 놓거나 + 로 첨부'}
             </p>
           </>
         )}

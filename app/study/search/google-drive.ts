@@ -39,6 +39,50 @@ export function isDriveConfigured(): boolean {
   return !!(CLIENT_ID && API_KEY && APP_ID);
 }
 
+/**
+ * 설정이 형식부터 어긋난 경우를 먼저 잡는다 — 팝업을 띄우기 전에.
+ *
+ * `Error 401: invalid_client`는 구글이 "그 클라이언트를 모른다"고 답한 것이다.
+ * 코드가 아니라 클라우드 콘솔 설정 문제이며, 원인은 거의 항상 이 넷 중 하나다.
+ *   ① 클라이언트 ID 오타(끝이 .apps.googleusercontent.com이 아님)
+ *   ② OAuth 클라이언트 유형이 "웹 애플리케이션"이 아님(데스크톱·안드로이드용은 안 된다)
+ *   ③ 지금 이 주소가 "승인된 JavaScript 원본"에 없음
+ *   ④ 클라이언트를 지웠거나 다른 프로젝트의 ID를 넣음
+ * ①만 여기서 잡을 수 있고, 나머지는 실패한 뒤에 원인을 짚어 준다(driveErrorMessage).
+ */
+export function driveConfigProblem(): string | null {
+  if (!isDriveConfigured()) {
+    return 'Google Drive 연동이 아직 설정되지 않았습니다. (NEXT_PUBLIC_GOOGLE_CLIENT_ID · NEXT_PUBLIC_GOOGLE_API_KEY · NEXT_PUBLIC_GOOGLE_APP_ID)';
+  }
+  if (!/\.apps\.googleusercontent\.com$/.test(CLIENT_ID!)) {
+    return 'NEXT_PUBLIC_GOOGLE_CLIENT_ID 형식이 올바르지 않습니다. 값이 .apps.googleusercontent.com으로 끝나야 합니다.';
+  }
+  return null;
+}
+
+/**
+ * 실패 원인을 이용자(개발자)가 손볼 수 있는 문장으로 바꾼다.
+ * 어느 설정을 어디에서 고쳐야 하는지까지 적는다 — "가져오지 못했습니다"로는 아무것도 못 한다.
+ */
+export function driveErrorMessage(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  const origin = typeof window === 'undefined' ? '' : window.location.origin;
+
+  if (/invalid_client|unauthorized_client/i.test(raw)) {
+    return `Google이 이 OAuth 클라이언트를 인식하지 못했습니다(invalid_client). 클라우드 콘솔 → API 및 서비스 → 사용자 인증 정보에서 확인해 주세요: 클라이언트 유형이 "웹 애플리케이션"인지, 승인된 JavaScript 원본에 ${origin} 이 등록돼 있는지, 그리고 NEXT_PUBLIC_GOOGLE_CLIENT_ID가 그 클라이언트의 값인지.`;
+  }
+  if (/idpiframe_initialization_failed|origin/i.test(raw)) {
+    return `승인된 JavaScript 원본에 ${origin} 을 추가해 주세요.`;
+  }
+  if (/access_denied|popup_closed/i.test(raw)) {
+    return 'Drive 접근 권한을 받지 못했습니다. 동의 화면에서 접근을 허용해 주세요.';
+  }
+  if (/로드 실패/.test(raw)) {
+    return 'Google 스크립트를 불러오지 못했습니다. 네트워크나 광고 차단 확장을 확인해 주세요.';
+  }
+  return 'Google Drive에서 파일을 가져오지 못했습니다.';
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any -- gapi/GIS는 타입 선언을 제공하지 않는다 */
 declare global {
   interface Window {
@@ -87,11 +131,15 @@ async function requestAccessToken(): Promise<string> {
     const client = window.google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
       scope: SCOPE,
-      callback: (response: { access_token?: string; error?: string }) => {
+      callback: (response: { access_token?: string; error?: string; error_description?: string }) => {
         if (response.access_token) resolve(response.access_token);
-        else reject(new Error(response.error ?? '권한을 받지 못했습니다.'));
+        // 원문(invalid_client 등)을 그대로 올려보낸다 — driveErrorMessage가 이 문자열로 원인을 가른다
+        else reject(new Error(response.error_description ?? response.error ?? '권한을 받지 못했습니다.'));
       },
-      error_callback: () => reject(new Error('cancelled')),
+      // 이용자가 팝업을 닫은 경우와 설정 오류를 구분한다.
+      // GIS는 둘 다 error_callback으로 오지만 type이 다르다.
+      error_callback: (error: { type?: string; message?: string }) =>
+        reject(new Error(error?.type === 'popup_closed' ? 'cancelled' : (error?.message ?? 'cancelled'))),
     });
     client.requestAccessToken();
   });

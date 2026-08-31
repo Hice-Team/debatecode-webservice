@@ -11,10 +11,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/app/context/language-context';
 import { t } from '@/app/lib/i18n';
-import { isDriveConfigured, pickFromDrive } from './google-drive';
-import { detectKind, type PendingAttachment } from './pending-attachments';
+import { driveConfigProblem, driveErrorMessage, pickFromDrive } from './google-drive';
+import {
+  detectKind,
+  formatBytes,
+  type AttachmentSource,
+  type PendingAttachment,
+  type SurfaceTone,
+} from './pending-attachments';
+import type { UploadRequest } from './attachment-slots';
 
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
+import { MAX_ATTACHMENT_BYTES } from '@/app/lib/storage';
+
 /** 프로젝트 폴더는 통째로 올리면 감당이 안 된다 — 코드/문서 파일만 추린다. */
 const PROJECT_MAX_FILES = 40;
 const SKIP_DIR = /(^|\/)(node_modules|\.git|\.next|dist|build|out|venv|__pycache__|\.venv|target)(\/|$)/;
@@ -70,16 +78,23 @@ const Icons = {
 
 export default function AttachMenu({
   onAdd,
+  onUpload,
   onNotice,
   onBusyChange,
   disabled,
   placement = 'bottom',
+  tone = 'light',
 }: {
+  /** 이미 주소가 있는 첨부(GitHub·URL 가져오기 결과)를 그대로 붙인다 */
   onAdd: (files: PendingAttachment[]) => void;
+  /** 로컬 파일을 업로드 큐로 넘긴다 — 진행률은 캐러셀이 그린다 */
+  onUpload: (requests: UploadRequest[], source: AttachmentSource, group?: string) => Promise<void>;
   onNotice: (message: string | null) => void;
   onBusyChange?: (busy: boolean) => void;
   disabled?: boolean;
   placement?: 'top' | 'bottom';
+  /** 어두운 표면(에디터 챗)에 놓일 때 — 메뉴까지 함께 어두워진다 */
+  tone?: SurfaceTone;
 }) {
   const { language } = useLanguage();
   const [open, setOpen] = useState(false);
@@ -134,53 +149,31 @@ export default function AttachMenu({
     setSubOpen(false);
   }
 
-  /** 파일 하나를 스토리지에 올려 첨부 메타로 바꾼다. */
-  async function upload(file: File, source: PendingAttachment['source'], displayName?: string): Promise<PendingAttachment | null> {
-    if (file.size > MAX_FILE_BYTES) {
-      onNotice(`"${file.name}"의 용량이 너무 큽니다. (최대 10MB)`);
-      return null;
-    }
-    const body = new FormData();
-    body.set('file', file);
-    const res = await fetch('/api/ai-search/attachment', { method: 'POST', body });
-    if (!res.ok) {
-      onNotice(res.status === 401 ? '첨부하려면 로그인이 필요합니다.' : '첨부 업로드에 실패했습니다.');
-      return null;
-    }
-    const data = (await res.json()) as { url: string };
-    const name = displayName ?? file.name;
-    const kind = detectKind(name, file.type);
-    return {
-      kind,
-      name,
-      url: data.url,
-      mime: file.type || undefined,
-      size: file.size,
-      source,
-      previewUrl: kind === 'image' ? URL.createObjectURL(file) : undefined,
-    };
-  }
+  /**
+   * 고른 파일을 업로드 큐로 넘긴다.
+   *
+   * 업로드 자체는 첨부 상태 훅(useAttachmentSlots)이 돌린다. 여기서 붙들고 있으면
+   * 진행률을 화면에 그릴 자리가 없어, 큰 파일을 붙이는 동안 아무 일도 없어 보인다.
+   * 이 메뉴가 하는 일은 "무엇을 올릴지 고르고 걸러내는 것"까지다.
+   */
+  function queueUpload(requests: UploadRequest[], source: AttachmentSource, group?: string) {
+    const tooBig = requests.filter((entry) => entry.file.size > MAX_ATTACHMENT_BYTES);
+    const accepted = requests.filter((entry) => entry.file.size <= MAX_ATTACHMENT_BYTES);
 
-  async function uploadMany(files: Array<{ file: File; name?: string }>, source: PendingAttachment['source']) {
-    if (files.length === 0) return;
-    onNotice(null);
-    setBusy(true);
-    try {
-      const accepted: PendingAttachment[] = [];
-      for (const entry of files) {
-        const result = await upload(entry.file, source, entry.name);
-        if (result) accepted.push(result);
-      }
-      if (accepted.length > 0) onAdd(accepted);
-    } finally {
-      setBusy(false);
+    if (tooBig.length > 0) {
+      onNotice(
+        `"${tooBig[0].name ?? tooBig[0].file.name}"의 용량이 너무 큽니다. (최대 ${formatBytes(MAX_ATTACHMENT_BYTES)})`,
+      );
+    } else {
+      onNotice(null);
     }
+    if (accepted.length > 0) void onUpload(accepted, source, group);
   }
 
   /* ---------- 파일 업로드 ---------- */
   function handleFiles(list: FileList | null) {
     if (!list) return;
-    uploadMany(Array.from(list).map((file) => ({ file })), 'local');
+    queueUpload(Array.from(list).map((file) => ({ file })), 'local');
   }
 
   /* ---------- Local에서 프로젝트 가져오기 ---------- */
@@ -198,9 +191,14 @@ export default function AttachMenu({
     if (picked.length > PROJECT_MAX_FILES) {
       onNotice(`파일이 너무 많아 앞의 ${PROJECT_MAX_FILES}개만 첨부합니다.`);
     }
-    uploadMany(
+    // 고른 폴더 이름 — 칩에 이것 하나만 적힌다. webkitRelativePath의 첫 마디가 폴더명이다.
+    const projectName = picked[0].path.split('/')[0] || '프로젝트';
+
+    // source가 'project'면 썸네일이 아니라 입력창 안 멘션 칩으로 앉는다(slotOf 참고)
+    queueUpload(
       picked.slice(0, PROJECT_MAX_FILES).map((entry) => ({ file: entry.file, name: entry.path })),
-      'local',
+      'project',
+      projectName,
     );
   }
 
@@ -208,21 +206,22 @@ export default function AttachMenu({
   async function handleDrive() {
     closeMenu();
     onNotice(null);
-    if (!isDriveConfigured()) {
-      onNotice(
-        'Google Drive 연동이 아직 설정되지 않았습니다. (NEXT_PUBLIC_GOOGLE_CLIENT_ID · NEXT_PUBLIC_GOOGLE_API_KEY · NEXT_PUBLIC_GOOGLE_APP_ID)',
-      );
+    // 팝업을 띄우기 전에 설정부터 본다 — 창이 떴다 사라지고 나면 원인을 짚기 어렵다
+    const problem = driveConfigProblem();
+    if (problem) {
+      onNotice(problem);
       return;
     }
     setBusy(true);
     try {
       const { files, failed } = await pickFromDrive();
-      if (files.length > 0) await uploadMany(files.map((file) => ({ file })), 'drive');
+      if (files.length > 0) queueUpload(files.map((file) => ({ file })), 'drive');
       // 일부만 실패해도 조용히 사라지지 않도록 알린다(권한 회수·내보내기 불가 등).
-      // uploadMany가 시작할 때 안내를 지우므로 반드시 그 뒤에 띄운다.
+      // queueUpload가 시작할 때 안내를 지우므로 반드시 그 뒤에 띄운다.
       if (failed > 0) onNotice(`${failed}개 파일을 Drive에서 가져오지 못했습니다.`);
     } catch (error) {
-      if ((error as Error).message !== 'cancelled') onNotice('Google Drive에서 파일을 가져오지 못했습니다.');
+      // 이용자가 창을 닫은 것은 실패가 아니다 — 그때만 조용히 넘긴다
+      if ((error as Error).message !== 'cancelled') onNotice(driveErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -272,9 +271,15 @@ export default function AttachMenu({
     }
   }
 
-  const itemClass =
-    'flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-[13px] text-fg transition-colors hover:bg-paper disabled:opacity-40';
-  const panelClass = `absolute left-0 z-50 w-[15rem] max-w-[calc(100vw-2rem)] overflow-visible rounded-[var(--radius-panel)] border border-hairline bg-surface py-1.5 shadow-xl shadow-ink/10 animate-in fade-in duration-150 ${
+  // 어두운 표면 위에 흰 메뉴가 튀어나오면 화면이 두 동강 난 것처럼 보인다 — 함께 어둡게 간다
+  const dark = tone === 'dark';
+  const itemClass = `flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-[13px] transition-colors disabled:opacity-40 ${
+    dark ? 'text-fg-on-dark hover:bg-white/[0.07]' : 'text-fg hover:bg-paper'
+  }`;
+  const surfaceClass = dark
+    ? 'border-white/10 bg-ink shadow-black/40'
+    : 'border-hairline bg-surface shadow-ink/10';
+  const panelClass = `absolute left-0 z-50 w-[15rem] max-w-[calc(100vw-2rem)] overflow-visible rounded-[var(--radius-panel)] border py-1.5 shadow-xl animate-in fade-in duration-150 ${surfaceClass} ${
     placement === 'top' ? 'bottom-full mb-2 slide-in-from-bottom-1' : 'top-full mt-2 slide-in-from-top-1'
   }`;
 
@@ -332,7 +337,9 @@ export default function AttachMenu({
         aria-expanded={open}
         aria-label={t('ai-attach', language)}
         title={t('ai-attach', language)}
-        className="grid h-10 w-10 place-items-center rounded-full text-fg-muted transition hover:bg-paper hover:text-signal disabled:opacity-40"
+        className={`grid h-10 w-10 place-items-center rounded-full transition disabled:opacity-40 ${
+          dark ? 'text-fg-on-dark-muted hover:bg-white/10 hover:text-white' : 'text-fg-muted hover:bg-paper hover:text-signal'
+        }`}
       >
         {busy ? (
           <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-hairline border-t-signal motion-reduce:animate-none" />
@@ -366,7 +373,7 @@ export default function AttachMenu({
               aria-expanded={subOpen}
               onClick={() => (subOpen ? setSubOpen(false) : openSub())}
               onFocus={openSub}
-              className={`${itemClass} ${subOpen ? 'bg-paper text-signal' : ''}`}
+              className={`${itemClass} ${subOpen ? (dark ? 'bg-white/[0.07] text-white' : 'bg-paper text-signal') : ''}`}
             >
               {Icons.more}
               {t('ai-attach-more', language)}
@@ -383,13 +390,13 @@ export default function AttachMenu({
                     placement === 'top' ? 'bottom-0' : 'top-0'
                   }`}
                 >
-                  <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface py-1.5 shadow-xl shadow-ink/10">
+                  <div className={`overflow-hidden rounded-[var(--radius-panel)] border py-1.5 shadow-xl ${surfaceClass}`}>
                     {subItems}
                   </div>
                 </div>
 
                 {/* 모바일 — 플라이아웃은 화면 밖으로 나가므로 목록 안에서 펼친다 */}
-                <div role="menu" className="border-l-2 border-brand-200 bg-paper/60 sm:hidden">
+                <div role="menu" className={`border-l-2 border-brand-400/40 sm:hidden ${dark ? 'bg-white/[0.04]' : 'bg-paper/60'}`}>
                   {subItems}
                 </div>
               </>

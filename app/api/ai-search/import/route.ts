@@ -66,11 +66,21 @@ function parseUrl(raw: string): URL | null {
   }
 }
 
-/** github.com/owner/repo/blob/ref/path → raw.githubusercontent.com 원문 주소 */
-function toRawGithub(url: URL): { raw: string; name: string } | null {
+/**
+ * github.com/owner/repo/blob/ref/path → raw.githubusercontent.com 원문 주소
+ *
+ * `group`은 멘션 칩에 적을 저장소명이다. 파일 하나만 가져와도 이용자가 인식하는 단위는
+ * "어느 저장소에서 왔는가"이므로 함께 돌려준다.
+ */
+function toRawGithub(url: URL): { raw: string; name: string; group?: string } | null {
   const host = url.hostname.toLowerCase();
   if (host === 'raw.githubusercontent.com' || host === 'gist.githubusercontent.com') {
-    return { raw: url.toString(), name: url.pathname.split('/').filter(Boolean).pop() || 'github-file' };
+    const segments = url.pathname.split('/').filter(Boolean);
+    return {
+      raw: url.toString(),
+      name: segments[segments.length - 1] || 'github-file',
+      group: segments.length >= 2 ? `${segments[0]}/${segments[1]}` : undefined,
+    };
   }
   if (host !== 'github.com' && host !== 'www.github.com') return null;
 
@@ -83,12 +93,49 @@ function toRawGithub(url: URL): { raw: string; name: string } | null {
   return {
     raw: `https://raw.githubusercontent.com/${owner}/${repo}/${rest.join('/')}`,
     name: rest[rest.length - 1] || 'github-file',
+    group: `${owner}/${repo}`,
   };
+}
+
+/** HTML 엔티티를 사람이 읽는 글자로 되돌린다 — 제목에 &amp;가 그대로 남지 않게. */
+function decodeEntities(value: string): string {
+  return value
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/&nbsp;/g, ' ')
+    // &amp;는 마지막에 — 먼저 풀면 &amp;lt; 같은 이중 이스케이프가 잘못 열린다
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * 문서의 제목을 뽑는다. 멘션 칩에 그대로 적히는 값이라 순서가 중요하다.
+ *
+ * og:title을 먼저 본다 — <title>은 "제목 · 사이트명 | 브랜드"처럼 꼬리가 붙는 경우가 많고,
+ * og:title은 대개 제목만 담고 있다. 둘 다 없으면 호출부가 주소로 대신한다.
+ */
+function metaTitle(html: string): string {
+  const head = html.slice(0, 200_000);
+  const og =
+    head.match(
+      /<meta[^>]+(?:property|name)=["']og:title["'][^>]*content=["']([^"']+)["']/i,
+    )?.[1] ??
+    // content가 property보다 앞에 오는 경우도 흔하다
+    head.match(
+      /<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["']og:title["']/i,
+    )?.[1] ??
+    head.match(/<meta[^>]+name=["']twitter:title["'][^>]*content=["']([^"']+)["']/i)?.[1];
+  if (og?.trim()) return decodeEntities(og.trim());
+
+  const tag = head.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+  return tag ? decodeEntities(tag.replace(/\s+/g, ' ').trim()) : '';
 }
 
 /** HTML에서 제목과 본문 텍스트를 대충 추려낸다 — 미리보기 용도라 완벽할 필요는 없다. */
 function summarizeHtml(html: string): { title: string; text: string } {
-  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? '';
+  const title = metaTitle(html);
   const text = html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
@@ -156,6 +203,8 @@ async function importRepository(
         source: 'github' as const,
         // 저장소 안 경로를 그대로 이름으로 쓴다 — 같은 파일명이 여러 폴더에 있어도 구분된다
         name: `${label}/${file.path}`,
+        // 멘션 칩은 이 이름 하나로 묶인다 — 40개 파일이 칩 40개가 되지 않도록
+        group: label,
         url: attachmentProxyUrl(path),
         mime: 'text/plain',
         size: bytes.byteLength,
@@ -233,6 +282,7 @@ export async function POST(request: Request) {
       kind: 'code',
       source: 'github',
       name: target.name,
+      group: target.group,
       url: attachmentProxyUrl(path),
       mime: 'text/plain',
       size: buffer.byteLength,

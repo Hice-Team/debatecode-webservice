@@ -19,6 +19,13 @@ export interface SearchModel {
   repo: string;
   /** 답변 앞에 사고 과정(<think> 또는 reasoning_content)을 흘리는 모델인지 — 진행 단계 표시에 쓴다 */
   reasoning: boolean;
+  /**
+   * 그림을 볼 수 있는 모델인지.
+   *
+   * 첨부한 이미지를 실제로 보내려면 이 표시가 있어야 한다. 못 보는 모델에 그림을 보내면
+   * 요청 자체가 거절되거나, 더 나쁘게는 조용히 무시된 채 "봤다"는 듯이 답한다.
+   */
+  vision?: boolean;
 }
 
 export const SEARCH_MODELS: SearchModel[] = [
@@ -39,6 +46,15 @@ export const SEARCH_MODELS: SearchModel[] = [
     hint: '코드 특화 — 구현·디버깅 질문에 강합니다',
     repo: 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
     reasoning: false,
+  },
+  {
+    id: 'qwen2.5-vl',
+    label: 'Qwen2.5 VL',
+    vendor: 'Alibaba',
+    hint: '이미지 이해 — 스크린샷·다이어그램을 함께 물어볼 때',
+    repo: 'Qwen/Qwen2.5-VL-72B-Instruct',
+    reasoning: false,
+    vision: true,
   },
 ];
 

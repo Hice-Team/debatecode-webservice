@@ -22,6 +22,8 @@ import { fallbackAnswer, getSearchLlmConfig, streamSearchAnswer } from '@/app/li
 import { hasOwnFunding } from '@/app/lib/ai/funding';
 import { EFFORTS, asEffort } from '@/app/lib/ai/effort';
 import { estimateTokens } from '@/app/lib/ai/free-ai';
+import { buildAttachmentContext } from '@/app/lib/ai/attachment-context';
+import { isAttachmentProxyUrl } from '@/app/lib/storage';
 import {
   DEFAULT_CONTEXT_MODE,
   contextTurns,
@@ -40,13 +42,26 @@ const bodySchema = z.object({
     .array(
       z.object({
         kind: z.enum(['image', 'file', 'link', 'code']),
-        name: z.string().max(200),
-        // http(s)만 — javascript:/data: 같은 스킴이 첨부 URL로 저장되지 않게 막는다
-        url: z.string().url().regex(/^https?:\/\//i, 'http(s) 주소만 첨부할 수 있습니다.'),
+        name: z.string().max(400),
+        // 두 가지만 허용한다.
+        //   ① 우리 스토리지를 가리키는 내부 프록시 주소 (/api/ai-search/file?path=…)
+        //   ② 외부 http(s) 주소 (URL 첨부)
+        // 예전에는 ②만 통과시켰는데 업로드는 전부 ①이라, 파일을 붙인 질문이 통째로
+        // 400으로 떨어졌다. 화면에는 "첨부 업로드에 실패했습니다"만 떠서 원인을 볼 수 없었다.
+        // javascript:/data: 같은 스킴은 계속 막는다.
+        url: z
+          .string()
+          .max(2000)
+          .refine(
+            (value) => isAttachmentProxyUrl(value) || /^https?:\/\//i.test(value),
+            '첨부 주소를 확인해 주세요.',
+          ),
         mime: z.string().max(120).optional(),
         size: z.number().nonnegative().optional(),
         source: z.string().max(40).optional(),
         preview: z.string().max(2000).optional(),
+        // 한 덩어리로 가져온 것들의 이름(저장소·프로젝트). 대화 기록에서도 칩 하나로 묶인다.
+        group: z.string().max(200).optional(),
       }),
     )
     .max(20)
@@ -156,13 +171,16 @@ export async function POST(request: Request) {
   }
 
   if (!sessionId) {
-    const existing = await prisma.aiSession.findFirst({
-      where: { userId },
+    // 세션 없이 들어온 질문은 **새 대화**를 연다. 예전에는 가장 최근 세션에 이어 붙였는데,
+    // 그러면 관계없는 질문이 지난 대화의 맥락을 물려받아 답이 엉뚱해졌다.
+    // 아직 아무 말도 오가지 않은 세션이 있으면 그것을 쓴다 — 빈 세션이 쌓이지 않도록.
+    const empty = await prisma.aiSession.findFirst({
+      where: { userId, messages: { none: {} } },
       orderBy: { updatedAt: 'desc' },
       select: { id: true },
     });
     sessionId =
-      existing?.id ??
+      empty?.id ??
       // 새 대화는 설정에서 고른 기본 모델로 연다 — 매번 다시 고르지 않게
       (await prisma.aiSession.create({ data: { userId, model: defaultSearchModel } })).id;
   }
@@ -177,6 +195,22 @@ export async function POST(request: Request) {
   const model = findSearchModel(modelId);
   // 강도도 모델처럼 세션에 기억된다 — 매번 다시 고르게 하지 않는다
   const effort = asEffort(parsed.data.effort ?? sessionRow?.effort);
+
+  // 첨부 원문을 읽어 프롬프트에 실을 블록으로 만든다.
+  //
+  // 스트림 콜백 안이 아니라 여기서 읽는 이유가 있다. 스토리지를 부르는 클라이언트는
+  // 쿠키에서 세션을 꺼내는데(RLS로 남의 파일을 막는 장치다), 응답이 흐르기 시작한 뒤에는
+  // 요청 스코프가 살아 있다고 보장할 수 없다. 첫 바이트가 조금 늦더라도 여기서 끝낸다.
+  //
+  // 실패해도 질문 자체는 계속 간다 — 첨부 하나 때문에 대화가 끊기면 안 된다.
+  // 그림은 고른 모델이 볼 수 있을 때만 실어 보낸다. 못 보는 모델에 보내면 요청이
+  // 거절되거나, 더 나쁘게는 조용히 무시된 채 "봤다"는 듯이 답한다.
+  const attachmentContext = await buildAttachmentContext(attachments, userId, model.vision === true).catch(() => ({
+    text: '',
+    read: 0,
+    listed: attachments.length,
+    images: [] as string[],
+  }));
 
   const encoder = new TextEncoder();
 
@@ -214,7 +248,24 @@ export async function POST(request: Request) {
           });
           send({ type: 'user-message', id: userMessage.id, createdAt: userMessage.createdAt.toISOString() });
         }
-        step('receive', 'done', `맥락 ${Math.min(history.length, 8)}턴`);
+        step(
+          'receive',
+          'done',
+          [
+            `맥락 ${Math.min(history.length, 8)}턴`,
+            // 몇 개를 실제로 읽었는지 화면에 남긴다 — 첨부가 조용히 무시되면 알 길이 없다
+            attachments.length > 0
+              ? [
+                  `첨부 ${attachments.length}개 중 ${attachmentContext.read}개 읽음`,
+                  attachmentContext.images.length > 0 ? `그림 ${attachmentContext.images.length}장 전달` : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              : '',
+          ]
+            .filter(Boolean)
+            .join(' · '),
+        );
 
         // ② 모델 연결 → ③ 추론 → ④ 답변 생성
         //    각 단계는 첫 토큰이 실제로 도착한 시점에 전환한다.
@@ -239,7 +290,8 @@ export async function POST(request: Request) {
             for await (const chunk of streamSearchAnswer({
               question,
               history: history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-              attachmentNames: attachments.map((a) => a.name),
+              attachmentContext: attachmentContext.text,
+              attachmentImages: attachmentContext.images,
               modelId,
               effort,
               user: userKeys,

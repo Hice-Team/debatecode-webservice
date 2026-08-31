@@ -10,8 +10,6 @@
 // 답변도 생성되는 대로 흘려 보여줄 수 있다.
 import { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { useLanguage } from '@/app/context/language-context';
 import { t } from '@/app/lib/i18n';
 import { setSessionModel } from '@/app/lib/actions/ai-search';
@@ -19,6 +17,8 @@ import { SEARCH_STEPS } from './steps';
 import ResponseToolbar from './response-toolbar';
 import Composer from './composer';
 import AttachmentChips from './attachment-chips';
+import AnswerMarkdown from './answer-markdown';
+import { followUps, starters } from './prompt-starters';
 import { takePendingAttachments, toWireAttachment, type PendingAttachment } from './pending-attachments';
 import { findSearchModel, DEFAULT_SEARCH_MODEL_ID } from '@/app/lib/ai/search-models';
 import { asEffort, type Effort } from '@/app/lib/ai/effort';
@@ -63,9 +63,6 @@ type StreamEvent =
     }
   | { type: 'error'; message: string };
 
-const PROSE =
-  'prose-sm max-w-none text-[15px] leading-[1.85] text-fg [&_a]:text-signal [&_code]:rounded [&_code]:bg-paper [&_code]:px-1 [&_h2]:mt-6 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-fg [&_li]:my-1 [&_p]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-ink [&_pre]:p-4 [&_pre]:text-white [&_ul]:list-disc [&_ul]:pl-5';
-
 export default function Conversation({
   sessionId,
   initialMessages,
@@ -75,6 +72,7 @@ export default function Conversation({
   importedFrom,
   branchedFrom,
   liveModel,
+  userName,
 }: {
   sessionId: string;
   initialMessages: ConversationMessage[];
@@ -84,6 +82,8 @@ export default function Conversation({
   importedFrom: { fileName?: string; messageCount?: number } | null;
   branchedFrom: { sessionId?: string; title?: string | null } | null;
   liveModel: boolean;
+  /** 인사말에 쓸 이름 — 없으면 이름 없이 인사한다(지어내지 않는다) */
+  userName?: string | null;
 }) {
   const { language } = useLanguage();
   const [messages, setMessages] = useState(initialMessages);
@@ -325,8 +325,18 @@ export default function Conversation({
   const answering = draft.length > 0;
 
   return (
-    <main className="flex-grow pb-40 sm:pb-44">
-      <div className="px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
+    // 대화 열 — 위는 스크롤되는 대화, 아래는 붙어 있는 입력창.
+    // 열 자체가 화면 높이를 나눠 가지므로 안쪽에서 fixed를 쓸 일이 없다.
+    //
+    // 아직 아무 말도 오가지 않았으면 입력창이 맨 아래가 아니라 인사말 바로 아래,
+    // 화면 가운데에 선다. 읽을 것이 없는 화면에서 입력창만 바닥에 붙어 있으면
+    // 정작 시선이 가야 할 한가운데가 텅 빈다.
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* dc-scroll을 쓰지 않는다 — 그 스크롤바는 흰색이라 페이퍼 위에서 보이지 않는다 */}
+      <main className="min-h-0 flex-1 overflow-y-auto">
+      <div className={`px-4 sm:px-6 ${empty ? 'flex min-h-full flex-col justify-center py-10' : 'py-6 sm:py-8'}`}>
+        {/* mx-auto — 대화도 입력창도 열 한가운데에 선다. 사이드바를 접고 펴면 열 폭이
+            바뀌는데, 왼쪽에 붙여 두면 그때마다 글이 좌우로 끌려다닌다. */}
         <div className="mx-auto w-full min-w-0 max-w-3xl">
           <div className="mb-6 flex items-center gap-3">
             <Link
@@ -381,10 +391,51 @@ export default function Conversation({
             </div>
           )}
 
+          {/* 빈 대화 — 인사 한 줄과 입력창만. 무엇을 물어야 할지 정하는 자리라
+              화면에 다른 것을 늘어놓지 않는다. */}
           {empty && (
-            <p className="rounded-[var(--radius-panel)] border border-dashed border-hairline px-5 py-16 text-center text-sm text-fg-muted">
-              {t('ai-search-conversation-empty', language)}
-            </p>
+            <div className="mb-4">
+              <h1 className="font-display text-[1.75rem] font-medium leading-tight tracking-tight text-fg sm:text-[2rem]" style={{ wordBreak: 'keep-all' }}>
+                {userName ? `${userName}님, 무엇이 궁금하신가요?` : '무엇이 궁금하신가요?'}
+              </h1>
+              <p className="mt-2 text-sm text-fg-muted">{t('ai-search-conversation-empty', language)}</p>
+            </div>
+          )}
+
+          {/* 빈 대화에서는 입력창이 여기, 인사말 바로 아래에 선다 */}
+          {empty && (
+            <div className="mt-5">
+              <Composer
+                sessionId={sessionId}
+                messages={messages}
+                disabled={streaming}
+                model={model}
+                onModelChange={changeModel}
+                effort={effort}
+                onEffortChange={changeEffort}
+                liveModel={liveModel}
+                onSend={send}
+                onStop={stopGenerating}
+                centered
+              />
+
+              {/* 예시 질문 — "무엇이든 물어보세요"만 두면 오히려 막막하다.
+                  누르면 그대로 보내진다. */}
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {starters(language).map((starter) => (
+                  <li key={starter.label}>
+                    <button
+                      type="button"
+                      onClick={() => send(starter.prompt)}
+                      disabled={streaming}
+                      className="rounded-full border border-hairline bg-surface px-3.5 py-2 text-[13px] text-fg-secondary transition-colors hover:border-signal/40 hover:text-signal disabled:opacity-40"
+                    >
+                      {starter.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
           <div className="space-y-8">
@@ -398,15 +449,14 @@ export default function Conversation({
                 </div>
               ) : (
                 <article key={message.id}>
-                  <div className={PROSE}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-                  </div>
+                  <AnswerMarkdown>{message.content}</AnswerMarkdown>
 
-                  {message.model && (
-                    <p className="mt-3 font-mono text-[10px] text-fg-quiet">
-                      {findSearchModel(message.model).label} · {findSearchModel(message.model).vendor}
-                    </p>
-                  )}
+                  {/* 어느 모델이 답했는지 + 검증하라는 고지. 답변마다 붙는다 —
+                      한 대화 안에서도 모델을 바꿀 수 있으므로 화면 위 한 곳에만 적으면 어긋난다. */}
+                  <p className="mt-4 font-mono text-[10px] text-fg-quiet">
+                    {message.model && `${findSearchModel(message.model).label} · ${findSearchModel(message.model).vendor} · `}
+                    {t('ai-answer-caution', language)}
+                  </p>
 
                   <ResponseToolbar
                     message={message}
@@ -414,7 +464,6 @@ export default function Conversation({
                     onRegenerate={() => regenerate(message.id)}
                     busy={busy}
                   />
-
                 </article>
               ),
             )}
@@ -468,17 +517,40 @@ export default function Conversation({
                 )}
 
                 {draft && (
-                  <div className={`mt-5 animate-in fade-in slide-in-from-bottom-2 duration-500 ${PROSE}`}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{draft}</ReactMarkdown>
+                  <div className="mt-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <AnswerMarkdown>{draft}</AnswerMarkdown>
                     <span
                       aria-hidden
-                      className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-signal align-text-bottom motion-reduce:animate-none"
+                      className="-mt-4 ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-signal align-text-bottom motion-reduce:animate-none"
                     />
                   </div>
                 )}
               </div>
             )}
           </div>
+
+          {/* 이어서 묻기 — 마지막 답변 뒤에만. 모델이 골라 준 추천이 아니라 정해진
+              후속 동작이므로, AI가 제안한 것처럼 보이지 않도록 이름을 붙여 둔다. */}
+          {!streaming && !empty && messages[messages.length - 1]?.role === 'assistant' && (
+            <div className="mt-8">
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-fg-quiet">
+                {t('ai-follow-up', language)}
+              </p>
+              <ul className="flex flex-wrap gap-2">
+                {followUps(language).map((item) => (
+                  <li key={item.label}>
+                    <button
+                      type="button"
+                      onClick={() => send(item.prompt)}
+                      className="rounded-full border border-hairline bg-surface px-3.5 py-2 text-[13px] text-fg-secondary transition-colors hover:border-signal/40 hover:text-signal"
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {error && (
             <p role="alert" className="mt-6 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -509,20 +581,25 @@ export default function Conversation({
           <div ref={bottomRef} />
         </div>
       </div>
+      </main>
 
-      <Composer
-        sessionId={sessionId}
-        messages={messages}
-        disabled={streaming}
-        model={model}
-        onModelChange={changeModel}
-        effort={effort}
-        onEffortChange={changeEffort}
-        liveModel={liveModel}
-        onSend={send}
-        onStop={stopGenerating}
-      />
-    </main>
+      {/* 입력창은 스크롤 칸 **밖**, 열의 마지막 칸이다 — 대화가 길어져도 늘 같은 자리에 있다.
+          빈 대화에서는 위(인사말 아래)에 이미 서 있으므로 여기서는 그리지 않는다. */}
+      {!empty && (
+        <Composer
+          sessionId={sessionId}
+          messages={messages}
+          disabled={streaming}
+          model={model}
+          onModelChange={changeModel}
+          effort={effort}
+          onEffortChange={changeEffort}
+          liveModel={liveModel}
+          onSend={send}
+          onStop={stopGenerating}
+        />
+      )}
+    </div>
   );
 }
 

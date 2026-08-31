@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { buildAttachmentContext } from '@/app/lib/ai/attachment-context';
+import { isAttachmentProxyUrl } from '@/app/lib/storage';
 import { prisma } from '@/app/lib/prisma';
 import { requireApiSession } from '@/app/lib/dal';
 import { decryptSecret } from '@/app/lib/crypto';
@@ -29,6 +31,30 @@ const schema = z.object({
   messages: z
     .array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(4_000) }))
     .max(24)
+    .default([]),
+  // 이번 질문에 붙인 첨부 — AI Search와 같은 모양이다(app/study/search/pending-attachments.ts).
+  // 원문은 서버가 스토리지에서 읽어 프롬프트에 싣는다.
+  attachments: z
+    .array(
+      z.object({
+        kind: z.enum(['image', 'file', 'link', 'code']),
+        name: z.string().max(400),
+        // 내부 프록시 주소이거나 외부 http(s)만 — javascript:/data: 스킴은 막는다
+        url: z
+          .string()
+          .max(2000)
+          .refine(
+            (value) => isAttachmentProxyUrl(value) || /^https?:\/\//i.test(value),
+            '첨부 주소를 확인해 주세요.',
+          ),
+        mime: z.string().max(120).optional(),
+        size: z.number().nonnegative().optional(),
+        source: z.string().max(40).optional(),
+        preview: z.string().max(2000).optional(),
+        group: z.string().max(200).optional(),
+      }),
+    )
+    .max(20)
     .default([]),
 });
 
@@ -101,7 +127,7 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
 
-  const { problemId, modelId, language, mode, code, messages } = parsed.data;
+  const { problemId, modelId, language, mode, code, messages, attachments } = parsed.data;
   const effort = asEffort(parsed.data.effort);
   // refactor-why는 사용자 발화 없이 AI가 먼저 말하는 자리라 messages가 비어 있을 수 있다
   if (mode !== 'refactor-why' && messages.length === 0) {
@@ -158,10 +184,28 @@ export async function POST(request: Request) {
   const codeLabel = mode === 'refactor-why' ? '당신이 방금 작성한 코드' : '사용자의 현재 에디터 코드';
   const context = `[문제] ${problem.title} (${problem.category})\n${problem.description.slice(0, 2500)}\n\n[${codeLabel} — ${language}]\n\`\`\`\n${code.slice(0, 6000) || '(아직 비어 있음)'}\n\`\`\``;
 
+  // 첨부 원문을 읽어 프롬프트에 실을 블록으로 만든다.
+  // 스트림이 시작된 뒤에는 요청 스코프(쿠키 → 스토리지 권한)가 살아 있다고 보장할 수 없어
+  // 여기서 먼저 끝낸다. 실패해도 질문 자체는 계속 간다.
+  // debateAI 모델 카탈로그에는 아직 그림을 보는 모델이 없다 — 그림은 싣지 않고,
+  // 왜 못 보는지를 프롬프트에 적어 모델이 "봤다"는 듯이 답하지 않게 한다.
+  const attachmentContext = await buildAttachmentContext(attachments, userId, false).catch(() => ({
+    text: '',
+    read: 0,
+    listed: attachments.length,
+    images: [] as string[],
+  }));
+
   const prompt =
     mode === 'refactor-why'
       ? `${context}\n\n위 내용을 바탕으로 첫 발언을 작성하세요.`
-      : [context, ...messages.map((m) => `${m.role === 'user' ? '사용자' : '어시스턴트'}: ${m.content}`)].join('\n\n');
+      : [
+          context,
+          attachmentContext.text,
+          ...messages.map((m) => `${m.role === 'user' ? '사용자' : '어시스턴트'}: ${m.content}`),
+        ]
+          .filter(Boolean)
+          .join('\n\n');
 
   // 강도는 프롬프트 한 줄과 출력 상한으로만 적용한다 — 공급자 전용 파라미터는 쓰지 않는다
   const system = SYSTEM + effortDirective(effort);

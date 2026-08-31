@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server';
 import { requireApiSession } from '@/app/lib/dal';
 import { createClient } from '@/app/lib/supabase/server';
-import { AI_ATTACHMENT_BUCKET, attachmentProxyUrl, safeStorageKey } from '@/app/lib/storage';
+import {
+  AI_ATTACHMENT_BUCKET,
+  MAX_ATTACHMENT_BYTES,
+  attachmentProxyUrl,
+  safeStorageKey,
+} from '@/app/lib/storage';
 import { rateLimit } from '@/app/lib/rate-limit';
 
 // AI Search 첨부 업로드 — 이미지/파일을 비공개 버킷에 올리고 열람용 프록시 주소를 돌려준다.
 // 파일 형식은 제한하지 않는다(요구사항: 특정 확장자로 좁히지 않음).
 // 다만 용량 상한과 사용자별 레이트리밋은 둔다.
-const MAX_BYTES = 10 * 1024 * 1024;
+//
+// 이 경로는 **작은 파일 전용**이다. 큰 파일은 요청 본문에 실으면 런타임 본문 상한에
+// 먼저 걸리므로, 클라이언트가 /api/ai-search/attachment/signed에서 서명된 업로드 주소를
+// 받아 스토리지로 직접 올린다. 상한값(MAX_ATTACHMENT_BYTES)은 두 경로가 함께 쓴다.
 
 export async function POST(request: Request) {
   const session = await requireApiSession();
@@ -23,7 +31,7 @@ export async function POST(request: Request) {
   if (!(file instanceof File) || file.size === 0) {
     return NextResponse.json({ error: 'file required' }, { status: 400 });
   }
-  if (file.size > MAX_BYTES) {
+  if (file.size > MAX_ATTACHMENT_BYTES) {
     return NextResponse.json({ error: 'file too large' }, { status: 413 });
   }
 

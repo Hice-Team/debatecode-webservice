@@ -27,13 +27,20 @@ export async function getRecentSession() {
 }
 
 /** 세션 목록 — 사이드바에 최신순으로 나열한다. */
-export async function listSessions(limit = 40) {
+export async function listSessions(limit = 60) {
   const { userId } = await verifySession();
   return prisma.aiSession.findMany({
     where: { userId },
     orderBy: { updatedAt: 'desc' },
     take: limit,
-    select: { id: true, title: true, model: true, updatedAt: true, _count: { select: { messages: true } } },
+    select: {
+      id: true,
+      title: true,
+      model: true,
+      folderId: true,
+      updatedAt: true,
+      _count: { select: { messages: true } },
+    },
   });
 }
 
@@ -84,7 +91,7 @@ export async function loadSession(sessionId: string) {
  * 이전 세션은 목록에 그대로 남으므로 언제든 다시 열 수 있다.
  * 빈 세션이 쌓이지 않도록, 메시지가 없는 세션이 이미 있으면 그것을 재사용한다.
  */
-export async function startNewSession(model?: string): Promise<{ sessionId: string }> {
+async function openNewSession(model?: string): Promise<{ sessionId: string }> {
   const { userId } = await verifySession();
   const chosen = isSearchModelId(model) ? model : DEFAULT_SEARCH_MODEL_ID;
 
@@ -95,23 +102,37 @@ export async function startNewSession(model?: string): Promise<{ sessionId: stri
   });
   if (empty) {
     await prisma.aiSession.update({ where: { id: empty.id }, data: { model: chosen, updatedAt: new Date() } });
-    revalidatePath('/study/search');
     return { sessionId: empty.id };
   }
 
   const created = await prisma.aiSession.create({ data: { userId, model: chosen } });
-  revalidatePath('/study');
-  revalidatePath('/study/search');
   return { sessionId: created.id };
 }
 
-/** 활성 세션을 보장한다 — 없으면 만든다(이어하기 경로). */
+export async function startNewSession(model?: string): Promise<{ sessionId: string }> {
+  const result = await openNewSession(model);
+  revalidatePath('/study');
+  revalidatePath('/study/search');
+  return result;
+}
+
+/**
+ * 세션 없이 들어왔을 때 쓸 세션 — **언제나 새 대화**다.
+ *
+ * 예전에는 가장 최근 세션을 이어받았다. 그래서 AI Search를 열 때마다 지난 대화가
+ * 그대로 이어졌고, 사실상 이용자 한 명에 대화 하나만 존재하는 것처럼 굴었다.
+ * 지난 대화는 사이드바에서 골라 들어가고, 그냥 들어오면 빈 화면에서 시작한다.
+ *
+ * 빈 세션까지 새로 만들지는 않는다 — 화면을 새로 고칠 때마다 아무 말도 없는 세션이
+ * 목록에 쌓이면 사이드바가 껍데기로 덮인다.
+ *
+ * startNewSession이 아니라 openNewSession을 부르는 이유가 있다. 이 함수는 **페이지가
+ * 그려지는 도중에** 불린다(app/study/search/page.tsx). 그 시점에 revalidatePath를
+ * 호출하면 Next가 렌더 중 캐시 무효화를 막아 페이지가 통째로 실패한다 — 화면에는
+ * 입력창은커녕 아무것도 남지 않는다.
+ */
 export async function ensureSession(): Promise<{ sessionId: string }> {
-  const { userId } = await verifySession();
-  const existing = await prisma.aiSession.findFirst({ where: { userId }, orderBy: { updatedAt: 'desc' }, select: { id: true } });
-  if (existing) return { sessionId: existing.id };
-  const created = await prisma.aiSession.create({ data: { userId, model: DEFAULT_SEARCH_MODEL_ID } });
-  return { sessionId: created.id };
+  return openNewSession();
 }
 
 /**
@@ -215,5 +236,69 @@ export async function deleteSession(formData: FormData): Promise<void> {
   if (!sessionId) return;
   await prisma.aiSession.deleteMany({ where: { id: sessionId, userId } });
   revalidatePath('/study');
+  revalidatePath('/study/search');
+}
+
+/* ---------- 폴더 ---------- */
+
+/**
+ * 대화 폴더 목록 — 사이드바에 나열한다.
+ *
+ * 대화가 쌓이면 최근순 목록만으로는 "그때 그 대화"를 찾을 수 없다. 폴더는 이용자가
+ * 직접 만드는 묶음이라 자동 분류처럼 엉뚱한 곳에 들어갈 일이 없다.
+ */
+export async function listFolders() {
+  const { userId } = await verifySession();
+  return prisma.aiFolder.findMany({
+    where: { userId },
+    orderBy: { updatedAt: 'desc' },
+    select: { id: true, name: true, _count: { select: { sessions: true } } },
+  });
+}
+
+export async function createFolder(formData: FormData): Promise<{ id?: string; error?: string }> {
+  const { userId } = await verifySession();
+  const name = String(formData.get('name') ?? '').trim().slice(0, 60);
+  if (!name) return { error: '폴더 이름을 입력해 주세요.' };
+
+  const folder = await prisma.aiFolder.create({ data: { userId, name } });
+  revalidatePath('/study/search');
+  return { id: folder.id };
+}
+
+export async function renameFolder(formData: FormData): Promise<void> {
+  const { userId } = await verifySession();
+  const id = String(formData.get('folderId') ?? '');
+  const name = String(formData.get('name') ?? '').trim().slice(0, 60);
+  if (!id || !name) return;
+  await prisma.aiFolder.updateMany({ where: { id, userId }, data: { name } });
+  revalidatePath('/study/search');
+}
+
+/** 폴더만 지운다 — 안에 있던 대화는 폴더 없는 상태로 남는다(스키마의 SetNull). */
+export async function deleteFolder(formData: FormData): Promise<void> {
+  const { userId } = await verifySession();
+  const id = String(formData.get('folderId') ?? '');
+  if (!id) return;
+  await prisma.aiFolder.deleteMany({ where: { id, userId } });
+  revalidatePath('/study/search');
+}
+
+/** 대화를 폴더에 넣거나 뺀다. folderId가 비어 있으면 뺀다. */
+export async function moveSessionToFolder(formData: FormData): Promise<void> {
+  const { userId } = await verifySession();
+  const sessionId = String(formData.get('sessionId') ?? '');
+  const folderId = String(formData.get('folderId') ?? '');
+  if (!sessionId) return;
+
+  // 남의 폴더로 옮길 수 없다 — 옮길 폴더가 내 것인지 먼저 본다
+  if (folderId) {
+    const owned = await prisma.aiFolder.findFirst({ where: { id: folderId, userId }, select: { id: true } });
+    if (!owned) return;
+  }
+  await prisma.aiSession.updateMany({
+    where: { id: sessionId, userId },
+    data: { folderId: folderId || null },
+  });
   revalidatePath('/study/search');
 }

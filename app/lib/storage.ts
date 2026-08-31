@@ -22,6 +22,21 @@ export function safeStorageKey(userId: string, filename: string): string {
 export const AI_ATTACHMENT_BUCKET = 'ai-attachments';
 
 /**
+ * 첨부 하나의 최대 크기 — 10GB.
+ *
+ * 이 크기를 요청 본문에 실어 보낼 수는 없다(서버리스 본문 상한). 그래서 일정 크기를
+ * 넘는 파일은 서명된 업로드 주소를 받아 브라우저에서 스토리지로 직행한다
+ * (app/api/ai-search/attachment/signed). 아래 임계값이 그 갈림길이다.
+ *
+ * 실제로 10GB가 올라가려면 Supabase 프로젝트의 전역 업로드 상한도 함께 올려야 한다
+ * (Storage → Settings → Upload file size limit). 무료 플랜 기본값은 50MB다.
+ */
+export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024 * 1024;
+
+/** 이 크기를 넘으면 서버를 거치지 않고 스토리지로 직접 올린다. */
+export const DIRECT_UPLOAD_THRESHOLD_BYTES = 4 * 1024 * 1024;
+
+/**
  * 첨부를 가리키는 앱 내부 주소.
  *
  * 서명 URL은 몇 분이면 만료되므로 DB에 담을 수 없다. 대신 만료되지 않는 이 주소를 담고,
@@ -36,4 +51,9 @@ export function attachmentPathFromUrl(url: string): string | null {
   if (!url.startsWith('/api/ai-search/file?')) return null;
   const value = new URLSearchParams(url.slice(url.indexOf('?') + 1)).get('path');
   return value || null;
+}
+
+/** 이 주소가 우리 스토리지를 가리키는 내부 첨부 주소인가. */
+export function isAttachmentProxyUrl(url: string): boolean {
+  return attachmentPathFromUrl(url) !== null;
 }
