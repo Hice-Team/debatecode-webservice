@@ -81,7 +81,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
   const lockedProviders = AI_PROVIDERS.filter((p) => p.locked);
   const usingNative = nativeProviders.some((p) => p.key === provider);
   // 하단 저장 바가 이 폼을 대신 제출한다 — 인라인 저장을 없앤 자리다
-  const settingsForm = useSettingsForm();
+  const settingsForm = useSettingsForm({ result: state, pending });
 
   return (
     <form action={formAction} {...settingsForm} className="space-y-6">
@@ -238,11 +238,6 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
             <p key={e}>{e}</p>
           ))}
         </div>
-      )}
-      {state.saved && (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-600">
-          저장되었습니다.
-        </p>
       )}
       {testState.message && (
         <p

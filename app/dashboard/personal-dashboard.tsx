@@ -36,7 +36,11 @@ const RADAR_CATEGORIES = ['해시', '스택', 'DP', '그래프', '그리디', '�
 const DIST_COLORS = { language: '#0369a1', domain: '#047857' };
 
 // 벤토 타일 공용 스타일 (Premium)
-const TILE = 'rounded-[var(--radius-panel)] border border-hairline bg-surface/90 backdrop-blur-sm p-5 shadow-[0_4px_20px_-10px_rgba(20,21,43,0.05)] transition-all duration-300 hover:shadow-[0_8px_30px_-12px_rgba(20,21,43,0.1)] hover:-translate-y-0.5';
+// 타일 하나 — 종이 한 장 들린 정도의 그림자만 준다(DESIGN.md §6).
+// 예전에는 타일마다 큰 그림자가 깔리고 호버할 때 위로 떠올랐다. 대시보드는 한 화면에
+// 타일이 열 개 넘게 놓이는 자리라, 그 하나하나가 떠오르면 어디를 봐야 할지 알 수 없다.
+const TILE =
+  'rounded-[var(--radius-panel)] border border-hairline bg-surface p-5 shadow-[0_1px_3px_rgba(8,9,26,0.05)]';
 
 // 연속 학습일(스트릭) — 활동한 날짜 집합에서 오늘(또는 어제)부터 이어지는 연속 일수.
 function computeStreak(dates: Date[]): number {
@@ -155,7 +159,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
           레이더처럼 내용이 짧은 타일은 아래가 텅 빈 채로 늘어난다. */}
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-12">
         {/* 히어로: 웰컴 + 스트릭 + 퀵네비 (대형) */}
-        <div className="lg:col-span-8 rounded-[var(--radius-panel)] border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-6 sm:p-8">
+        <div className="lg:col-span-8 rounded-[var(--radius-panel)] border border-hairline bg-surface p-6 shadow-[0_1px_3px_rgba(8,9,26,0.05)] sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600">
@@ -201,7 +205,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
               <Link
                 key={a.k}
                 href={a.href}
-                className="rounded-xl border border-hairline bg-surface/80 p-3.5 transition-colors hover:border-brand-300 hover:bg-brand-50/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                className="rounded-[var(--radius-card)] border border-hairline bg-paper p-3.5 transition-colors hover:border-signal/40 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
               >
                 <p className="text-sm font-bold text-fg">
                   <I18nSlot k={`dash-nav-${a.k}`} fallback={a.label} />
@@ -215,15 +219,17 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
         </div>
 
         {/* KPI 타일 (2×2) */}
-        <div className="lg:col-span-4 grid grid-cols-2 gap-4">
+        {/* self-stretch + auto-rows-fr — 왼쪽 히어로와 높이를 맞춘다.
+            바깥 그리드가 items-start라 그냥 두면 이 묶음만 위에 붙어 오른쪽 아래가 빈다. */}
+        <div className="grid grid-cols-2 gap-4 lg:col-span-4 lg:auto-rows-fr lg:self-stretch">
           {[
             { k: 'solved', label: '푼 문제', value: `${solvedProblemIds.size}`, sub: '전체 통과' },
             { k: 'submissions', label: '총 제출', value: `${totalSubmissions}`, sub: '제출 기준' },
             { k: 'response', label: '면접 응답률', value: responseRate != null ? `${responseRate}%` : '—', sub: '방어 성공' },
             { k: 'defense', label: '평균 방어율', value: avgDefense != null ? `${avgDefense}%` : '—', sub: null },
           ].map((c) => (
-            <div key={c.k} className="group relative overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface/90 backdrop-blur-sm p-4 flex flex-col justify-between shadow-[0_4px_20px_-10px_rgba(20,21,43,0.05)] transition-all duration-300 hover:shadow-[0_8px_30px_-12px_rgba(20,21,43,0.1)] hover:-translate-y-0.5">
-              <span aria-hidden className="absolute left-0 top-0 h-full w-1 bg-signal/70 transition-transform duration-300 group-hover:scale-y-110 group-hover:bg-brand-500" />
+            <div key={c.k} className="relative flex flex-col justify-between overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface p-4 shadow-[0_1px_3px_rgba(8,9,26,0.05)]">
+              <span aria-hidden className="absolute left-0 top-0 h-full w-1 bg-signal" />
               <p className="font-mono text-[10px] text-fg-muted tracking-wider">
                 <I18nSlot k={`dash-kpi-${c.k}`} fallback={c.label} />
               </p>
@@ -244,7 +250,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
         </div>
 
         {/* Star 점수 · 티어 · 명예의 전당 순위 (풀폭 스트립) */}
-        <section className="lg:col-span-12 overflow-hidden rounded-[var(--radius-panel)] border border-brand-200 bg-gradient-to-r from-brand-50/50 to-white shadow-[0_8px_32px_-12px_rgba(24,0,172,0.1)] transition-transform duration-300 hover:shadow-[0_12px_40px_-16px_rgba(24,0,172,0.15)]" aria-labelledby="rank-title">
+        <section className="lg:col-span-12 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface shadow-[0_1px_3px_rgba(8,9,26,0.05)]" aria-labelledby="rank-title">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:divide-x lg:divide-hairline">
             {/* 좌: Star 점수 + 티어 진행도 */}
             <div className="p-5 sm:p-6">
@@ -270,7 +276,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
               <div className="mt-4">
                 <div className="h-2 w-full overflow-hidden rounded-full bg-paper">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-colors"
+                    className="h-full rounded-full bg-signal transition-[width] duration-300"
                     style={{ width: `${tierProgress}%` }}
                   />
                 </div>
@@ -306,7 +312,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
                     <Link
                       key={tile.key}
                       href={tile.key === 'overall' ? '/hall-of-fame' : `/hall-of-fame?tab=${tile.key}`}
-                      className="rounded-xl border border-hairline bg-paper/40 p-3 text-center transition-colors hover:border-brand-300 hover:bg-brand-50/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                      className="rounded-[var(--radius-card)] border border-hairline bg-paper p-3 text-center transition-colors hover:border-signal/40 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                     >
                       <p className="font-display text-xl font-bold text-fg">
                         {entry.rank != null ? `#${entry.rank}` : '—'}
@@ -380,7 +386,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
                 { k: 'my-comments', label: '내 답글', value: myComments, highlight: false },
                 { k: 'new-replies', label: '새 댓글', value: newReplies, highlight: newReplies > 0 },
               ].map((s) => (
-                <Link key={s.k} href="/community" className="rounded-xl border border-hairline bg-paper/40 p-3 hover:bg-brand-50/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal">
+                <Link key={s.k} href="/community" className="rounded-[var(--radius-card)] border border-hairline bg-paper p-3 transition-colors hover:border-signal/40 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal">
                   <p className={`text-xl font-bold ${s.highlight ? 'text-rose-600' : 'text-fg'}`} style={{ fontFamily: 'var(--font-space-grotesk)' }}>{s.value}</p>
                   <p className="mt-0.5 text-[10px] text-fg-muted">
                     <I18nSlot k={`dash-${s.k}`} fallback={s.label} />
@@ -396,9 +402,15 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
           <div className="flex items-center gap-4 rounded-[var(--radius-panel)] border border-hairline bg-surface p-5 opacity-80">
             <span
               aria-hidden
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-xl ring-1 ring-inset ring-brand-100"
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-[var(--radius-card)] bg-paper text-fg-muted"
             >
-              🎁
+              {/* 선물 상자 — 이모지는 기기마다 다른 그림이 나오고 크기도 제각각이다 */}
+              <svg viewBox="0 0 24 24" className="h-6 w-6 fill-none stroke-current stroke-[1.6]" aria-hidden>
+                <path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z" strokeLinejoin="round" />
+                <path d="M3 7.5h18V11H3z" strokeLinejoin="round" />
+                <path d="M12 7.5V21" />
+                <path d="M12 7.5S10.5 3 8 3a2.3 2.3 0 0 0 0 4.5h4Zm0 0S13.5 3 16 3a2.3 2.3 0 0 1 0 4.5h-4Z" strokeLinejoin="round" />
+              </svg>
             </span>
             <div className="min-w-0 flex-1">
               <p className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">DEBATE POINT</p>
@@ -422,7 +434,7 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
             /* debateQ 타일 — 디베이트메이트 전용 */
             <Link
               href="/debate-mate/console"
-              className="group flex-1 rounded-[var(--radius-panel)] border border-brand-300 bg-gradient-to-br from-brand-900 to-brand-700 p-5 text-white transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+              className="group flex-1 rounded-[var(--radius-panel)] bg-ink p-5 text-white ring-1 ring-inset ring-white/[0.06] transition-colors hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
             >
               <p className="font-mono text-[11px] tracking-wider text-brand-200">MATE EXCLUSIVE</p>
               <p className="mt-1.5 text-xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>debateQ</p>

@@ -81,7 +81,7 @@ export default function AppSettingsForm({
 }) {
   const [state, formAction, pending] = useActionState(updateAppSettings, initialState);
   const { language: uiLanguage, setLanguage: setUiLanguage } = useLanguage();
-  const settingsForm = useSettingsForm();
+  const settingsForm = useSettingsForm({ result: state, pending });
 
   // 토글은 값이 화면에 남아야 해서 상태로 들고, 제출은 hidden input이 맡는다.
   // 체크박스를 그대로 쓰면 스위치 모양을 다시 만들어야 하고, 그러면 이 화면만

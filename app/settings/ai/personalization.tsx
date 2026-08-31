@@ -8,6 +8,7 @@
 //
 // 지침은 목록이다. 텍스트 상자 하나로 두면 "이 줄만 빼고 싶다"에 전체를 다시 쓰게 된다.
 import { useActionState, useState, useTransition } from 'react';
+import { useSettingsForm } from '../save-bar';
 import {
   DEFAULT_CODE_MODEL_ID,
   TIER_LABELS,
@@ -54,6 +55,9 @@ export default function AiPersonalization({
   sessionCount: number;
 }) {
   const [state, formAction, pending] = useActionState(saveAiPersonalization, initialState);
+  // 다른 설정 구역과 같은 하단 저장 바를 쓴다 — 구역마다 저장 방식이 다르면
+  // "이건 어디서 저장하지"를 매번 다시 찾아야 한다
+  const settingsForm = useSettingsForm({ result: state, pending });
   const [instructions, setInstructions] = useState<string[]>(initial.instructions);
   const [draft, setDraft] = useState('');
   const [context, setContext] = useState<ContextMode>(initial.contextMode);
@@ -71,7 +75,7 @@ export default function AiPersonalization({
 
   return (
     <>
-      <form action={formAction}>
+      <form action={formAction} {...settingsForm}>
         {/* ── 기본 모델 ─────────────────────────────────────────── */}
         <Group
           title="기본 모델"
@@ -234,7 +238,6 @@ export default function AiPersonalization({
           >
             {pending ? '저장 중…' : 'AI 설정 저장'}
           </button>
-          {state.saved && !pending && <span className="text-[13px] text-emerald-700">저장했습니다.</span>}
           {state.errors?.form && <span className="text-[13px] text-rose-600">{state.errors.form[0]}</span>}
         </div>
       </form>

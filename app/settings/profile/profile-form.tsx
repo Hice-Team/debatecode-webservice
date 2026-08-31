@@ -100,7 +100,10 @@ export default function ProfileForm({
 
   // 하단 저장 바는 폼 하나만 맡는다 — 여기서는 이름·이미지 폼을 등록한다.
   // 아래 학습 폼은 항목이 셋뿐이라 자체 버튼으로 저장한다.
-  const settingsForm = useSettingsForm();
+  const settingsForm = useSettingsForm({ result: state, pending });
+  // 이 화면에는 폼이 둘이다(기본 정보 · 공개 범위). 저장 바는 등록된 폼을 모두 제출하므로
+  // 둘 다 붙여야 한 번 누를 때 함께 저장된다 — 예전에는 나중 것 하나만 저장됐다.
+  const personalForm = useSettingsForm({ result: personalState, pending: personalPending });
 
   return (
     <div>
@@ -173,7 +176,7 @@ export default function ProfileForm({
         </div>
       </Group>
 
-      <form action={personalAction}>
+      <form action={personalAction} {...personalForm}>
         <Group title="공개 범위" desc="내 프로필과 활동을 누가 볼 수 있는지 정합니다.">
           <fieldset className="py-2">
             <legend className="sr-only">프로필 공개 범위</legend>
@@ -254,9 +257,6 @@ export default function ProfileForm({
           >
             {personalPending ? '저장 중…' : '공개 범위 · 학습 저장'}
           </button>
-          {personalState.saved && !personalPending && (
-            <span className="text-[13px] text-emerald-700">저장했습니다.</span>
-          )}
           {personalState.errors?.form && (
             <span className="text-[13px] text-rose-600">{personalState.errors.form[0]}</span>
           )}
