@@ -1,6 +1,11 @@
 'use client';
 
-// 문제 업로드 — 단건 폼 + 테스트케이스 표 편집.
+// 문제 업로드 — 네 단계로 나눈 단건 폼 + 테스트케이스 표 편집.
+//
+// 문제 하나를 등록하려면 기본 정보·지문·스타터 코드·테스트케이스 넷이 다 있어야 한다.
+// 예전에는 이 넷이 같은 무게의 카드로 쌓여 있어서, 어디까지 채웠고 무엇이 비었는지
+// 제출 버튼을 눌러 봐야 알 수 있었다. 지금은 단계마다 번호와 현재 상태를 적는다 —
+// "지문 512자", "케이스 3개 · 숨김 1" 처럼 채워진 정도가 접힌 채로도 보인다.
 //
 // 테스트케이스를 표로 편집하게 한 이유: JSON을 통째로 손으로 쓰면 인자 배열 형식
 // (`[[2,7,11,15], 9]` = 인자 두 개)을 틀리기 쉽고, 틀려도 저장은 되기 때문에
@@ -20,6 +25,57 @@ const STARTER_META: Record<Language, { id: string; field: 'starterJs' | 'starter
 };
 
 const initial: ProblemUploadState = {};
+
+/**
+ * 단계 하나. 번호 · 제목 · 지금 상태.
+ *
+ * `status`는 "얼마나 채워졌는가"를 짧게 적는다. 비어 있으면 무엇이 없는지 말하고
+ * (`tone='empty'`), 그 자체가 다음에 할 일이 된다 — 제출을 눌러 봐야 알게 하지 않는다.
+ */
+function Step({
+  n,
+  title,
+  desc,
+  status,
+  tone = 'ok',
+  action,
+  children,
+}: {
+  n: number;
+  title: string;
+  desc?: string;
+  status: string;
+  tone?: 'ok' | 'empty' | 'error';
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const badge =
+    tone === 'error'
+      ? 'border-rose-200 bg-rose-50 text-rose-700'
+      : tone === 'empty'
+        ? 'border-amber-200 bg-amber-50 text-amber-700'
+        : 'border-hairline bg-paper text-fg-muted';
+
+  return (
+    <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
+      <div className="mb-4 flex flex-wrap items-start gap-x-3 gap-y-2">
+        <span
+          aria-hidden
+          className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-ink font-mono text-[11px] font-bold text-white"
+        >
+          {n}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display text-[15px] font-bold tracking-tight text-fg">{title}</h3>
+          {desc && <p className="mt-0.5 text-xs leading-relaxed text-fg-muted">{desc}</p>}
+        </div>
+        <span className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] ${badge}`}>{status}</span>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
 
 interface CaseRow {
   input: string;
@@ -80,6 +136,14 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
   });
   const hasCaseError = caseErrors.some((e) => e.length > 0);
 
+  // 아직 비어 있는 것 — 제출 바에서 이름으로 말해 준다.
+  // "등록할 수 없습니다"만 띄우고 무엇이 문제인지는 서버 응답을 봐야 알던 자리다.
+  const missing = [
+    !description.trim() && '지문',
+    languages.length === 0 && '지원 언어',
+    cases.length === 0 && '테스트케이스',
+  ].filter(Boolean) as string[];
+
   const serializedCases = JSON.stringify(
     cases.map((c, i) => {
       try {
@@ -106,9 +170,12 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
       <input type="hidden" name="testCases" value={serializedCases} />
       {defaults && <input type="hidden" name="id" value={defaults.id} />}
 
-      {/* 기본 정보 */}
-      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
-        <h3 className="mb-4 text-sm font-bold text-fg">기본 정보</h3>
+      <Step
+        n={1}
+        title="기본 정보"
+        desc="목록과 검색에 쓰이는 값입니다."
+        status={defaults ? '수정 중' : '필수'}
+      >
         <div className="grid gap-4 sm:grid-cols-[1fr_8rem_10rem]">
           <div>
             <label htmlFor="p-title" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
@@ -178,16 +245,20 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
             <p className="mt-1 text-[11px] text-fg-muted">AI 면접이 답변에서 확인할 개념입니다.</p>
           </div>
         </div>
-      </section>
+      </Step>
 
-      {/* 지문 */}
-      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-fg">문제 지문 (마크다운)</h3>
+      <Step
+        n={2}
+        title="문제 지문"
+        desc="마크다운으로 씁니다. 제약과 예시를 함께 적어 주세요."
+        status={description.trim() ? `${description.trim().length.toLocaleString()}자` : '비어 있음'}
+        tone={description.trim() ? 'ok' : 'empty'}
+        action={
           <button type="button" onClick={() => setShowPreview((v) => !v)} className={BTN_NEUTRAL}>
             {showPreview ? '편집으로' : '미리보기'}
           </button>
-        </div>
+        }
+      >
         {showPreview ? (
           <div className="prose prose-sm max-w-none rounded-[var(--radius-panel)] border border-hairline bg-paper/40 px-4 py-3">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{description || '_(내용 없음)_'}</ReactMarkdown>
@@ -203,15 +274,19 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
             className={`${FIELD} font-mono text-[13px]`}
           />
         )}
-      </section>
+      </Step>
 
-      {/* 스타터 코드 */}
-      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
-        <h3 className="mb-1 text-sm font-bold text-fg">스타터 코드</h3>
-        <p className="mb-3 text-xs text-fg-muted">
-          이용자가 에디터를 열었을 때 처음 보이는 코드입니다. 함수명은 테스트케이스가 호출하는 이름과
-          같아야 합니다.
-        </p>
+      <Step
+        n={3}
+        title="지원 언어와 스타터 코드"
+        desc="이용자가 에디터를 열었을 때 처음 보이는 코드입니다. 함수명은 테스트케이스가 호출하는 이름과 같아야 합니다."
+        status={
+          languages.length === 0
+            ? '언어 없음'
+            : languages.map((l) => LANGUAGE_LABELS[l]).join(' · ')
+        }
+        tone={languages.length === 0 ? 'empty' : 'ok'}
+      >
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="font-mono text-xs tracking-wider text-fg-secondary">지원 언어</span>
           {LANGUAGES.map((l) => {
@@ -221,8 +296,8 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
                 key={l}
                 className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors ${
                   on
-                    ? 'border-brand-300 bg-brand-50 text-brand-700'
-                    : 'border-hairline bg-surface text-fg-muted hover:border-brand-300 hover:text-signal'
+                    ? 'border-signal bg-signal/[0.08] text-signal'
+                    : 'border-hairline bg-surface text-fg-muted hover:border-signal/40 hover:text-signal'
                 }`}
               >
                 <input
@@ -267,11 +342,19 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
             ))}
           </div>
         )}
-      </section>
+      </Step>
 
-      {/* 테스트케이스 */}
-      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
-        <h3 className="mb-1 text-sm font-bold text-fg">테스트케이스</h3>
+      <Step
+        n={4}
+        title="테스트케이스"
+        desc="채점이 실제로 돌려 보는 입력과 기대값입니다."
+        status={
+          hasCaseError
+            ? 'JSON 오류'
+            : `${cases.length}개${cases.filter((c) => c.isHidden).length > 0 ? ` · 숨김 ${cases.filter((c) => c.isHidden).length}` : ''}`
+        }
+        tone={hasCaseError ? 'error' : cases.length === 0 ? 'empty' : 'ok'}
+      >
         <div className="mb-3">
           <Callout tone="info" title="입력은 인자 배열입니다">
             <code className="rounded bg-surface/60 px-1">[[2,7,11,15], 9]</code>는 인자가 두 개(배열 하나 + 숫자
@@ -336,7 +419,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
         <button type="button" onClick={() => setCases((prev) => [...prev, { ...EMPTY_CASE }])} className={`mt-3 ${BTN_NEUTRAL}`}>
           + 케이스 추가
         </button>
-      </section>
+      </Step>
 
       {state.errors && state.errors.length > 0 && (
         <div className="rounded-[var(--radius-panel)] border border-rose-200 bg-rose-50 px-4 py-3">
@@ -349,11 +432,21 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <button type="submit" disabled={pending || hasCaseError} className={BTN_PRIMARY}>
+      {/* 제출 — 눌러 보고 알게 하지 않는다. 빠진 것이 있으면 여기서 먼저 말한다. */}
+      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-hairline bg-paper/95 px-1 py-3 backdrop-blur">
+        <button type="submit" disabled={pending || hasCaseError || missing.length > 0} className={BTN_PRIMARY}>
           {pending ? '저장 중…' : defaults ? '수정 저장' : '문제 은행에 등록'}
         </button>
-        {hasCaseError && <p className="text-xs text-rose-600">테스트케이스 JSON을 먼저 고쳐 주세요.</p>}
+        {hasCaseError ? (
+          <p className="text-xs text-rose-600">테스트케이스 JSON을 먼저 고쳐 주세요.</p>
+        ) : missing.length > 0 ? (
+          <p className="text-xs text-amber-700">아직 비어 있습니다 — {missing.join(' · ')}</p>
+        ) : (
+          <p className="text-xs text-fg-muted">
+            지문 {description.trim().length.toLocaleString()}자 · 언어{' '}
+            {languages.map((l) => LANGUAGE_LABELS[l]).join('·')} · 케이스 {cases.length}개
+          </p>
+        )}
       </div>
     </form>
   );

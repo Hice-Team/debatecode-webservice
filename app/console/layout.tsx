@@ -38,30 +38,27 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
 
   // 라벨은 사전 키만 넘긴다 — 표시 언어는 사이드바가 이용자 설정을 보고 정한다.
   const items: SidebarItem[] = [
-    { href: '/console', labelKey: 'console-nav-overview', icon: 'overview', group: 'operations', exact: true },
-    ...opt(has('report.review'), { href: '/console/reports', labelKey: 'console-nav-report', icon: 'report', count: pendingReports, group: 'operations' }),
-    ...opt(has('inquiry.respond'), { href: '/console/inquiries', labelKey: 'console-nav-inquiry', icon: 'inquiry', count: openInquiries, group: 'operations' }),
-    ...opt(has('problem.review'), { href: '/console/problem-review', labelKey: 'console-nav-review', icon: 'review', count: pendingDrafts, group: 'operations' }),
-    ...opt(has('mate.review'), { href: '/console/mates', labelKey: 'console-nav-mate', icon: 'mate', count: pendingMates, group: 'operations' }),
-    ...opt(has('point.review'), { href: '/console/points', labelKey: 'console-nav-points', icon: 'points', count: pendingPoints, group: 'operations' }),
+    { href: '/console', labelKey: 'console-nav-overview', icon: 'overview', group: 'problem', exact: true },
+    ...opt(has('report.review'), { href: '/console/reports', labelKey: 'console-nav-report', icon: 'report', count: pendingReports, group: 'community' }),
+    ...opt(has('inquiry.respond'), { href: '/console/inquiries', labelKey: 'console-nav-inquiry', icon: 'inquiry', count: openInquiries, group: 'community' }),
+    ...opt(has('problem.review'), { href: '/console/problem-review', labelKey: 'console-nav-review', icon: 'review', count: pendingDrafts, group: 'problem' }),
+    ...opt(has('mate.review'), { href: '/console/mates', labelKey: 'console-nav-mate', icon: 'mate', count: pendingMates, group: 'service' }),
+    ...opt(has('point.review'), { href: '/console/points', labelKey: 'console-nav-points', icon: 'points', count: pendingPoints, group: 'service' }),
 
-    ...opt(has('problem.review') || has('problem.manage'), { href: '/console/problems', labelKey: 'console-nav-upload', icon: 'upload', group: 'content' }),
-    ...opt(has('problem.author'), { href: '/console/drafts', labelKey: 'console-nav-drafts', icon: 'drafts', group: 'content' }),
-    ...opt(has('problemset.manage'), { href: '/console/problem-sets', labelKey: 'console-nav-sets', icon: 'sets', group: 'content' }),
-    ...opt(has('announcement.manage'), { href: '/console/popups', labelKey: 'console-nav-popup', icon: 'popup', group: 'content' }),
+    ...opt(has('problem.review') || has('problem.manage'), { href: '/console/problems', labelKey: 'console-nav-upload', icon: 'upload', group: 'problem' }),
+    ...opt(has('problem.author'), { href: '/console/drafts', labelKey: 'console-nav-drafts', icon: 'drafts', group: 'problem' }),
+    ...opt(has('problemset.manage'), { href: '/console/problem-sets', labelKey: 'console-nav-sets', icon: 'sets', group: 'problem' }),
+    ...opt(has('announcement.manage'), { href: '/console/popups', labelKey: 'console-nav-popup', icon: 'popup', group: 'community' }),
 
-    ...opt(has('member.read'), { href: '/console/access', labelKey: 'console-nav-access', icon: 'access', group: 'access', exact: true }),
-    ...opt(has('member.read'), { href: '/console/access/directory', labelKey: 'console-nav-directory', icon: 'members', group: 'access' }),
-    ...opt(has('role.grant') || has('permission.grant'), { href: '/console/access/roles', labelKey: 'console-nav-roles', icon: 'roles', group: 'access' }),
-    ...opt(has('sanction.issue') || has('sanction.lift'), { href: '/console/access/sanctions', labelKey: 'console-nav-sanctions', icon: 'sanction', count: openAppeals, group: 'access' }),
-    ...opt(has('audit.read'), { href: '/console/access/audit', labelKey: 'console-nav-audit', icon: 'audit', group: 'access' }),
+    ...opt(has('sanction.issue') || has('sanction.lift'), { href: '/console/access/sanctions', labelKey: 'console-nav-sanctions', icon: 'sanction', count: openAppeals, group: 'community' }),
+    ...opt(has('audit.read'), { href: '/console/access/audit', labelKey: 'console-nav-audit', icon: 'audit', group: 'service' }),
 
-    ...opt(has('marketing.send'), { href: '/console/marketing', labelKey: 'console-nav-marketing', icon: 'marketing', group: 'growth' }),
+    ...opt(has('marketing.send'), { href: '/console/marketing', labelKey: 'console-nav-marketing', icon: 'marketing', group: 'service' }),
 
-    ...opt(has('ranking.manage'), { href: '/console/seasons', labelKey: 'console-nav-seasons', icon: 'season', group: 'system' }),
-    ...opt(has('setting.read'), { href: '/console/system', labelKey: 'console-nav-system', icon: 'system', group: 'system', exact: true }),
-    ...opt(has('setting.write'), { href: '/console/system/settings', labelKey: 'console-nav-settings', icon: 'settings', group: 'system' }),
-    ...opt(has('maintenance.toggle'), { href: '/console/system/maintenance', labelKey: 'console-nav-maintenance', icon: 'maintenance', group: 'system' }),
+    ...opt(has('ranking.manage'), { href: '/console/seasons', labelKey: 'console-nav-seasons', icon: 'season', group: 'service' }),
+    ...opt(has('setting.read'), { href: '/console/system', labelKey: 'console-nav-system', icon: 'system', group: 'service', exact: true }),
+    ...opt(has('setting.write'), { href: '/console/system/settings', labelKey: 'console-nav-settings', icon: 'settings', group: 'service' }),
+    ...opt(has('maintenance.toggle'), { href: '/console/system/maintenance', labelKey: 'console-nav-maintenance', icon: 'maintenance', group: 'service' }),
   ];
 
   return (

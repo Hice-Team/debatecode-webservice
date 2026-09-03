@@ -12,7 +12,11 @@ import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/app/context/language-context';
 import { t } from '@/app/lib/i18n';
 
-export type SidebarGroup = 'operations' | 'content' | 'access' | 'growth' | 'system';
+// 콘솔이 다루는 것은 셋뿐이다 — 문제, 커뮤니티, 서비스.
+// 예전에는 운영·콘텐츠·접근제어·성장·시스템 다섯으로 나뉘어 있었는데, 그 이름들은
+// "무엇을 관리하는가"가 아니라 "어느 팀 일인가"에 가까웠다. 콘솔에 들어온 사람은
+// 팀이 아니라 대상을 찾는다.
+export type SidebarGroup = 'problem' | 'community' | 'service';
 
 // 사이드바 항목 — 라벨은 사전 키로만 넘긴다. 서버 레이아웃이 한국어/영어를 고르지 않고,
 // 화면이 이용자의 언어 설정을 보고 정한다(글로벌화).
@@ -105,7 +109,7 @@ function ItemBadge({ count, label }: { count: number; label: string }) {
   );
 }
 
-const GROUP_ORDER: SidebarGroup[] = ['operations', 'content', 'access', 'growth', 'system'];
+const GROUP_ORDER: SidebarGroup[] = ['problem', 'community', 'service'];
 
 const COLLAPSE_STORAGE_KEY = 'dc.console.collapsedGroups';
 
@@ -183,6 +187,27 @@ export default function ConsoleSidebar({
   const isActive = (item: SidebarItem) =>
     item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
+  /** 메뉴 한 줄. 묶음 안과 밖(개요)이 같은 모양이어야 해서 함수로 뽑았다. */
+  const renderItem = (item: SidebarItem) => {
+    const active = isActive(item);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        aria-current={active ? 'page' : undefined}
+        className={`flex items-center gap-3 rounded-[var(--radius-panel)] px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal ${
+          active ? 'bg-signal text-white shadow-sm shadow-brand-600/30' : 'text-fg hover:bg-paper hover:text-fg'
+        }`}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" aria-hidden className="shrink-0">
+          {ICONS[item.icon]}
+        </svg>
+        <span className="flex-1 truncate">{t(item.labelKey, language)}</span>
+        {item.count != null && <ItemBadge count={item.count} label={pendingLabel} />}
+      </Link>
+    );
+  };
+
   return (
     <>
       {/* 모바일: 가로 스크롤 칩 — 묶음 없이 한 줄로 흐른다 */}
@@ -232,8 +257,18 @@ export default function ConsoleSidebar({
         )}
 
         <nav aria-label={t('console-menu-aria', language)} className="flex-1 overflow-y-auto px-3 pb-3">
+          {/* 개요는 묶음 밖에 둔다 — 세 묶음 중 하나에 넣으면 그 묶음을 접었을 때
+              콘솔 홈으로 돌아갈 길이 사라진다. */}
+          {items
+            .filter((item) => item.href === '/console')
+            .map((item) => (
+              <div key={item.href} className="mb-3">
+                {renderItem(item)}
+              </div>
+            ))}
+
           {GROUP_ORDER.map((group) => {
-            const groupItems = items.filter((item) => item.group === group);
+            const groupItems = items.filter((item) => item.group === group && item.href !== '/console');
             if (groupItems.length === 0) return null;
 
             const isCollapsed = collapsed.has(group);
@@ -263,25 +298,7 @@ export default function ConsoleSidebar({
 
                 {!isCollapsed && (
                   <div className="space-y-1">
-                    {groupItems.map((item) => {
-                      const active = isActive(item);
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          aria-current={active ? 'page' : undefined}
-                          className={`flex items-center gap-3 rounded-[var(--radius-panel)] px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal ${
-                            active ? 'bg-signal text-white shadow-sm shadow-brand-600/30' : 'text-fg hover:bg-paper hover:text-fg'
-                          }`}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" aria-hidden className="shrink-0">
-                            {ICONS[item.icon]}
-                          </svg>
-                          <span className="flex-1 truncate">{t(item.labelKey, language)}</span>
-                          {item.count != null && <ItemBadge count={item.count} label={pendingLabel} />}
-                        </Link>
-                      );
-                    })}
+                    {groupItems.map(renderItem)}
                   </div>
                 )}
               </div>

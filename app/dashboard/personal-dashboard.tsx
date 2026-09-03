@@ -242,8 +242,15 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
         ))}
       </dl>
 
+      {/* ────────── 두 번째 층: 내가 한 것 ──────────
+          위(1~3)는 "지금 무엇을 할까", 여기부터는 "지금까지 무엇을 했나"다.
+          성격이 바뀌는 자리에 이름을 붙여야 카드가 연달아 나와도 층이 읽힌다. */}
+      <h2 className="mt-10 font-mono text-[11px] font-semibold uppercase tracking-widest text-fg-quiet">
+        지금까지 한 것
+      </h2>
+
       {/* ────────── 4. 약점 노트 ────────── */}
-      <section id="weak" className={`mt-8 scroll-mt-20 ${TILE}`} aria-labelledby="weak-title">
+      <section id="weak" className={`mt-3 scroll-mt-20 ${TILE}`} aria-labelledby="weak-title">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="weak-title" className="font-display text-[15px] font-bold tracking-tight text-fg">
             약점 노트
@@ -396,11 +403,14 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
         </div>
       )}
 
-      {/* ────────── 7. 물러난 것들 — 랭킹 · 포인트 · 메이트 ──────────
+      {/* ────────── 세 번째 층: 그래서 지금 어디쯤인가 ──────────
           확인은 하지만 여기서 하는 일은 아니다. 그래서 화면 아래, 한 줄 높이로 둔다. */}
-      <section className="mt-8 border-t border-hairline pt-6" aria-labelledby="aside-title">
-        <h2 id="aside-title" className="sr-only">
-          랭킹과 포인트
+      <section className="mt-10 border-t border-hairline pt-6" aria-labelledby="aside-title">
+        <h2
+          id="aside-title"
+          className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-widest text-fg-quiet"
+        >
+          지금 어디쯤인가
         </h2>
 
         <div className="grid gap-4 md:grid-cols-3">

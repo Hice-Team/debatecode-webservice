@@ -248,3 +248,55 @@ export function Callout({
     </div>
   );
 }
+
+/* ---------- 다이얼로그 ---------- */
+
+/**
+ * 콘솔 공용 다이얼로그 껍데기.
+ *
+ * 원래 역할 변경 다이얼로그 파일 안에 얹혀 있었는데, 제재 다이얼로그도 같은 껍데기를
+ * 가져다 쓰고 있었다. 역할 변경 화면이 사라지면서 제재 쪽이 함께 깨졌다 —
+ * 공용으로 쓰는 부품은 특정 화면 안이 아니라 여기 있어야 한다.
+ */
+export function Shell({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      <div aria-hidden className="absolute inset-0 bg-ink/50 backdrop-blur-[2px]" onClick={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="relative w-[min(34rem,100%)] overflow-hidden rounded-[var(--radius-panel)] bg-surface shadow-[0_12px_32px_rgba(8,9,26,0.24)]"
+      >
+        <div className="flex items-center justify-between border-b border-hairline px-6 py-4">
+          <h3 className="font-display text-lg font-bold tracking-tight text-fg">{title}</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="닫기"
+            className="grid h-8 w-8 place-items-center rounded-full text-fg-muted transition-colors hover:bg-paper hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2" aria-hidden>
+              <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function Footer({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-end gap-2 border-t border-hairline bg-paper px-6 py-4">{children}</div>
+  );
+}

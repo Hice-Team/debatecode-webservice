@@ -122,30 +122,35 @@ export default async function SettingsPage() {
   const categories = [
     {
       id: 'general',
+      section: 'app' as const,
       label: '일반',
       keywords: ['언어', '알림', '이메일', '시간대', '날짜', '에디터', '글꼴', 'language', 'notification'],
       icon: icon('M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17ZM12 8v4l2.5 2.5'),
     },
     {
       id: 'profile',
+      section: 'me' as const,
       label: '프로필',
       keywords: ['프로필', '이름', '아바타', '등급', '익명', '공개 범위', '목표', 'profile'],
       icon: icon('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0'),
     },
     {
       id: 'ai',
+      section: 'app' as const,
       label: 'AI',
       keywords: ['AI', 'API', '키', '모델', '지침', '맥락', 'free tier', 'openai', 'claude', 'gemini'],
       icon: icon('M12 4v3M12 17v3M4 12h3M17 12h3M7.8 7.8 6 6M16.2 7.8 18 6M7.8 16.2 6 18M16.2 16.2 18 18M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z'),
     },
     {
       id: 'integration',
+      section: 'app' as const,
       label: '로컬 연동',
       keywords: ['MCP', '토큰', 'bridge', 'ollama', 'debateNetwork', '파일시스템', '연동'],
       icon: icon('M9 7H7a5 5 0 0 0 0 10h2M15 7h2a5 5 0 0 1 0 10h-2M8.5 12h7'),
     },
     {
       id: 'accessibility',
+      section: 'app' as const,
       label: '접근성',
       // 브라우저에 바로 쓰는 설정이라 저장 단계가 없다
       instant: true,
@@ -154,12 +159,14 @@ export default async function SettingsPage() {
     },
     {
       id: 'data',
+      section: 'account' as const,
       label: '데이터',
       keywords: ['데이터', '내보내기', '삭제', '캐시', '약관', '방침', '개인정보', '학습 활용'],
       icon: icon('M12 4.5c-4 0-7 1.2-7 2.7v9.6c0 1.5 3 2.7 7 2.7s7-1.2 7-2.7V7.2c0-1.5-3-2.7-7-2.7ZM5 7.2c0 1.5 3 2.7 7 2.7s7-1.2 7-2.7'),
     },
     {
       id: 'security',
+      section: 'account' as const,
       label: '계정·보안',
       keywords: ['비밀번호', '이메일', '2단계', '기기', '세션', '로그인 기록', '소셜', '탈퇴', 'password'],
       icon: icon('M12 3.5 5 6.3v5.2c0 4.2 2.9 7.4 7 9 4.1-1.6 7-4.8 7-9V6.3L12 3.5Z'),

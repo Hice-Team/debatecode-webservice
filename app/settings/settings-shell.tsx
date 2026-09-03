@@ -15,12 +15,29 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import SettingsSaveBar, { useSaveBar } from './save-bar';
 
+export type SettingsSection = 'me' | 'app' | 'account';
+
+/**
+ * 갈래를 묶는 층.
+ *
+ * 일곱 갈래가 한 줄로 늘어서 있으면 "내 것"과 "앱의 것"과 "계정의 것"이 같은 무게로
+ * 보인다. 설정을 찾으러 온 사람은 대개 그 셋 중 어느 쪽인지는 알고 들어온다.
+ * 순서가 곧 화면 순서다.
+ */
+export const SETTINGS_SECTIONS: { id: SettingsSection; label: string }[] = [
+  { id: 'me', label: '내 정보' },
+  { id: 'app', label: '앱' },
+  { id: 'account', label: '계정' },
+];
+
 export interface SettingsCategory {
   id: string;
   label: string;
   /** 검색에 걸리게 할 항목 이름들 — 화면에 없는 동의어도 넣는다 */
   keywords: string[];
   icon: ReactNode;
+  /** 어느 묶음에 속하는가 */
+  section: SettingsSection;
   /**
    * 고르는 즉시 적용되는 갈래인가(저장 버튼이 없다).
    *
@@ -141,10 +158,21 @@ function SettingsBody({
           />
         </div>
 
-        <nav aria-label="설정 분류" className="flex gap-1 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0">
-          {matched.map(({ category: c, hits }) => {
-            const on = c.id === shown;
+        {/* 넓은 화면은 묶음별 목록, 좁은 화면은 한 줄 가로 스크롤.
+            좁은 화면에 묶음 머리글이 끼면 흐름이 토막 난다 — 거기서는 평면으로 둔다. */}
+        <nav aria-label="설정 분류" className="flex gap-1 overflow-x-auto pb-1 md:block md:overflow-visible md:pb-0">
+          {SETTINGS_SECTIONS.map((section) => {
+            const inSection = matched.filter((m) => m.category.section === section.id);
+            if (inSection.length === 0) return null;
+
             return (
+              <div key={section.id} className="contents md:mt-5 md:block md:first:mt-0">
+                <p className="hidden px-3.5 pb-1.5 font-mono text-[10px] font-semibold uppercase tracking-widest text-fg-quiet md:block">
+                  {section.label}
+                </p>
+                {inSection.map(({ category: c, hits }) => {
+                  const on = c.id === shown;
+                  return (
               <button
                 key={c.id}
                 type="button"
@@ -171,6 +199,9 @@ function SettingsBody({
                   </span>
                 )}
               </button>
+                  );
+                })}
+              </div>
             );
           })}
           {matched.length === 0 && (

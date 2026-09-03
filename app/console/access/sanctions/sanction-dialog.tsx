@@ -19,8 +19,7 @@ import {
   sanctionNotice,
   type SanctionType,
 } from '@/app/lib/sanctions';
-import { FIELD, FOCUS } from '../../ui';
-import { Shell, Footer } from '../directory/role-change-dialog';
+import { FIELD, FOCUS, Shell, Footer } from '../../ui';
 
 const initial: AccessFormState = {};
 
