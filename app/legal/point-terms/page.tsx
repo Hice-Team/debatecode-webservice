@@ -3,7 +3,6 @@ import Link from 'next/link';
 import {
   POINT_AMOUNTS,
   POINT_KINDS,
-  POINT_TO_KRW,
   SOLVE_POINTS_BY_DIFFICULTY,
 } from '@/app/lib/points';
 import { BOUNTY_MAX, BOUNTY_MIN } from '@/app/lib/board-rules';
@@ -46,8 +45,8 @@ export default function PointTermsPage() {
           대가를 지급하고 구매하는 선불전자지급수단이 아닙니다.
         </li>
         <li>
-          포인트의 교환 가치는 <strong>{(1000 * POINT_TO_KRW).toLocaleString()}P = 1,000원 상당</strong>이며, 서비스 내
-          디베이트샵의 상품 교환에만 사용할 수 있습니다.
+          포인트는 서비스 안에서 <strong>활동 기록과 등급 산정</strong>에 쓰입니다. 현재 포인트로 교환할 수 있는
+          상품은 없습니다.
         </li>
         <li>
           포인트는 <strong>현금으로 환급되지 않으며</strong>, 타인에게 양도·대여·판매하거나 계정 간 이전할 수 없습니다.
@@ -207,12 +206,14 @@ export default function PointTermsPage() {
 
       <h2>제6조 (사용 방식)</h2>
       <ul>
-        <li>포인트는 <Link href="/shop">디베이트샵</Link>의 상품 교환에만 사용할 수 있습니다.</li>
-        <li>주문 시 포인트가 <strong>즉시 차감</strong>되며 주문은 &quot;발급 대기&quot; 상태가 됩니다.</li>
-        <li>발급 전에는 이용자가 직접 주문을 취소할 수 있고, 차감된 포인트는 전액 환불됩니다.</li>
-        <li>재고 소진·발급 오류로 발급이 불가한 경우 운영진이 실패 처리하며 포인트는 자동 환불됩니다.</li>
-        <li>발급이 완료된 쿠폰은 취소·환불되지 않으며, 사용 조건과 유효기간은 각 브랜드의 정책을 따릅니다.</li>
-        <li>보유 잔액을 초과하는 주문은 접수되지 않습니다.</li>
+        <li>
+          포인트는 <strong>서비스 안에서만</strong> 의미를 가지며, 적립된 포인트는 활동 기록과 등급 산정에 반영됩니다.
+        </li>
+        <li>
+          현재 포인트를 상품이나 쿠폰으로 교환하는 기능은 <strong>제공하지 않습니다.</strong> 교환 수단이 열리면
+          시행일 7일 전까지 서비스 내 공지로 안내합니다(제9조).
+        </li>
+        <li>적립된 포인트는 이용자가 차감하거나 사용할 수 없으며, 운영상 정정이 필요한 경우에만 조정됩니다.</li>
       </ul>
 
       <h2>제7조 (적립 내역의 확인)</h2>
@@ -241,7 +242,7 @@ export default function PointTermsPage() {
 
       <h2>제9조 (지급 기준의 변경)</h2>
       <ul>
-        <li>운영자는 지급 기준·상품 구성·필요 포인트를 변경할 수 있습니다.</li>
+        <li>운영자는 지급 기준과 지급액을 변경할 수 있습니다.</li>
         <li>
           이용자에게 <strong>불리한 변경</strong>(지급액 인하, 지급 대상 축소, 사용처 제한 등)은 시행일{' '}
           <strong>7일 전까지</strong> 서비스 내 공지로 안내합니다.

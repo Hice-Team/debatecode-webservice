@@ -166,9 +166,32 @@ export default async function SettingsPage() {
     },
   ];
 
+  /**
+   * 폼에 넣을 값들의 지문.
+   *
+   * 저장 뒤 router.refresh()를 돌려도 화면의 값은 그대로였다. defaultValue와
+   * useState(initial)은 **마운트할 때 한 번만** 읽히기 때문이다. 그래서 서버가 값을
+   * 다듬거나(이름 앞뒤 공백) 일부를 거절했을 때, DB에는 다른 값이 들어갔는데 화면은
+   * 내가 친 그대로를 계속 보여 줬다 — 화면이 거짓말을 하고 있었다.
+   *
+   * 지문이 바뀌면 key가 바뀌고, key가 바뀌면 폼이 다시 마운트되면서 서버가 실제로
+   * 저장한 값으로 다시 그려진다. 저장에 성공한 직후에만 일어나므로(그 시점엔 고치던
+   * 것이 없다) 입력을 빼앗는 일은 없다.
+   */
+  const sig = (...parts: unknown[]) => parts.map((v) => String(v ?? '')).join('|');
+
   const panels = {
     general: (
       <AppSettingsForm
+        key={sig(
+          user.emailNotifications,
+          user.preferredLanguage,
+          user.timezone,
+          user.dateFormat,
+          user.country,
+          JSON.stringify(user.editorPrefs),
+          JSON.stringify(user.notifyPrefs),
+        )}
         initial={{
           emailNotifications: user.emailNotifications,
           preferredLanguage: user.preferredLanguage ?? '',
@@ -183,6 +206,14 @@ export default async function SettingsPage() {
 
     profile: (
       <ProfileForm
+        key={sig(
+          user.name,
+          user.avatarUrl,
+          user.rankBadgeVisible,
+          user.profileGoal,
+          user.profileVisibility,
+          user.chatLanguage,
+        )}
         initial={{
           name: user.name,
           email,
@@ -200,6 +231,7 @@ export default async function SettingsPage() {
     ai: (
       <div className="pt-4">
         <AiPersonalization
+          key={sig(user.aiCodeModel, user.aiContextMode, JSON.stringify(user.aiInstructions))}
           initial={{
             codeModel: user.aiCodeModel ?? '',
             contextMode: isContextMode(user.aiContextMode) ? user.aiContextMode : DEFAULT_CONTEXT_MODE,
@@ -208,6 +240,7 @@ export default async function SettingsPage() {
         />
         <div className="mt-10 border-t border-hairline pt-6">
           <AiSettingsForm
+            key={sig(user.aiProvider, !!user.aiApiKey, !!user.aiBaseUrl)}
             initial={{ aiProvider: user.aiProvider, hasKey: !!user.aiApiKey, keyHint: maskSecret(user.aiApiKey) }}
             freeQuota={{
               used: freeQuota.used,

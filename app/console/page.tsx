@@ -85,6 +85,7 @@ export default async function ConsoleOverviewPage() {
     recentAudit,
     maintenance,
     flags,
+    oldest,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.submission.count(),
@@ -113,7 +114,31 @@ export default async function ConsoleOverviewPage() {
       : Promise.resolve([]),
     maintenanceState(),
     has('setting.read') ? getSettingsByCategory('flag') : Promise.resolve([]),
+    // 각 큐에서 **가장 오래 기다린 것**의 접수 시각.
+    // 건수만으로는 "3건"이 10분 밀린 것인지 10일 밀린 것인지 알 수 없다.
+    // 운영 화면에서 먼저 보여야 하는 것은 개수가 아니라 밀린 정도다(DESIGN.md §13).
+    Promise.all([
+      has('report.review')
+        ? prisma.report.findFirst({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+      has('inquiry.respond')
+        ? prisma.inquiry.findFirst({ where: { status: 'open' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+      has('problem.review')
+        ? prisma.problemDraft.findFirst({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+      has('mate.review')
+        ? prisma.debateMateApplication.findFirst({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+      has('point.review')
+        ? prisma.pointRequest.findFirst({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+      has('sanction.lift')
+        ? prisma.sanction.findFirst({ where: { appealStatus: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+    ]),
   ]);
+  const [oldestReport, oldestInquiry, oldestDraft, oldestMate, oldestPoint, oldestAppeal] = oldest;
 
   const labels = Array.from({ length: DAYS }, (_, i) => {
     const d = new Date(start);
@@ -145,13 +170,18 @@ export default async function ConsoleOverviewPage() {
 
   // 처리 대기 큐 — 지금 손대야 할 것만. 볼 권한이 있는 항목만 나온다.
   const queue = [
-    { href: '/console/reports', label: '미처리 신고', count: pendingReports, show: has('report.review') },
-    { href: '/console/inquiries', label: '미답변 문의', count: openInquiries, show: has('inquiry.respond') },
-    { href: '/console/problem-review', label: '검토 대기 문제', count: pendingDrafts, show: has('problem.review') },
-    { href: '/console/mates', label: '메이트 신청', count: pendingMates, show: has('mate.review') },
-    { href: '/console/points', label: '포인트 심사', count: pendingPoints, show: has('point.review') },
-    { href: '/console/access/sanctions?tab=appeals', label: '제재 이의제기', count: openAppeals, show: has('sanction.lift') },
+    { href: '/console/reports', label: '미처리 신고', count: pendingReports, since: oldestReport?.createdAt, show: has('report.review') },
+    { href: '/console/inquiries', label: '미답변 문의', count: openInquiries, since: oldestInquiry?.createdAt, show: has('inquiry.respond') },
+    { href: '/console/problem-review', label: '검토 대기 문제', count: pendingDrafts, since: oldestDraft?.createdAt, show: has('problem.review') },
+    { href: '/console/mates', label: '메이트 신청', count: pendingMates, since: oldestMate?.createdAt, show: has('mate.review') },
+    { href: '/console/points', label: '포인트 심사', count: pendingPoints, since: oldestPoint?.createdAt, show: has('point.review') },
+    { href: '/console/access/sanctions?tab=appeals', label: '제재 이의제기', count: openAppeals, since: oldestAppeal?.createdAt, show: has('sanction.lift') },
   ].filter((q) => q.show);
+
+  // 가장 오래 밀린 것 — 머리글에 한 줄로 요약한다
+  const worst = queue
+    .filter((q) => q.count > 0 && q.since)
+    .sort((a, b) => new Date(a.since!).getTime() - new Date(b.since!).getTime())[0];
   const queueTotal = queue.reduce((sum, q) => sum + q.count, 0);
 
   const offFlags = flags.filter((f) => f.overridden && f.value === false);
@@ -215,7 +245,11 @@ export default async function ConsoleOverviewPage() {
               {queueTotal > 0 ? `처리 대기 ${queueTotal}건` : '처리 대기 없음'}
             </p>
             <p className="text-xs text-fg-muted">
-              {queueTotal > 0 ? '지금 확인이 필요한 항목입니다.' : '모든 운영 큐가 비어 있습니다.'}
+              {queueTotal === 0
+                ? '모든 운영 큐가 비어 있습니다.'
+                : worst
+                  ? `가장 오래 밀린 것은 ${worst.label}입니다.`
+                  : '지금 확인이 필요한 항목입니다.'}
             </p>
           </div>
           <div className="grid grid-cols-2 divide-x divide-y divide-hairline border-t border-hairline sm:grid-cols-3 lg:grid-cols-6 lg:divide-y-0">
@@ -226,8 +260,12 @@ export default async function ConsoleOverviewPage() {
                 className="bg-surface px-4 py-3 transition-colors hover:bg-paper focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal"
               >
                 <p className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">{q.label}</p>
-                <p className={`mt-0.5 font-display text-2xl font-bold ${q.count > 0 ? 'text-rose-600' : 'text-fg-quiet'}`}>
-                  {q.count}
+                <p className="mt-0.5 flex items-baseline gap-1.5">
+                  <span className={`font-display text-2xl font-bold ${q.count > 0 ? 'text-rose-600' : 'text-fg-quiet'}`}>
+                    {q.count}
+                  </span>
+                  {/* 가장 오래 기다린 것이 얼마나 됐는지 — 24시간이 넘으면 색이 바뀐다 */}
+                  {q.count > 0 && q.since && <SlaBadge since={q.since} />}
                 </p>
               </Link>
             ))}
