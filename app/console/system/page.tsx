@@ -264,7 +264,7 @@ export default async function SystemHealthPage() {
         <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
           <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
             <h3 className="text-sm font-bold text-fg">최근 운영 변경</h3>
-            <Link href="/console/access/audit" className="font-mono text-[11px] text-brand-600 hover:underline">
+            <Link href="/console/access/audit" className="font-mono text-[11px] text-signal hover:underline">
               전체 감사 로그 →
             </Link>
           </div>

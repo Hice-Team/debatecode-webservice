@@ -53,7 +53,7 @@ export default function SendButton({
         <button
           type="button"
           onClick={() => setConfirming(true)}
-          className="rounded-[var(--radius-card)] bg-signal px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-600"
+          className="rounded-[var(--radius-card)] bg-signal px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-signal"
         >
           발송하기
         </button>

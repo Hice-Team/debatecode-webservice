@@ -90,7 +90,7 @@ export default async function ConsolePointsPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold text-fg">{request.user.name}</span>
                     <span className="font-mono text-[11px] text-fg-quiet">{request.user.email}</span>
-                    <span className="ml-auto rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 font-mono text-[11px] font-semibold text-brand-700">
+                    <span className="ml-auto rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 font-mono text-[11px] font-semibold text-signal">
                       +{request.amount}P
                     </span>
                   </div>
@@ -103,7 +103,7 @@ export default async function ConsolePointsPage() {
                         href={payload.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-1 inline-block break-all font-mono text-[11px] text-brand-600 hover:underline"
+                        className="mt-1 inline-block break-all font-mono text-[11px] text-signal hover:underline"
                       >
                         {payload.url} ↗
                       </a>

@@ -112,7 +112,7 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
                   key={p.amount}
                   type="button"
                   onClick={() => setAmount(String(p.amount))}
-                  className={`rounded-[var(--radius-card)] border border-hairline px-2.5 py-1 text-[11px] text-fg-secondary hover:border-brand-300 hover:text-brand-700 ${FOCUS}`}
+                  className={`rounded-[var(--radius-card)] border border-hairline px-2.5 py-1 text-[11px] text-fg-secondary hover:border-brand-300 hover:text-signal ${FOCUS}`}
                 >
                   {p.label}
                 </button>
@@ -162,7 +162,7 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
       <button
         type="submit"
         disabled={!ready || pending}
-        className={`rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-40 ${FOCUS}`}
+        className={`rounded-[var(--radius-panel)] bg-signal px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-40 ${FOCUS}`}
       >
         {pending ? '반영 중…' : '포인트 반영'}
       </button>

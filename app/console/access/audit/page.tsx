@@ -146,7 +146,7 @@ export default async function AuditLogPage({
             ))}
           </select>
         </div>
-        <button type="submit" className="rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500">
+        <button type="submit" className="rounded-[var(--radius-panel)] bg-signal px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
           적용
         </button>
         {(q || domain !== 'all' || days !== '7') && (

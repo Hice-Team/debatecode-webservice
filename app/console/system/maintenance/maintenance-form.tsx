@@ -114,7 +114,7 @@ export default function MaintenanceForm({
               type="submit"
               disabled={pending}
               className={`rounded-[var(--radius-panel)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
-                confirming ? 'bg-rose-600 hover:bg-rose-700' : 'bg-brand-600 hover:bg-brand-500'
+                confirming ? 'bg-rose-600 hover:bg-rose-700' : 'bg-signal hover:bg-brand-700'
               }`}
             >
               {pending ? '적용 중…' : confirming ? '확인 · 지금 켜기' : '저장'}

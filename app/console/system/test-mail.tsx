@@ -35,7 +35,7 @@ export default function TestMail({ defaultTo }: { defaultTo: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="shrink-0 rounded-[var(--radius-card)] bg-signal px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-40"
+          className="shrink-0 rounded-[var(--radius-card)] bg-signal px-4 py-2 text-sm font-semibold text-white hover:bg-signal disabled:opacity-40"
         >
           {pending ? '보내는 중…' : '테스트 발송'}
         </button>

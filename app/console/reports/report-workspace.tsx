@@ -197,7 +197,7 @@ export default function ReportWorkspace({
                     </span>
                   ))}
                   {c.assigneeName && (
-                    <span className="ml-auto font-mono text-[9px] text-brand-600">@{c.assigneeName}</span>
+                    <span className="ml-auto font-mono text-[9px] text-signal">@{c.assigneeName}</span>
                   )}
                 </div>
               </button>
@@ -337,7 +337,7 @@ function CaseDetail({
                 href={item.content.href}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-block font-mono text-[11px] text-brand-600 hover:underline"
+                className="mt-2 inline-block font-mono text-[11px] text-signal hover:underline"
               >
                 원문 보기 ↗
               </a>

@@ -144,7 +144,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
               setPreview(f ? URL.createObjectURL(f) : (draft?.imageUrl ?? null));
               setRemoveImage(false);
             }}
-            className="w-full text-xs text-fg-secondary file:mr-3 file:rounded-[var(--radius-card)] file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700"
+            className="w-full text-xs text-fg-secondary file:mr-3 file:rounded-[var(--radius-card)] file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-signal"
           />
           {draft?.imageUrl && (
             <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-[11px] text-fg-secondary">
@@ -281,11 +281,11 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
             <span className="text-[11px] text-fg-muted">오늘 하루 보지 않기</span>
             <span className="ml-auto flex gap-1.5">
               {linkType !== 'none' && linkTarget && (
-                <span className="rounded-[var(--radius-card)] border border-brand-300 bg-surface px-2.5 py-1.5 text-[11px] font-semibold text-brand-700">
+                <span className="rounded-[var(--radius-card)] border border-brand-300 bg-surface px-2.5 py-1.5 text-[11px] font-semibold text-signal">
                   {linkLabel || DEFAULT_LINK_LABEL[linkType]}
                 </span>
               )}
-              <span className="rounded-[var(--radius-card)] bg-brand-600 px-3 py-1.5 text-[11px] font-semibold text-white">닫기</span>
+              <span className="rounded-[var(--radius-card)] bg-signal px-3 py-1.5 text-[11px] font-semibold text-white">닫기</span>
             </span>
           </div>
         </div>

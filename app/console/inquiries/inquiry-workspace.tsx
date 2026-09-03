@@ -154,7 +154,7 @@ export default function InquiryWorkspace({
                 </div>
                 <p className="mt-1 truncate text-xs font-medium text-fg">{q.subject}</p>
                 <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-fg-muted">{q.body}</p>
-                {q.assigneeName && <p className="mt-1 font-mono text-[9px] text-brand-600">@{q.assigneeName}</p>}
+                {q.assigneeName && <p className="mt-1 font-mono text-[9px] text-signal">@{q.assigneeName}</p>}
               </button>
             );
           })}

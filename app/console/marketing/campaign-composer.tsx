@@ -118,7 +118,7 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
         <button
           type="submit"
           disabled={pending}
-          className="rounded-[var(--radius-card)] bg-signal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
+          className="rounded-[var(--radius-card)] bg-signal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-signal disabled:opacity-50"
         >
           {pending ? '저장 중…' : '초안 저장'}
         </button>

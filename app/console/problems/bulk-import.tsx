@@ -31,7 +31,7 @@ export default function BulkImport() {
             <label htmlFor="bulk-json" className="font-mono text-xs tracking-wider text-fg-secondary">
               문제 JSON
             </label>
-            <button type="button" onClick={() => setJson(IMPORT_EXAMPLE)} className="font-mono text-[11px] text-brand-600 hover:underline">
+            <button type="button" onClick={() => setJson(IMPORT_EXAMPLE)} className="font-mono text-[11px] text-signal hover:underline">
               예시 채우기
             </button>
           </div>

@@ -157,7 +157,7 @@ export default async function SanctionCenterPage({
                   {evidence.reportIds && evidence.reportIds.length > 0 ? (
                     <p className="text-[11px] text-fg-secondary">
                       신고 {evidence.reportIds.length}건 ·{' '}
-                      <a href="/console/reports?status=resolved" className="text-brand-600 hover:underline">
+                      <a href="/console/reports?status=resolved" className="text-signal hover:underline">
                         신고 처리 화면에서 보기
                       </a>
                     </p>

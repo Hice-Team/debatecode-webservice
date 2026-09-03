@@ -52,7 +52,7 @@ export default function SanctionDialog({
       <Shell title="제재 발급 완료" onClose={onClose}>
         <p className="px-6 py-6 text-sm text-emerald-800">{state.saved}</p>
         <Footer>
-          <button type="button" onClick={onClose} className="rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white">
+          <button type="button" onClick={onClose} className="rounded-[var(--radius-panel)] bg-signal px-4 py-2 text-sm font-semibold text-white">
             닫기
           </button>
         </Footer>
@@ -245,7 +245,7 @@ export default function SanctionDialog({
               type="button"
               onClick={() => setStep(step + 1)}
               disabled={!canAdvance}
-              className="rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-40"
+              className="rounded-[var(--radius-panel)] bg-signal px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-40"
             >
               다음 →
             </button>

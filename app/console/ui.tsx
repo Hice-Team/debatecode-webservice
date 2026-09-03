@@ -3,8 +3,9 @@ export const BTN_APPROVE =
   'rounded-[var(--radius-panel)] bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700';
 export const BTN_REJECT =
   'rounded-[var(--radius-panel)] border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-rose-300 hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600';
+// 주요 액션 — signal 채움 + pill(§4). brand는 워드마크 전용이라 CTA에 쓰지 않는다(§2).
 export const BTN_PRIMARY =
-  'rounded-[var(--radius-panel)] bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
+  'rounded-full bg-signal px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 export const BTN_NEUTRAL =
   'rounded-[var(--radius-panel)] border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 export const BTN_DANGER =
@@ -90,7 +91,7 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-600">{eyebrow}</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-signal">{eyebrow}</span>
         <h1 className="mt-1.5 font-display text-3xl font-bold tracking-tight text-fg">
           {title}
         </h1>

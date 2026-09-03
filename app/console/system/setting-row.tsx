@@ -134,7 +134,7 @@ export default function SettingRow({
             <button
               type="submit"
               disabled={!dirty || pending}
-              className="shrink-0 rounded-[var(--radius-panel)] bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500 disabled:opacity-40"
+              className="shrink-0 rounded-[var(--radius-panel)] bg-signal px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-40"
             >
               {pending ? '저장 중…' : confirming ? '확인 · 적용' : '저장'}
             </button>

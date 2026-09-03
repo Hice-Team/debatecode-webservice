@@ -98,7 +98,7 @@ export default async function ConsoleProblemSetsPage({ searchParams }: PageProps
         <section className="mb-8 overflow-hidden rounded-[var(--radius-panel)] border border-signal/30 bg-surface">
           <div className="flex flex-wrap items-center gap-3 border-b border-hairline bg-brand-50/50 px-5 py-3">
             <div className="min-w-0">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-brand-600">Editing</p>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-signal">Editing</p>
               <h3 className="truncate font-bold text-fg">{editing.title}</h3>
             </div>
             <Link href="/console/problem-sets" className={`${BTN_NEUTRAL} ml-auto shrink-0`}>

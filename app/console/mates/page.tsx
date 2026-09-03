@@ -162,8 +162,8 @@ export default async function MateManagementPage({
           {pending.map((m) => (
             <details key={m.id} className="group px-5 py-4">
               <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2">
-                <span className="font-mono text-[10px] text-brand-600 group-open:hidden">▶</span>
-                <span className="hidden font-mono text-[10px] text-brand-600 group-open:inline">▼</span>
+                <span className="font-mono text-[10px] text-signal group-open:hidden">▶</span>
+                <span className="hidden font-mono text-[10px] text-signal group-open:inline">▼</span>
                 <span className="font-medium text-fg">{maskName(m.user.name)}</span>
                 <span className="font-mono text-[11px] text-fg-muted">{maskEmail(m.user.email)}</span>
                 <span className="font-mono text-[11px] text-fg-quiet">
@@ -186,7 +186,7 @@ export default async function MateManagementPage({
                     download={m.attachmentName ?? '신청서.pdf'}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-card)] border border-brand-200 bg-brand-50 px-3.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-card)] border border-brand-200 bg-brand-50 px-3.5 text-sm font-semibold text-signal transition-colors hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                   >
                     <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.7]" aria-hidden>
                       <path d="M12 4v11m0 0 3.5-3.5M12 15l-3.5-3.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -211,7 +211,7 @@ export default async function MateManagementPage({
                     href={m.portfolioUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-2 inline-block font-mono text-[11px] text-brand-600 hover:underline"
+                    className="mt-2 inline-block font-mono text-[11px] text-signal hover:underline"
                   >
                     포트폴리오 보기 ↗
                   </a>

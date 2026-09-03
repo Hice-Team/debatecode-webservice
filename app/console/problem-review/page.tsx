@@ -85,7 +85,7 @@ export default async function ProblemReviewPage() {
             title="검토 대기 중인 문제가 없습니다"
             sub="출제자가 초안을 제출하면 여기에 나타납니다."
             action={
-              <Link href="/console/problems" className="font-mono text-xs text-brand-600 hover:underline">
+              <Link href="/console/problems" className="font-mono text-xs text-signal hover:underline">
                 직접 문제 업로드하기 →
               </Link>
             }
@@ -96,8 +96,8 @@ export default async function ProblemReviewPage() {
             <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-center">
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-fg">
-                  <span className="mr-1.5 font-mono text-[10px] text-brand-600 group-open:hidden">▶</span>
-                  <span className="mr-1.5 hidden font-mono text-[10px] text-brand-600 group-open:inline">▼</span>
+                  <span className="mr-1.5 font-mono text-[10px] text-signal group-open:hidden">▶</span>
+                  <span className="mr-1.5 hidden font-mono text-[10px] text-signal group-open:inline">▼</span>
                   {d.title}
                 </p>
                 <p className="font-mono text-[11px] text-fg-muted">

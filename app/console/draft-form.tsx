@@ -22,7 +22,7 @@ export default function DraftForm() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+        className="rounded-[var(--radius-panel)] bg-signal px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
       >
         + 새 문제 초안 작성
       </button>
@@ -90,7 +90,7 @@ export default function DraftForm() {
 
       {state.errors?.form && <p className="text-xs text-rose-600">{state.errors.form[0]}</p>}
       <div className="flex items-center gap-2">
-        <button type="submit" disabled={pending} className="rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50">
+        <button type="submit" disabled={pending} className="rounded-[var(--radius-panel)] bg-signal px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50">
           {pending ? '제출 중…' : '검토큐에 제출'}
         </button>
         <button type="button" onClick={() => setOpen(false)} className="rounded-[var(--radius-panel)] border border-hairline px-4 py-2 text-sm text-fg-secondary hover:border-fg-quiet">취소</button>
