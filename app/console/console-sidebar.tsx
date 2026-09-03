@@ -214,7 +214,7 @@ export default function ConsoleSidebar({
       {/* 데스크톱: 좌측 고정 레일 */}
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-hairline bg-surface lg:sticky lg:top-0 lg:h-screen">
         <div className="px-6 pb-4 pt-7">
-          <p className="text-lg font-bold text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <p className="font-display text-lg font-bold text-fg">
             {t('console-title', language)}
           </p>
           <p className="mt-0.5 text-sm text-fg-muted">{t('console-sub', language)}</p>

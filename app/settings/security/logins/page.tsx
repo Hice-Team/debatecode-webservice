@@ -28,9 +28,9 @@ export default async function LoginList({ searchParams }: { searchParams?: { q?:
         <Link href="/settings" className="text-sm text-fg-secondary">설정으로 돌아가기</Link>
       </div>
       <form className="mt-3 mb-4" action="/settings/security/logins">
-        <input name="q" defaultValue={q} placeholder="검색 (브라우저, IP 등)" className="w-full rounded-lg border px-3 py-2" />
+        <input name="q" defaultValue={q} placeholder="검색 (브라우저, IP 등)" className="w-full rounded-[var(--radius-card)] border px-3 py-2" />
       </form>
-      <div className="rounded-xl border border-hairline overflow-hidden">
+      <div className="rounded-[var(--radius-panel)] border border-hairline overflow-hidden">
         {items.length === 0 ? (
           <p className="p-6 text-center text-sm text-fg-muted">검색 결과가 없습니다.</p>
         ) : (

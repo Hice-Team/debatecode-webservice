@@ -128,13 +128,13 @@ export default async function SettingsPage() {
     },
     {
       id: 'profile',
-      label: '개인 맞춤 설정',
+      label: '프로필',
       keywords: ['프로필', '이름', '아바타', '등급', '익명', '공개 범위', '목표', 'profile'],
       icon: icon('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0'),
     },
     {
       id: 'ai',
-      label: 'AI 설정',
+      label: 'AI',
       keywords: ['AI', 'API', '키', '모델', '지침', '맥락', 'free tier', 'openai', 'claude', 'gemini'],
       icon: icon('M12 4v3M12 17v3M4 12h3M17 12h3M7.8 7.8 6 6M16.2 7.8 18 6M7.8 16.2 6 18M16.2 16.2 18 18M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z'),
     },
@@ -146,7 +146,7 @@ export default async function SettingsPage() {
     },
     {
       id: 'accessibility',
-      label: '접근성 및 표시',
+      label: '접근성',
       // 브라우저에 바로 쓰는 설정이라 저장 단계가 없다
       instant: true,
       keywords: ['테마', '다크', '고대비', '움직임', '모션', '낭독', 'TTS', '접근성', 'accessibility'],
@@ -154,13 +154,13 @@ export default async function SettingsPage() {
     },
     {
       id: 'data',
-      label: '데이터 제어',
+      label: '데이터',
       keywords: ['데이터', '내보내기', '삭제', '캐시', '약관', '방침', '개인정보', '학습 활용'],
       icon: icon('M12 4.5c-4 0-7 1.2-7 2.7v9.6c0 1.5 3 2.7 7 2.7s7-1.2 7-2.7V7.2c0-1.5-3-2.7-7-2.7ZM5 7.2c0 1.5 3 2.7 7 2.7s7-1.2 7-2.7'),
     },
     {
       id: 'security',
-      label: '계정 및 보안',
+      label: '계정·보안',
       keywords: ['비밀번호', '이메일', '2단계', '기기', '세션', '로그인 기록', '소셜', '탈퇴', 'password'],
       icon: icon('M12 3.5 5 6.3v5.2c0 4.2 2.9 7.4 7 9 4.1-1.6 7-4.8 7-9V6.3L12 3.5Z'),
     },

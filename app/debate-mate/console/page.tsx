@@ -5,6 +5,7 @@ import { PageShell, PageHeader } from '@/app/components/page-shell';
 import { prisma } from '@/app/lib/prisma';
 import { getUser } from '@/app/lib/dal';
 import { getPointSummary, POINT_KIND_LABELS } from '@/app/lib/points';
+import { RANK_BADGE, nextRankFor, rankForScore, type RankName } from '@/app/lib/star-score';
 import { DIFFICULTY_LABELS } from '@/app/lib/types';
 import { platformLabel } from '@/app/community/boards';
 import SnsPromoForm from './sns-promo-form';
@@ -14,32 +15,26 @@ export const metadata: Metadata = { title: '디베이트메이트 활동 콘솔'
 const CARD = 'rounded-[var(--radius-panel)] border border-hairline bg-surface';
 
 function StatusBadge({ status }: { status: string }) {
+  // 상점이 사라져 주문 상태(발급 대기·완료·실패)는 더 이상 쓰이지 않는다.
+  // 남은 것은 출제 초안과 활동 인증의 심사 상태뿐이다.
   const styles: Record<string, string> = {
-    pending: 'bg-amber-50 text-amber-700 border-amber-200',
-    approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    rejected: 'bg-rose-50 text-rose-600 border-rose-200',
-    requested: 'bg-sky-50 text-sky-700 border-sky-200',
-    fulfilled: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    canceled: 'bg-paper text-fg-muted border-hairline',
-    failed: 'bg-rose-50 text-rose-600 border-rose-200',
+    pending: 'border-amber-200 bg-amber-50 text-amber-700',
+    approved: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    rejected: 'border-rose-200 bg-rose-50 text-rose-600',
   };
-  const labels: Record<string, string> = {
-    pending: '심사 중',
-    approved: '승인',
-    rejected: '반려',
-    requested: '발급 대기',
-    fulfilled: '발급 완료',
-    canceled: '취소됨',
-    failed: '발급 실패',
-  };
+  const labels: Record<string, string> = { pending: '심사 중', approved: '승인', rejected: '반려' };
   return (
-    <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${styles[status] ?? styles.canceled}`}>
+    <span
+      className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+        styles[status] ?? 'border-hairline bg-paper text-fg-muted'
+      }`}
+    >
       {labels[status] ?? status}
     </span>
   );
 }
 
-// 디베이트메이트 활동 콘솔 — 출제·검토 현황, 포인트 현황/내역, SNS 인증 신청, 디베이트샵.
+// 디베이트메이트 활동 콘솔 — 출제·검토 현황, 포인트와 등급, SNS 활동 인증.
 export default async function MateConsolePage() {
   const user = await getUser();
   // 메이트와 관리자만 — 그 외에는 소개 페이지로 돌려보낸다
@@ -72,6 +67,11 @@ export default async function MateConsolePage() {
     prisma.debateQSession.count({ where: { userId: user.id, status: 'COMPLETED' } }),
   ]);
 
+  // 포인트가 곧 등급 점수다(app/lib/points.ts). 메이트에게 포인트는 이제 교환 수단이
+  // 아니라 등급으로 이어지는 값이라, 잔액 옆에 그 등급을 함께 보여 준다.
+  const rank = rankForScore(summary.balance);
+  const nextRank = nextRankFor(summary.balance);
+
   const approvedDrafts = drafts.filter((d) => d.status === 'approved').length;
   const pendingDrafts = drafts.filter((d) => d.status === 'pending').length;
 
@@ -93,7 +93,7 @@ export default async function MateConsolePage() {
         actions={
           <Link
             href="/problems/new"
-            className="inline-flex items-center gap-2 rounded-xl bg-signal px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 active:scale-[0.98]"
+            className="inline-flex items-center gap-2 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
           >
             + 문제 만들기
           </Link>
@@ -124,21 +124,39 @@ export default async function MateConsolePage() {
             ))}
           </div>
 
-          {/* 포인트 — 보유와 적립 예정만. 나머지는 아래 내역에서 본다. */}
+          {/* 포인트와 등급 — 예전에는 잔액 아래에 "○○원 상당"이라고 적었다.
+              교환할 상점이 없어진 지금 그건 없는 값을 지어낸 것이다(DESIGN.md §5).
+              대신 그 포인트가 실제로 무엇이 되는지 — 등급 — 를 적는다. */}
           <div className="grid grid-cols-2 divide-x divide-hairline border-t border-hairline lg:border-t-0">
-            {[
-              { label: '보유 포인트', value: summary.balance, tone: 'text-signal', hint: `${summary.balance.toLocaleString()}원 상당` },
-              { label: '적립 예정', value: summary.pending, tone: 'text-amber-700', hint: '승인 대기 중' },
-            ].map((stat) => (
-              <div key={stat.label} className="px-4 py-4">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
-                <p className={`dc-num mt-1 font-display text-2xl font-bold ${stat.tone}`}>
-                  {stat.value.toLocaleString()}
-                  <span className="ml-0.5 text-sm font-semibold text-fg-quiet">P</span>
-                </p>
-                <p className="mt-0.5 text-[11px] text-fg-muted">{stat.hint}</p>
-              </div>
-            ))}
+            <div className="px-4 py-4">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">보유 포인트</p>
+              <p className="dc-num mt-1 font-display text-2xl font-bold text-signal">
+                {summary.balance.toLocaleString()}
+                <span className="ml-0.5 text-sm font-semibold text-fg-quiet">P</span>
+              </p>
+              <p className="mt-1 flex items-center gap-1.5">
+                <span
+                  className={`rounded-full border px-1.5 py-0.5 font-mono text-[10px] font-bold ${
+                    RANK_BADGE[rank.name as RankName]
+                  }`}
+                >
+                  {rank.name}
+                </span>
+                <span className="text-[11px] text-fg-muted">
+                  {nextRank ? `${nextRank.name}까지 ${(nextRank.min - summary.balance).toLocaleString()}P` : '최고 등급'}
+                </span>
+              </p>
+            </div>
+            <div className="px-4 py-4">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">적립 예정</p>
+              <p className="dc-num mt-1 font-display text-2xl font-bold text-amber-700">
+                {summary.pending.toLocaleString()}
+                <span className="ml-0.5 text-sm font-semibold text-fg-quiet">P</span>
+              </p>
+              <p className="mt-1 text-[11px] text-fg-muted">
+                {summary.pending > 0 ? '운영진 승인 후 지급됩니다.' : '심사 중인 신청이 없습니다.'}
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -148,7 +166,7 @@ export default async function MateConsolePage() {
         <section className={`${CARD} overflow-hidden`}>
           <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
             <h2 className="font-bold text-fg">내가 만든 문제</h2>
-            <Link href="/console/drafts" className="font-mono text-[11px] text-brand-600 hover:underline">
+            <Link href="/console/drafts" className="font-mono text-[11px] text-signal hover:underline">
               초안 관리 →
             </Link>
           </div>
@@ -169,7 +187,7 @@ export default async function MateConsolePage() {
                     {new Date(draft.createdAt).toLocaleDateString('ko-KR')}
                   </p>
                   {draft.status === 'rejected' && draft.reviewNote && (
-                    <p className="mt-1 rounded-lg bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">{draft.reviewNote}</p>
+                    <p className="mt-1 rounded-[var(--radius-card)] bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">{draft.reviewNote}</p>
                   )}
                 </li>
               ))}
@@ -236,7 +254,7 @@ export default async function MateConsolePage() {
                       {platformLabel(payload?.platform)} · {new Date(request.createdAt).toLocaleDateString('ko-KR')}
                     </span>
                     {request.status === 'rejected' && request.reviewNote && (
-                      <span className="mt-1 block rounded-lg bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">{request.reviewNote}</span>
+                      <span className="mt-1 block rounded-[var(--radius-card)] bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">{request.reviewNote}</span>
                     )}
                   </span>
                   <span className="shrink-0 font-mono text-xs text-fg-muted">+{request.amount}P</span>
@@ -248,7 +266,6 @@ export default async function MateConsolePage() {
         )}
       </section>
 
-      {/* 디베이트샵 */}
     </PageShell>
   );
 }

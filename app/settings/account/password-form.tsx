@@ -48,10 +48,10 @@ export default function PasswordForm({ email }: { email: string }) {
     <form onSubmit={handleSubmit} method="post" className="space-y-4">
       <div>
         <label htmlFor="current" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">현재 비밀번호</label>
-        <input id="current" name="current" type="password" autoComplete="current-password" required placeholder="현재 비밀번호" className="w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60" />
+        <input id="current" name="current" type="password" autoComplete="current-password" required placeholder="현재 비밀번호" className="w-full rounded-[var(--radius-card)] border border-hairline bg-paper/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-signal/60" />
         {error && <p className="mt-1.5 text-xs text-rose-600">{error}</p>}
       </div>
-      <button type="submit" disabled={pending} className="px-6 py-3 bg-brand-600 text-white font-semibold rounded-lg hover:bg-brand-500 transition-colors disabled:opacity-50">
+      <button type="submit" disabled={pending} className="px-6 py-3 bg-brand-600 text-white font-semibold rounded-[var(--radius-card)] hover:bg-brand-500 transition-colors disabled:opacity-50">
         {pending ? '확인 중…' : '확인하고 변경하기'}
       </button>
     </form>

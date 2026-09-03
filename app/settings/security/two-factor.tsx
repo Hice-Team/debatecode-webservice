@@ -216,7 +216,7 @@ export default function TwoFactor({
       {/* 복구 이메일 — 코드 확인을 거쳐야 저장된다(app/settings/security/recovery-email.tsx) */}
       <RecoveryEmail current={initialEmail ?? null} verifiedAt={recoveryVerifiedAt ?? null} />
 
-      <div className="rounded-xl border border-hairline bg-surface p-4">
+      <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-4">
         <div className="flex flex-wrap items-center gap-2">
           <h4 className="font-semibold">인증 앱 (TOTP)</h4>
           <span
@@ -233,7 +233,7 @@ export default function TwoFactor({
           앱에서 QR 코드를 스캔하고 생성된 코드를 입력하면 등록됩니다. Google Authenticator·1Password 등
           표준 TOTP 앱을 모두 지원합니다.
         </p>
-        <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-[12px] leading-relaxed text-emerald-900">
+        <p className="mt-2 rounded-[var(--radius-card)] border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-[12px] leading-relaxed text-emerald-900">
           켜면 <strong>다음 로그인부터</strong> 비밀번호 뒤에 확인을 한 번 더 받습니다. 계정 삭제처럼
           되돌릴 수 없는 동작에도 같은 확인이 붙습니다. 확인은 기기별로 30일 동안 유지됩니다.
         </p>
@@ -245,7 +245,7 @@ export default function TwoFactor({
         {qrDataUrl && (
           <div className="mt-4 flex flex-wrap items-start gap-4">
             { }
-            <img src={qrDataUrl} alt="TOTP 등록용 QR 코드" width={200} height={200} className="rounded-lg border border-hairline" />
+            <img src={qrDataUrl} alt="TOTP 등록용 QR 코드" width={200} height={200} className="rounded-[var(--radius-card)] border border-hairline" />
             <div className="min-w-[16rem] flex-1">
               <p className="font-mono text-xs text-fg-secondary">스캔 후 생성된 6자리 코드를 입력하세요.</p>
               {secret && (
@@ -290,7 +290,7 @@ export default function TwoFactor({
         </div>
 
         {backupCodes && (
-          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
+          <div className="mt-3 rounded-[var(--radius-card)] border border-amber-200 bg-amber-50/70 p-3">
             <p className="text-[12px] font-semibold text-amber-900">
               지금 옮겨 적어 주세요 — 이 코드는 다시 볼 수 없습니다.
             </p>
@@ -330,7 +330,7 @@ export default function TwoFactor({
       </div>
 
       {/* 보안키 — 등록 함수는 있는데 부르는 버튼이 없어서 그동안 쓸 수 없었다 */}
-      <div className="rounded-xl border border-hairline bg-surface p-4">
+      <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-4">
         <div className="flex flex-wrap items-center gap-2">
           <h4 className="font-semibold">보안키 (WebAuthn)</h4>
           <span
@@ -349,7 +349,7 @@ export default function TwoFactor({
         </p>
 
         {keys.length > 0 && (
-          <ul className="mt-3 divide-y divide-hairline rounded-lg border border-hairline">
+          <ul className="mt-3 divide-y divide-hairline rounded-[var(--radius-card)] border border-hairline">
             {keys.map((key) => (
               <KeyRow
                 key={key.id}
@@ -369,7 +369,7 @@ export default function TwoFactor({
             onChange={(e) => setKeyName(e.target.value)}
             placeholder="키 이름 (예: 개인 노트북)"
             maxLength={40}
-            className="min-w-0 flex-1 rounded-lg border border-hairline px-3 py-2 text-sm"
+            className="min-w-0 flex-1 rounded-[var(--radius-card)] border border-hairline px-3 py-2 text-sm"
           />
           <button
             onClick={beginWebAuthn}

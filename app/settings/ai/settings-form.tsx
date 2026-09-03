@@ -80,7 +80,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
       <section>
         <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wider text-fg-muted">내장 면접관</p>
         <label
-          className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors ${
+          className={`flex cursor-pointer items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3 text-sm transition-colors ${
             provider === 'builtin_ai' ? 'border-signal bg-signal/10 font-semibold' : 'border-hairline hover:border-fg-quiet'
           }`}
         >
@@ -140,7 +140,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
           {nativeProviders.map((p) => (
             <label
               key={p.key}
-              className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors ${
+              className={`flex items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3 text-sm transition-colors ${
                 PRO_TIER_SUSPENDED && !initial.hasKey
                   ? 'cursor-not-allowed border-hairline opacity-50'
                   : provider === p.key
@@ -167,7 +167,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
 
         {/* 키 입력 — 고른 제공사가 있을 때만. 값은 서버에서 이중 암호화되어 저장된다. */}
         {usingNative && (
-          <div className="mt-3 rounded-xl border border-hairline bg-paper/40 p-4">
+          <div className="mt-3 rounded-[var(--radius-panel)] border border-hairline bg-paper/40 p-4">
             <label htmlFor="aiApiKey" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               API KEY
             </label>
@@ -178,7 +178,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
               autoComplete="off"
               spellCheck={false}
               placeholder={initial.hasKey ? '등록됨 — 바꿀 때만 입력' : KEY_HINTS[provider]}
-              className="w-full rounded-lg border border-hairline bg-surface px-4 py-2.5 font-mono text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+              className="w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-4 py-2.5 font-mono text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
             />
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-fg-muted">
               <span>
@@ -208,7 +208,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
           {lockedProviders.map((p) => (
             <div
               key={p.key}
-              className="flex cursor-not-allowed items-center gap-3 rounded-lg border border-hairline bg-paper/60 px-4 py-3 text-sm text-fg-quiet"
+              className="flex cursor-not-allowed items-center gap-3 rounded-[var(--radius-card)] border border-hairline bg-paper/60 px-4 py-3 text-sm text-fg-quiet"
               title="아직 지원 준비 중입니다"
             >
               <input type="radio" disabled className="accent-[#4531d9]" />
@@ -222,7 +222,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
       </section>
 
       {state.errors?.form && (
-        <div className="space-y-1 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-600">
+        <div className="space-y-1 rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-600">
           {state.errors.form.map((e) => (
             <p key={e}>{e}</p>
           ))}
@@ -230,7 +230,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
       )}
       {testState.message && (
         <p
-          className={`rounded-lg border px-4 py-2.5 text-sm ${
+          className={`rounded-[var(--radius-card)] border px-4 py-2.5 text-sm ${
             testState.ok
               ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
               : 'border-rose-200 bg-rose-50 text-rose-600'
@@ -253,7 +253,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
           <button
             formAction={testAction}
             disabled={pending || testPending}
-            className="rounded-lg border border-hairline px-6 py-3 font-medium text-fg-secondary transition hover:border-fg-quiet active:scale-[0.98] disabled:opacity-50"
+            className="rounded-[var(--radius-card)] border border-hairline px-6 py-3 font-medium text-fg-secondary transition hover:border-fg-quiet active:scale-[0.98] disabled:opacity-50"
           >
             {testPending ? '테스트 중…' : '연결 테스트'}
           </button>
@@ -282,7 +282,7 @@ function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
 
   if (allowance.unlimited) {
     return (
-      <div className="mt-2 space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+      <div className="mt-2 space-y-2 rounded-[var(--radius-panel)] border border-emerald-200 bg-emerald-50/60 p-4">
         <p className="text-[12px] font-semibold text-emerald-900">사용 한도 없음</p>
         <p className="text-[11px] leading-relaxed text-emerald-900/70">
           내 API 키(또는 로컬 모델)가 등록되어 있어 debateAI에 횟수 제한이 걸리지 않습니다.
@@ -293,7 +293,7 @@ function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
   }
 
   return (
-    <div className="mt-2 space-y-4 rounded-xl border border-brand-200 bg-brand-50/60 p-4">
+    <div className="mt-2 space-y-4 rounded-[var(--radius-panel)] border border-brand-200 bg-brand-50/60 p-4">
       <div className="grid gap-1.5 border-t border-brand-200/70 pt-3 text-[11px] text-brand-900/75">
         <p className="flex justify-between">
           <span>debateAI (문제 풀이 중 질문)</span>

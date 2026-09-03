@@ -91,7 +91,7 @@ export function PageHeader({
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         <span className="text-xs font-bold uppercase tracking-wider text-brand-600">{eyebrow}</span>
-        <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        <h1 className="mt-1.5 font-display text-3xl font-bold tracking-tight text-fg">
           {title}
         </h1>
         {sub && <p className="mt-1 text-sm text-fg-secondary">{sub}</p>}
