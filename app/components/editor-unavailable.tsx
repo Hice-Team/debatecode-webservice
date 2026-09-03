@@ -8,7 +8,6 @@ import Nav from '@/app/components/nav';
 // 그래서 막되, 스마트폰에서도 쓸 수 있는 곳으로 바로 이어지는 길을 함께 준다.
 const ELSEWHERE = [
   { href: '/dashboard', label: '대시보드', desc: '진도 · 방어 성공률 · 오답노트' },
-  { href: '/study', label: 'AI Search', desc: '개발 질문을 바로 물어보기' },
   { href: '/community', label: '커뮤니티', desc: '풀이 공유 · 질문' },
 ];
 

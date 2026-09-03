@@ -98,12 +98,7 @@ export default async function ConsoleOverviewPage() {
     has('inquiry.respond') ? prisma.inquiry.count({ where: { status: 'open' } }) : 0,
     has('problem.review') ? prisma.problemDraft.count({ where: { status: 'pending' } }) : 0,
     has('mate.review') ? prisma.debateMateApplication.count({ where: { status: 'pending' } }) : 0,
-    has('point.review')
-      ? Promise.all([
-          prisma.pointRequest.count({ where: { status: 'pending' } }),
-          prisma.shopOrder.count({ where: { status: 'requested' } }),
-        ]).then(([a, b]) => a + b)
-      : 0,
+    has('point.review') ? prisma.pointRequest.count({ where: { status: 'pending' } }) : 0,
     has('sanction.lift') ? prisma.sanction.count({ where: { appealStatus: 'pending' } }) : 0,
     prisma.user.count({ where: { createdAt: { gte: todayStart } } }),
     prisma.submission.count({ where: { createdAt: { gte: todayStart } } }),

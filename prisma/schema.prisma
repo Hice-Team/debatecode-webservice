@@ -31,8 +31,6 @@ model User {
   aiCodeModel                      String?
   // AI Search에서 기본으로 열 모델 (app/lib/ai/search-models.ts의 id).
   // aiCodeModel(면접·리팩토링)과 나눠 둔다 — 코드를 따지는 일과 개념을 찾는 일은
-  // 잘하는 모델이 다르고, 하나로 묶으면 한쪽은 늘 아쉬운 선택이 된다.
-  aiSearchModel                    String?
   // 이용자가 직접 적는 지침 — string[]. 대화마다 앞에 붙는다.
   //
   // 한 덩어리 텍스트가 아니라 목록인 이유: 지침은 하나씩 추가되고 하나씩 후회된다.
@@ -126,7 +124,6 @@ model User {
   postLikes                        PostLike[]
   bookmarks                        Bookmark[]
   workbooks                        Workbook[]
-  lessonProgress                   LessonProgress[]
   pollVotes                        PollVote[]
   loginEvents                      LoginEvent[]
   sanctions                        Sanction[]
@@ -135,10 +132,6 @@ model User {
   debateQSessions                  DebateQSession[]
   pointEntries                     PointLedger[]
   pointRequests                    PointRequest[]
-  shopOrders                       ShopOrder[]
-  aiSessions                       AiSession[]
-  aiFolders                        AiFolder[]
-  aiFeedback                       AiFeedback[]
   rankingResets                    RankingReset[]         @relation("RankingResetTarget")
   marketListings                   MarketListing[]        @relation("MarketSeller")
   marketChatsAsBuyer               MarketChat[]           @relation("MarketBuyer")
@@ -760,41 +753,6 @@ model Announcement {
 
 // ---------- debateStudy: 코스웨어 ----------
 
-model Course {
-  id          Int      @id @default(autoincrement())
-  slug        String   @unique
-  title       String
-  description String
-  language    String // "python" | "javascript" 등
-  order       Int      @default(0)
-  lessons     Lesson[]
-}
-
-model Lesson {
-  id       Int              @id @default(autoincrement())
-  courseId Int
-  slug     String
-  title    String
-  content  String // 한국어 markdown (텍스트 + 코드 예제)
-  order    Int              @default(0)
-  course   Course           @relation(fields: [courseId], references: [id])
-  progress LessonProgress[]
-
-  @@unique([courseId, slug])
-}
-
-model LessonProgress {
-  id          String   @id @default(cuid())
-  userId      String   @db.Uuid
-  lessonId    Int
-  completedAt DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, lessonId])
-  @@index([lessonId])
-}
-
 // ---------- 디베이트메이트: 포인트 원장 / 활동 인증 / 디베이트샵 ----------
 
 // 포인트 원장 — 잔액은 이 테이블의 amount 합으로만 구한다(별도 잔액 컬럼을 두지 않는다).
@@ -836,57 +794,8 @@ model PointRequest {
 }
 
 // 디베이트샵 상품 — 기프티콘 카탈로그. 1,000P = 1,000원.
-model ShopProduct {
-  id          String      @id @default(cuid())
-  name        String
-  brand       String
-  // 어느 상점에 걸리는가 — general(전 회원) | mate(디베이트메이트 전용).
-  // 구매 흐름(포인트 차감 → 운영자 승인 → 연락처로 발송)은 둘이 같고, 카탈로그만 다르다.
-  scope       String      @default("general")
-  description String?
-  stock       Int? // null = 무제한
-  priceKrw    Int // 정가(원). 필요 포인트와 1:1
-  imageUrl    String?
-  // 발급 채널 — kakao_biz(카카오쇼핑 for biz) | giftishow(기프티쇼) | manual(수동 발급)
-  provider    String      @default("manual")
-  providerSku String?
-  active      Boolean     @default(true)
-  order       Int         @default(0)
-  createdAt   DateTime    @default(now())
-  orders      ShopOrder[]
-
-  @@index([active, order])
-  @@index([scope, active, order])
-}
-
 // 상점 주문 — 주문 시 포인트를 즉시 차감(원장에 음수 기록)하고, 쿠폰 발급은 별도 단계로 확정한다.
 // 발급 실패/취소 시 환불 원장을 추가한다.
-model ShopOrder {
-  id              String      @id @default(cuid())
-  userId          String      @db.Uuid
-  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId       String
-  product         ShopProduct @relation(fields: [productId], references: [id])
-  pointsSpent     Int
-  status          String      @default("requested") // requested | fulfilled | canceled | failed
-  // 발급 결과 — 쿠폰 코드는 발급 채널이 돌려준 값. 수동 발급이면 운영자가 입력한다.
-  couponCode      String?
-  couponExpiresAt DateTime?
-  providerOrderId String?
-  failureReason   String?
-  // 발급된 쿠폰을 보낼 곳 — 주문 시 이용자가 입력한다.
-  // 예전에는 어디로 보낼지 기록이 없어 운영자가 따로 물어봐야 했다.
-  contact         String?
-  contactType     String      @default("email") // email | phone
-  adminMemo       String?
-  createdAt       DateTime    @default(now())
-  fulfilledAt     DateTime?
-
-  @@index([userId, createdAt(sort: Desc)])
-  @@index([status, createdAt])
-  @@index([productId])
-}
-
 // 출시 알림 신청 — 대기 페이지(debate-commingsoon)에서 이메일만 받는다.
 //
 // 회원가입이 아니다. 출시 소식을 한 번 보내기 위한 최소 수집이라 이메일 외에는 두지 않는다.
@@ -966,69 +875,6 @@ model EmailCampaign {
 
 // AI Search 대화 세션 — 사용자당 최근 1개만 활성으로 유지한다.
 // '새로 시작하기'를 고르면 기존 세션을 삭제하고 새 세션을 만든다.
-/// AI Search 대화를 묶는 폴더. 사이드바에서 이용자가 직접 만든다.
-/// 대화가 쌓이면 최근순 목록만으로는 "그때 그 대화"를 찾을 수 없다.
-model AiFolder {
-  id        String      @id @default(cuid())
-  userId    String      @db.Uuid
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  sessions  AiSession[]
-
-  @@index([userId, updatedAt(sort: Desc)])
-}
-
-model AiSession {
-  id           String      @id @default(cuid())
-  userId       String      @db.Uuid
-  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  /// 폴더에 넣지 않은 대화는 null — 최근 목록에만 나온다.
-  /// 폴더를 지워도 대화는 남는다(SetNull) — 정리하려다 대화를 잃으면 안 된다.
-  folderId     String?
-  folder       AiFolder?   @relation(fields: [folderId], references: [id], onDelete: SetNull)
-  title        String? // 첫 질문에서 뽑은 요약 제목
-  model        String? // 이 세션에서 마지막으로 고른 모델 id (app/lib/ai/search-models.ts)
-  effort       String? // 마지막으로 고른 사고 강도 (low | medium | high)
-  // 가져온 세션이면 원본 파일 정보를 남긴다 — 최초 질문 위에 카드로 한 번만 보여준다
-  importedFrom Json? // { fileName, messageCount, importedAt }
-  // 다른 대화에서 갈라져 나온 세션이면 원본을 남긴다 — { sessionId, title, messageId, at }
-  // 화면 위에 "…에서 분기됨 · 원본 보기" 줄로 한 번만 보여 준다.
-  branchedFrom Json?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  messages     AiMessage[]
-
-  @@index([userId, updatedAt(sort: Desc)])
-  @@index([folderId, updatedAt(sort: Desc)])
-}
-
-model AiMessage {
-  id               String       @id @default(cuid())
-  sessionId        String
-  session          AiSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  role             String // user | assistant
-  content          String
-  // 첨부 메타데이터 — [{ kind: image|file, name, url, mime, size }]
-  // 파일 첨부와 "모델이 그 파일을 이해하는가"는 별개 문제라 데이터만 보관한다.
-  attachments      Json         @default("[]")
-  // 답변 근거 문서 — [{ source, title, href }]. 검색 계층 결과이며 AI 계층과 분리돼 있다.
-  sources          Json         @default("[]")
-  model            String? // 이 답변을 만든 모델 id — 투명성 고지에 쓴다
-  // 이 답변에 든 토큰 — 공급자가 usage를 주면 그 값, 아니면 추정치.
-  // 어디까지가 실측인지 섞이면 안 되므로 estimated로 구분해 둔다.
-  promptTokens     Int?
-  completionTokens Int?
-  tokensEstimated  Boolean      @default(false)
-  // 생성에 쓴 사고 강도 (low | medium | high)
-  effort           String?
-  createdAt        DateTime     @default(now())
-  feedback         AiFeedback[]
-
-  @@index([sessionId, createdAt])
-}
-
 /// AI Search 답변 피드백 — 답변 하나에 이용자 한 명당 한 건(다시 누르면 갱신·취소).
 ///
 /// 신고(Report)와는 목적이 다르다. 신고는 법적 문제를 처리 큐에 올리는 것이고,
@@ -1136,26 +982,6 @@ model RankingReset {
 
   @@index([userId, resetAt(sort: Desc)])
   @@index([resetAt(sort: Desc)])
-}
-
-model AiFeedback {
-  id        String    @id @default(cuid())
-  messageId String
-  message   AiMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  userId    String    @db.Uuid
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rating    String // up | down
-  /// 부정 평가 사유 코드 배열 — app/lib/ai/feedback-reasons.ts 가 단일 출처
-  reasons   Json      @default("[]")
-  comment   String? // 이용자가 직접 적은 보충 설명 (선택)
-  /// 어떤 모델에 대한 평가였는지 — 나중에 모델을 바꿔도 집계가 흐려지지 않게 박아 둔다
-  model     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@unique([messageId, userId])
-  @@index([rating, createdAt(sort: Desc)])
-  @@index([createdAt(sort: Desc)])
 }
 
 /// 가입 위저드 임시 저장소.

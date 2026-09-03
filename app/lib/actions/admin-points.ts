@@ -61,63 +61,13 @@ export async function reviewPointRequest(formData: FormData): Promise<void> {
   revalidatePath('/debate-mate/console');
 }
 
-/** 상점 주문 발급 확정 — 쿠폰 코드를 기록하고 fulfilled로 넘긴다. */
-export async function fulfillShopOrder(formData: FormData): Promise<void> {
-  await requireReviewer();
-  const id = String(formData.get('id') ?? '');
-  const couponCode = String(formData.get('couponCode') ?? '').trim();
-  const expiresRaw = String(formData.get('couponExpiresAt') ?? '').trim();
-  if (!id || !couponCode) return;
-
-  const order = await prisma.shopOrder.findUnique({ where: { id }, select: { status: true } });
-  if (!order || order.status !== 'requested') return;
-
-  await prisma.shopOrder.update({
-    where: { id },
-    data: {
-      status: 'fulfilled',
-      couponCode,
-      couponExpiresAt: expiresRaw ? new Date(expiresRaw) : null,
-      fulfilledAt: new Date(),
-    },
-  });
-
-  revalidatePath('/console/points');
-  revalidatePath('/debate-mate/console');
-}
-
-/** 발급 실패 처리 — 차감했던 포인트를 환불한다. */
-export async function failShopOrder(formData: FormData): Promise<void> {
-  await requireReviewer();
-  const id = String(formData.get('id') ?? '');
-  const reason = String(formData.get('reason') ?? '').trim() || '발급 실패';
-  if (!id) return;
-
-  const order = await prisma.shopOrder.findUnique({ where: { id } });
-  if (!order || order.status !== 'requested') return;
-
-  await prisma.$transaction(async (tx) => {
-    await tx.shopOrder.update({ where: { id }, data: { status: 'failed', failureReason: reason } });
-    await tx.pointLedger.create({
-      data: {
-        userId: order.userId,
-        amount: order.pointsSpent,
-        kind: POINT_KINDS.shopRefund,
-        memo: `발급 실패 환불 — ${reason}`,
-        refType: 'shopOrder',
-        refId: order.id,
-      },
-    });
-  });
-
-  revalidatePath('/console/points');
-  revalidatePath('/debate-mate/console');
-}
+/* 상점(기프티콘 발급)이 제거돼 주문 확정·실패 처리 액션도 함께 걷어냈다. */
 
 export interface PointGrantState {
   error?: string;
   saved?: string;
 }
+
 
 /**
  * 운영자 수동 포인트 지급·차감.

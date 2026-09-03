@@ -37,20 +37,10 @@ const initialTestState: AiTestState = {};
 export interface ModelUsage {
   id: string;
   label: string;
-  /** 어디에서 고른 모델인가 — 사용량을 그 갈래로 묶어 보여 준다 */
-  surface: 'debateai' | 'ai-search' | 'other';
   used: number;
   /** 지금 그 셀렉터에서 선택돼 있는 모델인지 */
   selected: boolean;
 }
-
-const SURFACE_LABEL: Record<ModelUsage['surface'], string> = {
-  debateai: 'debateAI 탭 · 면접',
-  'ai-search': 'AI Search',
-  other: '그 외',
-};
-
-const SURFACE_ORDER: ModelUsage['surface'][] = ['debateai', 'ai-search', 'other'];
 
 interface Props {
   initial: { aiProvider: string; hasKey: boolean; keyHint: string | null };
@@ -61,7 +51,6 @@ interface Props {
     resetAt: string | null;
     models: ModelUsage[];
     allowance: {
-      aiSearch: { used: number; limit: number; remaining: number; resetAt: string | null };
       debateAiPerProblem: number;
       unlimited: boolean;
     };
@@ -289,12 +278,6 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
  */
 function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
   const { allowance } = quota;
-  const search = allowance.aiSearch;
-  const searchPct = Math.min(100, (search.used / Math.max(1, search.limit)) * 100);
-  const grouped = SURFACE_ORDER.map((surface) => ({
-    surface,
-    models: quota.models.filter((m) => m.surface === surface),
-  })).filter((g) => g.models.length > 0);
   const topModelUsage = quota.models.reduce((max, m) => Math.max(max, m.used), 0);
 
   if (allowance.unlimited) {
@@ -302,7 +285,7 @@ function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
       <div className="mt-2 space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
         <p className="text-[12px] font-semibold text-emerald-900">사용 한도 없음</p>
         <p className="text-[11px] leading-relaxed text-emerald-900/70">
-          내 API 키(또는 로컬 모델)가 등록되어 있어 AI Search·debateAI에 횟수 제한이 걸리지 않습니다.
+          내 API 키(또는 로컬 모델)가 등록되어 있어 debateAI에 횟수 제한이 걸리지 않습니다.
           요금은 등록하신 키의 계정으로 청구됩니다.
         </p>
       </div>
@@ -311,23 +294,6 @@ function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
 
   return (
     <div className="mt-2 space-y-4 rounded-xl border border-brand-200 bg-brand-50/60 p-4">
-      <div>
-        <div className="mb-1 flex items-center justify-between font-mono text-[11px] text-brand-800/70">
-          <span>AI Search · 오늘</span>
-          <span>
-            {search.used} / {search.limit}회
-            {search.resetAt &&
-              ` · ${new Date(search.resetAt).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' })} 초기화`}
-          </span>
-        </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-brand-100">
-          <div
-            className={`h-full rounded-full ${search.remaining === 0 ? 'bg-rose-500' : 'bg-signal'}`}
-            style={{ width: `${searchPct}%` }}
-          />
-        </div>
-      </div>
-
       <div className="grid gap-1.5 border-t border-brand-200/70 pt-3 text-[11px] text-brand-900/75">
         <p className="flex justify-between">
           <span>debateAI (문제 풀이 중 질문)</span>
@@ -339,13 +305,13 @@ function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
         </p>
       </div>
 
-      {grouped.map((group) => (
-        <div key={group.surface}>
+      {quota.models.length > 0 && (
+        <div>
           <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-brand-700/70">
-            {SURFACE_LABEL[group.surface]}
+            모델별 내역
           </p>
           <ul className="space-y-1.5">
-            {group.models.map((m) => (
+            {quota.models.map((m) => (
               <li key={m.id}>
                 <div className="flex items-baseline gap-2 text-[12px]">
                   <span className={`truncate ${m.selected ? 'font-semibold text-fg' : 'text-fg-secondary'}`}>
@@ -372,7 +338,7 @@ function FreeUsagePanel({ quota }: { quota: NonNullable<Props['freeQuota']> }) {
             ))}
           </ul>
         </div>
-      ))}
+      )}
 
       {quota.models.length === 0 && (
         <p className="text-[11px] text-brand-900/60">아직 사용 기록이 없습니다. 모델을 쓰기 시작하면 여기에 쌓입니다.</p>

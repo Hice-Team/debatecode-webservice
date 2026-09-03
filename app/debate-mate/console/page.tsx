@@ -8,7 +8,6 @@ import { getPointSummary, POINT_KIND_LABELS } from '@/app/lib/points';
 import { DIFFICULTY_LABELS } from '@/app/lib/types';
 import { platformLabel } from '@/app/community/boards';
 import SnsPromoForm from './sns-promo-form';
-import ShopSection from './shop-section';
 
 export const metadata: Metadata = { title: '디베이트메이트 활동 콘솔' };
 
@@ -46,7 +45,7 @@ export default async function MateConsolePage() {
   // 메이트와 관리자만 — 그 외에는 소개 페이지로 돌려보낸다
   if (user.role !== 'debate_mate' && user.role !== 'admin') redirect('/debate-mate');
 
-  const [summary, drafts, ledger, requests, orders, snsPosts, debateQCount] = await Promise.all([
+  const [summary, drafts, ledger, requests, snsPosts, debateQCount] = await Promise.all([
     getPointSummary(user.id),
     prisma.problemDraft.findMany({
       where: { authorId: user.id },
@@ -62,12 +61,6 @@ export default async function MateConsolePage() {
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
       take: 10,
-    }),
-    prisma.shopOrder.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-      include: { product: { select: { name: true, brand: true } } },
     }),
     // SNS 인증 신청 대상 — 본인이 SNS 게시판에 올린 외부 링크 글
     prisma.post.findMany({
@@ -256,7 +249,6 @@ export default async function MateConsolePage() {
       </section>
 
       {/* 디베이트샵 */}
-      <ShopSection orders={orders} balance={summary.balance} />
     </PageShell>
   );
 }

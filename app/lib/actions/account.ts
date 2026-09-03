@@ -94,17 +94,14 @@ export async function deleteAccount(
       await tx.submission.deleteMany({ where: { userId } });
 
       // 3) 학습·보관함
-      await tx.lessonProgress.deleteMany({ where: { userId } });
       await tx.bookmark.deleteMany({ where: { userId } });
       await tx.workbook.deleteMany({ where: { userId } });
 
       // 4) 포인트·상점
-      await tx.shopOrder.deleteMany({ where: { userId } });
       await tx.pointRequest.deleteMany({ where: { userId } });
       await tx.pointLedger.deleteMany({ where: { userId } });
 
       // 5) AI Search 대화 (메시지는 cascade)
-      await tx.aiSession.deleteMany({ where: { userId } });
 
       // 6) 출제·메이트·보안 기록
       await tx.problemDraft.deleteMany({ where: { authorId: userId } });

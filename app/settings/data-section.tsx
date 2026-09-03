@@ -37,7 +37,6 @@ export interface DataCounts {
   submissions: number;
   posts: number;
   comments: number;
-  aiSessions: number;
   debateChats: number;
   bookmarks: number;
 }
@@ -48,7 +47,6 @@ const DELETABLE: { key: keyof DataCounts; label: string; note: string }[] = [
   { key: 'submissions', label: '제출 기록', note: '제출한 코드와 채점 결과. 통과 이력과 랭킹 근거가 사라집니다.' },
   { key: 'posts', label: '내가 쓴 글', note: '글에 달린 답글도 함께 사라집니다.' },
   { key: 'comments', label: '내가 쓴 답글', note: '채택된 답글이면 채택 표시도 사라집니다.' },
-  { key: 'aiSessions', label: 'AI Search 대화', note: '주고받은 질문과 답변 전체.' },
   { key: 'debateChats', label: 'debateAI 채팅', note: '문제별로 나눈 대화.' },
   { key: 'bookmarks', label: '북마크', note: '담아 둔 문제 목록.' },
 ];

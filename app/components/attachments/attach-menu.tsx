@@ -237,7 +237,7 @@ export default function AttachMenu({
     onNotice(null);
     setBusy(true);
     try {
-      const res = await fetch('/api/ai-search/import', {
+      const res = await fetch('/api/attachments/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode, url: value }),

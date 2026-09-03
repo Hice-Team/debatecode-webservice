@@ -77,7 +77,7 @@ export default async function SettingsPage() {
       select: {
         name: true, avatarUrl: true, rankBadgeVisible: true, anonymousTag: true,
         aiTrainingConsentAt: true, createdAt: true,
-        emailNotifications: true, preferredLanguage: true, aiCodeModel: true, aiSearchModel: true,
+        emailNotifications: true, preferredLanguage: true, aiCodeModel: true,
         aiInstructions: true, aiContextMode: true,
         timezone: true, dateFormat: true, country: true, editorPrefs: true, notifyPrefs: true,
         profileGoal: true, profileVisibility: true, chatLanguage: true,
@@ -106,11 +106,10 @@ export default async function SettingsPage() {
       prisma.submission.count({ where: { userId } }),
       prisma.post.count({ where: { authorId: userId } }),
       prisma.comment.count({ where: { authorId: userId } }),
-      prisma.aiSession.count({ where: { userId } }),
       prisma.debateAiChat.count({ where: { userId } }),
       prisma.bookmark.count({ where: { userId } }),
-    ]).then(([activityLogs, submissions, posts, comments, aiSessions, debateChats, bookmarks]) => ({
-      activityLogs, submissions, posts, comments, aiSessions, debateChats, bookmarks,
+    ]).then(([activityLogs, submissions, posts, comments, debateChats, bookmarks]) => ({
+      activityLogs, submissions, posts, comments, debateChats, bookmarks,
     })),
   ]);
 
@@ -201,11 +200,9 @@ export default async function SettingsPage() {
         <AiPersonalization
           initial={{
             codeModel: user.aiCodeModel ?? '',
-            searchModel: user.aiSearchModel ?? '',
             contextMode: isContextMode(user.aiContextMode) ? user.aiContextMode : DEFAULT_CONTEXT_MODE,
             instructions: parseInstructions(user.aiInstructions),
           }}
-          sessionCount={counts.aiSessions}
         />
         <div className="mt-10 border-t border-hairline pt-6">
           <AiSettingsForm
@@ -215,13 +212,7 @@ export default async function SettingsPage() {
               limit: freeQuota.limit,
               resetAt: freeQuota.resetAt ? freeQuota.resetAt.toISOString() : null,
               models: freeQuota.models,
-              allowance: {
-                ...freeQuota.allowance,
-                aiSearch: {
-                  ...freeQuota.allowance.aiSearch,
-                  resetAt: freeQuota.allowance.aiSearch.resetAt?.toISOString() ?? null,
-                },
-              },
+              allowance: freeQuota.allowance,
             }}
           />
         </div>

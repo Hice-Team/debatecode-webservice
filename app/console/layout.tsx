@@ -31,13 +31,7 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
       has('mate.review') ? prisma.debateMateApplication.count({ where: { status: 'pending' } }) : 0,
       has('report.review') ? prisma.report.count({ where: { status: 'pending' } }) : 0,
       has('inquiry.respond') ? prisma.inquiry.count({ where: { status: 'open' } }) : 0,
-      has('point.review')
-        ? // 활동 인증 심사 + 쿠폰 발급 대기를 하나의 배지로 합친다
-          Promise.all([
-            prisma.pointRequest.count({ where: { status: 'pending' } }),
-            prisma.shopOrder.count({ where: { status: 'requested' } }),
-          ]).then(([a, b]) => a + b)
-        : 0,
+      has('point.review') ? prisma.pointRequest.count({ where: { status: 'pending' } }) : 0,
       has('sanction.lift') ? prisma.sanction.count({ where: { appealStatus: 'pending' } }) : 0,
       maintenanceState(),
     ]);
@@ -54,7 +48,6 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
     ...opt(has('problem.review') || has('problem.manage'), { href: '/console/problems', labelKey: 'console-nav-upload', icon: 'upload', group: 'content' }),
     ...opt(has('problem.author'), { href: '/console/drafts', labelKey: 'console-nav-drafts', icon: 'drafts', group: 'content' }),
     ...opt(has('problemset.manage'), { href: '/console/problem-sets', labelKey: 'console-nav-sets', icon: 'sets', group: 'content' }),
-    ...opt(has('shop.manage'), { href: '/console/shop', labelKey: 'console-nav-shop', icon: 'shop', group: 'content' }),
     ...opt(has('announcement.manage'), { href: '/console/popups', labelKey: 'console-nav-popup', icon: 'popup', group: 'content' }),
 
     ...opt(has('member.read'), { href: '/console/access', labelKey: 'console-nav-access', icon: 'access', group: 'access', exact: true }),

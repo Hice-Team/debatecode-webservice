@@ -3,11 +3,10 @@
 // AI 개인 설정 — 기본 모델 2종 · 지침 · 맥락 양 · 대화 관리.
 //
 // 모델을 고르는 자리가 지금까지 흩어져 있었다. 일반 설정에 같은 셀렉터가 두 번 있었고,
-// AI Search 모델은 아예 설정에 없어서 대화 화면에서 매번 다시 골라야 했다.
 // 여기로 모은다 — 무엇을 기본으로 쓸지는 한 곳에서만 정한다.
 //
 // 지침은 목록이다. 텍스트 상자 하나로 두면 "이 줄만 빼고 싶다"에 전체를 다시 쓰게 된다.
-import { useActionState, useState, useTransition } from 'react';
+import { useActionState, useState } from 'react';
 import { useSettingsForm } from '../save-bar';
 import {
   DEFAULT_CODE_MODEL_ID,
@@ -15,9 +14,7 @@ import {
   findDebateAiModel,
   groupedModels,
 } from '@/app/lib/ai/debateai-models';
-import { DEFAULT_SEARCH_MODEL_ID, SEARCH_MODELS, findSearchModel } from '@/app/lib/ai/search-models';
 import { saveAiPersonalization, type AiSettingsState } from '@/app/lib/actions/settings';
-import { deleteAllAiSessions } from '@/app/lib/actions/ai-search-transfer';
 import {
   CONTEXT_MODES,
   DEFAULT_CONTEXT_MODE,
@@ -25,7 +22,6 @@ import {
   MAX_INSTRUCTION_LENGTH,
   type ContextMode,
 } from '@/app/lib/user-prefs';
-import Dialog from '@/app/components/dialog';
 
 const initialState: AiSettingsState = {};
 
@@ -44,15 +40,12 @@ function Group({ title, desc, children }: { title: string; desc?: string; childr
 
 export default function AiPersonalization({
   initial,
-  sessionCount,
 }: {
   initial: {
     codeModel: string;
-    searchModel: string;
     contextMode: ContextMode;
     instructions: string[];
   };
-  sessionCount: number;
 }) {
   const [state, formAction, pending] = useActionState(saveAiPersonalization, initialState);
   // 다른 설정 구역과 같은 하단 저장 바를 쓴다 — 구역마다 저장 방식이 다르면
@@ -62,9 +55,6 @@ export default function AiPersonalization({
   const [draft, setDraft] = useState('');
   const [context, setContext] = useState<ContextMode>(initial.contextMode);
 
-  const [clearOpen, setClearOpen] = useState(false);
-  const [clearing, startClear] = useTransition();
-  const [cleared, setCleared] = useState(false);
 
   function addInstruction() {
     const value = draft.trim().slice(0, MAX_INSTRUCTION_LENGTH);
@@ -103,27 +93,6 @@ export default function AiPersonalization({
               </p>
             </div>
 
-            <div>
-              <label htmlFor="aiSearchModel" className="mb-1.5 block text-sm font-medium text-fg">
-                AI Search
-              </label>
-              <select
-                id="aiSearchModel"
-                name="aiSearchModel"
-                defaultValue={initial.searchModel}
-                className={SELECT}
-              >
-                <option value="">기본값 — {findSearchModel(DEFAULT_SEARCH_MODEL_ID).label}</option>
-                {SEARCH_MODELS.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1.5 text-[12px] leading-relaxed text-fg-muted">
-                개념을 찾고 설명하는 자리입니다. 코드 모델과 따로 둡니다.
-              </p>
-            </div>
           </div>
         </Group>
 
@@ -242,62 +211,7 @@ export default function AiPersonalization({
         </div>
       </form>
 
-      {/* ── 대화 관리 ─────────────────────────────────────────── */}
-      <Group
-        title="대화 관리"
-        desc="AI Search는 최근 1개 세션만 보관합니다. 남겨 두려면 대화 화면에서 먼저 내보내기로 내려받으세요."
-      >
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-[var(--radius-card)] border border-hairline px-4 py-4">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-fg">보관 중인 대화</p>
-            <p className="mt-0.5 font-mono text-[12px] text-fg-muted">
-              {cleared ? '모두 지웠습니다.' : `${sessionCount}개 세션`}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setClearOpen(true)}
-            disabled={sessionCount === 0 || cleared}
-            className="dc-tap min-h-10 shrink-0 rounded-[var(--radius-card)] border border-hairline px-4 text-sm font-semibold text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-50 disabled:opacity-40 disabled:hover:border-hairline disabled:hover:bg-transparent"
-          >
-            대화 전체 삭제
-          </button>
-        </div>
-      </Group>
 
-      <Dialog
-        open={clearOpen}
-        onClose={() => setClearOpen(false)}
-        tone="danger"
-        width="sm"
-        title="AI Search 대화 전체 삭제"
-        desc="주고받은 질문과 답변이 모두 사라지고 되돌릴 수 없습니다."
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={() => setClearOpen(false)}
-              className="dc-tap min-h-10 rounded-[var(--radius-card)] border border-hairline px-4 text-sm font-medium text-fg-secondary transition-colors hover:border-fg-quiet hover:text-fg"
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              disabled={clearing}
-              onClick={() =>
-                startClear(async () => {
-                  await deleteAllAiSessions();
-                  setCleared(true);
-                  setClearOpen(false);
-                })
-              }
-              className="dc-tap min-h-10 rounded-[var(--radius-card)] bg-rose-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-rose-700 disabled:opacity-40"
-            >
-              {clearing ? '지우는 중…' : '모두 삭제'}
-            </button>
-          </>
-        }
-      />
     </>
   );
 }

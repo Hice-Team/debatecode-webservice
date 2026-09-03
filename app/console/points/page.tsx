@@ -5,12 +5,11 @@ import { getUser } from '@/app/lib/dal';
 import { canReview } from '@/app/lib/roles';
 import { platformLabel } from '@/app/community/boards';
 import { POINT_KIND_LABELS } from '@/app/lib/points';
-import { failShopOrder, fulfillShopOrder, reviewPointRequest } from '@/app/lib/actions/admin-points';
-import { PageHeader, SectionHeader, BTN_APPROVE, BTN_REJECT, BTN_PRIMARY, EmptyRow } from '../ui';
+import { reviewPointRequest } from '@/app/lib/actions/admin-points';
+import { PageHeader, SectionHeader, BTN_APPROVE, BTN_REJECT, EmptyRow } from '../ui';
 import PointGrantForm, { type GrantTarget } from './grant-form';
 import { maskName } from '@/app/lib/privacy';
 import { roleLabel } from '@/app/lib/roles';
-import { SHOP_SCOPE_LABELS, type ShopScope } from '@/app/lib/shop-scope';
 
 export const metadata: Metadata = { title: '포인트 심사' };
 
@@ -18,7 +17,7 @@ export default async function ConsolePointsPage() {
   const user = await getUser();
   if (!canReview(user.role)) redirect('/console');
 
-  const [pendingRequests, reviewedRequests, pendingOrders, recentLedger] = await Promise.all([
+  const [pendingRequests, reviewedRequests, recentLedger] = await Promise.all([
     prisma.pointRequest.findMany({
       where: { status: 'pending' },
       orderBy: { createdAt: 'asc' },
@@ -29,14 +28,6 @@ export default async function ConsolePointsPage() {
       orderBy: { reviewedAt: 'desc' },
       take: 10,
       include: { user: { select: { name: true } } },
-    }),
-    prisma.shopOrder.findMany({
-      where: { status: 'requested' },
-      orderBy: { createdAt: 'asc' },
-      include: {
-        user: { select: { name: true, email: true } },
-        product: { select: { name: true, brand: true, provider: true, scope: true } },
-      },
     }),
     prisma.pointLedger.findMany({
       orderBy: { createdAt: 'desc' },
@@ -68,13 +59,12 @@ export default async function ConsolePointsPage() {
       <PageHeader
         eyebrow="Points"
         title="포인트 심사"
-        sub="활동 인증 신청을 검토하고, 디베이트샵 주문의 쿠폰 발급을 확정합니다."
+        sub="활동 인증 신청을 검토하고 포인트를 지급합니다."
       />
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[
           { label: '심사 대기', value: pendingRequests.length, warn: pendingRequests.length > 0 },
-          { label: '발급 대기', value: pendingOrders.length, warn: pendingOrders.length > 0 },
           { label: '최근 원장', value: recentLedger.length },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl border border-hairline bg-surface px-4 py-3">
@@ -151,78 +141,6 @@ export default async function ConsolePointsPage() {
         )}
       </section>
 
-      {/* 디베이트샵 발급 대기 */}
-      <section className="mb-8 overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
-        <div className="border-b border-hairline px-5 py-3">
-          <h3 className="font-bold text-fg">디베이트샵 발급 대기</h3>
-          <p className="mt-0.5 text-xs text-fg-muted">
-            발급 채널 연동 전에는 쿠폰 코드를 직접 입력해 확정합니다. 실패 처리 시 포인트가 자동 환불됩니다.
-          </p>
-        </div>
-        {pendingOrders.length === 0 ? (
-          <EmptyRow text="발급을 기다리는 주문이 없습니다." />
-        ) : (
-          <ul className="divide-y divide-hairline">
-            {pendingOrders.map((order) => (
-              <li key={order.id} className="px-5 py-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold text-fg">{order.user.name}</span>
-                  <span className="font-mono text-[11px] text-fg-quiet">{order.user.email}</span>
-                  <span className="ml-auto font-mono text-[11px] text-fg-muted">
-                    −{order.pointsSpent.toLocaleString()}P
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-fg">
-                  {order.product.brand} {order.product.name}
-                  <span className="ml-2 rounded border border-hairline bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted">
-                    {SHOP_SCOPE_LABELS[order.product.scope as ShopScope] ?? order.product.scope}
-                  </span>
-                  <span className="ml-1.5 rounded border border-hairline bg-paper px-1.5 py-0.5 font-mono text-[10px] text-fg-muted">
-                    {order.product.provider}
-                  </span>
-                </p>
-
-                {/* 발송지 — 주문 시 이용자가 남긴 연락처. 이게 없으면 발급해 놓고 어디로 보낼지 모른다. */}
-                <p className="mt-1.5 rounded-lg border border-brand-200 bg-brand-50/50 px-3 py-2 font-mono text-[11px] text-brand-800">
-                  발송 {order.contactType === 'phone' ? '문자' : '메일'} ·{' '}
-                  <strong className="font-semibold">{order.contact ?? '미입력 (이용자에게 확인 필요)'}</strong>
-                </p>
-
-                <div className="mt-3 flex flex-col gap-2 lg:flex-row">
-                  <form action={fulfillShopOrder} className="flex flex-1 flex-wrap items-center gap-2">
-                    <input type="hidden" name="id" value={order.id} />
-                    <input
-                      name="couponCode"
-                      required
-                      placeholder="쿠폰 코드"
-                      className="min-w-0 flex-1 rounded-lg border border-hairline px-3 py-1.5 font-mono text-xs focus:border-signal focus:outline-none"
-                    />
-                    <input
-                      name="couponExpiresAt"
-                      type="date"
-                      className="rounded-lg border border-hairline px-3 py-1.5 text-xs focus:border-signal focus:outline-none"
-                    />
-                    <button type="submit" className={BTN_PRIMARY}>
-                      발급 확정
-                    </button>
-                  </form>
-                  <form action={failShopOrder} className="flex shrink-0 items-center gap-2">
-                    <input type="hidden" name="id" value={order.id} />
-                    <input
-                      name="reason"
-                      placeholder="실패 사유"
-                      className="w-32 rounded-lg border border-hairline px-3 py-1.5 text-xs focus:border-signal focus:outline-none"
-                    />
-                    <button type="submit" className={BTN_REJECT}>
-                      실패·환불
-                    </button>
-                  </form>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* 최근 심사 결과 */}

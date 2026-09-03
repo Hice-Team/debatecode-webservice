@@ -11,7 +11,6 @@ import { getProviderFor } from '../ai/provider';
 import { LlmInterviewer } from '../ai/llm-interviewer';
 import { decryptSecret, encryptSecret } from '../crypto';
 import { isDebateAiModelId } from '../ai/debateai-models';
-import { isSearchModelId } from '../ai/search-models';
 import { MAX_INSTRUCTIONS, MAX_INSTRUCTION_LENGTH, isContextMode } from '../user-prefs';
 
 export interface AiSettingsState {
@@ -207,9 +206,6 @@ export async function deleteSelectedUserData(
       if (types.includes('comments')) {
         await tx.comment.deleteMany({ where: { authorId: session.userId } });
       }
-      if (types.includes('aiSessions')) {
-        await tx.aiSession.deleteMany({ where: { userId: session.userId } });
-      }
       if (types.includes('debateChats')) {
         await tx.debateAiChat.deleteMany({ where: { userId: session.userId } });
       }
@@ -223,8 +219,6 @@ export async function deleteSelectedUserData(
 
   // 캐시/클라이언트 데이터: 서버쪽은 경로 재검증으로 반영
   revalidatePath('/settings');
-  revalidatePath('/study');
-  revalidatePath('/study/search');
   return { sent: true };
 }
 
@@ -288,7 +282,6 @@ export async function saveAiPersonalization(
   const session = await verifySession();
 
   const codeModel = String(formData.get('aiCodeModel') ?? '');
-  const searchModel = String(formData.get('aiSearchModel') ?? '');
   const contextMode = String(formData.get('aiContextMode') ?? '');
 
   const instructions = formData
@@ -302,7 +295,6 @@ export async function saveAiPersonalization(
     where: { id: session.userId },
     data: {
       aiCodeModel: isDebateAiModelId(codeModel) ? codeModel : null,
-      aiSearchModel: isSearchModelId(searchModel) ? searchModel : null,
       aiContextMode: isContextMode(contextMode) ? contextMode : null,
       aiInstructions: instructions,
     },

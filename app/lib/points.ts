@@ -95,7 +95,8 @@ export async function getPointSummary(userId: string): Promise<PointSummary> {
     prisma.pointLedger.aggregate({ where: { userId, amount: { gt: 0 } }, _sum: { amount: true } }),
     prisma.pointLedger.aggregate({ where: { userId, amount: { lt: 0 } }, _sum: { amount: true } }),
     prisma.pointRequest.aggregate({ where: { userId, status: 'pending' }, _sum: { amount: true } }),
-    prisma.shopOrder.aggregate({ where: { userId, status: 'requested' }, _sum: { pointsSpent: true } }),
+    // 상점이 사라져 "발급 대기로 묶인 포인트"가 없다 — 잔액이 곧 쓸 수 있는 전부다.
+    Promise.resolve({ _sum: { pointsSpent: 0 } }),
   ]);
 
   const totalEarned = earned._sum.amount ?? 0;

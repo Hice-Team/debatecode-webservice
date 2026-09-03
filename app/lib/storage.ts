@@ -40,15 +40,15 @@ export const DIRECT_UPLOAD_THRESHOLD_BYTES = 4 * 1024 * 1024;
  * 첨부를 가리키는 앱 내부 주소.
  *
  * 서명 URL은 몇 분이면 만료되므로 DB에 담을 수 없다. 대신 만료되지 않는 이 주소를 담고,
- * 열람 시점에 프록시(app/api/ai-search/file)가 세션을 확인해 서명 URL로 넘긴다.
+ * 열람 시점에 프록시(app/api/attachments/file)가 세션을 확인해 서명 URL로 넘긴다.
  */
 export function attachmentProxyUrl(path: string): string {
-  return `/api/ai-search/file?path=${encodeURIComponent(path)}`;
+  return `/api/attachments/file?path=${encodeURIComponent(path)}`;
 }
 
 /** 프록시 주소에서 스토리지 키를 되꺼낸다 — 예전 공개 URL이면 null. */
 export function attachmentPathFromUrl(url: string): string | null {
-  if (!url.startsWith('/api/ai-search/file?')) return null;
+  if (!url.startsWith('/api/attachments/file?')) return null;
   const value = new URLSearchParams(url.slice(url.indexOf('?') + 1)).get('path');
   return value || null;
 }

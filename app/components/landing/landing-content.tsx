@@ -7,7 +7,6 @@
 
 import { useLanguage } from '@/app/context/language-context';
 import EditorShowcase from './editor-showcase';
-import SearchShowcase from './search-showcase';
 
 type Lang = 'ko' | 'en';
 
@@ -477,7 +476,6 @@ export default function LandingContent() {
           </div>
 
           {/* 오른쪽: 눌러 볼 수 있는 검색 데모 — 세 칩이 이 기능이 하는 세 가지 일이다 */}
-          <SearchShowcase />
         </div>
       </section>
 

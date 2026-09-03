@@ -71,7 +71,7 @@ function tooLargeMessage(): string {
 async function uploadThroughServer(file: File, options: UploadOptions): Promise<UploadResult> {
   const body = new FormData();
   body.set('file', file);
-  const res = await fetch('/api/ai-search/attachment', {
+  const res = await fetch('/api/attachments/upload', {
     method: 'POST',
     body,
     signal: options.signal,
@@ -96,7 +96,7 @@ interface Ticket {
 }
 
 async function requestTicket(file: File, signal?: AbortSignal): Promise<Ticket> {
-  const res = await fetch('/api/ai-search/attachment/signed', {
+  const res = await fetch('/api/attachments/upload/signed', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: file.name, size: file.size, mime: file.type || undefined }),
