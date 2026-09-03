@@ -12,7 +12,7 @@ const isDev = process.env.NODE_ENV !== "production";
 const documentCsp = [
   "default-src 'self'",
   // cdn.channel.io / *.channel.io — 채널톡 SDK (커뮤니티/대시보드/설정/온보딩 상담 위젯)
-  // apis.google.com / accounts.google.com — AI Search 첨부의 "Drive에서 파일 추가"(Google Picker)
+  // apis.google.com / accounts.google.com — 첨부의 "Drive에서 파일 추가"(Google Picker)
   `script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.channel.io https://apis.google.com https://accounts.google.com${isDev ? " 'unsafe-eval'" : ""}`,
   // fonts.googleapis.com — layout.tsx가 Space Grotesk·IBM Plex를 이 주소의 스타일시트로 불러온다.
   // 여기 없으면 CSP가 조용히 막고, 화면은 시스템 폰트로 떨어진 채 아무 경고도 보이지 않는다
@@ -23,7 +23,7 @@ const documentCsp = [
   "font-src 'self' data: https://cdn.jsdelivr.net https://cdn.channel.io https://fonts.gstatic.com",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://*.channel.io wss://*.channel.io https://www.googleapis.com https://accounts.google.com",
   "worker-src 'self' blob:",
-  // supabase.co — 첨부 미리보기의 PDF는 <iframe>으로 연다. 프록시(/api/ai-search/file)가
+  // supabase.co — 첨부 미리보기의 PDF는 <iframe>으로 연다. 프록시(/api/attachments/file)가
   // 서명 URL로 302를 보내므로, 최종 목적지인 스토리지 도메인이 여기 있어야 프레임이 뜬다.
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://*.channel.io https://docs.google.com https://accounts.google.com https://content.googleapis.com https://*.supabase.co",
   "media-src 'self' blob: https:",
@@ -47,7 +47,7 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
-    // microphone=(self) — AI Search 음성 입력(받아쓰기)이 같은 출처에서만 마이크를 쓴다.
+    // microphone=(self) — debateAI 음성 입력(받아쓰기)이 같은 출처에서만 마이크를 쓴다.
     key: "Permissions-Policy",
     value: "camera=(), microphone=(self), geolocation=(), payment=(), usb=()",
   },

@@ -147,6 +147,8 @@ export default async function SettingsPage() {
     {
       id: 'accessibility',
       label: '접근성 및 표시',
+      // 브라우저에 바로 쓰는 설정이라 저장 단계가 없다
+      instant: true,
       keywords: ['테마', '다크', '고대비', '움직임', '모션', '낭독', 'TTS', '접근성', 'accessibility'],
       icon: icon('M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17ZM8.5 12h7M12 8.5v7'),
     },
