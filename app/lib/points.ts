@@ -79,24 +79,20 @@ export function isEarning(kind: string): boolean {
 }
 
 export interface PointSummary {
-  /** 확정 잔액 — 원장 합계 */
+  /** 확정 잔액 — 원장 합계. 이 값이 곧 등급 점수다. */
   balance: number;
   /** 적립 예정 — 승인 대기 중인 인증 신청 합계 */
   pending: number;
-  /** 사용 예정 — 발급 대기(requested) 주문 합계. 이미 잔액에서 차감된 금액이다. */
-  reserved: number;
   totalEarned: number;
   totalSpent: number;
 }
 
 /** 사용자 포인트 현황 — 콘솔 상단 요약에 그대로 쓴다. */
 export async function getPointSummary(userId: string): Promise<PointSummary> {
-  const [earned, spent, pendingRequests, reservedOrders] = await Promise.all([
+  const [earned, spent, pendingRequests] = await Promise.all([
     prisma.pointLedger.aggregate({ where: { userId, amount: { gt: 0 } }, _sum: { amount: true } }),
     prisma.pointLedger.aggregate({ where: { userId, amount: { lt: 0 } }, _sum: { amount: true } }),
     prisma.pointRequest.aggregate({ where: { userId, status: 'pending' }, _sum: { amount: true } }),
-    // 상점이 사라져 "발급 대기로 묶인 포인트"가 없다 — 잔액이 곧 쓸 수 있는 전부다.
-    Promise.resolve({ _sum: { pointsSpent: 0 } }),
   ]);
 
   const totalEarned = earned._sum.amount ?? 0;
@@ -105,16 +101,36 @@ export async function getPointSummary(userId: string): Promise<PointSummary> {
   return {
     balance: totalEarned - totalSpent,
     pending: pendingRequests._sum.amount ?? 0,
-    reserved: reservedOrders._sum.pointsSpent ?? 0,
     totalEarned,
     totalSpent,
   };
 }
 
 /**
- * 원장에 적립/차감을 기록한다.
+ * 원장 합계를 다시 세어 User.starScore에 새겨 넣는다.
+ *
+ * starScore는 **원장의 캐시**다. 등급을 매기고 명예의 전당을 정렬할 때마다 원장을
+ * 합산하면 사용자 수만큼 집계가 돌아가므로, 합계를 컬럼 하나에 들고 있는다.
+ * 캐시이므로 언제든 이 함수로 다시 만들 수 있다 — 그것이 원장을 진실로 두는 이유다.
+ */
+export async function syncStarScore(userId: string): Promise<number> {
+  const total = await prisma.pointLedger.aggregate({ where: { userId }, _sum: { amount: true } });
+  // 조정으로 음수가 될 수 있지만 등급 점수는 0 아래로 내려가지 않는다
+  const score = Math.max(0, total._sum.amount ?? 0);
+  await prisma.user.update({ where: { id: userId }, data: { starScore: score } });
+  return score;
+}
+
+/**
+ * 원장에 적립/차감을 기록하고, 등급 점수(User.starScore)를 같은 값으로 맞춘다.
+ *
  * (userId, kind, refType, refId) 유니크 제약이 중복 지급을 막으므로, 같은 활동을 다시
  * 처리해도 두 번 쌓이지 않는다. 이미 있으면 null을 반환한다.
+ *
+ * 예전에는 포인트와 등급 점수가 **같은 사건에서 각자** 쌓였다. 문제를 하나 통과하면
+ * 원장에는 `난이도 × 통과율`이, starScore에는 `정답률×35 + 난이도×3.75`가 따로 들어갔다.
+ * 두 숫자가 같은 활동을 세면서 서로 다른 값을 말하니, 화면에서 "포인트"와 "등급 점수"가
+ * 왜 다른지 설명할 방법이 없었다. 지금은 원장이 유일한 진실이고 starScore는 그 합계다.
  */
 export async function grantPoints(input: {
   userId: string;
@@ -126,7 +142,7 @@ export async function grantPoints(input: {
 }) {
   if (input.amount === 0) return null;
   try {
-    return await prisma.pointLedger.create({
+    const entry = await prisma.pointLedger.create({
       data: {
         userId: input.userId,
         amount: input.amount,
@@ -136,6 +152,10 @@ export async function grantPoints(input: {
         refId: input.refId ?? null,
       },
     });
+    // 원장에 실제로 들어간 뒤에만 등급 점수를 맞춘다. 유니크 충돌로 지급이 없었던
+    // 경우까지 다시 세면, 아무 일도 없었는데 점수만 흔들린다.
+    await syncStarScore(input.userId);
+    return entry;
   } catch {
     return null; // 유니크 충돌 = 이미 지급됨
   }

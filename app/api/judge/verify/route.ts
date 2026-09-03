@@ -91,18 +91,11 @@ export async function POST(request: Request) {
     select: { id: true },
   });
 
-  // Star 점수의 풀이 축: 정답률(최대 35)과 난이도/효율(최대 15)을 제출마다 누적한다.
-  // 면접 축은 면접 종료 시 방어 점수로 따로 더한다.
-  const starPoints = Math.round(
-    (verdict.passed / Math.max(1, verdict.total)) * 35 +
-      (verdict.status === 'PASS' ? problem.difficulty * 3.75 : 0),
-  );
-  if (starPoints > 0) {
-    await prisma.user.update({ where: { id: userId }, data: { starScore: { increment: starPoints } } });
-  }
-
   // 디베이트포인트 — 난이도 × 통과율. refId를 문제 id로 두면 원장의 유니크 제약이
   // "같은 문제 재지급"을 막아 준다(app/lib/points.ts).
+  //
+  // 등급 점수(starScore)를 여기서 따로 올리지 않는다. grantPoints가 원장에 쓰면서
+  // 함께 맞춘다 — 한 사건이 두 곳에서 각자 점수를 만들던 것이 두 숫자가 어긋난 원인이었다.
   const reward = solvePoints(problem.difficulty, verdict.passed, verdict.total);
   if (reward > 0) {
     await grantPoints({
