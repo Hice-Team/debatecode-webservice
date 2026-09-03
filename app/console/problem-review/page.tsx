@@ -119,7 +119,7 @@ export default async function ProblemReviewPage() {
               </div>
             </summary>
 
-            <div className="mt-3 rounded-xl border border-hairline bg-paper/40 p-4">
+            <div className="mt-3 rounded-[var(--radius-panel)] border border-hairline bg-paper/40 p-4">
               <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-fg-muted">문제 설명</p>
               <p className="max-h-72 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-fg">
                 {d.description}
@@ -135,7 +135,7 @@ export default async function ProblemReviewPage() {
               {(() => {
                 const cd = d.copyrightDelegation as { donated?: boolean; signerName?: string; agreedAt?: string } | null;
                 return cd?.donated ? (
-                  <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800">
+                  <p className="mt-3 rounded-[var(--radius-card)] border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800">
                     저작권 기증 위임서 제출됨 · 서명 {cd.signerName} ·{' '}
                     {cd.agreedAt ? new Date(cd.agreedAt).toLocaleDateString('ko-KR') : ''}
                   </p>
@@ -168,7 +168,7 @@ export default async function ProblemReviewPage() {
                 <input
                   name="note"
                   placeholder="반려 사유 (선택 — 출제자에게 표시됩니다)"
-                  className="w-full flex-1 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                  className="w-full flex-1 rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                 />
                 <button className={BTN_REJECT}>반려</button>
               </form>

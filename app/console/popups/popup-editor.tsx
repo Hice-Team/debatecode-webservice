@@ -78,7 +78,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
             {VARIANTS.map(([value, label, desc]) => (
               <label
                 key={value}
-                className={`flex flex-1 cursor-pointer items-start gap-2 rounded-xl border px-3 py-2.5 transition-colors ${
+                className={`flex flex-1 cursor-pointer items-start gap-2 rounded-[var(--radius-panel)] border px-3 py-2.5 transition-colors ${
                   variant === value ? 'border-signal bg-brand-50/50' : 'border-hairline hover:border-ink/25'
                 }`}
               >
@@ -144,7 +144,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
               setPreview(f ? URL.createObjectURL(f) : (draft?.imageUrl ?? null));
               setRemoveImage(false);
             }}
-            className="w-full text-xs text-fg-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700"
+            className="w-full text-xs text-fg-secondary file:mr-3 file:rounded-[var(--radius-card)] file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700"
           />
           {draft?.imageUrl && (
             <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-[11px] text-fg-secondary">
@@ -163,7 +163,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
           )}
         </div>
 
-        <fieldset className="rounded-xl border border-hairline bg-paper/30 p-3.5">
+        <fieldset className="rounded-[var(--radius-panel)] border border-hairline bg-paper/30 p-3.5">
           <legend className="px-1 font-mono text-xs tracking-wider text-fg-secondary">클릭 동작</legend>
           <select
             name="linkType"
@@ -236,7 +236,7 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
         </div>
 
         {state.errors?.form && (
-          <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+          <p className="rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
             {state.errors.form[0]}
           </p>
         )}
@@ -281,11 +281,11 @@ export default function PopupEditor({ draft, onDone }: { draft?: PopupDraft; onD
             <span className="text-[11px] text-fg-muted">오늘 하루 보지 않기</span>
             <span className="ml-auto flex gap-1.5">
               {linkType !== 'none' && linkTarget && (
-                <span className="rounded-lg border border-brand-300 bg-surface px-2.5 py-1.5 text-[11px] font-semibold text-brand-700">
+                <span className="rounded-[var(--radius-card)] border border-brand-300 bg-surface px-2.5 py-1.5 text-[11px] font-semibold text-brand-700">
                   {linkLabel || DEFAULT_LINK_LABEL[linkType]}
                 </span>
               )}
-              <span className="rounded-lg bg-brand-600 px-3 py-1.5 text-[11px] font-semibold text-white">닫기</span>
+              <span className="rounded-[var(--radius-card)] bg-brand-600 px-3 py-1.5 text-[11px] font-semibold text-white">닫기</span>
             </span>
           </div>
         </div>

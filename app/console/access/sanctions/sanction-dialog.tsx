@@ -53,7 +53,7 @@ export default function SanctionDialog({
       <Shell title="제재 발급 완료" onClose={onClose}>
         <p className="px-6 py-6 text-sm text-emerald-800">{state.saved}</p>
         <Footer>
-          <button type="button" onClick={onClose} className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white">
+          <button type="button" onClick={onClose} className="rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white">
             닫기
           </button>
         </Footer>
@@ -101,7 +101,7 @@ export default function SanctionDialog({
                 무엇을 보고 제재하는지 남깁니다. 이의제기가 들어왔을 때 답할 수 있는 유일한 재료입니다.
               </p>
               {presetReportIds.length > 0 && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5">
+                <div className="rounded-[var(--radius-panel)] border border-emerald-200 bg-emerald-50 px-3 py-2.5">
                   <p className="text-xs font-semibold text-emerald-900">
                     신고 {presetReportIds.length}건이 근거로 첨부됩니다
                   </p>
@@ -136,7 +136,7 @@ export default function SanctionDialog({
                   {SANCTION_TYPES.map((t) => (
                     <label
                       key={t}
-                      className={`flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 transition-colors ${
+                      className={`flex cursor-pointer items-start gap-2.5 rounded-[var(--radius-panel)] border px-3 py-2.5 transition-colors ${
                         type === t ? 'border-rose-400 bg-rose-50/50' : 'border-hairline hover:border-ink/25'
                       }`}
                     >
@@ -165,7 +165,7 @@ export default function SanctionDialog({
                       key={p.days}
                       type="button"
                       onClick={() => setDays(p.days)}
-                      className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${FOCUS} ${
+                      className={`rounded-[var(--radius-panel)] border px-3 py-1.5 text-xs font-semibold transition-colors ${FOCUS} ${
                         days === p.days
                           ? p.days === 0
                             ? 'border-rose-500 bg-rose-600 text-white'
@@ -178,7 +178,7 @@ export default function SanctionDialog({
                   ))}
                 </div>
                 {days === 0 && (
-                  <p className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-800">
+                  <p className="mt-2 rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-800">
                     영구 제재는 스스로 만료되지 않습니다. 해제하려면 운영자가 직접 풀어야 합니다.
                   </p>
                 )}
@@ -203,7 +203,7 @@ export default function SanctionDialog({
           {/* ③ 확인 */}
           {step === 3 && (
             <>
-              <div className="rounded-xl border border-hairline bg-paper/40 p-3.5 text-xs">
+              <div className="rounded-[var(--radius-panel)] border border-hairline bg-paper/40 p-3.5 text-xs">
                 <dl className="space-y-1.5">
                   <Row label="대상" value={target.name} />
                   <Row label="조치" value={`${SANCTION_TYPE_LABEL[type]} 제한`} />
@@ -216,7 +216,7 @@ export default function SanctionDialog({
                 <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                   이용자에게 표시되는 문구
                 </p>
-                <pre className="whitespace-pre-wrap rounded-xl border border-hairline bg-surface px-3.5 py-3 font-sans text-xs leading-relaxed text-fg">
+                <pre className="whitespace-pre-wrap rounded-[var(--radius-panel)] border border-hairline bg-surface px-3.5 py-3 font-sans text-xs leading-relaxed text-fg">
                   {sanctionNotice(type, days, reason)}
                 </pre>
               </div>
@@ -224,7 +224,7 @@ export default function SanctionDialog({
           )}
 
           {state.error && (
-            <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{state.error}</p>
+            <p className="rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{state.error}</p>
           )}
         </div>
 
@@ -233,12 +233,12 @@ export default function SanctionDialog({
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className={`mr-auto rounded-xl border border-hairline px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}
+              className={`mr-auto rounded-[var(--radius-panel)] border border-hairline px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}
             >
               ← 이전
             </button>
           )}
-          <button type="button" onClick={onClose} className={`rounded-xl border border-hairline px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}>
+          <button type="button" onClick={onClose} className={`rounded-[var(--radius-panel)] border border-hairline px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}>
             취소
           </button>
           {step < 3 ? (
@@ -246,7 +246,7 @@ export default function SanctionDialog({
               type="button"
               onClick={() => setStep(step + 1)}
               disabled={!canAdvance}
-              className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-40"
+              className="rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-40"
             >
               다음 →
             </button>
@@ -254,7 +254,7 @@ export default function SanctionDialog({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
+              className="rounded-[var(--radius-panel)] bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
             >
               {pending ? '적용 중…' : '제재 발급'}
             </button>

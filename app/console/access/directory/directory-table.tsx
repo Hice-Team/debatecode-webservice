@@ -107,7 +107,7 @@ export default function DirectoryTable({
               setRoleFilter(e.target.value);
               setPage(1);
             }}
-            className={`rounded-lg border border-hairline bg-surface px-2.5 py-2 text-sm ${FOCUS}`}
+            className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2.5 py-2 text-sm ${FOCUS}`}
           >
             <option value="all">전체 역할</option>
             {ROLES.map((r) => (
@@ -123,7 +123,7 @@ export default function DirectoryTable({
               setStatus(e.target.value as typeof status);
               setPage(1);
             }}
-            className={`rounded-lg border border-hairline bg-surface px-2.5 py-2 text-sm ${FOCUS}`}
+            className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2.5 py-2 text-sm ${FOCUS}`}
           >
             <option value="all">전체 상태</option>
             <option value="sanctioned">제재 중</option>

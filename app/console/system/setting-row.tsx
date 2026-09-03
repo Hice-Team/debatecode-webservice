@@ -126,7 +126,7 @@ export default function SettingRow({
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              className="shrink-0 rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
+              className="shrink-0 rounded-[var(--radius-panel)] bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
             >
               변경
             </button>
@@ -134,7 +134,7 @@ export default function SettingRow({
             <button
               type="submit"
               disabled={!dirty || pending}
-              className="shrink-0 rounded-xl bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500 disabled:opacity-40"
+              className="shrink-0 rounded-[var(--radius-panel)] bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500 disabled:opacity-40"
             >
               {pending ? '저장 중…' : confirming ? '확인 · 적용' : '저장'}
             </button>
@@ -146,7 +146,7 @@ export default function SettingRow({
                 setConfirming(false);
                 setDraft(current);
               }}
-              className="shrink-0 rounded-xl border border-hairline px-3 py-1.5 text-xs text-fg-secondary"
+              className="shrink-0 rounded-[var(--radius-panel)] border border-hairline px-3 py-1.5 text-xs text-fg-secondary"
             >
               취소
             </button>
@@ -155,7 +155,7 @@ export default function SettingRow({
       </div>
 
       {confirming && (
-        <p className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] leading-relaxed text-rose-800">
+        <p className="mt-2 rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] leading-relaxed text-rose-800">
           이 설정은 서비스 동작을 즉시 바꿉니다. <strong>{formatValue(def, current)}</strong> →{' '}
           <strong>{formatValue(def, draft)}</strong> 로 적용할까요?
         </p>

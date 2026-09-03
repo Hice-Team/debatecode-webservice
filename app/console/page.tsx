@@ -149,7 +149,7 @@ export default async function ConsoleOverviewPage() {
     { href: '/console/inquiries', label: '미답변 문의', count: openInquiries, show: has('inquiry.respond') },
     { href: '/console/problem-review', label: '검토 대기 문제', count: pendingDrafts, show: has('problem.review') },
     { href: '/console/mates', label: '메이트 신청', count: pendingMates, show: has('mate.review') },
-    { href: '/console/points', label: '포인트·주문', count: pendingPoints, show: has('point.review') },
+    { href: '/console/points', label: '포인트 심사', count: pendingPoints, show: has('point.review') },
     { href: '/console/access/sanctions?tab=appeals', label: '제재 이의제기', count: openAppeals, show: has('sanction.lift') },
   ].filter((q) => q.show);
   const queueTotal = queue.reduce((sum, q) => sum + q.count, 0);
@@ -160,8 +160,8 @@ export default async function ConsoleOverviewPage() {
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600">ADMIN CONSOLE</span>
-          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-fg-muted">ADMIN CONSOLE</span>
+          <h1 className="mt-1.5 font-display text-3xl font-bold tracking-tight text-fg">
             관리 콘솔
           </h1>
           <p className="mt-1 text-sm text-fg-secondary">
@@ -173,9 +173,10 @@ export default async function ConsoleOverviewPage() {
             )}
           </p>
         </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
-          📅 {now.toLocaleDateString('ko-KR')}
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-hairline bg-surface px-3 py-1.5 font-mono text-[11px] text-fg-muted">
+          {/* 초록 점 — 서비스가 살아 있다는 표시. 이모지는 기기마다 다른 그림이 나온다(§8) */}
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+          {now.toLocaleDateString('ko-KR')}
         </span>
       </div>
 
@@ -205,7 +206,7 @@ export default async function ConsoleOverviewPage() {
       {queue.length > 0 && (
         <section
           className={`mt-5 overflow-hidden rounded-[var(--radius-panel)] border ${
-            queueTotal > 0 ? 'border-rose-300 bg-rose-50/60' : 'border-hairline bg-surface'
+            queueTotal > 0 ? 'border-rose-300 bg-rose-50' : 'border-hairline bg-surface'
           }`}
           aria-label="처리 대기 작업"
         >
@@ -222,7 +223,7 @@ export default async function ConsoleOverviewPage() {
               <Link
                 key={q.href}
                 href={q.href}
-                className="bg-surface/70 px-4 py-3 transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal"
+                className="bg-surface px-4 py-3 transition-colors hover:bg-paper focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal"
               >
                 <p className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">{q.label}</p>
                 <p className={`mt-0.5 font-display text-2xl font-bold ${q.count > 0 ? 'text-rose-600' : 'text-fg-quiet'}`}>
@@ -242,7 +243,7 @@ export default async function ConsoleOverviewPage() {
               <p className="font-mono text-[11px] tracking-wider text-fg-muted">{c.label}</p>
               <DeltaBadge delta={c.delta} />
             </div>
-            <p className="mt-1.5 text-3xl font-bold text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            <p className="mt-1.5 font-display text-3xl font-bold text-fg">
               {c.value}
             </p>
             <p className="mt-1 text-xs text-fg-secondary">{c.sub}</p>
@@ -254,17 +255,17 @@ export default async function ConsoleOverviewPage() {
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-lg font-bold text-fg">사용자 트래픽 · 최근 {DAYS}일</h3>
-            <span className="font-mono text-[10px] text-brand-600">일별 활동</span>
+            <h3 className="font-display text-[15px] font-bold tracking-tight text-fg">사용자 트래픽 · 최근 {DAYS}일</h3>
+            <span className="font-mono text-[10px] text-fg-quiet">일별 활동</span>
           </div>
           <AreaChart series={traffic} labels={labels} />
         </div>
 
         <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface" aria-labelledby="feed-title">
           <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
-            <h3 id="feed-title" className="text-sm font-bold text-fg">최근 운영 활동</h3>
+            <h3 id="feed-title" className="font-display text-[15px] font-bold tracking-tight text-fg">최근 운영 활동</h3>
             {recentAudit.length > 0 && (
-              <Link href="/console/access/audit" className="font-mono text-[11px] text-brand-600 hover:underline">
+              <Link href="/console/access/audit" className="font-mono text-[11px] text-signal hover:underline">
                 전체 →
               </Link>
             )}
@@ -279,9 +280,9 @@ export default async function ConsoleOverviewPage() {
                 <li key={entry.id}>
                   <Link
                     href="/console/access/audit"
-                    className="flex items-center gap-2.5 px-5 py-2.5 transition-colors hover:bg-brand-50/40"
+                    className="flex items-center gap-2.5 px-5 py-2.5 transition-colors hover:bg-paper"
                   >
-                    <span className="shrink-0 rounded bg-paper px-1.5 py-0.5 font-mono text-[9px] font-bold text-fg-muted">
+                    <span className="shrink-0 rounded-[var(--radius-control)] bg-paper px-1.5 py-0.5 font-mono text-[9px] font-bold text-fg-muted">
                       {auditActionLabel(entry.action)}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-xs text-fg">{entry.summary}</span>

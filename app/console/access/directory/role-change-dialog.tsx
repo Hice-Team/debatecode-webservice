@@ -36,7 +36,7 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
       <Shell title="역할 변경 완료" onClose={onClose}>
         <p className="px-6 py-6 text-sm text-emerald-800">{state.saved}</p>
         <Footer>
-          <button type="button" onClick={onClose} className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white">
+          <button type="button" onClick={onClose} className="rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white">
             닫기
           </button>
         </Footer>
@@ -54,7 +54,7 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
 
         <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-5">
           {!single && (
-            <div className="rounded-xl border border-hairline bg-paper/50 px-3 py-2.5">
+            <div className="rounded-[var(--radius-panel)] border border-hairline bg-paper/50 px-3 py-2.5">
               <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-fg-muted">대상</p>
               <p className="text-xs leading-relaxed text-fg">
                 {targets
@@ -72,7 +72,7 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
               {ROLES.map((r) => (
                 <label
                   key={r}
-                  className={`flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 transition-colors ${
+                  className={`flex cursor-pointer items-start gap-2.5 rounded-[var(--radius-panel)] border px-3 py-2.5 transition-colors ${
                     nextRole === r ? 'border-signal bg-brand-50/50' : 'border-hairline hover:border-ink/25'
                   }`}
                 >
@@ -97,7 +97,7 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
 
           {/* 권한 변화 미리보기 — 역할 이름만으로는 알 수 없는 것을 보여 준다 */}
           {!unchanged && (diff.gained.length > 0 || diff.lost.length > 0) && (
-            <div className="rounded-xl border border-hairline bg-paper/40 p-3.5">
+            <div className="rounded-[var(--radius-panel)] border border-hairline bg-paper/40 p-3.5">
               <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                 이 변경으로 달라지는 권한
               </p>
@@ -128,7 +128,7 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
             </div>
           )}
           {unchanged && (
-            <p className="rounded-xl border border-hairline bg-paper/40 px-3 py-2.5 text-[11px] text-fg-muted">
+            <p className="rounded-[var(--radius-panel)] border border-hairline bg-paper/40 px-3 py-2.5 text-[11px] text-fg-muted">
               현재와 같은 역할입니다. 다른 역할을 선택하세요.
             </p>
           )}
@@ -153,18 +153,18 @@ export default function RoleChangeDialog({ targets, onClose }: { targets: Target
           </div>
 
           {state.error && (
-            <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{state.error}</p>
+            <p className="rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{state.error}</p>
           )}
         </div>
 
         <Footer>
-          <button type="button" onClick={onClose} className={`rounded-xl border border-hairline px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}>
+          <button type="button" onClick={onClose} className={`rounded-[var(--radius-panel)] border border-hairline px-4 py-2 text-sm text-fg-secondary ${FOCUS}`}>
             취소
           </button>
           <button
             type="submit"
             disabled={pending || unchanged || reason.trim().length < 4}
-            className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-40"
+            className="rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-40"
           >
             {pending ? '적용 중…' : `${ROLE_LABELS[nextRole]}(으)로 변경`}
           </button>

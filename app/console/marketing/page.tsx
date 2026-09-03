@@ -56,7 +56,7 @@ export default async function ConsoleMarketingPage() {
       />
 
       {!live && (
-        <p className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <p className="mb-5 rounded-[var(--radius-panel)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           메일 전송 수단(<code className="font-mono">SMTP_HOST</code> · <code className="font-mono">SMTP_USER</code> ·{' '}
           <code className="font-mono">SMTP_PASS</code>)이 설정되지 않았습니다. 지금은 대상 수만 확인되고 실제로 메일이
           나가지 않습니다.
@@ -86,11 +86,11 @@ export default async function ConsoleMarketingPage() {
           발송 목록
         </h2>
         {campaigns.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-hairline px-4 py-12 text-center text-sm text-fg-muted">
+          <p className="rounded-[var(--radius-panel)] border border-dashed border-hairline px-4 py-12 text-center text-sm text-fg-muted">
             아직 작성한 메일이 없습니다.
           </p>
         ) : (
-          <ul className="overflow-hidden rounded-xl border border-hairline bg-surface">
+          <ul className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
             {campaigns.map((campaign) => (
               <li key={campaign.id} className="flex flex-wrap items-center gap-3 border-b border-hairline px-4 py-3 last:border-b-0">
                 <div className="min-w-0 flex-1">
@@ -125,7 +125,7 @@ export default async function ConsoleMarketingPage() {
                     />
                     <form action={deleteCampaign}>
                       <input type="hidden" name="id" value={campaign.id} />
-                      <button className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-600">
+                      <button className="rounded-[var(--radius-card)] border border-hairline px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-600">
                         삭제
                       </button>
                     </form>
@@ -143,11 +143,11 @@ export default async function ConsoleMarketingPage() {
           최근 수신 동의
         </h2>
         {recent.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-hairline px-4 py-12 text-center text-sm text-fg-muted">
+          <p className="rounded-[var(--radius-panel)] border border-dashed border-hairline px-4 py-12 text-center text-sm text-fg-muted">
             아직 수신 동의자가 없습니다.
           </p>
         ) : (
-          <ul className="overflow-hidden rounded-xl border border-hairline bg-surface">
+          <ul className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
             {recent.map((contact) => (
               <li key={contact.id} className="flex items-center gap-3 border-b border-hairline px-4 py-2.5 last:border-b-0">
                 <span data-no-translate className="min-w-0 flex-1 truncate font-mono text-[13px] text-fg">

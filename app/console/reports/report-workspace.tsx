@@ -135,7 +135,7 @@ export default function ReportWorkspace({
                 key={key}
                 type="button"
                 onClick={() => setFilter(key)}
-                className={`flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${FOCUS} ${
+                className={`flex-1 rounded-[var(--radius-card)] px-2 py-1.5 text-xs font-semibold transition-colors ${FOCUS} ${
                   filter === key ? 'bg-signal text-white' : 'text-fg-secondary hover:bg-paper'
                 }`}
               >
@@ -147,7 +147,7 @@ export default function ReportWorkspace({
             aria-label="대상 필터"
             value={reasonFilter}
             onChange={(e) => setReasonFilter(e.target.value)}
-            className={`w-full rounded-lg border border-hairline bg-surface px-2.5 py-1.5 text-xs ${FOCUS}`}
+            className={`w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-2.5 py-1.5 text-xs ${FOCUS}`}
           >
             <option value="all">모든 대상</option>
             {REPORT_TARGETS.map((tt) => (
@@ -279,7 +279,7 @@ function CaseDetail({
                 id={`assign-${item.dedupeKey}`}
                 name="assigneeId"
                 defaultValue={item.assigneeId ?? ''}
-                className={`rounded-lg border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
+                className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
               >
                 <option value="">미지정</option>
                 {reviewers.map((r) => (
@@ -289,7 +289,7 @@ function CaseDetail({
                   </option>
                 ))}
               </select>
-              <button className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
+              <button className="rounded-[var(--radius-card)] border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
                 지정
               </button>
             </form>
@@ -303,7 +303,7 @@ function CaseDetail({
                 id={`prio-${item.dedupeKey}`}
                 name="priority"
                 defaultValue={item.priority}
-                className={`rounded-lg border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
+                className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
               >
                 {PRIORITIES.map((p) => (
                   <option key={p} value={p}>
@@ -311,7 +311,7 @@ function CaseDetail({
                   </option>
                 ))}
               </select>
-              <button className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
+              <button className="rounded-[var(--radius-card)] border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
                 변경
               </button>
             </form>
@@ -323,11 +323,11 @@ function CaseDetail({
       <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
         <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">신고 대상 콘텐츠</h3>
         {item.content.gone ? (
-          <p className="rounded-xl border border-hairline bg-paper/50 px-4 py-6 text-center text-xs text-fg-muted">
+          <p className="rounded-[var(--radius-panel)] border border-hairline bg-paper/50 px-4 py-6 text-center text-xs text-fg-muted">
             삭제되었거나 찾을 수 없는 콘텐츠입니다. 이미 조치됐을 수 있습니다.
           </p>
         ) : (
-          <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-4">
+          <div className="rounded-[var(--radius-panel)] border border-rose-100 bg-rose-50/40 p-4">
             {item.content.title && <p className="mb-1 font-semibold text-fg">{item.content.title}</p>}
             <p className="max-h-60 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-fg">
               {item.content.body}
@@ -351,7 +351,7 @@ function CaseDetail({
         </h3>
         <ul className="space-y-1.5">
           {item.reasons.map((r, i) => (
-            <li key={i} className="flex items-start gap-2 rounded-lg bg-paper/50 px-3 py-2">
+            <li key={i} className="flex items-start gap-2 rounded-[var(--radius-card)] bg-paper/50 px-3 py-2">
               <span className="shrink-0 rounded border border-rose-200 bg-surface px-1.5 py-0.5 font-mono text-[10px] text-rose-700">
                 {reasonLabel(r.reason)}
               </span>
@@ -440,7 +440,7 @@ function CaseDetail({
 
           {/* 콘텐츠 삭제 — 삭제와 신고 종결이 한 동작으로 묶여 있다 */}
           {canModerate && !item.content.gone && item.targetType !== 'user' && (
-            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50/40 p-3.5">
+            <div className="mb-4 rounded-[var(--radius-panel)] border border-rose-200 bg-rose-50/40 p-3.5">
               {confirmDelete ? (
                 <form action={deleteReportedContent} className="flex flex-wrap items-center gap-2">
                   <input type="hidden" name="dedupeKey" value={item.dedupeKey} />

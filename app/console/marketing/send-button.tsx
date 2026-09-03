@@ -37,7 +37,7 @@ export default function SendButton({
           <button
             type="submit"
             disabled={pending}
-            className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50"
+            className="rounded-[var(--radius-card)] bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50"
           >
             {pending ? '발송 중…' : '발송'}
           </button>
@@ -53,7 +53,7 @@ export default function SendButton({
         <button
           type="button"
           onClick={() => setConfirming(true)}
-          className="rounded-lg bg-signal px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-600"
+          className="rounded-[var(--radius-card)] bg-signal px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-600"
         >
           발송하기
         </button>

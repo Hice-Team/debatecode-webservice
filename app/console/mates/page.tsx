@@ -179,14 +179,14 @@ export default async function MateManagementPage({
 
               {/* 신청서 PDF가 곧 지원서다 — 심사자가 가장 먼저 열어야 하는 것이라 맨 위에 둔다.
                   지원 동기는 예전 신청서에만 남아 있어 있을 때만 그린다. */}
-              <div className="mt-3 rounded-xl border border-hairline bg-paper/40 p-4">
+              <div className="mt-3 rounded-[var(--radius-panel)] border border-hairline bg-paper/40 p-4">
                 {m.attachmentUrl ? (
                   <a
                     href={m.attachmentUrl}
                     download={m.attachmentName ?? '신청서.pdf'}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-card)] border border-brand-200 bg-brand-50 px-3.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                   >
                     <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.7]" aria-hidden>
                       <path d="M12 4v11m0 0 3.5-3.5M12 15l-3.5-3.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -226,7 +226,7 @@ export default async function MateManagementPage({
                     name="note"
                     rows={2}
                     placeholder="반려서 — 반려 사유를 적어주세요. 신청자에게 그대로 전달됩니다. (선택)"
-                    className="w-full flex-1 rounded-lg border border-hairline bg-surface px-3 py-2 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                    className="w-full flex-1 rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-2 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                   />
                   <button className={BTN_REJECT}>반려</button>
                 </form>
@@ -319,7 +319,7 @@ export default async function MateManagementPage({
                   </span>
                 </div>
                 {m.reviewNote && (
-                  <p className="mt-1.5 rounded-lg border border-hairline bg-paper/40 px-3 py-2 text-xs leading-relaxed text-fg-secondary">
+                  <p className="mt-1.5 rounded-[var(--radius-card)] border border-hairline bg-paper/40 px-3 py-2 text-xs leading-relaxed text-fg-secondary">
                     {m.status === 'revoked' ? '회수 사유' : m.status === 'rejected' ? '반려서' : '메모'}: {m.reviewNote}
                   </p>
                 )}

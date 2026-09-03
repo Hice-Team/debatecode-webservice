@@ -221,7 +221,7 @@ export default async function SystemHealthPage() {
                 </div>
                 <p className="mt-1.5 break-words text-xs text-fg-secondary">{check.detail}</p>
                 {check.hint && (
-                  <p className="mt-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-[11px] leading-relaxed text-fg">
+                  <p className="mt-1.5 rounded-[var(--radius-card)] bg-surface/70 px-2.5 py-1.5 text-[11px] leading-relaxed text-fg">
                     → {check.hint}
                   </p>
                 )}
@@ -245,7 +245,7 @@ export default async function SystemHealthPage() {
             전체 {SETTING_DEFS.length}개 중 <strong className="text-fg">{overrideCount}개</strong>가 기본값에서 변경돼
             있습니다.
           </p>
-          <p className="mt-3 rounded-xl bg-paper/60 px-3 py-2.5 text-[11px] leading-relaxed text-fg-secondary">
+          <p className="mt-3 rounded-[var(--radius-panel)] bg-paper/60 px-3 py-2.5 text-[11px] leading-relaxed text-fg-secondary">
             여기 있는 값은 재배포 없이 즉시 반영됩니다. 특정 기능만 오류가 나면 그 기능 플래그를 끄고, 외부 AI가
             죽으면 공급자를 바꾸고, 전면 장애면 유지보수 모드를 켜세요.
           </p>

@@ -1,17 +1,17 @@
 // 관리 콘솔 공용 UI 조각 — 서버/클라이언트 페이지에서 함께 쓰는 헤더·빈 행·버튼 클래스.
 export const BTN_APPROVE =
-  'rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700';
+  'rounded-[var(--radius-panel)] bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700';
 export const BTN_REJECT =
-  'rounded-xl border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-rose-300 hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600';
+  'rounded-[var(--radius-panel)] border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-rose-300 hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600';
 export const BTN_PRIMARY =
-  'rounded-xl bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
+  'rounded-[var(--radius-panel)] bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 export const BTN_NEUTRAL =
-  'rounded-xl border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
+  'rounded-[var(--radius-panel)] border border-hairline px-3 py-1.5 text-xs font-medium text-fg hover:border-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 export const BTN_DANGER =
-  'rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600';
+  'rounded-[var(--radius-panel)] bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600';
 
 export const FIELD =
-  'w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
+  'w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-2 text-sm placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 export const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal';
 
 // 신고 사유·대상 라벨은 app/lib/report-targets.ts가 원본이다.
@@ -137,7 +137,7 @@ export function StatGrid({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {stats.map((stat) => (
-        <div key={stat.label} className="rounded-xl border border-hairline bg-surface px-4 py-3">
+        <div key={stat.label} className="rounded-[var(--radius-panel)] border border-hairline bg-surface px-4 py-3">
           <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
           <p className={`mt-1 font-display text-2xl font-bold ${stat.warn ? 'text-rose-600' : 'text-fg'}`}>
             {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
@@ -207,7 +207,7 @@ export interface AuditTrailItem {
 export function AuditTrail({ items, label }: { items: AuditTrailItem[]; label?: string }) {
   if (items.length === 0) return null;
   return (
-    <div className="mt-4 rounded-xl border border-hairline bg-paper/40 p-3">
+    <div className="mt-4 rounded-[var(--radius-panel)] border border-hairline bg-paper/40 p-3">
       <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">{label ?? '처리 이력'}</p>
       <ul className="space-y-1.5">
         {items.map((item) => (
@@ -242,7 +242,7 @@ export function Callout({
     ok: 'border-emerald-200 bg-emerald-50/60 text-emerald-900',
   }[tone];
   return (
-    <div className={`rounded-xl border px-4 py-3 text-xs leading-relaxed ${cls}`}>
+    <div className={`rounded-[var(--radius-panel)] border px-4 py-3 text-xs leading-relaxed ${cls}`}>
       {title && <p className="mb-0.5 font-semibold">{title}</p>}
       {children}
     </div>

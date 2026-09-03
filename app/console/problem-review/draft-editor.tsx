@@ -44,7 +44,7 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
   }
 
   return (
-    <form action={formAction} className="mt-3 space-y-3 rounded-xl border border-brand-200 bg-brand-50/30 p-4">
+    <form action={formAction} className="mt-3 space-y-3 rounded-[var(--radius-panel)] border border-brand-200 bg-brand-50/30 p-4">
       <input type="hidden" name="id" value={draft.id} />
 
       {draft.caseCount === 0 && (

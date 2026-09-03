@@ -79,7 +79,7 @@ export default function PopupList({ items }: { items: PopupRow[] }) {
               </form>
               <form action={deletePopup}>
                 <input type="hidden" name="id" value={item.id} />
-                <button className="rounded-xl border border-hairline px-3 py-1.5 text-xs font-medium text-fg-secondary hover:border-rose-300 hover:text-rose-700">
+                <button className="rounded-[var(--radius-panel)] border border-hairline px-3 py-1.5 text-xs font-medium text-fg-secondary hover:border-rose-300 hover:text-rose-700">
                   삭제
                 </button>
               </form>

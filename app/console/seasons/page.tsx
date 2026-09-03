@@ -91,7 +91,7 @@ export default async function SeasonsPage() {
         <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
           <UserResetForm />
 
-          <div className="mt-5 divide-y divide-hairline overflow-hidden rounded-xl border border-hairline">
+          <div className="mt-5 divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline">
             {resets.length === 0 ? (
               <EmptyRow text="초기화된 계정이 없습니다." />
             ) : (

@@ -74,7 +74,7 @@ export default function OverrideForm({
             aria-label="계정 검색"
             className={`${FIELD} mb-2`}
           />
-          <div className="max-h-56 overflow-y-auto rounded-xl border border-hairline divide-y divide-hairline">
+          <div className="max-h-56 overflow-y-auto rounded-[var(--radius-panel)] border border-hairline divide-y divide-hairline">
             {filtered.length === 0 && (
               <p className="px-3 py-6 text-center text-xs text-fg-muted">해당하는 계정이 없습니다.</p>
             )}
@@ -112,7 +112,7 @@ export default function OverrideForm({
           <legend className="mb-1.5 font-mono text-xs tracking-wider text-fg-secondary">
             권한 {permissions.length > 0 && <span className="text-signal">· {permissions.length}개 선택</span>}
           </legend>
-          <div className="max-h-[15.5rem] overflow-y-auto rounded-xl border border-hairline">
+          <div className="max-h-[15.5rem] overflow-y-auto rounded-[var(--radius-panel)] border border-hairline">
             {GROUP_ORDER.map((group) => {
               const perms = ALL_PERMISSIONS.filter((p) => PERMISSIONS[p].group === group);
               if (perms.length === 0) return null;
@@ -181,7 +181,7 @@ export default function OverrideForm({
             ).map((o) => (
               <label
                 key={o.value}
-                className={`flex flex-1 cursor-pointer items-start gap-2 rounded-xl border px-3 py-2.5 transition-colors ${
+                className={`flex flex-1 cursor-pointer items-start gap-2 rounded-[var(--radius-panel)] border px-3 py-2.5 transition-colors ${
                   effect === o.value
                     ? o.value === 'allow'
                       ? 'border-emerald-400 bg-emerald-50/50'
@@ -244,10 +244,10 @@ export default function OverrideForm({
         </Callout>
       )}
       {state.error && (
-        <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{state.error}</p>
+        <p className="rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{state.error}</p>
       )}
       {state.saved && (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+        <p className="rounded-[var(--radius-card)] border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
           {state.saved}
         </p>
       )}
@@ -256,7 +256,7 @@ export default function OverrideForm({
         <button
           type="submit"
           disabled={!ready || pending}
-          className={`rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-40 ${FOCUS}`}
+          className={`rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-40 ${FOCUS}`}
         >
           {pending
             ? '적용 중…'

@@ -152,7 +152,7 @@ export default async function SanctionCenterPage({
                 <p className="mt-2 text-sm text-fg">{s.reason}</p>
 
                 {/* 근거 — 이의제기 때 이 블록 하나로 답이 나와야 한다 */}
-                <div className="mt-2 rounded-xl border border-hairline bg-paper/40 px-3 py-2">
+                <div className="mt-2 rounded-[var(--radius-panel)] border border-hairline bg-paper/40 px-3 py-2">
                   <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-fg-muted">근거</p>
                   {evidence.reportIds && evidence.reportIds.length > 0 ? (
                     <p className="text-[11px] text-fg-secondary">
@@ -199,11 +199,11 @@ export default async function SanctionCenterPage({
               </div>
 
               <div className="mt-2 grid gap-2 lg:grid-cols-2">
-                <div className="rounded-xl border border-hairline bg-paper/40 px-3 py-2">
+                <div className="rounded-[var(--radius-panel)] border border-hairline bg-paper/40 px-3 py-2">
                   <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-fg-muted">제재 사유</p>
                   <p className="text-xs leading-relaxed text-fg">{s.reason}</p>
                 </div>
-                <div className="rounded-xl border border-amber-200 bg-amber-50/50 px-3 py-2">
+                <div className="rounded-[var(--radius-panel)] border border-amber-200 bg-amber-50/50 px-3 py-2">
                   <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-amber-800/60">이용자 소명</p>
                   <p className="whitespace-pre-wrap text-xs leading-relaxed text-fg">{s.appealText}</p>
                 </div>
@@ -217,7 +217,7 @@ export default async function SanctionCenterPage({
                     <input
                       name="note"
                       placeholder="기각 사유 — 이용자에게 전달됩니다"
-                      className="w-full flex-1 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet"
+                      className="w-full flex-1 rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet"
                     />
                     <button className={BTN_REJECT}>기각</button>
                   </form>

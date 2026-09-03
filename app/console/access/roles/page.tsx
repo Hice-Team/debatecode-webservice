@@ -155,7 +155,7 @@ export default async function RolesPage({ searchParams }: { searchParams: Promis
 
       <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {ROLES.map((r) => (
-          <div key={r} className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5">
+          <div key={r} className="rounded-[var(--radius-panel)] border border-hairline bg-surface px-3.5 py-2.5">
             <p className="text-xs font-semibold text-fg">{ROLE_LABELS[r as Role]}</p>
             <p className="mt-0.5 text-[11px] leading-relaxed text-fg-muted">{ROLE_DESCRIPTIONS[r as Role]}</p>
           </div>

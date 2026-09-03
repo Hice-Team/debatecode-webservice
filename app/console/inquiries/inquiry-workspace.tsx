@@ -120,7 +120,7 @@ export default function InquiryWorkspace({
                 key={key}
                 type="button"
                 onClick={() => setFilter(key)}
-                className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${FOCUS} ${
+                className={`rounded-[var(--radius-card)] px-2 py-1.5 text-xs font-semibold transition-colors ${FOCUS} ${
                   filter === key ? 'bg-signal text-white' : 'text-fg-secondary hover:bg-paper'
                 }`}
               >
@@ -220,7 +220,7 @@ function InquiryDetail({
               name="category"
               aria-label="분류"
               defaultValue={item.category ?? 'etc'}
-              className={`rounded-lg border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
+              className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
             >
               {Object.entries(CATEGORY_LABEL).map(([k, v]) => (
                 <option key={k} value={k}>
@@ -232,7 +232,7 @@ function InquiryDetail({
               name="priority"
               aria-label="우선순위"
               defaultValue={item.priority}
-              className={`rounded-lg border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
+              className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
             >
               {PRIORITIES.map((p) => (
                 <option key={p} value={p}>
@@ -240,7 +240,7 @@ function InquiryDetail({
                 </option>
               ))}
             </select>
-            <button className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
+            <button className="rounded-[var(--radius-card)] border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
               분류 저장
             </button>
           </form>
@@ -251,7 +251,7 @@ function InquiryDetail({
               name="assigneeId"
               aria-label="담당자"
               defaultValue={item.assigneeId ?? ''}
-              className={`rounded-lg border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
+              className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
             >
               <option value="">담당 미지정</option>
               {responders.map((r) => (
@@ -261,7 +261,7 @@ function InquiryDetail({
                 </option>
               ))}
             </select>
-            <button className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
+            <button className="rounded-[var(--radius-card)] border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
               지정
             </button>
           </form>
@@ -287,7 +287,7 @@ function InquiryDetail({
       {/* 문의 본문 */}
       <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
         <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">문의 내용</h3>
-        <p className="whitespace-pre-wrap rounded-xl bg-paper/50 px-4 py-3 text-sm leading-relaxed text-fg">
+        <p className="whitespace-pre-wrap rounded-[var(--radius-panel)] bg-paper/50 px-4 py-3 text-sm leading-relaxed text-fg">
           {item.body}
         </p>
       </section>
@@ -305,7 +305,7 @@ function InquiryDetail({
 
         {!editing && item.answer ? (
           <>
-            <p className="whitespace-pre-wrap rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3 text-sm leading-relaxed text-fg">
+            <p className="whitespace-pre-wrap rounded-[var(--radius-panel)] border border-emerald-200 bg-emerald-50/50 px-4 py-3 text-sm leading-relaxed text-fg">
               {item.answer}
             </p>
             {item.answeredByName && (

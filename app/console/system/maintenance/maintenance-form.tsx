@@ -105,7 +105,7 @@ export default function MaintenanceForm({
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+              className="rounded-[var(--radius-panel)] bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
             >
               유지보수 모드 켜기
             </button>
@@ -113,7 +113,7 @@ export default function MaintenanceForm({
             <button
               type="submit"
               disabled={pending}
-              className={`rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
+              className={`rounded-[var(--radius-panel)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
                 confirming ? 'bg-rose-600 hover:bg-rose-700' : 'bg-brand-600 hover:bg-brand-500'
               }`}
             >
@@ -124,7 +124,7 @@ export default function MaintenanceForm({
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="rounded-xl border border-hairline px-4 py-2 text-sm text-fg-secondary"
+              className="rounded-[var(--radius-panel)] border border-hairline px-4 py-2 text-sm text-fg-secondary"
             >
               취소
             </button>

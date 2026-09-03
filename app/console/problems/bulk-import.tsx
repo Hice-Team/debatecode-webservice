@@ -47,7 +47,7 @@ export default function BulkImport() {
         </div>
 
         {state.errors && state.errors.length > 0 && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+          <div className="rounded-[var(--radius-panel)] border border-rose-200 bg-rose-50 px-4 py-3">
             <p className="mb-1 text-xs font-semibold text-rose-800">{state.errors.length}개 문제가 있습니다</p>
             <ul className="list-inside list-disc space-y-0.5 text-[11px] text-rose-700">
               {state.errors.map((e, i) => (
@@ -65,7 +65,7 @@ export default function BulkImport() {
 
         {/* 검증 결과 */}
         {state.preview && state.preview.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-hairline">
+          <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline">
             <p className="border-b border-hairline bg-paper/50 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
               검증 통과 {state.preview.length}건
             </p>

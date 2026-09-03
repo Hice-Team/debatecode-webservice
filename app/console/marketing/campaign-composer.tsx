@@ -9,7 +9,7 @@ import { AUDIENCE_LABELS, type Audience } from '@/app/lib/marketing-audience';
 const initialState: CampaignState = {};
 
 const FIELD =
-  'w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/30';
+  'w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-2 text-sm placeholder:text-fg-quiet focus:border-signal/40 focus:outline-none focus:ring-2 focus:ring-signal/30';
 const LABEL = 'block font-mono text-[11px] uppercase tracking-wider text-fg-muted mb-1.5';
 
 const SAMPLE = `# 이번 주 새 기출 세트가 열렸습니다
@@ -52,7 +52,7 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
             {(Object.keys(AUDIENCE_LABELS) as Audience[]).map((key) => (
               <label
                 key={key}
-                className={`cursor-pointer rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                className={`cursor-pointer rounded-[var(--radius-card)] border px-3 py-2.5 text-sm transition-colors ${
                   audience === key ? 'border-signal bg-signal/10 font-semibold' : 'border-hairline hover:border-fg-quiet'
                 }`}
               >
@@ -103,14 +103,14 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
         </div>
 
         {state.errors?.form && (
-          <div className="space-y-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-[13px] text-rose-700">
+          <div className="space-y-1 rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-3 py-2 text-[13px] text-rose-700">
             {state.errors.form.map((e) => (
               <p key={e}>{e}</p>
             ))}
           </div>
         )}
         {state.saved && (
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] text-emerald-700">
+          <p className="rounded-[var(--radius-card)] border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] text-emerald-700">
             {state.message}
           </p>
         )}
@@ -118,7 +118,7 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
         <button
           type="submit"
           disabled={pending}
-          className="rounded-lg bg-signal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
+          className="rounded-[var(--radius-card)] bg-signal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
         >
           {pending ? '저장 중…' : '초안 저장'}
         </button>
@@ -130,8 +130,8 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
       {/* ---------- 미리보기 ---------- */}
       <div className="lg:sticky lg:top-6">
         <p className={LABEL}>미리보기</p>
-        <div className="overflow-hidden rounded-xl border border-hairline bg-[#f6f6f7] p-4">
-          <div className="overflow-hidden rounded-xl border border-hairline bg-surface">
+        <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-[#f6f6f7] p-4">
+          <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
             <div className="border-b border-hairline px-5 py-3">
               <span className="font-mono text-[11px] font-bold tracking-[0.12em] text-signal">DEBATECODE</span>
             </div>

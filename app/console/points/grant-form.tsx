@@ -64,7 +64,7 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
             placeholder="이름·역할로 찾기"
             className={`${FIELD} mb-2`}
           />
-          <div className="max-h-48 divide-y divide-hairline overflow-y-auto rounded-xl border border-hairline">
+          <div className="max-h-48 divide-y divide-hairline overflow-y-auto rounded-[var(--radius-panel)] border border-hairline">
             {filtered.length === 0 && (
               <p className="px-3 py-6 text-center text-xs text-fg-muted">해당하는 계정이 없습니다.</p>
             )}
@@ -112,7 +112,7 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
                   key={p.amount}
                   type="button"
                   onClick={() => setAmount(String(p.amount))}
-                  className={`rounded-lg border border-hairline px-2.5 py-1 text-[11px] text-fg-secondary hover:border-brand-300 hover:text-brand-700 ${FOCUS}`}
+                  className={`rounded-[var(--radius-card)] border border-hairline px-2.5 py-1 text-[11px] text-fg-secondary hover:border-brand-300 hover:text-brand-700 ${FOCUS}`}
                 >
                   {p.label}
                 </button>
@@ -135,7 +135,7 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
           </div>
 
           {selected && valid && (
-            <div className="rounded-xl border border-hairline bg-paper/40 px-3 py-2.5 text-xs">
+            <div className="rounded-[var(--radius-panel)] border border-hairline bg-paper/40 px-3 py-2.5 text-xs">
               <p className="text-fg-secondary">
                 <strong className="text-fg">{selected.name}</strong> · {selected.balance.toLocaleString()}P →{' '}
                 <strong className={after != null && after < 0 ? 'text-rose-600' : 'text-fg'}>
@@ -151,7 +151,7 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
       </div>
 
       {state.error && (
-        <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{state.error}</p>
+        <p className="rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{state.error}</p>
       )}
       {state.saved && (
         <Callout tone="ok" title="반영되었습니다">
@@ -162,7 +162,7 @@ export default function PointGrantForm({ targets }: { targets: GrantTarget[] }) 
       <button
         type="submit"
         disabled={!ready || pending}
-        className={`rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-40 ${FOCUS}`}
+        className={`rounded-[var(--radius-panel)] bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-40 ${FOCUS}`}
       >
         {pending ? '반영 중…' : '포인트 반영'}
       </button>

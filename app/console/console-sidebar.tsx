@@ -58,9 +58,6 @@ const ICONS: Record<string, React.ReactNode> = {
   points: (
     <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.2 6.2h2.4a1.4 1.4 0 0 1 0 2.8H6.2V6.2Zm0 2.8v2.8" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
   ),
-  shop: (
-    <path d="M2.5 5.5h11l-.8 8a1.5 1.5 0 0 1-1.5 1.4H4.8a1.5 1.5 0 0 1-1.5-1.4l-.8-8ZM5.5 5.5V4a2.5 2.5 0 0 1 5 0v1.5" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-  ),
   marketing: (
     <path d="M1.8 5.5h12.4v8H1.8v-8Zm0 .4 6.2 4.3 6.2-4.3" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
   ),
@@ -82,9 +79,6 @@ const ICONS: Record<string, React.ReactNode> = {
   ),
   season: (
     <path d="M8 1.5 9.9 5.6l4.4.5-3.3 3 .9 4.4L8 11.3 4.1 13.5l.9-4.4-3.3-3 4.4-.5L8 1.5Z" strokeWidth="1.3" fill="none" strokeLinejoin="round" />
-  ),
-  feedback: (
-    <path d="M5.5 13.5V7l2.5-4a1.2 1.2 0 0 1 1.7 1.3L9 7h3.3a1.2 1.2 0 0 1 1.2 1.4l-.8 4.1a1.2 1.2 0 0 1-1.2 1H5.5Zm0 0H2.5V7h3" strokeWidth="1.4" fill="none" strokeLinejoin="round" />
   ),
   // 시스템
   system: (
@@ -197,7 +191,7 @@ export default function ConsoleSidebar({
         className="dc-scroll-none lg:hidden sticky top-0 z-10 overflow-x-auto border-b border-hairline bg-surface/95 px-4 py-2 backdrop-blur"
       >
         {maintenanceOn && (
-          <p className="mb-2 rounded-lg bg-amber-100 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900">
+          <p className="mb-2 rounded-[var(--radius-card)] bg-amber-100 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900">
             {t('console-maintenance-live', language)}
           </p>
         )}
@@ -206,7 +200,7 @@ export default function ConsoleSidebar({
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-card)] px-3 py-1.5 text-xs font-medium transition-colors ${
                 isActive(item) ? 'bg-signal text-white' : 'text-fg-secondary hover:bg-paper hover:text-fg'
               }`}
             >
@@ -230,7 +224,7 @@ export default function ConsoleSidebar({
         {maintenanceOn && (
           <Link
             href="/console/system/maintenance"
-            className="mx-3 mb-2 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-[11px] font-semibold leading-relaxed text-amber-900 hover:bg-amber-100"
+            className="mx-3 mb-2 flex items-start gap-2 rounded-[var(--radius-panel)] border border-amber-300 bg-amber-50 px-3 py-2.5 text-[11px] font-semibold leading-relaxed text-amber-900 hover:bg-amber-100"
           >
             <span aria-hidden className="mt-0.5 h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-amber-600" />
             {t('console-maintenance-live', language)}
@@ -254,7 +248,7 @@ export default function ConsoleSidebar({
                   onClick={() => toggleGroup(group)}
                   aria-expanded={!isCollapsed}
                   aria-label={`${t(`console-group-${group}`, language)} — ${t('console-group-toggle', language)}`}
-                  className="flex w-full items-center gap-1.5 rounded-lg px-3.5 pb-1.5 pt-1 text-left font-mono text-[10px] font-semibold uppercase tracking-widest text-fg-quiet hover:text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                  className="flex w-full items-center gap-1.5 rounded-[var(--radius-card)] px-3.5 pb-1.5 pt-1 text-left font-mono text-[10px] font-semibold uppercase tracking-widest text-fg-quiet hover:text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                 >
                   <span aria-hidden className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`}>
                     ▾
@@ -276,7 +270,7 @@ export default function ConsoleSidebar({
                           key={item.href}
                           href={item.href}
                           aria-current={active ? 'page' : undefined}
-                          className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal ${
+                          className={`flex items-center gap-3 rounded-[var(--radius-panel)] px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal ${
                             active ? 'bg-signal text-white shadow-sm shadow-brand-600/30' : 'text-fg hover:bg-paper hover:text-fg'
                           }`}
                         >
@@ -297,7 +291,7 @@ export default function ConsoleSidebar({
 
         {/* 하단 접속자 카드 */}
         <div className="border-t border-hairline p-4">
-          <div className="flex items-center gap-3 rounded-xl bg-paper/80 px-3.5 py-3">
+          <div className="flex items-center gap-3 rounded-[var(--radius-panel)] bg-paper/80 px-3.5 py-3">
             <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-signal text-xs font-bold text-white">
               {(userName[0] ?? 'A').toUpperCase()}
             </span>

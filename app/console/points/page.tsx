@@ -67,7 +67,7 @@ export default async function ConsolePointsPage() {
           { label: '심사 대기', value: pendingRequests.length, warn: pendingRequests.length > 0 },
           { label: '최근 원장', value: recentLedger.length },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-hairline bg-surface px-4 py-3">
+          <div key={stat.label} className="rounded-[var(--radius-panel)] border border-hairline bg-surface px-4 py-3">
             <p className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">{stat.label}</p>
             <p className={`mt-1 font-display text-2xl font-bold ${stat.warn ? 'text-rose-600' : 'text-fg'}`}>{stat.value}</p>
           </div>
@@ -95,7 +95,7 @@ export default async function ConsolePointsPage() {
                     </span>
                   </div>
 
-                  <div className="mt-2 rounded-xl border border-hairline bg-paper/50 p-3 text-sm">
+                  <div className="mt-2 rounded-[var(--radius-panel)] border border-hairline bg-paper/50 p-3 text-sm">
                     <p className="font-medium text-fg">{payload?.title ?? '제목 없음'}</p>
                     <p className="mt-0.5 font-mono text-[11px] text-fg-muted">{platformLabel(payload?.platform)}</p>
                     {payload?.url && (
@@ -120,7 +120,7 @@ export default async function ConsolePointsPage() {
                       <input
                         name="note"
                         placeholder="반려 사유 (선택)"
-                        className="min-w-0 flex-1 rounded-lg border border-hairline px-3 py-1.5 text-xs focus:border-signal focus:outline-none"
+                        className="min-w-0 flex-1 rounded-[var(--radius-card)] border border-hairline px-3 py-1.5 text-xs focus:border-signal focus:outline-none"
                       />
                       <button type="submit" className={BTN_REJECT}>
                         반려

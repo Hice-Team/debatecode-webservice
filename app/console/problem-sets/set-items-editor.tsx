@@ -58,13 +58,13 @@ export default function SetItemsEditor({
           편성된 문제 <span className="font-mono text-xs text-fg-quiet">{items.length}</span>
         </h4>
         {items.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-hairline px-4 py-8 text-center text-sm text-fg-muted">
+          <p className="rounded-[var(--radius-panel)] border border-dashed border-hairline px-4 py-8 text-center text-sm text-fg-muted">
             오른쪽에서 문제를 추가해 세트를 구성하세요.
           </p>
         ) : (
           <ol className="space-y-1.5">
             {items.map((item, index) => (
-              <li key={item.id} className="flex items-center gap-2 rounded-xl border border-hairline px-3 py-2">
+              <li key={item.id} className="flex items-center gap-2 rounded-[var(--radius-panel)] border border-hairline px-3 py-2">
                 <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-paper font-mono text-[11px] font-bold text-fg-muted">
                   {index + 1}
                 </span>
@@ -80,7 +80,7 @@ export default function SetItemsEditor({
                     disabled={pending || index === 0}
                     onClick={() => run(moveProblemInSet, { itemId: item.id, direction: 'up' })}
                     aria-label="위로"
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-hairline text-fg-secondary hover:border-brand-300 hover:text-signal disabled:opacity-30"
+                    className="grid h-7 w-7 place-items-center rounded-[var(--radius-card)] border border-hairline text-fg-secondary hover:border-brand-300 hover:text-signal disabled:opacity-30"
                   >
                     ↑
                   </button>
@@ -89,7 +89,7 @@ export default function SetItemsEditor({
                     disabled={pending || index === items.length - 1}
                     onClick={() => run(moveProblemInSet, { itemId: item.id, direction: 'down' })}
                     aria-label="아래로"
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-hairline text-fg-secondary hover:border-brand-300 hover:text-signal disabled:opacity-30"
+                    className="grid h-7 w-7 place-items-center rounded-[var(--radius-card)] border border-hairline text-fg-secondary hover:border-brand-300 hover:text-signal disabled:opacity-30"
                   >
                     ↓
                   </button>
@@ -98,7 +98,7 @@ export default function SetItemsEditor({
                     disabled={pending}
                     onClick={() => run(removeProblemFromSet, { itemId: item.id })}
                     aria-label="제거"
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-hairline text-rose-600 hover:border-rose-300 disabled:opacity-30"
+                    className="grid h-7 w-7 place-items-center rounded-[var(--radius-card)] border border-hairline text-rose-600 hover:border-rose-300 disabled:opacity-30"
                   >
                     ×
                   </button>
@@ -117,7 +117,7 @@ export default function SetItemsEditor({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="제목·카테고리·기업으로 검색"
-          className="mb-3 w-full rounded-lg border border-hairline px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25"
+          className="mb-3 w-full rounded-[var(--radius-card)] border border-hairline px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25"
         />
         {candidates.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-fg-muted">
@@ -126,7 +126,7 @@ export default function SetItemsEditor({
         ) : (
           <ul className="space-y-1.5">
             {candidates.map((p) => (
-              <li key={p.id} className="flex items-center gap-2 rounded-xl border border-hairline px-3 py-2">
+              <li key={p.id} className="flex items-center gap-2 rounded-[var(--radius-panel)] border border-hairline px-3 py-2">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-fg">{p.title}</p>
                   <p className="truncate font-mono text-[10px] text-fg-quiet">

@@ -189,7 +189,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
           </button>
         </div>
         {showPreview ? (
-          <div className="prose prose-sm max-w-none rounded-xl border border-hairline bg-paper/40 px-4 py-3">
+          <div className="prose prose-sm max-w-none rounded-[var(--radius-panel)] border border-hairline bg-paper/40 px-4 py-3">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{description || '_(내용 없음)_'}</ReactMarkdown>
           </div>
         ) : (
@@ -282,7 +282,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
 
         <div className="space-y-2">
           {cases.map((c, i) => (
-            <div key={i} className="rounded-xl border border-hairline bg-paper/30 p-3">
+            <div key={i} className="rounded-[var(--radius-panel)] border border-hairline bg-paper/30 p-3">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-fg-quiet">#{i + 1}</span>
                 <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-fg-secondary">
@@ -300,7 +300,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
                   <button
                     type="button"
                     onClick={() => setCases((prev) => prev.filter((_, j) => j !== i))}
-                    className={`ml-auto rounded-lg px-2 py-0.5 text-[11px] text-fg-muted hover:text-rose-600 ${FOCUS}`}
+                    className={`ml-auto rounded-[var(--radius-card)] px-2 py-0.5 text-[11px] text-fg-muted hover:text-rose-600 ${FOCUS}`}
                   >
                     삭제
                   </button>
@@ -339,7 +339,7 @@ export default function UploadForm({ defaults }: { defaults?: ProblemFormDefault
       </section>
 
       {state.errors && state.errors.length > 0 && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+        <div className="rounded-[var(--radius-panel)] border border-rose-200 bg-rose-50 px-4 py-3">
           <p className="mb-1 text-xs font-semibold text-rose-800">등록할 수 없습니다</p>
           <ul className="list-inside list-disc space-y-0.5 text-[11px] text-rose-700">
             {state.errors.map((e, i) => (
