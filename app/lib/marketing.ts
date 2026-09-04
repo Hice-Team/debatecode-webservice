@@ -4,10 +4,23 @@
 // 갈리므로 여기에 모은다. 철회는 행을 지우지 않고 unsubscribedAt을 채운다 — "동의한 적 있는
 // 사람이 언제 철회했는지"는 정보통신망법상 남겨 두어야 하는 기록이다.
 import { prisma } from './prisma';
-import type { Audience } from './marketing-audience';
+import { DEFAULT_FILTERS, type Audience, type AudienceFilters } from './marketing-audience';
 
 // 순수 값은 marketing-audience.ts에 있다 — 클라이언트 컴포넌트가 prisma를 끌어오지 않도록.
-export { AUDIENCE_LABELS, isAudience, type Audience } from './marketing-audience';
+export {
+  AUDIENCE_LABELS,
+  SOURCE_LABELS,
+  CONSENT_WINDOWS,
+  FATIGUE_WINDOWS,
+  DEFAULT_FILTERS,
+  isAudience,
+  isConsentSource,
+  toFilters,
+  describeFilters,
+  type Audience,
+  type AudienceFilters,
+  type ConsentSourceFilter,
+} from './marketing-audience';
 
 export type ConsentSource = 'signup' | 'settings' | 'launch_notify' | 'manual';
 
@@ -81,23 +94,55 @@ export async function unsubscribeByToken(token: string): Promise<{ ok: boolean; 
   return { ok: true, email: contact.email };
 }
 
-function audienceWhere(audience: Audience) {
+/**
+ * 대상 조건 → Prisma where.
+ *
+ * **미리보기와 실제 발송이 반드시 같은 함수를 쓴다.** 두 곳에 따로 쓰면 조건이
+ * 갈리고, 그때는 "300명"이라고 보여 준 뒤 다른 사람들에게 나가는 사고가 된다.
+ * 되돌릴 수 없는 동작이므로 여기 한 곳만 둔다.
+ */
+function audienceWhere(f: AudienceFilters) {
+  const now = new Date();
+  const since = (days: number) => new Date(now.getTime() - days * 86400_000);
+
   return {
+    // 동의를 철회한 사람은 어떤 조건으로도 다시 들어오지 않는다
     unsubscribedAt: null,
-    ...(audience === 'members' ? { userId: { not: null } } : {}),
-    ...(audience === 'guests' ? { userId: null } : {}),
+    ...(f.audience === 'members' ? { userId: { not: null } } : {}),
+    ...(f.audience === 'guests' ? { userId: null } : {}),
+    ...(f.source ? { source: f.source } : {}),
+    ...(f.consentedWithinDays ? { consentedAt: { gte: since(f.consentedWithinDays) } } : {}),
+    // 아직 한 번도 안 받은 사람(lastSentAt = null)은 제외 대상이 아니다
+    ...(f.excludeSentWithinDays
+      ? { OR: [{ lastSentAt: null }, { lastSentAt: { lt: since(f.excludeSentWithinDays) } }] }
+      : {}),
   };
 }
 
 /** 발송 대상 수 — 보내기 전에 몇 명인지 먼저 보여 준다 */
-export function countAudience(audience: Audience): Promise<number> {
-  return prisma.marketingContact.count({ where: audienceWhere(audience) });
+export function countAudience(filters: AudienceFilters | Audience): Promise<number> {
+  const f = typeof filters === 'string' ? { ...DEFAULT_FILTERS, audience: filters } : filters;
+  return prisma.marketingContact.count({ where: audienceWhere(f) });
 }
 
 /** 발송 대상 목록 — 주소와 수신거부 토큰만 가져온다 */
-export function listAudience(audience: Audience) {
+export function listAudience(filters: AudienceFilters | Audience) {
+  const f = typeof filters === 'string' ? { ...DEFAULT_FILTERS, audience: filters } : filters;
   return prisma.marketingContact.findMany({
-    where: audienceWhere(audience),
+    where: audienceWhere(f),
     select: { id: true, email: true, name: true, unsubscribeToken: true },
+  });
+}
+
+/**
+ * 대상 표본 — 수만 보여 주면 조건이 맞는지 확인할 방법이 없다.
+ * 실제로 들어오는 주소 몇 개를 함께 보여 준다.
+ */
+export async function sampleAudience(filters: AudienceFilters, take = 8) {
+  return prisma.marketingContact.findMany({
+    where: audienceWhere(filters),
+    orderBy: { consentedAt: 'desc' },
+    take,
+    select: { id: true, email: true, userId: true, source: true, lastSentAt: true },
   });
 }

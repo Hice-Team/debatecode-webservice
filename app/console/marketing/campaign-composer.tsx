@@ -2,9 +2,20 @@
 
 // 홍보 메일 작성 — 왼쪽에 입력, 오른쪽에 실제로 나갈 모습.
 // 메일은 회수할 수 없으므로 "보내기 전에 보이는 그대로"를 볼 수 있어야 한다.
-import { useActionState, useState } from 'react';
-import { saveCampaign, type CampaignState } from '@/app/lib/actions/admin-marketing';
-import { AUDIENCE_LABELS, type Audience } from '@/app/lib/marketing-audience';
+//
+// 대상도 마찬가지다. 예전에는 회원/비회원 세 칸뿐이었고 숫자만 보여 줬다. 숫자는
+// 조건이 맞는지 말해 주지 않는다 — "300명"이 내가 생각한 그 300명인지 확인할
+// 방법이 없었다. 조건을 바꾸면 대상 수와 **실제로 들어올 주소 몇 개**를 함께 보여 준다.
+import { useActionState, useEffect, useState, useTransition } from 'react';
+import { saveCampaign, previewAudience, type CampaignState } from '@/app/lib/actions/admin-marketing';
+import {
+  AUDIENCE_LABELS,
+  SOURCE_LABELS,
+  CONSENT_WINDOWS,
+  FATIGUE_WINDOWS,
+  type Audience,
+  type ConsentSourceFilter,
+} from '@/app/lib/marketing-audience';
 
 const initialState: CampaignState = {};
 
@@ -21,11 +32,48 @@ const SAMPLE = `# 이번 주 새 기출 세트가 열렸습니다
 
 [문제 풀러 가기](https://debatecode.org/contests)`;
 
+type Preview = {
+  count: number;
+  sample: { email: string; member: boolean; source: string; lastSentAt: string | null }[];
+};
+
 export default function CampaignComposer({ counts }: { counts: Record<Audience, number> }) {
   const [state, formAction, pending] = useActionState(saveCampaign, initialState);
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [audience, setAudience] = useState<Audience>('all');
+  const [source, setSource] = useState<ConsentSourceFilter | ''>('');
+  const [consentedWithinDays, setConsentedWithinDays] = useState<number | null>(null);
+  const [excludeSentWithinDays, setExcludeSentWithinDays] = useState<number | null>(null);
+
+  // 조건이 바뀌면 대상을 다시 센다. 서버의 audienceWhere를 그대로 쓰므로
+  // 여기 보이는 수와 실제로 나갈 대상이 갈리지 않는다.
+  const [preview, setPreview] = useState<Preview | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewing, startPreview] = useTransition();
+
+  useEffect(() => {
+    let cancelled = false;
+    startPreview(async () => {
+      try {
+        const next = await previewAudience({
+          audience,
+          source: source || null,
+          consentedWithinDays,
+          excludeSentWithinDays,
+        });
+        if (!cancelled) {
+          setPreview(next);
+          setPreviewError(null);
+        }
+      } catch {
+        if (!cancelled) setPreviewError('대상을 세지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [audience, source, consentedWithinDays, excludeSentWithinDays]);
 
   return (
     <form action={formAction} className="grid gap-5 lg:grid-cols-2 lg:items-start">
@@ -71,6 +119,66 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
               </label>
             ))}
           </div>
+
+          {/* 더 좁히기 — 세 축 모두 기본값은 "가리지 않음"이라 아무것도 고르지
+              않으면 위 세 칸만 쓰던 예전과 똑같이 동작한다. */}
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            <label className="block">
+              <span className="mb-1 block font-mono text-[10px] text-fg-muted">동의 경로</span>
+              <select
+                name="source"
+                value={source}
+                onChange={(e) => setSource(e.target.value as ConsentSourceFilter | '')}
+                className={`${FIELD} py-1.5 text-xs`}
+              >
+                <option value="">경로 전체</option>
+                {(Object.keys(SOURCE_LABELS) as ConsentSourceFilter[]).map((k) => (
+                  <option key={k} value={k}>
+                    {SOURCE_LABELS[k]}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block font-mono text-[10px] text-fg-muted">동의 시점</span>
+              <select
+                name="consentedWithinDays"
+                value={consentedWithinDays ?? ''}
+                onChange={(e) => setConsentedWithinDays(e.target.value ? Number(e.target.value) : null)}
+                className={`${FIELD} py-1.5 text-xs`}
+              >
+                {CONSENT_WINDOWS.map((w) => (
+                  <option key={w.label} value={w.days ?? ''}>
+                    {w.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block font-mono text-[10px] text-fg-muted">최근 발송 제외</span>
+              <select
+                name="excludeSentWithinDays"
+                value={excludeSentWithinDays ?? ''}
+                onChange={(e) => setExcludeSentWithinDays(e.target.value ? Number(e.target.value) : null)}
+                className={`${FIELD} py-1.5 text-xs`}
+              >
+                {FATIGUE_WINDOWS.map((w) => (
+                  <option key={w.label} value={w.days ?? ''}>
+                    {w.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <AudiencePreview
+            preview={preview}
+            error={previewError}
+            loading={previewing && preview === null}
+            stale={previewing && preview !== null}
+          />
         </div>
 
         <div>
@@ -118,7 +226,7 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
         <button
           type="submit"
           disabled={pending}
-          className="rounded-[var(--radius-card)] bg-signal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-signal disabled:opacity-50"
+          className="rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
         >
           {pending ? '저장 중…' : '초안 저장'}
         </button>
@@ -149,6 +257,85 @@ export default function CampaignComposer({ counts }: { counts: Record<Audience, 
         </div>
       </div>
     </form>
+  );
+}
+
+/**
+ * 대상 미리보기.
+ *
+ * 이 숫자를 믿고 되돌릴 수 없는 메일이 나간다. 그래서 네 상태를 전부 그린다 —
+ * 세는 중인지, 못 셌는지, 0명인지, 몇 명인지가 각각 다른 화면이어야 한다.
+ * 특히 "0명"과 "아직 못 셌음"이 같아 보이면 안 된다.
+ */
+function AudiencePreview({
+  preview,
+  error,
+  loading,
+  stale,
+}: {
+  preview: Preview | null;
+  error: string | null;
+  loading: boolean;
+  stale: boolean;
+}) {
+  if (error) {
+    return (
+      <div className="mt-2 rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 px-3 py-2.5 text-[13px] text-rose-700">
+        {error}
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="mt-2 rounded-[var(--radius-card)] border border-hairline bg-paper px-3 py-2.5">
+        <div className="h-4 w-32 animate-pulse rounded bg-hairline" />
+        <div className="mt-2 h-3 w-48 animate-pulse rounded bg-hairline" />
+      </div>
+    );
+  }
+
+  if (!preview) return null;
+
+  if (preview.count === 0) {
+    return (
+      <div className="mt-2 rounded-[var(--radius-card)] border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13px] text-amber-800">
+        지금 조건에 맞는 대상이 없습니다. 조건을 넓히면 대상이 생깁니다.
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`mt-2 rounded-[var(--radius-card)] border border-hairline bg-paper px-3 py-2.5 transition-opacity ${
+        stale ? 'opacity-60' : ''
+      }`}
+      aria-busy={stale}
+    >
+      <p className="text-[13px] font-semibold text-fg">
+        이 조건이면 <span className="font-mono text-signal">{preview.count.toLocaleString()}</span>명에게 나갑니다
+      </p>
+      <ul className="mt-1.5 space-y-0.5">
+        {preview.sample.map((c) => (
+          <li key={c.email} className="flex items-center gap-2 font-mono text-[11px] text-fg-muted">
+            <span data-no-translate className="min-w-0 flex-1 truncate">
+              {c.email}
+            </span>
+            <span className="shrink-0 text-fg-quiet">{c.member ? '회원' : '비회원'}</span>
+            {c.lastSentAt && (
+              <span className="shrink-0 text-fg-quiet">
+                최근 발송 {new Date(c.lastSentAt).toLocaleDateString('ko-KR')}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {preview.count > preview.sample.length && (
+        <p className="mt-1 font-mono text-[10px] text-fg-quiet">
+          외 {(preview.count - preview.sample.length).toLocaleString()}명
+        </p>
+      )}
+    </div>
   );
 }
 

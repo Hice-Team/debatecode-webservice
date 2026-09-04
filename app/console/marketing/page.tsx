@@ -4,33 +4,22 @@ import { prisma } from '@/app/lib/prisma';
 import { getUser } from '@/app/lib/dal';
 import { canGrantRoles } from '@/app/lib/roles';
 import { isEmailLive } from '@/app/lib/email';
-import { AUDIENCE_LABELS, countAudience, type Audience } from '@/app/lib/marketing';
-import { deleteCampaign } from '@/app/lib/actions/admin-marketing';
+import { countAudience, describeFilters, toFilters, type Audience } from '@/app/lib/marketing';
 import { PageHeader, StatGrid } from '../ui';
 import CampaignComposer from './campaign-composer';
-import SendButton from './send-button';
+import CampaignRow, { type CampaignRowData } from './campaign-row';
 
 export const metadata: Metadata = { title: '홍보 메일' };
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: '초안',
-  sending: '발송 중',
-  sent: '발송 완료',
-  failed: '발송 실패',
-};
-
-const STATUS_TONES: Record<string, string> = {
-  draft: 'border-hairline bg-paper text-fg-secondary',
-  sending: 'border-sky-200 bg-sky-50 text-sky-700',
-  sent: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  failed: 'border-rose-200 bg-rose-50 text-rose-700',
-};
+/** 실패 목록은 한 건당 이만큼만 그린다 — 진짜 수는 failedCount가 말한다 */
+const FAILURES_SHOWN = 20;
 
 export default async function ConsoleMarketingPage() {
   const user = await getUser();
   if (!canGrantRoles(user.role)) redirect('/console');
 
-  const [all, members, guests, unsubscribed, campaigns, recent] = await Promise.all([
+  const [all, members, guests, unsubscribed, campaigns, recent, sentTotal, failedTotal] =
+    await Promise.all([
     countAudience('all'),
     countAudience('members'),
     countAudience('guests'),
@@ -42,7 +31,78 @@ export default async function ConsoleMarketingPage() {
       take: 8,
       select: { id: true, email: true, name: true, source: true, consentedAt: true, userId: true },
     }),
+    // 지금까지 실제로 도착한 통수 — 캠페인 행의 sentCount 합이 아니라 발송 기록에서 센다
+    prisma.emailDelivery.count({ where: { status: 'sent' } }),
+    // 아직 남아 있는 실패 — 다시 보낼 수 있는 것이 얼마나 밀려 있는지
+    prisma.emailDelivery.count({ where: { status: 'failed' } }),
   ]);
+
+  /* ---------- 발송 결과 ----------
+   * 수는 groupBy로 정확히 세고, 목록만 상한을 둔다. 상한 걸린 목록의 길이를
+   * 지표로 쓰면 "실패 20건"이 실제로는 20이 아니라 화면 한도가 된다. */
+  const campaignIds = campaigns.map((c) => c.id);
+  const [deliveryCounts, failureRows] = await Promise.all([
+    campaignIds.length
+      ? prisma.emailDelivery.groupBy({
+          by: ['campaignId', 'status'],
+          where: { campaignId: { in: campaignIds } },
+          _count: { _all: true },
+        })
+      : [],
+    campaignIds.length
+      ? prisma.emailDelivery.findMany({
+          where: { campaignId: { in: campaignIds }, status: 'failed' },
+          orderBy: { createdAt: 'desc' },
+          select: { campaignId: true, email: true, status: true, error: true, attempt: true },
+        })
+      : [],
+  ]);
+
+  const tally = new Map<string, { sent: number; failed: number }>();
+  for (const row of deliveryCounts) {
+    const e = tally.get(row.campaignId) ?? { sent: 0, failed: 0 };
+    if (row.status === 'sent') e.sent += row._count._all;
+    else e.failed += row._count._all;
+    tally.set(row.campaignId, e);
+  }
+
+  const failuresByCampaign = new Map<string, typeof failureRows>();
+  for (const row of failureRows) {
+    const list = failuresByCampaign.get(row.campaignId) ?? [];
+    if (list.length < FAILURES_SHOWN) list.push(row);
+    failuresByCampaign.set(row.campaignId, list);
+  }
+
+  const rows: CampaignRowData[] = campaigns.map((c) => {
+    const counted = tally.get(c.id);
+    return {
+      id: c.id,
+      subject: c.subject,
+      status: c.status,
+      // 저장할 때의 조건을 그대로 되살려 보여 준다 — 무슨 조건으로 갔는지 답할 수 있게
+      audienceLabel: describeFilters(
+        toFilters({
+          audience: c.audience,
+          source: c.sourceFilter,
+          consentedWithinDays: c.consentedWithinDays,
+          excludeSentWithinDays: c.excludeSentWithinDays,
+        }),
+      ),
+      recipientCount: c.recipientCount,
+      // 발송 기록이 있으면 그쪽이 진짜다. 캠페인 행의 합계는 요약일 뿐이다.
+      sentCount: counted?.sent ?? c.sentCount,
+      failedCount: counted?.failed ?? c.failedCount,
+      errorMessage: c.errorMessage,
+      createdAt: c.createdAt.toISOString(),
+      sentAt: c.sentAt ? c.sentAt.toISOString() : null,
+      failures: (failuresByCampaign.get(c.id) ?? []).map((d) => ({
+        email: d.email,
+        status: d.status,
+        error: d.error,
+        attempt: d.attempt,
+      })),
+    };
+  });
 
   const counts: Record<Audience, number> = { all, members, guests };
   const live = isEmailLive();
@@ -65,10 +125,14 @@ export default async function ConsoleMarketingPage() {
 
       <StatGrid
         stats={[
-          { label: '수신 동의', value: all },
-          { label: '회원', value: members },
-          { label: '비회원', value: guests },
+          {
+            label: '수신 동의',
+            value: all,
+            sub: `회원 ${members.toLocaleString()} · 비회원 ${guests.toLocaleString()}`,
+          },
           { label: '수신거부', value: unsubscribed },
+          { label: '지금까지 발송', value: sentTotal },
+          { label: '남은 실패', value: failedTotal, warn: failedTotal > 0 },
         ]}
       />
 
@@ -85,53 +149,14 @@ export default async function ConsoleMarketingPage() {
         <h2 id="campaigns-title" className="mb-3 text-lg font-bold text-fg">
           발송 목록
         </h2>
-        {campaigns.length === 0 ? (
+        {rows.length === 0 ? (
           <p className="rounded-[var(--radius-panel)] border border-dashed border-hairline px-4 py-12 text-center text-sm text-fg-muted">
-            아직 작성한 메일이 없습니다.
+            아직 작성한 메일이 없습니다. 위에서 초안을 저장하면 여기에 쌓입니다.
           </p>
         ) : (
-          <ul className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
-            {campaigns.map((campaign) => (
-              <li key={campaign.id} className="flex flex-wrap items-center gap-3 border-b border-hairline px-4 py-3 last:border-b-0">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-fg">{campaign.subject}</p>
-                  <p className="font-mono text-[11px] text-fg-muted">
-                    {AUDIENCE_LABELS[(campaign.audience as Audience) ?? 'all']} · 대상{' '}
-                    {campaign.recipientCount.toLocaleString()}명
-                    {campaign.status === 'sent' && ` · 성공 ${campaign.sentCount.toLocaleString()}`}
-                    {campaign.failedCount > 0 && ` · 실패 ${campaign.failedCount.toLocaleString()}`}
-                    {' · '}
-                    {campaign.createdAt.toLocaleDateString('ko-KR')}
-                  </p>
-                  {campaign.errorMessage && (
-                    <p className="mt-1 text-[11px] text-amber-700">{campaign.errorMessage}</p>
-                  )}
-                </div>
-
-                <span
-                  className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
-                    STATUS_TONES[campaign.status] ?? STATUS_TONES.draft
-                  }`}
-                >
-                  {STATUS_LABELS[campaign.status] ?? campaign.status}
-                </span>
-
-                {(campaign.status === 'draft' || campaign.status === 'failed') && (
-                  <div className="flex shrink-0 items-center gap-2">
-                    <SendButton
-                      campaignId={campaign.id}
-                      subject={campaign.subject}
-                      recipientCount={campaign.recipientCount}
-                    />
-                    <form action={deleteCampaign}>
-                      <input type="hidden" name="id" value={campaign.id} />
-                      <button className="rounded-[var(--radius-card)] border border-hairline px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:border-rose-300 hover:text-rose-600">
-                        삭제
-                      </button>
-                    </form>
-                  </div>
-                )}
-              </li>
+          <ul className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
+            {rows.map((campaign) => (
+              <CampaignRow key={campaign.id} campaign={campaign} />
             ))}
           </ul>
         )}

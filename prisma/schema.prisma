@@ -859,6 +859,10 @@ model EmailCampaign {
   subject        String
   body           String // 마크다운
   audience       String    @default("all") // all | members | guests
+  // 대상을 더 좁힌 조건 — 보낸 뒤에도 "무슨 조건으로 갔는지" 답할 수 있어야 한다
+  sourceFilter          String? // signup | settings | launch_notify | manual (null = 전체)
+  consentedWithinDays   Int? // 최근 N일 내 동의자만 (null = 제한 없음)
+  excludeSentWithinDays Int? // 최근 N일 내 발송받은 사람 제외 (null = 제외 없음)
   status         String    @default("draft") // draft | sending | sent | failed
   recipientCount Int       @default(0)
   sentCount      Int       @default(0)
@@ -868,7 +872,31 @@ model EmailCampaign {
   createdAt      DateTime  @default(now())
   sentAt         DateTime?
 
+  deliveries EmailDelivery[]
+
   @@index([status, createdAt(sort: Desc)])
+}
+
+/// 수신자별 발송 결과.
+///
+/// 합계(sentCount/failedCount)만으로는 "실패 3건"을 보고 할 수 있는 일이 없다.
+/// 누가 실패했는지 남겨야 그 사람들에게만 다시 보낼 수 있다.
+model EmailDelivery {
+  id         String   @id @default(cuid())
+  campaignId String
+  /// 명단에서 지워져도 발송 기록은 남으므로 주소를 함께 박아 둔다
+  contactId  String?
+  email      String
+  status     String // sent | failed
+  error      String?
+  attempt    Int      @default(1)
+  createdAt  DateTime @default(now())
+
+  campaign EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  /// 같은 캠페인에서 한 주소는 한 줄 — 재발송은 이 줄을 갱신한다
+  @@unique([campaignId, email])
+  @@index([campaignId, status])
 }
 
 // ---------- AI Search: 대화 세션 ----------
