@@ -47,16 +47,20 @@ export async function requestSnsPromo(_prev: MateActionState, formData: FormData
   if (post.authorId !== userId) return { errors: { form: ['본인이 작성한 글만 신청할 수 있습니다.'] } };
   if (!post.url) return { errors: { form: ['외부 링크가 없는 글은 인증할 수 없습니다.'] } };
 
-  // 같은 글로 중복 신청 방지 — 반려된 건은 다시 신청할 수 있다
-  const duplicate = await prisma.pointRequest.findFirst({
+  // 같은 글로 중복 신청 방지 — 반려된 건은 다시 신청할 수 있다.
+  //
+  // 예전에는 findFirst로 **한 건만** 가져와 그 건의 postId를 비교했다. 이미 신청한 글이
+  // 둘 이상이면 엉뚱한 건이 잡혀 비교가 빗나갔고, 같은 글로 포인트를 다시 받을 수 있었다.
+  // payload가 Json이라 DB 필터로 좁히는 대신, 사람당 몇 건 되지 않으므로 전부 가져와 확인한다.
+  const priorRequests = await prisma.pointRequest.findMany({
     where: { userId, kind: 'sns_promo', status: { in: ['pending', 'approved'] } },
-    select: { id: true, payload: true },
+    select: { payload: true },
   });
-  if (duplicate) {
-    const payload = duplicate.payload as { postId?: string };
-    if (payload?.postId === post.id) {
-      return { errors: { form: ['이 글은 이미 신청했거나 승인된 상태입니다.'] } };
-    }
+  const alreadyClaimed = priorRequests.some(
+    (r) => (r.payload as { postId?: string } | null)?.postId === post.id,
+  );
+  if (alreadyClaimed) {
+    return { errors: { form: ['이 글은 이미 신청했거나 승인된 상태입니다.'] } };
   }
 
   await prisma.pointRequest.create({
