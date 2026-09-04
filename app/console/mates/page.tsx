@@ -34,6 +34,11 @@ const INACTIVE_DAYS = 30;
 // 예전에는 세 가지가 한 화면에 세로로 쌓여 있어서, 신청 하나를 보려고 활동 중인 메이트
 // 목록 전체를 지나쳐야 했다. 탭으로 나누고, 활동 탭에는 "지금 이 사람이 실제로 활동
 // 중인가"를 판단할 지표(승인률·최근 활동일·경고 수)를 붙였다.
+//
+// 심사 탭에도 같은 것이 필요하다. 예전에는 신청서 PDF와 이름만 두고 판단해야 했는데,
+// 정작 "이 사람이 메이트를 할 만한가"를 말해 주는 기록은 서비스 안에 이미 있다 —
+// 얼마나 풀었고, 커뮤니티에서 얼마나 답했고, 제재를 받은 적이 있는지.
+// 승인한 뒤에는 지표가 보이고 승인하기 전에는 안 보이는 것이 거꾸로였다.
 export default async function MateManagementPage({
   searchParams,
 }: {
@@ -73,6 +78,43 @@ export default async function MateManagementPage({
     }),
   ]);
 
+  // 시각은 한 번만 읽는다 — 렌더 중 두 번 읽으면 두 값이 서로 어긋날 수 있다
+  const now = new Date().getTime();
+
+  // 신청자의 서비스 안 기록 — 심사의 실제 근거다.
+  // 신청 목록이 50건까지라 한 번에 모아 온다(신청자마다 따로 조회하면 N+1이 된다).
+  const applicantIds = pending.map((m) => m.userId);
+  const applicants = applicantIds.length
+    ? await prisma.user.findMany({
+        where: { id: { in: applicantIds } },
+        select: {
+          id: true,
+          createdAt: true,
+          starScore: true,
+          _count: { select: { posts: true, comments: true } },
+          submissions: { where: { status: 'PASS' }, select: { problemId: true }, distinct: ['problemId'] },
+          sanctions: { select: { active: true, expiresAt: true } },
+        },
+      })
+    : [];
+  const applicantById = new Map(
+    applicants.map((a) => [
+      a.id,
+      {
+        joinedDays: Math.floor((now - a.createdAt.getTime()) / 86400_000),
+        solved: a.submissions.length,
+        posts: a._count.posts,
+        comments: a._count.comments,
+        starScore: a.starScore,
+        // 지금 살아 있는 제재만 — 만료된 것은 이력이지 결격 사유가 아니다
+        activeSanctions: a.sanctions.filter(
+          (x) => x.active && (!x.expiresAt || x.expiresAt.getTime() > now),
+        ).length,
+        pastSanctions: a.sanctions.length,
+      },
+    ]),
+  );
+
   // 경고 이력 — 별도 표 없이 감사 로그에서 센다
   const warnRows = await prisma.auditLog
     .findMany({
@@ -89,7 +131,6 @@ export default async function MateManagementPage({
     warnsByUser.set(w.targetId, list);
   }
 
-  const now = new Date().getTime();
   const enriched = mates.map((m) => {
     const drafts = m.problemDrafts;
     const approved = drafts.filter((d) => d.status === 'approved').length;
@@ -159,7 +200,9 @@ export default async function MateManagementPage({
           {pending.length === 0 && (
             <EmptyState title="신청 대기 중인 사용자가 없습니다" sub="새 신청이 들어오면 여기에 나타납니다." />
           )}
-          {pending.map((m) => (
+          {pending.map((m) => {
+            const who = applicantById.get(m.userId);
+            return (
             <details key={m.id} className="group px-5 py-4">
               <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2">
                 <span className="font-mono text-[10px] text-signal group-open:hidden">▶</span>
@@ -170,12 +213,60 @@ export default async function MateManagementPage({
                   신청 {m.createdAt.toLocaleDateString('ko-KR')}
                 </span>
                 <span className="ml-auto flex items-center gap-2">
+                  {/* 제재 중인 사람은 펼쳐 보기 전에 눈에 걸려야 한다 */}
+                  {who && who.activeSanctions > 0 && (
+                    <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-rose-700">
+                      제재 중 {who.activeSanctions}
+                    </span>
+                  )}
                   <SlaBadge since={m.createdAt} />
-                  <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 font-mono text-[10px] text-amber-700">
-                    신청서 열람
+                  <span className="rounded-full border border-hairline bg-paper px-2 py-0.5 font-mono text-[10px] text-fg-muted">
+                    펼쳐서 심사
                   </span>
                 </span>
               </summary>
+
+              {/* 신청자의 서비스 안 기록 — 신청서보다 먼저 본다.
+                  글로 쓴 지원 동기와 달리 이건 실제로 한 일이다. */}
+              {who && (
+                <div className="mt-3 rounded-[var(--radius-panel)] border border-hairline bg-paper p-4">
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
+                    서비스 활동 기록
+                  </p>
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+                    {[
+                      { label: '푼 문제', value: `${who.solved}`, warn: who.solved === 0 },
+                      { label: '커뮤니티', value: `글 ${who.posts} · 댓글 ${who.comments}` },
+                      { label: '가입', value: `${who.joinedDays}일 전`, warn: who.joinedDays < 7 },
+                      {
+                        label: '제재 이력',
+                        value: who.pastSanctions === 0 ? '없음' : `${who.pastSanctions}건`,
+                        warn: who.pastSanctions > 0,
+                      },
+                    ].map((f) => (
+                      <div key={f.label}>
+                        <dt className="font-mono text-[10px] text-fg-quiet">{f.label}</dt>
+                        <dd className={`text-sm font-semibold ${f.warn ? 'text-amber-700' : 'text-fg'}`}>
+                          {f.value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+
+                  {/* 판단을 대신하지 않는다 — 눈에 걸리는 사실만 짚어 준다 */}
+                  {(who.solved === 0 || who.joinedDays < 7 || who.activeSanctions > 0) && (
+                    <p className="mt-3 border-t border-hairline pt-2.5 text-[12px] leading-relaxed text-amber-800">
+                      {[
+                        who.activeSanctions > 0 && '지금 제재 중인 계정입니다.',
+                        who.solved === 0 && '아직 통과한 문제가 없습니다.',
+                        who.joinedDays < 7 && '가입한 지 일주일이 되지 않았습니다.',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* 신청서 PDF가 곧 지원서다 — 심사자가 가장 먼저 열어야 하는 것이라 맨 위에 둔다.
                   지원 동기는 예전 신청서에만 남아 있어 있을 때만 그린다. */}
@@ -186,7 +277,7 @@ export default async function MateManagementPage({
                     download={m.attachmentName ?? '신청서.pdf'}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-card)] border border-brand-200 bg-brand-50 px-3.5 text-sm font-semibold text-signal transition-colors hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-card)] border border-signal/30 bg-signal/[0.06] px-3.5 text-sm font-semibold text-signal transition-colors hover:bg-signal/[0.12] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                   >
                     <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.7]" aria-hidden>
                       <path d="M12 4v11m0 0 3.5-3.5M12 15l-3.5-3.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -222,10 +313,14 @@ export default async function MateManagementPage({
                 <form action={reviewMateApplication} className="flex flex-1 items-start gap-2">
                   <input type="hidden" name="id" value={m.id} />
                   <input type="hidden" name="action" value="reject" />
+                  {/* 사유는 필수다. 비워 두면 신청자는 왜 떨어졌는지 모른 채
+                      같은 이유로 다시 신청한다 — 심사자도 같은 신청서를 또 읽게 된다. */}
                   <textarea
                     name="note"
                     rows={2}
-                    placeholder="반려서 — 반려 사유를 적어주세요. 신청자에게 그대로 전달됩니다. (선택)"
+                    required
+                    minLength={5}
+                    placeholder="반려 사유 — 신청자에게 그대로 전달됩니다. 무엇이 부족했는지 적어 주세요."
                     className="w-full flex-1 rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-2 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                   />
                   <button className={BTN_REJECT}>반려</button>
@@ -237,7 +332,8 @@ export default async function MateManagementPage({
                 </form>
               </div>
             </details>
-          ))}
+            );
+          })}
         </div>
       )}
 
