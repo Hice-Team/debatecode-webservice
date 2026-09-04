@@ -8,7 +8,12 @@
 //   · "처리완료"가 무엇을 했다는 뜻인지 아무 데도 남지 않았다.
 //
 // 여기서는 대상별로 묶은 **케이스**가 단위이고, 조치(삭제·제재·종결)를 한 화면에서 끝낸다.
-import { useActionState, useMemo, useState } from 'react';
+//
+// 신고 처리는 같은 동작의 반복이다. 그래서 한 건에 드는 시간을 줄이는 데 화면을 맞춘다.
+//   · 자주 쓰는 처리 문구를 눌러 채운다 — 매번 손으로 치면 건당 십몇 초가 그대로 쌓이고,
+//     사람마다 다르게 적어서 나중에 "이번 달 스팸 삭제 몇 건"을 셀 수 없게 된다.
+//   · J/K(또는 ↑/↓)로 큐를 넘긴다 — 목록과 상세를 마우스로 오가지 않아도 된다.
+import { useActionState, useEffect, useMemo, useState } from 'react';
 import {
   resolveReportCase,
   assignReportCase,
@@ -74,6 +79,25 @@ export interface Reviewer {
 
 const initial: ReportActionState = {};
 
+/**
+ * 자주 쓰는 처리 문구.
+ *
+ * `actionTaken`은 케이스와 감사 로그에 그대로 남는다. 자유 입력만 두면 같은 조치를
+ * 사람마다 다르게 적어서, 남긴 기록으로 아무것도 세지 못한다. 자주 쓰는 것을 고정 문구로
+ * 두면 집계가 되고 손도 덜 간다 — 그 밖의 경우를 위해 자유 입력은 그대로 남긴다.
+ *
+ * `for`는 이 문구가 어느 결말에 어울리는지다. 기각 문구를 처리완료에 붙여 두면
+ * 기록이 서로 어긋난다.
+ */
+const ACTION_PRESETS: { label: string; text: string; for: 'resolve' | 'dismiss' }[] = [
+  { label: '스팸·광고', text: '광고성 게시물 삭제', for: 'resolve' },
+  { label: '욕설·비방', text: '욕설·비방 표현 삭제', for: 'resolve' },
+  { label: '가이드 안내', text: '작성자에게 커뮤니티 가이드라인 안내', for: 'resolve' },
+  { label: '제재 병행', text: '콘텐츠 삭제 + 작성자 제재', for: 'resolve' },
+  { label: '위반 아님', text: '검토 결과 가이드라인 위반 아님', for: 'dismiss' },
+  { label: '중복 신고', text: '동일 사안 중복 신고 — 앞선 케이스에서 처리', for: 'dismiss' },
+];
+
 export default function ReportWorkspace({
   cases,
   reviewers,
@@ -112,6 +136,39 @@ export default function ReportWorkspace({
 
   const selected = visible.find((c) => c.dedupeKey === selectedKey) ?? visible[0] ?? null;
 
+  /**
+   * J/K(또는 ↑/↓)로 큐를 넘긴다.
+   *
+   * 글을 치고 있을 때는 가로채지 않는다 — 메모에 "k"를 적으려다 케이스가 넘어가면
+   * 그 단축키는 방해가 된다. 조합키(Ctrl·Meta·Alt)도 그대로 흘려보낸다.
+   */
+  const currentKey = selected?.dedupeKey ?? null;
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      const typing = el?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el?.tagName ?? '');
+      if (typing) return;
+
+      const step =
+        e.key === 'j' || e.key === 'J' || e.key === 'ArrowDown'
+          ? 1
+          : e.key === 'k' || e.key === 'K' || e.key === 'ArrowUp'
+            ? -1
+            : 0;
+      if (step === 0 || visible.length === 0) return;
+
+      const at = visible.findIndex((c) => c.dedupeKey === currentKey);
+      const next = visible[Math.min(visible.length - 1, Math.max(0, (at < 0 ? 0 : at) + step))];
+      if (!next) return;
+
+      e.preventDefault();
+      setSelectedKey(next.dedupeKey);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [visible, currentKey]);
+
   const counts = {
     pending: cases.filter((c) => c.status === 'pending').length,
     mine: cases.filter((c) => c.status === 'pending' && c.assigneeId === currentUserId).length,
@@ -147,7 +204,7 @@ export default function ReportWorkspace({
             aria-label="대상 필터"
             value={reasonFilter}
             onChange={(e) => setReasonFilter(e.target.value)}
-            className={`w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-2.5 py-1.5 text-xs ${FOCUS}`}
+            className={`mb-2 w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-2.5 py-1.5 text-xs ${FOCUS}`}
           >
             <option value="all">모든 대상</option>
             {REPORT_TARGETS.map((tt) => (
@@ -156,6 +213,11 @@ export default function ReportWorkspace({
               </option>
             ))}
           </select>
+          {/* 단축키가 있다는 것을 화면이 말해 주지 않으면 아무도 쓰지 않는다 */}
+          <p className="px-0.5 font-mono text-[10px] text-fg-quiet">
+            <kbd className="rounded-[var(--radius-control)] border border-hairline px-1">J</kbd>{' '}
+            <kbd className="rounded-[var(--radius-control)] border border-hairline px-1">K</kbd> 로 케이스 이동
+          </p>
         </div>
 
         <div className="min-h-0 flex-1 divide-y divide-hairline overflow-y-auto">
@@ -169,8 +231,11 @@ export default function ReportWorkspace({
                 key={c.dedupeKey}
                 type="button"
                 onClick={() => setSelectedKey(c.dedupeKey)}
-                className={`block w-full px-4 py-3 text-left transition-colors ${
-                  on ? 'bg-brand-50/70' : 'hover:bg-paper/60'
+                // 키보드로 넘길 때 고른 줄이 목록 밖으로 나가면 어디에 있는지 알 수 없다
+                ref={on ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
+                aria-current={on ? 'true' : undefined}
+                className={`block w-full border-l-2 px-4 py-3 text-left transition-colors ${
+                  on ? 'border-signal bg-brand-50' : 'border-transparent hover:bg-paper'
                 }`}
               >
                 <div className="flex items-center gap-1.5">
@@ -472,12 +537,35 @@ function CaseDetail({
             <label htmlFor={`taken-${item.dedupeKey}`} className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-fg-muted">
               처리 내용 (이력에 남습니다)
             </label>
+            {/* 눌러서 채운다 — 같은 문구를 매번 손으로 치지 않게. 고른 뒤에도 고칠 수 있다. */}
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {ACTION_PRESETS.map((preset) => {
+                const on = actionTaken === preset.text;
+                return (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setActionTaken(on ? '' : preset.text)}
+                    aria-pressed={on}
+                    title={preset.text}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${FOCUS} ${
+                      on
+                        ? 'border-signal bg-signal/[0.08] text-signal'
+                        : 'border-hairline text-fg-secondary hover:border-signal/40 hover:text-signal'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+
             <input
               id={`taken-${item.dedupeKey}`}
               name="actionTaken"
               value={actionTaken}
               onChange={(e) => setActionTaken(e.target.value)}
-              placeholder="예: 광고성 게시물 삭제 + 작성자 7일 글쓰기 제한"
+              placeholder="직접 적어도 됩니다 — 예: 광고성 게시물 삭제 + 작성자 7일 글쓰기 제한"
               className={FIELD}
             />
 
