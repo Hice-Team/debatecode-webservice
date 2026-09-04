@@ -77,6 +77,13 @@ export default async function SeasonsPage() {
             시즌 초기화와 다릅니다. 시즌 초기화는 <strong>번호만</strong> 다시 매기고, 이 동작은{' '}
             <strong>순위를</strong> 다시 셉니다. 기록은 남으므로 언제든 되돌릴 수 있습니다.
           </Callout>
+          {/* 순위와 등급은 서로 다른 값이다. 포인트가 곧 등급 점수가 된 뒤로(app/lib/points.ts)
+              이 구분이 더 중요해졌는데, 화면에 적혀 있지 않아 "초기화하면 다 돌아간다"고
+              읽힐 수 있었다. */}
+          <Callout tone="info" title="등급(Bronze~Diamond)은 그대로입니다">
+            순위는 <strong>이 구간의 활동</strong>으로 다시 세지만, 등급은 지금까지 쌓은{' '}
+            <strong>디베이트포인트 누적</strong>으로 매깁니다. 초기화해도 아무의 등급도 내려가지 않습니다.
+          </Callout>
           <div className="mt-4">
             <RankingResetForm floor={floor} />
           </div>
