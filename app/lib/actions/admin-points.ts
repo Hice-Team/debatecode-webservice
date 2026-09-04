@@ -33,6 +33,8 @@ export async function reviewPointRequest(formData: FormData): Promise<void> {
   const approve = String(formData.get('action') ?? '') === 'approve';
   const note = String(formData.get('note') ?? '').trim() || null;
   if (!id) return;
+  // 반려 사유는 신청자에게 그대로 전달된다 - 비어 있으면 진행하지 않는다.
+  if (!approve && (note?.length ?? 0) < 5) return;
 
   const request = await prisma.pointRequest.findUnique({ where: { id } });
   if (!request || request.status !== 'pending') return;

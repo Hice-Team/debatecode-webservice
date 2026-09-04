@@ -216,6 +216,8 @@ export default async function SanctionCenterPage({
                     <input type="hidden" name="action" value="reject" />
                     <input
                       name="note"
+                      required
+                      minLength={5}
                       placeholder="기각 사유 — 이용자에게 전달됩니다"
                       className="w-full flex-1 rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet"
                     />

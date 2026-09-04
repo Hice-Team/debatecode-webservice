@@ -44,6 +44,14 @@ export default async function ProblemReviewPage() {
     }),
   ]);
 
+  // 오늘 처리한 건수 — 목록의 길이가 아니라 실제로 센 값이다.
+  // (목록은 15건까지만 가져오므로 그 길이는 처리량을 말해 주지 못한다.)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const processedToday = await prisma.problemDraft.count({
+    where: { status: { in: ['approved', 'rejected'] }, reviewedAt: { gte: todayStart } },
+  });
+
   const withMeta = pending.map((d) => {
     const payload = (d.payload ?? {}) as DraftPayload;
     return { draft: d, payload, caseCount: payload.testCases?.length ?? 0 };
@@ -74,7 +82,9 @@ export default async function ProblemReviewPage() {
             { label: '검토 대기', value: pending.length, warn: pending.length > 0 },
             { label: '케이스 미비', value: missingCases, warn: missingCases > 0 },
             { label: '7일 초과 대기', value: stale, warn: stale > 0 },
-            { label: '최근 처리', value: processed.length },
+            // "최근 처리"는 조회 상한(take: 15)이라 15건을 넘기면 언제 봐도 15였다.
+            // 세어서 뜻이 있는 값으로 바꾼다 — 오늘 실제로 처리한 건수(§5).
+            { label: '오늘 처리', value: processedToday },
           ]}
         />
       </div>
@@ -167,7 +177,9 @@ export default async function ProblemReviewPage() {
                 <input type="hidden" name="action" value="reject" />
                 <input
                   name="note"
-                  placeholder="반려 사유 (선택 — 출제자에게 표시됩니다)"
+                  required
+                  minLength={5}
+                  placeholder="반려 사유 — 출제자에게 그대로 표시됩니다"
                   className="w-full flex-1 rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                 />
                 <button className={BTN_REJECT}>반려</button>

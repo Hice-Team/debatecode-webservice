@@ -105,6 +105,9 @@ export async function reviewProblemDraft(formData: FormData) {
   const approve = String(formData.get('action') ?? '') === 'approve';
   const note = String(formData.get('note') ?? '').trim() || null;
   if (!id) return;
+  // 반려 사유는 출제자 화면에 그대로 뜬다. 사유 없는 반려는 출제자가 같은 초안을
+  // 그대로 다시 올리게 만들고, 검토자는 같은 초안을 또 읽는다.
+  if (!approve && (note?.length ?? 0) < 5) return;
 
   const draft = await prisma.problemDraft.findUnique({ where: { id } });
   if (!draft || draft.status !== 'pending') return;
@@ -184,6 +187,8 @@ export async function reviewMateApplication(formData: FormData) {
   const approve = String(formData.get('action') ?? '') === 'approve';
   const note = String(formData.get('note') ?? '').trim().slice(0, 2000) || null;
   if (!id) return;
+  // 신청자에게 전달되는 문장이다 — 비어 있으면 반려를 진행하지 않는다.
+  if (!approve && (note?.length ?? 0) < 5) return;
 
   const app = await prisma.debateMateApplication.findUnique({ where: { id } });
   if (!app || app.status !== 'pending') return;
