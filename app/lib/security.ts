@@ -2,13 +2,13 @@
 import { prisma } from './prisma';
 import { sha256Hex } from './mcp-auth';
 
-// Cloudflare(cf-connecting-ip) 우선, 그다음 X-Forwarded-For 첫 홉.
+// Vercel이 전달하는 실제 IP를 우선하고, 로컬·기타 프록시는 전달 체인을 보조로 쓴다.
 export function clientIpFromHeaders(h: Headers): string {
-  const cf = h.get('cf-connecting-ip');
-  if (cf) return cf.trim();
+  const realIp = h.get('x-real-ip');
+  if (realIp) return realIp.trim();
   const xff = h.get('x-forwarded-for');
   if (xff) return xff.split(',')[0].trim();
-  return h.get('x-real-ip')?.trim() || 'unknown';
+  return 'unknown';
 }
 
 // 표시용 마스킹 — IPv4는 마지막 옥텟, IPv6는 앞 2블록만 남긴다.

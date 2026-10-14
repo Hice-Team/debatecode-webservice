@@ -282,10 +282,7 @@ export interface SweepState {
  * "관리 콘솔이나 예약 작업에서 부른다"고 적혀 있었지만 호출부가 없었다).
  * 그 사이 세 표가 단조 증가한다.
  *
- * cron으로 돌리지 않는 이유는 wrangler.jsonc에 적힌 그대로다 — OpenNext가 만드는
- * worker.js에는 `scheduled` 핸들러가 없어 트리거를 걸면 매 실행이 실패한다.
- * 정기 실행이 필요해지면 Supabase의 pg_cron으로 DB 안에서 도는 편이 맞다.
- * 그전까지는 이 버튼이 그 자리를 대신한다.
+ * 정기 실행 작업으로 옮기기 전까지는 이 버튼으로 수동 실행한다.
  */
 export async function sweepExpiredData(): Promise<SweepState> {
   const caller = await getUser();

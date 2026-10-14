@@ -825,8 +825,8 @@ ALTER TABLE public."MarketMessage" ENABLE ROW LEVEL SECURITY;
 
 -- 2026-08-20h: 지속 레이트 리밋
 --
--- 기존 리미터는 인메모리다. 단일 서버에서는 맞지만 Cloudflare Workers에서는 요청마다
--- 다른 아이솔레이트에 붙고 그 메모리는 수시로 사라진다. 즉 운영에서는 사실상 세지 않는다.
+-- 기존 리미터는 인메모리라 서버리스 인스턴스 간에 횟수가 공유되지 않는다.
+-- 즉 운영에서는 설정한 한도보다 느슨하게 적용될 수 있다.
 -- 로그인·가입·비밀번호 재설정처럼 "틀린 횟수"가 곧 보안인 자리만 DB로 센다.
 CREATE TABLE IF NOT EXISTS "RateLimitCounter" (
   "key"       TEXT NOT NULL PRIMARY KEY,

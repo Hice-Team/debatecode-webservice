@@ -7,7 +7,7 @@
 이 문서는 저장소의 디렉터리 경로와 파일 확장자를 조합해 프로젝트 파일에 적용할 라벨 및 역할을 정의합니다. app/처럼 파일 수가 많은 영역은 하위 경로가 기능 라벨이며, 그 안의 개별 파일명은 페이지·API·컴포넌트·유틸리티의 구체 기능을 나타냅니다. node_modules/, .git/, .next/ 등은 실행 환경 또는 생성물이라 소스 인벤토리와 분리해 설명합니다.
 
 [프로젝트 개요]
-Next.js App Router 기반의 Debate Code 서비스입니다. React와 TypeScript로 화면 및 API를 구현하고, Prisma와 PostgreSQL을 데이터 계층으로 사용합니다. 인증에는 Supabase를 사용하며, OpenNext Cloudflare 설정으로 Cloudflare Workers 배포를 지원합니다.
+Next.js App Router 기반의 Debate Code 서비스입니다. React와 TypeScript로 화면 및 API를 구현하고, Prisma와 PostgreSQL을 데이터 계층으로 사용합니다. 인증에는 Supabase를 사용하며, Vercel의 Next.js Node.js 런타임 배포를 지원합니다.
 
 [라벨 범례]
 APP-ROUTE: 사용자 화면, 레이아웃, 라우트별 UI
@@ -33,15 +33,13 @@ package.json — OPS: npm 명령, 직접 의존성, Prisma 시드 설정.
 package-lock.json — OPS: npm 의존성의 재현 가능한 잠금 정보.
 tsconfig.json — OPS: TypeScript 컴파일 옵션과 경로 별칭.
 next.config.ts — OPS: Next.js 앱 설정.
-open-next.config.ts — OPS: OpenNext Cloudflare 어댑터 설정.
-wrangler.jsonc — OPS: Cloudflare Workers 배포 설정.
 proxy.ts — API 요청 프록시/미들웨어 역할의 요청 진입점.
 eslint.config.mjs — OPS: ESLint 검사 규칙.
 postcss.config.mjs — OPS: CSS 빌드 플러그인 설정.
 next-env.d.ts — GENERATED: Next.js가 생성하는 TypeScript 환경 선언.
 tsconfig.tsbuildinfo — GENERATED: TypeScript 증분 빌드 캐시. 안전하게 재생성할 수 있습니다.
 next-env.d.ts 및 *.tsbuildinfo — GENERATED: 빌드 도구가 관리하는 로컬 산출물이며 소스 코드와 구분합니다.
-.dev.vars.example — OPS: Cloudflare 개발 변수 예시. 실제 비밀값을 넣지 않습니다.
+.env.example — OPS: 로컬/Vercel 환경변수 이름 예시. 실제 비밀값을 넣지 않습니다.
 .env — LOCAL-ONLY: 데이터베이스/API 비밀 환경 변수. 절대 공유하거나 인벤토리에 값을 기록하지 않습니다.
 .gitignore — OPS: Git에서 제외할 파일 및 생성물 규칙.
 next-env.d.ts, skills-lock.json — GENERATED/OPS: 프레임워크 타입 선언 및 보조 도구 잠금 정보.
@@ -103,7 +101,7 @@ skills-lock.json — OPS: 스킬/보조 도구 버전 잠금 정보.
 .js, .mjs, .cjs — OPS/DOMAIN: JavaScript 설정·스크립트·CommonJS 도구.
 .css — UI: 전역 또는 기능별 스타일.
 .prisma, .sql — DATA: 데이터 모델과 SQL.
-.json, .jsonc — OPS/DATA: 구조화 설정·메타데이터. wrangler.jsonc는 배포 설정입니다.
+.json, .jsonc — OPS/DATA: 구조화 설정·메타데이터.
 .md, .txt — DOC: 설명·작업 지침·텍스트 자료. 특정 기능 디렉터리 안에서는 해당 기능 문서로 라벨링합니다.
 .png, .jpg, .jpeg, .webp, .svg, .ico — ASSET: 이미지·아이콘.
 .pdf — ASSET 또는 LOCAL-ONLY: 문서/QA 산출물. output/에 있으면 재생성 산출물인지 확인합니다.
@@ -114,11 +112,9 @@ skills-lock.json — OPS: 스킬/보조 도구 버전 잠금 정보.
 [생성물 및 로컬 데이터 분류]
 node_modules/** — GENERATED: 설치된 외부 패키지. package-lock.json으로 복원 가능하며 프로젝트 소스가 아닙니다.
 .next/** — GENERATED: Next.js 개발/빌드 캐시.
-.open-next/** — GENERATED: OpenNext 빌드 출력.
-.wrangler/** — GENERATED/LOCAL-ONLY: Wrangler 로컬 상태 및 개발 데이터일 수 있습니다. 내용 확인 전 삭제하지 않습니다.
 on-tmp/**, tmp/**, output/**, .claude/** — GENERATED/LOCAL-ONLY: 빈 임시 폴더 및 잔여 폴더로, 정리 작업을 통해 안전하게 제거되었습니다.
 public/ss.ai, public/ss.psd, on-tmp-inspect.mjs — ASSET/OPS: 미사용 그래픽 원본 및 임시 진단 스크립트로, 정리 작업을 통해 제거되었습니다.
 .env — LOCAL-ONLY: 로컬 비밀 설정이므로 보존했습니다.
 
 [정리 원칙]
-재생성 가능한 QA 출력과 Next.js/OpenNext 빌드 캐시만 확인 후 제거하고, 소스·설정·사용자 변경·백업·환경 변수·배포 상태는 임의 삭제하지 않습니다. 생성된 Prisma 코드와 빌드 캐시는 원본 스키마/설정이 아니라 생성물입니다. node_modules는 현재 실행 환경의 의존성이므로 보존했습니다. .wrangler는 로컬 개발 상태나 데이터가 포함될 수 있어 보존했습니다.
+재생성 가능한 QA 출력과 Next.js 빌드 캐시만 확인 후 제거하고, 소스·설정·사용자 변경·백업·환경 변수·배포 상태는 임의 삭제하지 않습니다. 생성된 Prisma 코드와 빌드 캐시는 원본 스키마/설정이 아니라 생성물입니다. node_modules는 현재 실행 환경의 의존성이므로 보존했습니다.

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   // 실행은 잦은 동작이라 인메모리로 충분하다. 제출은 기록과 포인트가 걸려 있어
-  // 인스턴스가 바뀌어도 세지는 카운터로 막는다 — Workers에서는 인메모리가 남지 않는다.
+  // 서버리스 인스턴스가 바뀌어도 횟수가 공유되는 카운터로 막는다.
   if (kind === 'submit') {
     const limit = await getLimit('limit.rate.submission');
     const gate = await durableRateLimit(`submit:${userId}`, limit, 60_000);

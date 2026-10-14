@@ -48,7 +48,7 @@ function randomToken(): string {
  * 지금 요청에 해당하는 초안을 찾는다.
  *
  * 만료 정리를 여기서 곁다리로 한다 — 가입 화면은 자주 열리지 않으므로 별도 배치를 두는 것보다
- * 이쪽이 단순하고, Workers에는 어차피 정기 실행이 없다(wrangler.jsonc 주석 참고).
+ * 이쪽이 단순하다.
  */
 export async function loadDraft(): Promise<DraftLookup> {
   const now = new Date();

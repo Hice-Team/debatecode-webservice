@@ -87,8 +87,7 @@ export async function POST(request: Request) {
       { status: 429 },
     );
   }
-  // 인스턴스가 바뀌어도 남는 카운터로 하루 총량을 묶는다.
-  // Workers에서는 인메모리 카운터가 요청마다 사라져 사실상 세지지 않는다.
+  // 서버리스 인스턴스가 바뀌어도 남는 카운터로 하루 총량을 묶는다.
   const gate = await durableRateLimit(`translate:${session.userId}`, 120, 60 * 60 * 1000);
   if (!gate.allowed) {
     return NextResponse.json(

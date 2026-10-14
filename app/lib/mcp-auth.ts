@@ -1,6 +1,6 @@
 // debateNetwork(MCP)·debateBridge 연동용 개인 액세스 토큰(PAT) 유틸.
 // 토큰 평문은 발급 순간에만 존재하고 DB에는 sha256 해시만 저장한다.
-// Web Crypto만 사용 — Node/Cloudflare Workers 양쪽에서 동작한다.
+// Web Crypto API를 사용한다.
 import { prisma } from './prisma';
 
 const TOKEN_PREFIX = 'dcp_';

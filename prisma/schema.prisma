@@ -5,14 +5,7 @@ datasource db {
 }
 
 generator client {
-  provider   = "prisma-client-js"
-  // Cloudflare Workers에는 네이티브 쿼리 엔진이 없다. driver adapter + WASM 쿼리
-  // 컴파일러를 쓰는 Rust-free 클라이언트를 생성한다(네이티브 .dll.node 미포함).
-  engineType = "client"
-  // 클라이언트를 node_modules가 아닌 앱 소스에 생성한다. node_modules/@prisma/client
-  // 를 심볼릭 링크로 추적하는 Next standalone 번들 문제(Windows EPERM)를 피하고,
-  // 번들러가 일반 소스 파일로 포함하도록 한다.
-  output     = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 // Supabase Auth(auth.users)가 인증/비밀번호를 소유한다.

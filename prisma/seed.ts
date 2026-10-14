@@ -1,9 +1,7 @@
-import { PrismaClient, Prisma } from '../app/generated/prisma';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { createClient } from '@supabase/supabase-js';
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 // service_role 키로 auth.users를 직접 생성 — RLS/이메일 확인 절차를 우회한다 (시드 전용).
 const supabaseAdmin = createClient(

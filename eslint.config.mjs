@@ -18,8 +18,6 @@ const eslintConfig = defineConfig([
     // 빌드가 통과할 수 없고, 통과시키려고 규칙을 끄면 우리 코드의 문제까지 함께 가려진다.
     // `prisma generate`를 돌릴 때마다 새로 만들어지므로 고칠 수도 없다.
     "app/generated/**",
-    // OpenNext 빌드 산출물
-    ".open-next/**",
 
     // AI 코딩 도구 설치물 — 우리가 작성한 코드가 아니고 앱 번들에도 들어가지 않는다.
     // (oh-my-design 훅/스크립트, hallmark 스킬 문서, Cursor 룰)
@@ -49,7 +47,7 @@ const eslintConfig = defineConfig([
       // 이 앱이 그리는 이미지는 전부 이용자가 올린 것이거나 외부 주소다(Supabase Storage의
       // 서명 URL, 커뮤니티 첨부, 상품 사진, 아바타). next/image로 최적화하려면
       //   1) 도메인마다 remotePatterns를 등록해야 하는데 서명 URL은 쿼리가 매번 바뀌고,
-      //   2) Cloudflare Workers 배포에서는 이미지 최적화가 별도 과금 대상이다.
+      //   2) 원본이 자주 바뀌는 서명 URL은 캐시 효율이 낮다.
       // 최적화가 필요해지는 시점이 오면 그때 loader를 붙이는 편이 낫다.
       '@next/next/no-img-element': 'off',
 

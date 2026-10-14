@@ -31,7 +31,7 @@ function configured(...names: string[]): boolean {
 
 /**
  * 헬스 점검 — /api/health와 같은 판단을 서버 컴포넌트 안에서 직접 한다.
- * 자기 자신을 fetch하면 Workers에서 서브리퀘스트 한도와 절대 URL 문제를 떠안게 된다.
+ * 자기 자신을 fetch하지 않아도 되고, 의존성 점검 결과를 바로 렌더링할 수 있다.
  */
 async function collectChecks() {
   const started = Date.now();
@@ -65,7 +65,7 @@ async function collectChecks() {
       detail: hasSupabase ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).host : 'NEXT_PUBLIC_SUPABASE_* 미설정',
       hint: hasSupabase
         ? undefined
-        : 'NEXT_PUBLIC_* 은 빌드 변수다. wrangler secret이 아니라 빌드 환경변수로 넣어야 한다 (DEPLOY.md)',
+        : 'NEXT_PUBLIC_* 값은 빌드 환경변수로 등록해야 한다 (DEPLOY.md)',
     },
     {
       key: 'supabase_service',

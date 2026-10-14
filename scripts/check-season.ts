@@ -1,10 +1,8 @@
 // 시즌·랭킹 설정 확인 — 콘솔 화면 없이 지금 값이 무엇인지 확인할 때 쓴다.
 //   npx tsx scripts/check-season.ts
-import { PrismaClient } from '../app/generated/prisma';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;

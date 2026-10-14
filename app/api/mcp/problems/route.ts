@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
-import { Prisma } from '@/app/generated/prisma';
+import { Prisma } from '@prisma/client';
 import { authenticateMcp } from '@/app/lib/mcp-auth';
 import { rateLimit } from '@/app/lib/rate-limit';
 
