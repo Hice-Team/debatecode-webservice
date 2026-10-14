@@ -1,5 +1,29 @@
 # Cloudflare Workers 배포 (OpenNext)
 
+[Vercel 테스트 배포]
+
+이 저장소의 기본 `build` 스크립트는 Cloudflare OpenNext 전용이다. Vercel 프로젝트에서는
+Framework Preset을 **Next.js**, Root Directory를 저장소 루트로 두고 Build Command를
+`npm run build:vercel`로 지정한다. 이 명령은 Prisma 클라이언트를 생성한 뒤 일반 `next build`를
+실행한다. Output Directory는 자동 감지값을 유지하고 Node.js 런타임을 사용한다.
+
+Vercel 프로젝트의 Environment Variables에 `.dev.vars.example`에서 필요한 값을 등록한다.
+최소한 `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AI_SECRET_KEY`와
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`이
+필요하다. 사용하는 기능에 따라 메일·AI·OAuth·Google·WebAuthn 변수도 추가한다.
+`NEXT_PUBLIC_*` 값은 빌드 시 클라이언트 번들에 포함되므로 Preview와 Production 각각에
+맞는 값으로 설정한다. 시크릿은 `NEXT_PUBLIC_` 접두사를 붙이지 않는다.
+
+배포 도메인을 Supabase Auth의 허용 URL 및 OAuth 제공자 콜백 URL에 추가한다.
+WebAuthn을 쓰면 도메인별 `NEXT_PUBLIC_WEBAUTHN_RPID`와
+`NEXT_PUBLIC_WEBAUTHN_ORIGIN`도 맞춘다. Vercel 배포는 Cloudflare Workers 배포와 별개이며,
+Cloudflare 바인딩이나 Wrangler 시크릿을 가져오지 않는다. `npm run build`는 계속 Workers 전용이다.
+
+현재 빌드는 성공하지만 Prisma 생성 코드의 동적 파일 경로 때문에 Next.js 출력 추적 경고가
+나온다. 배포 산출물이 과도하게 커지거나 함수 크기 제한에 걸리는지 첫 Vercel 배포에서 확인한다.
+
+---
+
 [opennext.js.org/cloudflare](https://opennext.js.org/cloudflare) 어댑터로 Cloudflare **Workers**에 배포한다.
 세팅은 완료되어 있다: [wrangler.jsonc](wrangler.jsonc) · [open-next.config.ts](open-next.config.ts) ·
 `next.config.ts`의 `initOpenNextCloudflareForDev()` · package.json `preview`/`deploy` 스크립트.
