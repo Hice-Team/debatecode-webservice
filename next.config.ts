@@ -1,8 +1,4 @@
 import type { NextConfig } from "next";
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-
-// `next dev`에서 Cloudflare 바인딩(process.env 등)을 흉내내도록 초기화한다.
-initOpenNextCloudflareForDev();
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -58,8 +54,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      // 커뮤니티 첨부(파일/이미지 최대 10MB × 복수)를 서버 액션으로 받는다 — 기본 1MB로는 업로드 실패
-      bodySizeLimit: "25mb",
+      // Vercel Functions의 4.5 MB 요청 한도보다 낮게 둔다. 큰 파일은 signed upload를 사용한다.
+      bodySizeLimit: "4mb",
     },
   },
 

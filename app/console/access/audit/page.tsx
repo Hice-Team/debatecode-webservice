@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import type { Prisma } from '@/app/generated/prisma';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/app/lib/prisma';
 import { getUser } from '@/app/lib/dal';
 import { can } from '@/app/lib/permissions-server';

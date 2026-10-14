@@ -2,11 +2,9 @@
 //   npx tsx --env-file=.env scripts/check-rate-limit.ts
 //
 // 한도 3, 창 5초로 5번 두드려 4번째부터 막히는지 본다.
-import { PrismaClient } from '../app/generated/prisma';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 const KEY = `selftest:${Date.now()}`;
 

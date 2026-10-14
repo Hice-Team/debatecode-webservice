@@ -65,7 +65,6 @@ export default function Footer() {
           </div>
           <div className="text-right space-y-1">
             <p className="font-light">&copy; {new Date().getFullYear()} Debate Code. All rights reserved.</p>
-            <p>Hosted on Cloudflare</p>
           </div>
         </div>
       </div>

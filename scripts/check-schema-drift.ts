@@ -6,11 +6,9 @@
 // 스키마와 DB가 조용히 어긋나고, 그 컬럼을 읽는 화면만 런타임에 터진다(Prisma P2022).
 // 배포 전에 이 스크립트로 확인한다.
 import { readFileSync } from 'node:fs';
-import { PrismaClient } from '../app/generated/prisma';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 /** schema.prisma에서 모델별 스칼라 컬럼을 뽑는다(관계·블록 속성 제외). */
 function parseModels(source: string): Map<string, string[]> {
@@ -43,8 +41,7 @@ async function main() {
   const models = parseModels(source);
 
   const rows = await prisma.$queryRaw<{ table_name: string; column_name: string }[]>`
-    -- ::text 캐스팅 — information_schema는 sql_identifier 타입을 돌려주는데
-    -- pg 어댑터가 그 타입을 매핑하지 못한다(UnsupportedNativeDataType).
+    -- 결과를 text로 고정해 드라이버별 네이티브 타입 차이를 피한다.
     SELECT table_name::text AS table_name, column_name::text AS column_name
     FROM information_schema.columns WHERE table_schema = 'public'`;
 

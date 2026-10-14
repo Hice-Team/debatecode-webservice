@@ -4,11 +4,10 @@
 
 ## 1. 환경변수 — 성격에 맞는 자리에 있는가
 
-가장 흔한 사고가 여기서 난다. [.dev.vars.example](../.dev.vars.example)의 전체 목록과 대조한다.
+가장 흔한 사고가 여기서 난다. [.env.example](../.env.example)의 전체 목록과 대조한다.
 
-- [ ] `NEXT_PUBLIC_*` 이 **빌드 환경변수**로 들어가 있다 (GitHub Secrets → 워크플로 `env:`).
-      `wrangler secret put`으로 넣었다면 **잘못된 것** — 클라이언트 번들에 들어가지 않는다.
-- [ ] `DATABASE_URL`이 Supabase **pooler(6543)** URL이다. 직결(5432)이면 Workers 동시성에서 커넥션이 마른다.
+- [ ] `NEXT_PUBLIC_*`가 Vercel의 Preview/Production 빌드 환경변수에 각각 들어가 있다.
+- [ ] `DATABASE_URL`이 Supabase **pooler(6543)** URL이다. 서버리스 동시성에서 연결 수가 급증할 수 있다.
 - [ ] `AI_SECRET_KEY`가 개발용과 다른 프로덕션 값이다. **이 키가 바뀌면 기존 암호화 데이터를 못 읽는다.**
 - [ ] `SUPABASE_SERVICE_ROLE_KEY`가 런타임 시크릿으로만 있다 (`NEXT_PUBLIC_` 접두어가 붙어 있지 않다).
 - [ ] `NEXT_PUBLIC_WEBAUTHN_RPID` / `_ORIGIN`이 실제 배포 도메인과 일치한다 (불일치 시 보안키 등록 실패).
@@ -75,14 +74,15 @@ npx prisma db execute --file prisma/manual-additive.sql --schema prisma/schema.p
       더 이상 읽지 않는 컬럼이라 **먼저 적용해도 구버전이 죽지 않는다** — 다만 구버전의
       백업 코드 발급 화면은 그 순간부터 실패한다. 배포 간격을 짧게 둔다.
 
-## 4. 빌드 확인 (리눅스 / WSL)
+## 4. Next.js 빌드 확인
 
 ```bash
-npm run preview        # workerd에서 프로덕션 빌드 실행
+npm run build
+npm run start
 ```
 
-- [ ] Windows에서 실행하지 않았다 (OpenNext는 Windows 빌드가 크래시한다).
-- [ ] preview에서 로그인 → 문제 풀이 → 커뮤니티 글 작성이 된다.
+- [ ] Node.js 런타임으로 프로덕션 빌드와 로컬 실행이 된다.
+- [ ] 로그인 → 문제 풀이 → 커뮤니티 글 작성 흐름이 된다.
 
 ## 5. 스모크 테스트
 
@@ -135,9 +135,7 @@ npx tsx --env-file=.env scripts/qa-roles.mjs --base http://localhost:3100
 
 ## 6. 배포
 
-```bash
-npm run deploy         # 또는 main에 push → GitHub Actions
-```
+Vercel에 연결된 Production 브랜치에 push해 배포한다. 그 외 브랜치는 Preview 배포로 확인한다.
 
 ## 7. 배포 직후
 
@@ -146,7 +144,7 @@ npm run deploy         # 또는 main에 push → GitHub Actions
 - [ ] debateAI에 한 번 질문 → 답이 오고, 설정 › AI의 "오늘 사용" 수치가 1 오른다
 - [ ] 2차 인증을 켠 계정으로 로그인 → `/login/verify`를 거쳐 들어간다
 - [ ] `/console/system`에서 DB 왕복시간이 정상 범위(수백 ms 이내)
-- [ ] `npx wrangler tail`로 첫 몇 분간 5xx가 없는지 확인
+- [ ] Vercel Deployments의 Runtime Logs에서 첫 몇 분간 5xx가 없는지 확인
 - [ ] 브라우저 콘솔에 Supabase 관련 `undefined` 오류가 없는지 (있으면 1번 항목 재확인)
 
 ## 문제가 생기면
@@ -160,5 +158,5 @@ npm run deploy         # 또는 main에 push → GitHub Actions
 | AI 공급자 장애 | 기본 공급자·모델 전환 |
 | 전면 장애 | 유지보수 모드 on (운영진은 계속 접속 가능) |
 
-코드 원인은 대개 서버 액션 변경이나 Prisma 스키마 불일치다. Workers 로그와
+코드 원인은 대개 서버 액션 변경이나 Prisma 스키마 불일치다. Vercel Runtime Logs와
 `prisma migrate status`를 먼저 본다.

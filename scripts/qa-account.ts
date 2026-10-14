@@ -6,12 +6,10 @@
 // 로그인해야 열리는 화면(설정·대시보드)은 익명으로 검사할 수 없다. 실제 계정으로 눌러 봐야
 // 서버 컴포넌트 예외처럼 로그인 뒤에만 드러나는 문제를 잡을 수 있다.
 // 점검이 끝나면 delete로 지운다 — 운영 DB에 정체불명의 계정을 남기지 않는다.
-import { PrismaClient } from '../app/generated/prisma';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 import { createClient } from '@supabase/supabase-js';
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

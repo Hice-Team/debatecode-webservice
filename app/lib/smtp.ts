@@ -1,15 +1,8 @@
 // SMTP 클라이언트 — 외부 발송 서비스 없이 우리 메일 계정으로 직접 보낸다.
 //
-// 왜 직접 구현했나:
-//   · nodemailer는 Cloudflare Workers에서 동작하지 않는다(Node 스트림·DNS 의존).
-//   · Resend 같은 API 서비스는 보내는 주소의 **도메인 소유 확인**을 요구한다.
-//     발신 주소가 gmail.com이면 확인할 도메인이 없어서 애초에 등록이 안 된다.
-//   · Workers는 fetch 말고 TCP도 열 수 있다. node:tls의 connect가 nodejs_compat로
-//     제공되므로, SMTP 대화를 직접 하면 Gmail 계정을 그대로 발신자로 쓸 수 있다.
-//
-// TLS는 **암묵적 TLS(465)** 만 쓴다. 587 + STARTTLS는 평문으로 붙었다가 기존 소켓을
-// TLS로 승격하는데, 그 승격 경로가 런타임마다 지원이 갈린다. 465는 처음부터 TLS라
-// 승격 자체가 없다 — 로컬 Node와 workerd에서 같은 코드가 같게 동작한다.
+// TLS는 **암묵적 TLS(465)** 만 쓴다. 587 + STARTTLS는 평문 연결을 TLS로 승격해야 하므로
+// 연결 경로를 단순하게 유지하기 위해 처음부터 TLS를 사용하는 포트만 지원한다.
+// SMTP 연결을 허용하지 않는 서버리스 호스팅에서는 API 전송(예: Resend)을 사용한다.
 //
 // env: SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / EMAIL_FROM (app/lib/email.ts 참고)
 import { connect as tlsConnect, type TLSSocket } from 'node:tls';

@@ -1,10 +1,9 @@
 // 문제집 세트 초기 편성 — 기존 기출 문제(company/examYear)를 기업·연도별 세트로 묶고,
 // 난이도별 실전 모의고사와 카테고리 테마 세트를 만든다. 같은 slug가 있으면 건너뛴다.
 // 실행: npx tsx prisma/seed-problem-sets.ts
-import { PrismaClient } from '../app/generated/prisma';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+const prisma = new PrismaClient();
 
 function slugify(value: string): string {
   const ascii = value

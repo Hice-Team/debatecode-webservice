@@ -32,15 +32,13 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# Local platform state; may contain development data.
+.wrangler/
 
 # vercel
 .vercel
-
-# cloudflare (opennext)
-/.open-next/
-.wrangler/
-.dev.vars
-cloudflare-env.d.ts
 
 # prisma generated client (regenerated via `prisma generate`)
 /app/generated/

@@ -1,4 +1,4 @@
-// sha256 — Web Crypto만 사용해 Node·Cloudflare Workers 양쪽에서 같게 동작한다.
+// sha256 — Node.js Web Crypto API를 사용한다.
 //
 // 되돌릴 필요가 없는 값(토큰, 백업 코드, 코드 지문)은 해시로 보관한다.
 // 되돌릴 수 있게 저장해야 하는 값(이용자 API 키 등)은 app/lib/crypto.ts 쪽이다.
