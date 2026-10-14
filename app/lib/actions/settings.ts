@@ -5,10 +5,13 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import { verifySession } from '../dal';
+import { createClient } from '../supabase/server';
 import { AI_PROVIDERS, DEFAULT_BASE_URLS, LOCKED_PROVIDERS, isSelectableProvider } from '../ai/config';
 import { getProviderFor } from '../ai/provider';
 import { LlmInterviewer } from '../ai/llm-interviewer';
 import { decryptSecret, encryptSecret } from '../crypto';
+import { isDebateAiModelId } from '../ai/debateai-models';
+import { MAX_INSTRUCTIONS, MAX_INSTRUCTION_LENGTH, isContextMode } from '../user-prefs';
 
 export interface AiSettingsState {
   errors?: { form?: string[] };
@@ -94,7 +97,7 @@ export async function saveAiSettings(
     where: { id: session.userId },
     data: {
       aiProvider,
-      // 이 폼이 aiModel을 보내지 않을 때는 건드리지 않는다 — 모델은 debateAI 탭·AI Search의
+      // 이 폼이 aiModel을 보내지 않을 때는 건드리지 않는다 — 모델은 debateAI 탭의
       // 셀렉터에서 고르므로, 여기서 null로 덮으면 저장할 때마다 그 선택이 초기화된다.
       ...(formData.has('aiModel') ? { aiModel: aiModel || null } : {}),
       aiApiKey: keyToStore,
@@ -203,9 +206,6 @@ export async function deleteSelectedUserData(
       if (types.includes('comments')) {
         await tx.comment.deleteMany({ where: { authorId: session.userId } });
       }
-      if (types.includes('aiSessions')) {
-        await tx.aiSession.deleteMany({ where: { userId: session.userId } });
-      }
       if (types.includes('debateChats')) {
         await tx.debateAiChat.deleteMany({ where: { userId: session.userId } });
       }
@@ -219,8 +219,6 @@ export async function deleteSelectedUserData(
 
   // 캐시/클라이언트 데이터: 서버쪽은 경로 재검증으로 반영
   revalidatePath('/settings');
-  revalidatePath('/study');
-  revalidatePath('/study/search');
   return { sent: true };
 }
 
@@ -236,4 +234,72 @@ export async function saveRecoveryEmail(formData: FormData) {
   if (!email) return;
   await prisma.user.update({ where: { id: session.userId }, data: { twoFactorRecoveryEmail: email } });
   revalidatePath('/settings');
+}
+
+/**
+ * 학습 활용 동의 켜고 끄기.
+ *
+ * 선택 동의라서 언제든 되돌릴 수 있어야 한다(개인정보보호법 제37조·GDPR 7(3)).
+ * 시각을 지우는 것으로 철회를 표시한다 — 켠 적이 있는지와 지금 켜져 있는지를
+ * 한 컬럼으로 다루기 위해서다.
+ */
+export async function setAiTrainingConsent(formData: FormData): Promise<void> {
+  const session = await verifySession();
+  const on = String(formData.get('consent') ?? '') === 'on';
+  await prisma.user.update({
+    where: { id: session.userId },
+    data: { aiTrainingConsentAt: on ? new Date() : null },
+  });
+  revalidatePath('/settings');
+}
+
+/**
+ * 이 기기를 뺀 모든 기기에서 로그아웃.
+ *
+ * 계정을 빼앗겼을 때 가장 먼저 눌러야 하는 버튼이다. 기기 목록에서 하나씩 끊게만 두면
+ * 목록에 안 잡히는 세션(만료 직전이라 조회에서 빠진 것)이 남는다.
+ * scope 'others'를 쓰는 이유는, 지금 보고 있는 화면까지 끊기면 그다음에 해야 할
+ * 비밀번호 변경으로 이어 가지 못하기 때문이다.
+ */
+export async function signOutOtherDevices(): Promise<void> {
+  await verifySession();
+  const supabase = await createClient();
+  await supabase.auth.signOut({ scope: 'others' }).catch(() => {});
+  revalidatePath('/settings');
+}
+
+/**
+ * AI 개인 설정 — 기본 모델 2종, 개별 지침, 맥락 양.
+ *
+ * 지침을 배열로 받는다. 텍스트 한 덩어리가 아니라 목록이라, 한 줄을 빼도
+ * 나머지를 다시 쓸 일이 없다. 저장 전에 길이와 개수를 다시 자른다 —
+ * 화면에서 막았다고 해서 서버가 믿을 이유는 없다.
+ */
+export async function saveAiPersonalization(
+  _prev: AiSettingsState,
+  formData: FormData,
+): Promise<AiSettingsState> {
+  const session = await verifySession();
+
+  const codeModel = String(formData.get('aiCodeModel') ?? '');
+  const contextMode = String(formData.get('aiContextMode') ?? '');
+
+  const instructions = formData
+    .getAll('instruction')
+    .map((v) => String(v).trim())
+    .filter(Boolean)
+    .map((v) => v.slice(0, MAX_INSTRUCTION_LENGTH))
+    .slice(0, MAX_INSTRUCTIONS);
+
+  await prisma.user.update({
+    where: { id: session.userId },
+    data: {
+      aiCodeModel: isDebateAiModelId(codeModel) ? codeModel : null,
+      aiContextMode: isContextMode(contextMode) ? contextMode : null,
+      aiInstructions: instructions,
+    },
+  });
+
+  revalidatePath('/settings');
+  return { saved: true };
 }

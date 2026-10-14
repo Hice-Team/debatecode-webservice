@@ -32,9 +32,13 @@ export async function ensureAnonymousTag(userId: string): Promise<string> {
       // unique 충돌 — 다음 후보로 재시도
     }
   }
-  // 8회 모두 충돌하는 건 사실상 불가능하지만, 마지막 수단으로 id 파편을 붙인다
+  // 8회 모두 충돌하는 건 사실상 불가능하지만, 마지막 수단으로 id 파편을 붙인다.
+  // 저장에 실패해도 던지지 않는다 — 이 값 하나 때문에 화면 전체가 열리지 않으면 안 된다
+  // (계정 행이 아직 없는 반쪽 상태에서 update는 항상 실패한다).
   const fallback = `Anonymous ${userId.slice(0, 4)}`;
-  await prisma.user.update({ where: { id: userId }, data: { anonymousTag: fallback } });
+  await prisma.user
+    .update({ where: { id: userId }, data: { anonymousTag: fallback } })
+    .catch(() => null);
   return fallback;
 }
 

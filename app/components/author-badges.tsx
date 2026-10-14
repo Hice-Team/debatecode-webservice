@@ -33,7 +33,7 @@ export default function AuthorBadges({
 
   return (
     <span className={`inline-flex flex-wrap items-center gap-1.5 ${className}`}>
-      <span data-no-translate className="text-ink-soft/55">{displayName(author, anonymous)}</span>
+      <span data-no-translate className="text-fg-muted">{displayName(author, anonymous)}</span>
 
       {showRole && (
         <span className={`rounded-full border px-1.5 py-0.5 text-[9px] font-bold ${ROLE_BADGE[role]}`}>

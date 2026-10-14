@@ -7,7 +7,7 @@
 // 그래서 대상 유형을 넓히고, 유형마다 **그 맥락에서 실제로 쓰는 사유**만 보여 준다.
 // 게시글에 "테스트케이스 오류"를 띄우거나 문제에 "욕설/비방"을 띄우면 아무도 안 고른다.
 
-export const REPORT_TARGETS = ['post', 'comment', 'user', 'problem', 'editor', 'ai_search'] as const;
+export const REPORT_TARGETS = ['post', 'comment', 'user', 'problem', 'editor', 'ai_search', 'debateai'] as const;
 export type ReportTarget = (typeof REPORT_TARGETS)[number];
 
 export const REPORT_TARGET_LABELS: Record<ReportTarget, string> = {
@@ -17,6 +17,7 @@ export const REPORT_TARGET_LABELS: Record<ReportTarget, string> = {
   problem: '문제',
   editor: '코드 에디터',
   ai_search: 'AI 답변',
+  debateai: 'debateAI 답변',
 };
 
 /** 신고 모달의 제목 — "무엇을 신고하는지"가 분명해야 사유를 제대로 고른다 */
@@ -27,6 +28,7 @@ export const REPORT_TARGET_TITLES: Record<ReportTarget, string> = {
   problem: '문제 오류 신고',
   editor: '코드 에디터 문제 신고',
   ai_search: 'AI 답변 신고',
+  debateai: 'debateAI 답변 신고',
 };
 
 export const REPORT_TARGET_DESC: Record<ReportTarget, string> = {
@@ -36,6 +38,7 @@ export const REPORT_TARGET_DESC: Record<ReportTarget, string> = {
   problem: '지문·테스트케이스·정답이 잘못됐다면 알려 주세요. 확인 후 수정합니다.',
   editor: '실행·채점이 제대로 되지 않는다면 알려 주세요. 재현에 필요한 내용을 함께 적어 주시면 빠릅니다.',
   ai_search: '사실과 다르거나 부적절한 답변을 알려 주세요.',
+  debateai: '사실과 다르거나 부적절한 debateAI 답변을 알려 주세요.',
 };
 
 export interface ReportReason {
@@ -80,7 +83,7 @@ const AI_REASONS: ReportReason[] = [
 export function reasonsFor(target: string): ReportReason[] {
   if (target === 'problem') return PROBLEM_REASONS;
   if (target === 'editor') return EDITOR_REASONS;
-  if (target === 'ai_search') return AI_REASONS;
+  if (target === 'ai_search' || target === 'debateai') return AI_REASONS;
   return COMMUNITY_REASONS;
 }
 
@@ -98,5 +101,5 @@ export function targetLabel(target: string): string {
 
 /** 콘텐츠 오류 계열인가 — 콘솔에서 "가이드라인 위반"과 다른 줄로 다루기 위해 */
 export function isDefectReport(target: string): boolean {
-  return target === 'problem' || target === 'editor' || target === 'ai_search';
+  return target === 'problem' || target === 'editor' || target === 'ai_search' || target === 'debateai';
 }

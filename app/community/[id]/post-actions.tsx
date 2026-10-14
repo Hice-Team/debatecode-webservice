@@ -19,7 +19,7 @@ export default function PostActions({ postId, canEdit }: { postId: string; canEd
           href={`/community/${postId}/edit`}
           title={t('post-edit', language)}
           aria-label={t('post-edit', language)}
-          className={`${BUTTON} border-ink/10 text-ink-soft/50 hover:border-brand-200 hover:text-brand-600`}
+          className={`${BUTTON} border-hairline text-fg-muted hover:border-brand-200 hover:text-brand-600`}
         >
           {/* 연필 */}
           <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.7]" aria-hidden>
@@ -38,7 +38,7 @@ export default function PostActions({ postId, canEdit }: { postId: string; canEd
           type="submit"
           title={t('post-delete', language)}
           aria-label={t('post-delete', language)}
-          className={`${BUTTON} border-ink/10 text-ink-soft/50 hover:border-rose-200 hover:text-rose-600`}
+          className={`${BUTTON} border-hairline text-fg-muted hover:border-rose-200 hover:text-rose-600`}
         >
           {/* 휴지통 */}
           <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[1.7]" aria-hidden>

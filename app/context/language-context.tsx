@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { Language } from '@/app/lib/i18n';
+import { isSupportedLanguage } from '@/app/lib/i18n';
 
 interface LanguageContextType {
   language: Language;
@@ -16,7 +17,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('language');
-    if (saved === 'ko' || saved === 'en') {
+    if (saved && isSupportedLanguage(saved)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage 복원은 하이드레이션 후에만 가능
       setLanguageState(saved);
     }
@@ -29,7 +30,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('language', lang);
+    try {
+      localStorage.setItem('language', lang);
+    } catch {
+      // storage unavailable fallback
+    }
   };
 
   return (
@@ -46,3 +51,4 @@ export function useLanguage() {
   }
   return context;
 }
+

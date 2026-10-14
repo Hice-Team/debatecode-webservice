@@ -21,17 +21,17 @@ export default function BulkImport() {
   return (
     <div className="space-y-4">
       <Callout tone="info" title="형식">
-        문제 객체의 배열, 또는 <code className="rounded bg-white/60 px-1">{'{ "problems": [...] }'}</code> 형태를
+        문제 객체의 배열, 또는 <code className="rounded bg-surface/60 px-1">{'{ "problems": [...] }'}</code> 형태를
         받습니다. 한 번에 최대 50건. 각 문제에는 테스트케이스가 최소 1개 있어야 합니다.
       </Callout>
 
       <form action={formAction} className="space-y-3">
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label htmlFor="bulk-json" className="font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="bulk-json" className="font-mono text-xs tracking-wider text-fg-secondary">
               문제 JSON
             </label>
-            <button type="button" onClick={() => setJson(IMPORT_EXAMPLE)} className="font-mono text-[11px] text-brand-600 hover:underline">
+            <button type="button" onClick={() => setJson(IMPORT_EXAMPLE)} className="font-mono text-[11px] text-signal hover:underline">
               예시 채우기
             </button>
           </div>
@@ -47,7 +47,7 @@ export default function BulkImport() {
         </div>
 
         {state.errors && state.errors.length > 0 && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+          <div className="rounded-[var(--radius-panel)] border border-rose-200 bg-rose-50 px-4 py-3">
             <p className="mb-1 text-xs font-semibold text-rose-800">{state.errors.length}개 문제가 있습니다</p>
             <ul className="list-inside list-disc space-y-0.5 text-[11px] text-rose-700">
               {state.errors.map((e, i) => (
@@ -65,13 +65,13 @@ export default function BulkImport() {
 
         {/* 검증 결과 */}
         {state.preview && state.preview.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-ink/10">
-            <p className="border-b border-ink/10 bg-paper/50 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-ink-soft/50">
+          <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline">
+            <p className="border-b border-hairline bg-paper/50 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
               검증 통과 {state.preview.length}건
             </p>
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-ink/5 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+                <tr className="border-b border-hairline font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                   <th scope="col" className="px-4 py-2 text-left font-medium">제목</th>
                   <th scope="col" className="px-4 py-2 text-left font-medium">카테고리</th>
                   <th scope="col" className="px-4 py-2 text-left font-medium">난이도</th>
@@ -80,13 +80,13 @@ export default function BulkImport() {
               </thead>
               <tbody>
                 {state.preview.map((p, i) => (
-                  <tr key={i} className="border-b border-ink/5 last:border-0">
-                    <td className="px-4 py-2 font-medium text-ink">{p.title}</td>
-                    <td className="px-4 py-2 text-ink-soft/70">{p.category}</td>
-                    <td className="px-4 py-2 text-ink-soft/70">
+                  <tr key={i} className="border-b border-hairline last:border-0">
+                    <td className="px-4 py-2 font-medium text-fg">{p.title}</td>
+                    <td className="px-4 py-2 text-fg-secondary">{p.category}</td>
+                    <td className="px-4 py-2 text-fg-secondary">
                       {p.difficulty} · {DIFFICULTY_LABEL[p.difficulty]}
                     </td>
-                    <td className="px-4 py-2 text-right font-mono text-ink-soft/70">{p.cases}</td>
+                    <td className="px-4 py-2 text-right font-mono text-fg-secondary">{p.cases}</td>
                   </tr>
                 ))}
               </tbody>
@@ -104,7 +104,7 @@ export default function BulkImport() {
             </button>
           )}
           {!validated && !state.saved && (
-            <p className="text-[11px] text-ink-soft/50">먼저 검증해야 등록 버튼이 나타납니다.</p>
+            <p className="text-[11px] text-fg-muted">먼저 검증해야 등록 버튼이 나타납니다.</p>
           )}
         </div>
       </form>

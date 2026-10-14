@@ -99,9 +99,9 @@ export default async function AuditLogPage({
       </div>
 
       {/* 필터 — GET 폼이라 결과가 주소에 남는다 */}
-      <form method="get" className="mb-4 flex flex-wrap items-end gap-2 rounded-2xl border border-ink/10 bg-white p-4">
+      <form method="get" className="mb-4 flex flex-wrap items-end gap-2 rounded-[var(--radius-panel)] border border-hairline bg-surface p-4">
         <div className="min-w-[10rem] flex-1">
-          <label htmlFor="audit-q" className="mb-1.5 block font-mono text-[11px] tracking-wider text-ink-soft/55">
+          <label htmlFor="audit-q" className="mb-1.5 block font-mono text-[11px] tracking-wider text-fg-muted">
             검색 (내용·행위자·대상 ID)
           </label>
           <input
@@ -109,18 +109,18 @@ export default async function AuditLogPage({
             name="q"
             defaultValue={q}
             placeholder="예: 제재 / 강*호 / cmxxxx"
-            className={`w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm ${FOCUS}`}
+            className={`w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-2 text-sm ${FOCUS}`}
           />
         </div>
         <div>
-          <label htmlFor="audit-domain" className="mb-1.5 block font-mono text-[11px] tracking-wider text-ink-soft/55">
+          <label htmlFor="audit-domain" className="mb-1.5 block font-mono text-[11px] tracking-wider text-fg-muted">
             영역
           </label>
           <select
             id="audit-domain"
             name="domain"
             defaultValue={domain}
-            className={`rounded-lg border border-ink/15 bg-white px-2.5 py-2 text-sm ${FOCUS}`}
+            className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2.5 py-2 text-sm ${FOCUS}`}
           >
             {DOMAINS.map((d) => (
               <option key={d.value} value={d.value}>
@@ -130,14 +130,14 @@ export default async function AuditLogPage({
           </select>
         </div>
         <div>
-          <label htmlFor="audit-days" className="mb-1.5 block font-mono text-[11px] tracking-wider text-ink-soft/55">
+          <label htmlFor="audit-days" className="mb-1.5 block font-mono text-[11px] tracking-wider text-fg-muted">
             기간
           </label>
           <select
             id="audit-days"
             name="days"
             defaultValue={days}
-            className={`rounded-lg border border-ink/15 bg-white px-2.5 py-2 text-sm ${FOCUS}`}
+            className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2.5 py-2 text-sm ${FOCUS}`}
           >
             {PERIODS.map((p) => (
               <option key={p.value} value={p.value}>
@@ -146,7 +146,7 @@ export default async function AuditLogPage({
             ))}
           </select>
         </div>
-        <button type="submit" className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500">
+        <button type="submit" className="rounded-[var(--radius-panel)] bg-signal px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
           적용
         </button>
         {(q || domain !== 'all' || days !== '7') && (
@@ -156,14 +156,14 @@ export default async function AuditLogPage({
         )}
       </form>
 
-      <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
+      <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
         {entries.length === 0 ? (
           <EmptyState
             title="조건에 맞는 기록이 없습니다"
             sub="기간을 넓히거나 영역 필터를 해제해 보세요."
           />
         ) : (
-          <ul className="divide-y divide-ink/5">
+          <ul className="divide-y divide-hairline">
             {entries.map((entry) => (
               <li key={entry.id} className="px-5 py-3.5">
                 <div className="flex flex-wrap items-center gap-2">
@@ -173,21 +173,21 @@ export default async function AuditLogPage({
                         ? 'bg-rose-100 text-rose-800'
                         : entry.action.startsWith('maintenance.') || entry.action.startsWith('setting.')
                           ? 'bg-amber-100 text-amber-900'
-                          : 'bg-ink/[0.06] text-ink-soft/55'
+                          : 'bg-paper text-fg-muted'
                     }`}
                   >
                     {auditActionLabel(entry.action)}
                   </span>
-                  <span className="min-w-0 flex-1 break-words text-sm text-ink-soft/80">{entry.summary}</span>
-                  <span className="shrink-0 font-mono text-[11px] text-ink-soft/45">
+                  <span className="min-w-0 flex-1 break-words text-sm text-fg">{entry.summary}</span>
+                  <span className="shrink-0 font-mono text-[11px] text-fg-muted">
                     {entry.actorName}({roleLabel(entry.actorRole)})
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] text-ink-soft/35">
+                  <span className="shrink-0 font-mono text-[11px] text-fg-quiet">
                     {entry.createdAt.toLocaleString('ko-KR')}
                   </span>
                 </div>
                 {(entry.targetId || entry.ipMasked) && (
-                  <p className="mt-1 font-mono text-[10px] text-ink-soft/30">
+                  <p className="mt-1 font-mono text-[10px] text-fg-quiet">
                     {entry.targetType && `${entry.targetType}:${entry.targetId ?? '—'}`}
                     {entry.ipMasked && ` · ${entry.ipMasked}`}
                   </p>
@@ -197,8 +197,8 @@ export default async function AuditLogPage({
           </ul>
         )}
 
-        <div className="flex items-center justify-between gap-3 border-t border-ink/10 px-4 py-3">
-          <p className="font-mono text-[11px] text-ink-soft/50">
+        <div className="flex items-center justify-between gap-3 border-t border-hairline px-4 py-3">
+          <p className="font-mono text-[11px] text-fg-muted">
             {total.toLocaleString()}건 중 {entries.length}건 표시
           </p>
           <div className="flex items-center gap-2">
@@ -219,7 +219,7 @@ export default async function AuditLogPage({
         </div>
       </div>
 
-      <p className="mt-3 font-mono text-[11px] text-ink-soft/40">
+      <p className="mt-3 font-mono text-[11px] text-fg-quiet">
         기록되는 액션 {Object.keys(AUDIT_ACTIONS).length}종
       </p>
     </div>

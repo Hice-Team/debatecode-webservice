@@ -19,7 +19,6 @@ const PRIVATE_PATHS = [
   '/dashboard',
   '/console',
   '/settings',
-  '/shop/orders',
   '/debate-mate/console',
   '/problems/mine',
   '/problems/new',

@@ -13,11 +13,15 @@
   --foreground: #14152b;
 }
 
-@theme inline {
+/* `inline`을 뗀 이유 — 다크 테마를 쓰려면 유틸리티가 값을 인라인하지 말고
+   변수를 가리켜야 한다. inline이면 .bg-paper가 `#f5f6fb`로 굳어, 아래에서
+   --color-paper를 다시 정의해도 아무 일도 일어나지 않는다. */
+@theme {
   /* debateCode 브랜드 토큰 — 워드마크 인디고 기반 */
   --color-ink: #08091a;        /* 네이비-블랙 에디터/크롬 배경 */
   --color-ink-soft: #12142c;   /* 패널/텍스트 다크 */
   --color-paper: #f5f6fb;      /* 쿨톤 라이트 배경 */
+  --color-surface: #ffffff;    /* 페이퍼 위에 얹히는 카드·입력 표면 (DESIGN.md §1) */
 
   /* 브랜드 인디고 스케일 (#1800AC 기준) */
   --color-brand-50: #eef0ff;
@@ -36,11 +40,186 @@
   --color-signal: #4531d9;
   --color-signal-soft: #5b4cf0;
 
+  /* ── 명도 계단 (DESIGN.md §2) ───────────────────────────────
+     화면마다 text-ink-soft/45, /55, /65 …를 눈대중으로 골라 쓰던 것을 네 단계로 묶는다.
+     임의 불투명도는 화면마다 조금씩 다른 회색을 만들고, 그 차이가 쌓이면
+     "무엇이 더 중요한지"를 색이 더 이상 말해 주지 않는다.
+
+       fg           제목, 본문 핵심 — 지금 읽어야 할 것
+       fg-secondary 본문, 설명문
+       fg-muted     메타데이터, 라벨, 보조 정보
+       fg-quiet     비활성, placeholder, 타임스탬프 (본문에는 쓰지 않는다)
+
+     다크 표면(에디터·네비·히어로)에서는 -on-dark 짝을 쓴다. */
+  --color-fg: #08091a;
+  --color-fg-secondary: #3b3f57;
+  --color-fg-muted: #6b7086;
+  --color-fg-quiet: #868ca2;
+
+  --color-fg-on-dark: #f7f8fa;
+  --color-fg-on-dark-secondary: #c8ccd8;
+  --color-fg-on-dark-muted: #8a8f9e;
+  --color-fg-on-dark-quiet: #6e727a;
+
+  /* 경계선 — 위계는 테두리보다 명도로 만든다. 그래도 모호할 때만 이 실선. */
+  --color-hairline: rgba(8, 9, 26, 0.08);
+  --color-hairline-on-dark: rgba(255, 255, 255, 0.08);
+
+  /* ── 반경 (DESIGN.md §4) ────────────────────────────────────
+     세 단계 + pill. 화면마다 lg/xl/2xl/3xl을 다르게 고르던 것을 여기서 끊는다. */
+  --radius-control: 6px;
+  --radius-card: 8px;
+  --radius-panel: 12px;
+
+  /* ── 모션 (DESIGN.md §7) ────────────────────────────────────
+     easing 하나로 통일한다. 상태 150 / 진입·퇴장 200 / 레이아웃 300ms. */
+  --ease-dc: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-state: 150ms;
+  --duration-enter: 200ms;
+  --duration-layout: 300ms;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: "Pretendard Variable", "Pretendard", var(--font-plex-sans), var(--font-geist-sans), ui-sans-serif, sans-serif;
   --font-mono: var(--font-plex-mono), var(--font-geist-mono), ui-monospace, monospace;
   --font-display: var(--font-space-grotesk), "Pretendard", ui-sans-serif, sans-serif;
+}
+
+/* ═══ 다크 테마 ═══════════════════════════════════════════════
+   콘텐츠 표면(페이퍼)만 뒤집는다. **잉크는 뒤집지 않는다** —
+   에디터·네비 크롬은 원래 어두운 캔버스이고, 테마가 아니라 그 화면의 정체다.
+   그래서 --color-ink 계열과 -on-dark 짝은 두 테마에서 같은 값을 유지한다.
+
+   세 갈래를 모두 다룬다.
+     :root                       밝은 팔레트(기본값). 위 @theme이 정의한다.
+     prefers-color-scheme: dark  OS가 다크인데 사용자가 라이트를 고르지 않은 경우
+     [data-theme='dark']         사용자가 직접 고른 경우 — OS보다 우선
+
+   토큰만 바꾸고 컴포넌트는 건드리지 않는다. 화면 코드가 bg-white 같은 리터럴 대신
+   bg-surface·text-fg 같은 토큰을 쓰는 이유가 이것이다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --background: #0b0c1d;
+    --foreground: #f7f8fa;
+  }
+}
+:root[data-theme='dark'] {
+  --background: #0b0c1d;
+  --foreground: #f7f8fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-paper: #0b0c1d;
+    --color-surface: #14162e;
+    --color-fg: #f7f8fa;
+    --color-fg-secondary: #c8ccd8;
+    --color-fg-muted: #9aa0b0;
+    --color-fg-quiet: #7b8092;
+    --color-hairline: rgba(255, 255, 255, 0.10);
+
+    /* 브랜드 저채도 틴트 — 밝은 면에서 배경으로 쓰이던 자리다 */
+    --color-brand-50: #1c1e42;
+    --color-brand-100: #262a56;
+    --color-brand-200: #343a72;
+    --color-brand-700: #a1a2ff;
+    --color-brand-800: #c4c6ff;
+    --color-brand-900: #dfe1ff;
+  }
+}
+:root[data-theme='dark'] {
+  --color-paper: #0b0c1d;
+  --color-surface: #14162e;
+  --color-fg: #f7f8fa;
+  --color-fg-secondary: #c8ccd8;
+  --color-fg-muted: #9aa0b0;
+  --color-fg-quiet: #7b8092;
+  --color-hairline: rgba(255, 255, 255, 0.10);
+  --color-brand-50: #1c1e42;
+  --color-brand-100: #262a56;
+  --color-brand-200: #343a72;
+  --color-brand-700: #a1a2ff;
+  --color-brand-800: #c4c6ff;
+  --color-brand-900: #dfe1ff;
+}
+
+/* 의미색의 연한 배경(-50)과 진한 글자(-700/-900)는 밝은 면 전용으로 고른 값이다.
+   다크에서 그대로 두면 흰 배경에 흰 글자가 된다. 짝을 뒤집어 같은 의미를 유지한다.
+   Tailwind 기본 팔레트라 토큰이 없어, 여기서 유틸리티를 직접 덮는다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --tint-emerald: rgba(5, 150, 105, 0.18);
+    --tint-rose: rgba(225, 29, 72, 0.18);
+    --tint-amber: rgba(245, 158, 11, 0.16);
+    --tint-sky: rgba(2, 132, 199, 0.18);
+    --ink-on-tint-emerald: #6ee7b7;
+    --ink-on-tint-rose: #fda4af;
+    --ink-on-tint-amber: #fcd34d;
+    --ink-on-tint-sky: #7dd3fc;
+  }
+}
+:root[data-theme='dark'] {
+  --tint-emerald: rgba(5, 150, 105, 0.18);
+  --tint-rose: rgba(225, 29, 72, 0.18);
+  --tint-amber: rgba(245, 158, 11, 0.16);
+  --tint-sky: rgba(2, 132, 199, 0.18);
+  --ink-on-tint-emerald: #6ee7b7;
+  --ink-on-tint-rose: #fda4af;
+  --ink-on-tint-amber: #fcd34d;
+  --ink-on-tint-sky: #7dd3fc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .bg-emerald-50 { background-color: var(--tint-emerald); }
+  :root:not([data-theme='light']) .bg-rose-50 { background-color: var(--tint-rose); }
+  :root:not([data-theme='light']) .bg-amber-50 { background-color: var(--tint-amber); }
+  :root:not([data-theme='light']) .bg-sky-50 { background-color: var(--tint-sky); }
+  :root:not([data-theme='light']) .text-emerald-700,
+  :root:not([data-theme='light']) .text-emerald-800,
+  :root:not([data-theme='light']) .text-emerald-900 { color: var(--ink-on-tint-emerald); }
+  :root:not([data-theme='light']) .text-rose-700,
+  :root:not([data-theme='light']) .text-rose-800,
+  :root:not([data-theme='light']) .text-rose-900 { color: var(--ink-on-tint-rose); }
+  :root:not([data-theme='light']) .text-amber-700,
+  :root:not([data-theme='light']) .text-amber-800,
+  :root:not([data-theme='light']) .text-amber-900 { color: var(--ink-on-tint-amber); }
+  :root:not([data-theme='light']) .text-sky-700,
+  :root:not([data-theme='light']) .text-sky-800,
+  :root:not([data-theme='light']) .text-sky-900 { color: var(--ink-on-tint-sky); }
+}
+:root[data-theme='dark'] .bg-emerald-50 { background-color: var(--tint-emerald); }
+:root[data-theme='dark'] .bg-rose-50 { background-color: var(--tint-rose); }
+:root[data-theme='dark'] .bg-amber-50 { background-color: var(--tint-amber); }
+:root[data-theme='dark'] .bg-sky-50 { background-color: var(--tint-sky); }
+:root[data-theme='dark'] .text-emerald-700,
+:root[data-theme='dark'] .text-emerald-800,
+:root[data-theme='dark'] .text-emerald-900 { color: var(--ink-on-tint-emerald); }
+:root[data-theme='dark'] .text-rose-700,
+:root[data-theme='dark'] .text-rose-800,
+:root[data-theme='dark'] .text-rose-900 { color: var(--ink-on-tint-rose); }
+:root[data-theme='dark'] .text-amber-700,
+:root[data-theme='dark'] .text-amber-800,
+:root[data-theme='dark'] .text-amber-900 { color: var(--ink-on-tint-amber); }
+:root[data-theme='dark'] .text-sky-700,
+:root[data-theme='dark'] .text-sky-800,
+:root[data-theme='dark'] .text-sky-900 { color: var(--ink-on-tint-sky); }
+
+/* 테마 전환 순간의 깜빡임을 줄인다. 색만 바꾸고 위치는 건드리지 않는다. */
+@media (prefers-reduced-motion: no-preference) {
+  html.dc-theme-ready body {
+    transition: background-color var(--duration-layout) var(--ease-dc),
+      color var(--duration-layout) var(--ease-dc);
+  }
+}
+
+/* 가로 스크롤 차단.
+   `clip`이지 `hidden`이 아니다 — hidden은 스크롤 컨테이너를 만들어서 position: sticky를
+   조용히 망가뜨린다(헤더가 안 붙는다). clip은 넘치는 부분만 자른다.
+   넓은 표(순위·포인트 내역)나 코드 블록은 자기 안에서 가로로 스크롤한다. */
+html,
+body {
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 body {
@@ -53,16 +232,16 @@ body {
 /* 공유 컴포넌트 클래스 — 서버/클라이언트 어디서든 동일한 스타일을 쓴다 */
 @layer components {
   .dc-card {
-    @apply bg-white rounded-2xl border border-ink/[0.06] shadow-[0_1px_3px_rgba(20,21,43,0.05)];
+    @apply bg-white rounded-[var(--radius-panel)] border border-hairline shadow-[0_1px_3px_rgba(8,9,26,0.05)];
   }
   .dc-btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-3 bg-signal text-white text-sm font-semibold rounded-xl hover:bg-brand-600 active:scale-[0.98] transition disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 bg-signal text-white text-sm font-semibold rounded-full hover:bg-brand-600 active:scale-[0.98] transition-colors disabled:opacity-50 disabled:pointer-events-none;
   }
   .dc-btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-ink/10 bg-white text-sm font-medium text-ink-soft/75 hover:bg-paper hover:text-ink active:scale-[0.98] transition disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-hairline bg-white text-sm font-medium text-fg-secondary hover:bg-paper hover:text-fg active:scale-[0.98] transition-colors disabled:opacity-50 disabled:pointer-events-none;
   }
   .dc-input {
-    @apply w-full rounded-xl border border-ink/10 bg-white px-3.5 py-2.5 text-sm text-ink-soft placeholder:text-ink-soft/35 focus:outline-none focus:ring-2 focus:ring-signal/50 focus:border-signal/40;
+    @apply w-full rounded-[var(--radius-card)] border border-hairline bg-white px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/50 focus:border-signal/40;
   }
   /* 리스트 행 — 테이블 대신 쓰는 터치 친화 행 (토스식 리스트) */
   .dc-row {
@@ -70,8 +249,37 @@ body {
   }
   /* 메타 칩 — 카테고리/상태 등 보조 정보 */
   .dc-chip {
-    @apply inline-flex items-center rounded-full border border-ink/[0.08] bg-paper px-2.5 py-0.5 text-[11px] font-medium text-ink-soft/70;
+    @apply inline-flex items-center rounded-full border border-hairline bg-paper px-2.5 py-0.5 text-[11px] font-medium text-fg-muted;
   }
+}
+
+/* ═══ 조판 (DESIGN.md §3) ═══════════════════════════════════
+   한글 규칙 — Linear의 라틴 조판을 그대로 옮기면 한글이 깨지는 지점들.
+
+   1) 제목이 줄바꿈될 때 단어 중간에서 끊기지 않게 한다. 영문은 공백에서만 끊기지만
+      한글은 어절 중간에서도 끊겨서 "알고리즘 문제 풀 / 이"처럼 읽힌다.
+   2) 음수 자간은 큰 글자에만. 48px에서 벌어져 보이는 것을 좁히는 값이라,
+      15px 본문에 같은 비율을 주면 한글이 뭉친다.
+   3) 아주 긴 단어(URL·식별자)는 제목 안에서 넘치기 전에 끊는다. */
+h1, h2, h3, h4, h5, h6 {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  font-style: normal; /* 이탤릭 제목 금지 — 가장 흔한 AI 티 중 하나다 */
+  letter-spacing: -0.012em;
+}
+h1 {
+  letter-spacing: -0.022em;
+  line-height: 1.08;
+}
+
+/* 숫자 자리 고정 — 포인트·순위·토큰 수·시간처럼 갱신되는 숫자가
+   자릿수 때문에 좌우로 흔들리지 않게 한다. */
+.dc-num,
+time,
+[data-num] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
 }
 
 /* 인풋 박스 — 사용자가 드래그로 크기를 조절할 수 없다.
@@ -81,6 +289,65 @@ textarea {
   field-sizing: content;
   max-height: 45vh;
 }
+
+/* 움직임 줄이기 — 운영체제 설정과 앱 설정 둘 다 본다.
+   OS에서 켠 사람은 앱에서 끌 수 없다(접근성 설정을 앱이 덮어쓰면 안 된다).
+   위치 이동과 크기 변화만 없애고 페이드는 남긴다 — 무언가 바뀌었다는 신호까지 지우면
+   화면이 언제 갱신됐는지 알 수 없다. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+:root[data-reduce-motion='on'] *,
+:root[data-reduce-motion='on'] *::before,
+:root[data-reduce-motion='on'] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* 작은 아이콘 버튼의 터치 영역 — 보이는 크기는 그대로 두고 누를 수 있는 넓이만 44×44로.
+   손가락 끝은 대략 9mm(≈44px)라, 28px 버튼은 옆 버튼을 같이 누르게 된다.
+   버튼을 실제로 키우면 촘촘한 툴바가 무너지므로 투명한 판을 하나 덮는다.
+   겹치는 버튼끼리는 나란히 두지 말 것 — 판이 서로 먹는다. */
+.dc-tap {
+  position: relative;
+}
+.dc-tap::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+/* 마우스에서는 필요 없다 — 정확히 겨냥할 수 있고, 넓은 판이 옆 요소의 호버를 가린다 */
+@media (pointer: fine) {
+  .dc-tap::after {
+    content: none;
+  }
+}
+
+/* ═══ 레이어 순서 ═══════════════════════════════════════════
+   z 값을 화면마다 눈대중으로 고르면 언젠가 반드시 겹친다.
+   실제로 설정 화면의 확인창이 헤더와 같은 z-50이라, DOM 순서가 바뀌면 가려질 상태였다.
+
+     10~40   페이지 안 요소 (카드 위 배지, 목록 위 버튼)
+     50      전역 헤더 (sticky)
+     60~70   화면에 붙어 있는 보조 UI (에디터 헤더 토글 등)
+     80      드롭다운·팝오버
+     90      다이얼로그·확인창  ← 헤더보다 반드시 위
+     100     전체화면 뷰어 (첨부 미리보기)
+
+   새 오버레이를 만들 때는 위 표에서 고른다. 표에 없는 값을 쓰지 않는다. */
 
 /* 키보드 포커스 가시성 — 마우스 클릭에는 나타나지 않는다 */
 :focus-visible {
@@ -138,3 +405,122 @@ textarea {
 .dc-scroll-none::-webkit-scrollbar {
   display: none;
 }
+
+/* ═══ 진입 애니메이션 ═══════════════════════════════════════
+   메뉴·다이얼로그·토스트가 `animate-in fade-in slide-in-from-top-1 duration-150` 같은
+   클래스를 쓰고 있었는데, 이 유틸리티는 tailwindcss-animate 플러그인이 주는 것이라
+   플러그인 없이는 **전부 무효**였다 — 화면이 툭툭 나타나던 원인.
+   의존성을 하나 더 늘리는 대신 쓰는 조합만 직접 정의한다.
+
+   duration-*(Tailwind v4)는 `--tw-duration`을 세팅하므로 그대로 받아 쓴다. */
+@layer utilities {
+  .animate-in {
+    animation-name: dc-enter;
+    animation-duration: var(--tw-duration, 150ms);
+    animation-timing-function: var(--tw-ease, cubic-bezier(0.16, 1, 0.3, 1));
+    animation-fill-mode: both;
+  }
+
+  .fade-in { --dc-enter-opacity: 0; }
+  .zoom-in-95 { --dc-enter-scale: 0.95; }
+  .slide-in-from-top-1 { --dc-enter-y: -0.25rem; }
+  .slide-in-from-top-2 { --dc-enter-y: -0.5rem; }
+  .slide-in-from-bottom-1 { --dc-enter-y: 0.25rem; }
+  .slide-in-from-bottom-2 { --dc-enter-y: 0.5rem; }
+  .slide-in-from-left-1 { --dc-enter-x: -0.25rem; }
+  .slide-in-from-right-1 { --dc-enter-x: 0.25rem; }
+}
+
+@keyframes dc-enter {
+  from {
+    opacity: var(--dc-enter-opacity, 1);
+    transform: translate3d(var(--dc-enter-x, 0), var(--dc-enter-y, 0), 0)
+      scale3d(var(--dc-enter-scale, 1), var(--dc-enter-scale, 1), 1);
+  }
+}
+
+/* 움직임을 줄이도록 설정한 이용자에게는 위치 이동 없이 페이드만 남긴다 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    animation-duration: 1ms;
+  }
+}
+
+/* ═══ 잉크 표면의 내비게이션 ═══════════════════════════════════
+   코드 에디터(잉크 캔버스) 위에서는 상단 내비게이션도 같은 표면색을 쓴다.
+   레이아웃은 그대로 두고 색만 바꾸는 자리라, 자식 컴포넌트마다 pathname을 다시 읽게
+   하는 대신 부모가 .dc-nav-dark 표식을 달고 여기서 명도 계단을 -on-dark 짝으로 바꾼다.
+
+   개별 컴포넌트를 고치지 않는 이유: 내비게이션 자식은 로고·언어·프로필·인증 버튼까지
+   여섯 개이고, 각자 "지금 다크인가"를 알아야 할 이유가 없다. */
+.dc-nav-dark {
+  color: var(--color-fg-on-dark);
+}
+.dc-nav-dark .text-fg,
+.dc-nav-dark .text-ink,
+.dc-nav-dark .text-ink-soft {
+  color: var(--color-fg-on-dark);
+}
+.dc-nav-dark .text-fg-secondary {
+  color: var(--color-fg-on-dark-secondary);
+}
+.dc-nav-dark .text-fg-muted {
+  color: var(--color-fg-on-dark-muted);
+}
+.dc-nav-dark .text-fg-quiet {
+  color: var(--color-fg-on-dark-quiet);
+}
+/* 흰 배경을 쓰는 작은 조각(언어 칩·아바타 테두리 등)은 잉크 위에서 뒤집는다 */
+.dc-nav-dark .bg-white,
+.dc-nav-dark .bg-paper {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+.dc-nav-dark .border-hairline {
+  border-color: var(--color-hairline-on-dark);
+}
+
+/* ═══ 고대비 ═══════════════════════════════════════════════════
+   명도 계단을 더 벌리고 경계선을 진하게 한다. 의미색(성공·주의·위험)은 건드리지 않는다 —
+   전부 흑백으로 만들면 "무엇이 실패했는지"를 색으로 읽던 사람이 오히려 못 읽는다.
+   기기별 설정이라 계정이 아니라 브라우저에 저장한다(app/lib/ui-preferences.ts). */
+:root[data-contrast='high'],
+:root.high-contrast {
+  --color-fg-secondary: #14162b;
+  --color-fg-muted: #2b3049;
+  --color-fg-quiet: #454a63;
+  --color-hairline: rgba(8, 9, 26, 0.28);
+}
+/* 다크에서의 고대비 — 세 갈래를 테마와 같은 방식으로 다룬다.
+   `:not([data-theme='light'])`만 쓰면 표식이 없는 기본 상태(=라이트)에도 걸려
+   흰 바탕에 흰 글자가 된다. 반드시 미디어 쿼리 안에 둬야 한다. */
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast='high']:not([data-theme='light']),
+  :root.high-contrast:not([data-theme='light']) {
+    --color-fg-secondary: #f2f4f8;
+    --color-fg-muted: #dfe3ec;
+    --color-fg-quiet: #c3c8d6;
+    --color-hairline: rgba(255, 255, 255, 0.34);
+  }
+}
+:root[data-contrast='high'][data-theme='dark'],
+:root.high-contrast[data-theme='dark'] {
+  --color-fg-secondary: #f2f4f8;
+  --color-fg-muted: #dfe3ec;
+  --color-fg-quiet: #c3c8d6;
+  --color-hairline: rgba(255, 255, 255, 0.34);
+}
+/* 초점 링도 함께 굵힌다 — 키보드로만 쓰는 사람에게 지금 위치가 가장 중요한 정보다 */
+:root[data-contrast='high'] :focus-visible,
+:root.high-contrast :focus-visible {
+  outline-width: 3px;
+}
+
+/* ═══ 모션 줄이기 ═══════════════════════════════════════════════ */
+:root[data-reduce-motion='on'] *,
+:root.reduce-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+

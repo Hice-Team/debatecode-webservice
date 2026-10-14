@@ -8,12 +8,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { verifySession, getUser } from '../dal';
 import { prisma } from '../prisma';
-import { canOrderScope, validateContact } from '../shop-scope';
-import { featureBlockMessage } from '../settings';
-import { POINT_AMOUNTS, POINT_KINDS, getPointSummary, grantPoints } from '../points';
-import { SNS_PLATFORMS } from '@/app/community/boards';
+import { POINT_AMOUNTS, POINT_KINDS, grantPoints } from '../points';
 
-const PLATFORM_KEYS = SNS_PLATFORMS.map((p) => p.key) as [string, ...string[]];
 
 export interface MateActionState {
   errors?: { form?: string[] };
@@ -51,16 +47,20 @@ export async function requestSnsPromo(_prev: MateActionState, formData: FormData
   if (post.authorId !== userId) return { errors: { form: ['본인이 작성한 글만 신청할 수 있습니다.'] } };
   if (!post.url) return { errors: { form: ['외부 링크가 없는 글은 인증할 수 없습니다.'] } };
 
-  // 같은 글로 중복 신청 방지 — 반려된 건은 다시 신청할 수 있다
-  const duplicate = await prisma.pointRequest.findFirst({
+  // 같은 글로 중복 신청 방지 — 반려된 건은 다시 신청할 수 있다.
+  //
+  // 예전에는 findFirst로 **한 건만** 가져와 그 건의 postId를 비교했다. 이미 신청한 글이
+  // 둘 이상이면 엉뚱한 건이 잡혀 비교가 빗나갔고, 같은 글로 포인트를 다시 받을 수 있었다.
+  // payload가 Json이라 DB 필터로 좁히는 대신, 사람당 몇 건 되지 않으므로 전부 가져와 확인한다.
+  const priorRequests = await prisma.pointRequest.findMany({
     where: { userId, kind: 'sns_promo', status: { in: ['pending', 'approved'] } },
-    select: { id: true, payload: true },
+    select: { payload: true },
   });
-  if (duplicate) {
-    const payload = duplicate.payload as { postId?: string };
-    if (payload?.postId === post.id) {
-      return { errors: { form: ['이 글은 이미 신청했거나 승인된 상태입니다.'] } };
-    }
+  const alreadyClaimed = priorRequests.some(
+    (r) => (r.payload as { postId?: string } | null)?.postId === post.id,
+  );
+  if (alreadyClaimed) {
+    return { errors: { form: ['이 글은 이미 신청했거나 승인된 상태입니다.'] } };
   }
 
   await prisma.pointRequest.create({
@@ -89,112 +89,27 @@ export async function requestSnsPromo(_prev: MateActionState, formData: FormData
  * 상품을 주문한다. 주문 즉시 포인트를 차감(원장에 음수 기록)하고 주문은 requested 상태가 된다.
  * 실제 쿠폰 발급은 운영자 확정(또는 발급 채널 연동) 단계에서 이뤄진다.
  */
-export async function orderShopProduct(_prev: MateActionState, formData: FormData): Promise<MateActionState> {
-  const { userId } = await verifySession();
+/* 상점(기프티콘 교환)은 제거됐다 — 주문·취소 액션도 함께 걷어냈다.
+   포인트는 상점 화폐가 아니라 랭킹 기여도로만 남는다. */
 
-  // 발급 채널이 죽었을 때 콘솔에서 끈다 — 포인트만 빠지고 쿠폰이 안 나오는 사고를 막는다
-  const blocked = await featureBlockMessage('flag.shop_order', '기프티콘 발급이 일시 중지되었습니다. 포인트는 그대로 유지됩니다.');
-  if (blocked) return { errors: { form: [blocked] } };
+export async function grantAdoptionPoints(input: {
+  board: string;
+  commentId: string;
+  answererId: string;
+  answererRole?: string;
+  /** 문의게시판에서 질문자가 건 채택 포인트 */
+  bounty?: number | null;
+}) {
+  const isMentor = input.board === 'mentor';
+  const kind = isMentor ? POINT_KINDS.mentorAdopted : POINT_KINDS.qnaAdopted;
 
-  const productId = String(formData.get('productId') ?? '');
-  if (!productId) return { errors: { form: ['상품을 선택해 주세요.'] } };
+  // 지급 대상이 아닌 역할 — 채택 자체는 그대로 남고 포인트만 쌓이지 않는다
+  if (input.answererRole && input.answererRole !== 'debate_mate') return;
 
-  const product = await prisma.shopProduct.findUnique({ where: { id: productId } });
-  if (!product || !product.active) return { errors: { form: ['판매 중인 상품이 아닙니다.'] } };
-
-  // 메이트 전용 카탈로그는 메이트만 주문할 수 있다.
-  // 화면에서 감추는 것만으로는 부족하다 — 상품 ID만 알면 폼을 직접 보낼 수 있다.
-  const buyer = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
-  if (!canOrderScope(buyer?.role ?? 'user', product.scope)) {
-    return { errors: { form: ['디베이트메이트 전용 상품입니다.'] } };
-  }
-
-  // 발송받을 연락처 — 없으면 발급해 놓고 어디로 보낼지 몰라 운영자가 따로 물어야 했다
-  const contactType = String(formData.get('contactType') ?? 'phone');
-  const contact = String(formData.get('contact') ?? '').trim();
-  const contactError = validateContact(contactType, contact);
-  if (contactError) return { errors: { form: [contactError] } };
-
-  if (product.stock != null && product.stock <= 0) {
-    return { errors: { form: ['재고가 소진된 상품입니다.'] } };
-  }
-
-  const summary = await getPointSummary(userId);
-  if (summary.balance < product.priceKrw) {
-    return { errors: { form: [`포인트가 부족합니다. (보유 ${summary.balance.toLocaleString()}P / 필요 ${product.priceKrw.toLocaleString()}P)`] } };
-  }
-
-  // 주문 생성과 포인트 차감을 한 트랜잭션으로 묶는다 — 차감만 되고 주문이 없는 상태를 막는다
-  await prisma.$transaction(async (tx) => {
-    if (product.stock != null) {
-      await tx.shopProduct.update({ where: { id: product.id }, data: { stock: { decrement: 1 } } });
-    }
-    const order = await tx.shopOrder.create({
-      data: {
-        userId,
-        productId: product.id,
-        pointsSpent: product.priceKrw,
-        status: 'requested',
-        contact,
-        contactType,
-      },
-    });
-    await tx.pointLedger.create({
-      data: {
-        userId,
-        amount: -product.priceKrw,
-        kind: POINT_KINDS.shopPurchase,
-        memo: `${product.brand} ${product.name}`,
-        refType: 'shopOrder',
-        refId: order.id,
-      },
-    });
-  });
-
-  revalidatePath('/debate-mate/console');
-  revalidatePath('/console/points');
-  revalidatePath('/shop');
-  revalidatePath('/shop/orders');
-  return {
-    saved: true,
-    message: '주문이 접수되었습니다. 운영자 승인 후 입력하신 연락처로 발송됩니다.',
-  };
-}
-
-/** 발급 전(requested) 주문을 사용자가 취소한다 — 차감한 포인트를 환불 원장으로 되돌린다. */
-export async function cancelShopOrder(formData: FormData): Promise<void> {
-  const { userId } = await verifySession();
-  const orderId = String(formData.get('orderId') ?? '');
-  if (!orderId) return;
-
-  const order = await prisma.shopOrder.findUnique({ where: { id: orderId } });
-  if (!order || order.userId !== userId || order.status !== 'requested') return;
-
-  await prisma.$transaction(async (tx) => {
-    await tx.shopOrder.update({ where: { id: orderId }, data: { status: 'canceled' } });
-    await tx.pointLedger.create({
-      data: {
-        userId,
-        amount: order.pointsSpent,
-        kind: POINT_KINDS.shopRefund,
-        memo: '주문 취소 환불',
-        refType: 'shopOrder',
-        refId: order.id,
-      },
-    });
-  });
-
-  revalidatePath('/debate-mate/console');
-}
-
-/* ---------- 채택 시 포인트 적립 (댓글 채택 액션에서 호출) ---------- */
-
-/** 답변 채택 보상 — 게시판에 따라 지급액이 다르다. 중복 지급은 원장 유니크가 막는다. */
-export async function grantAdoptionPoints(input: { board: string; commentId: string; answererId: string }) {
-  const kind = input.board === 'mentor' ? POINT_KINDS.mentorAdopted : POINT_KINDS.qnaAdopted;
+  const amount = isMentor ? POINT_AMOUNTS[kind] : (input.bounty ?? POINT_AMOUNTS[kind]);
   await grantPoints({
     userId: input.answererId,
-    amount: POINT_AMOUNTS[kind],
+    amount,
     kind,
     refType: 'comment',
     refId: input.commentId,

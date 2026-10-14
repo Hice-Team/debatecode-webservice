@@ -12,7 +12,11 @@ import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/app/context/language-context';
 import { t } from '@/app/lib/i18n';
 
-export type SidebarGroup = 'operations' | 'content' | 'access' | 'growth' | 'system';
+// 콘솔이 다루는 것은 셋뿐이다 — 문제, 커뮤니티, 서비스.
+// 예전에는 운영·콘텐츠·접근제어·성장·시스템 다섯으로 나뉘어 있었는데, 그 이름들은
+// "무엇을 관리하는가"가 아니라 "어느 팀 일인가"에 가까웠다. 콘솔에 들어온 사람은
+// 팀이 아니라 대상을 찾는다.
+export type SidebarGroup = 'problem' | 'community' | 'service';
 
 // 사이드바 항목 — 라벨은 사전 키로만 넘긴다. 서버 레이아웃이 한국어/영어를 고르지 않고,
 // 화면이 이용자의 언어 설정을 보고 정한다(글로벌화).
@@ -58,9 +62,6 @@ const ICONS: Record<string, React.ReactNode> = {
   points: (
     <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.2 6.2h2.4a1.4 1.4 0 0 1 0 2.8H6.2V6.2Zm0 2.8v2.8" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
   ),
-  shop: (
-    <path d="M2.5 5.5h11l-.8 8a1.5 1.5 0 0 1-1.5 1.4H4.8a1.5 1.5 0 0 1-1.5-1.4l-.8-8ZM5.5 5.5V4a2.5 2.5 0 0 1 5 0v1.5" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-  ),
   marketing: (
     <path d="M1.8 5.5h12.4v8H1.8v-8Zm0 .4 6.2 4.3 6.2-4.3" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
   ),
@@ -80,6 +81,9 @@ const ICONS: Record<string, React.ReactNode> = {
   audit: (
     <path d="M3 1.5h7l3 3v10H3v-13Zm7 0v3h3M5.5 8h5m-5 2.5h5" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
   ),
+  season: (
+    <path d="M8 1.5 9.9 5.6l4.4.5-3.3 3 .9 4.4L8 11.3 4.1 13.5l.9-4.4-3.3-3 4.4-.5L8 1.5Z" strokeWidth="1.3" fill="none" strokeLinejoin="round" />
+  ),
   // 시스템
   system: (
     <path d="M2 8h3l1.5-4 3 8L11 8h3" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -96,7 +100,7 @@ function ItemBadge({ count, label }: { count: number; label: string }) {
   return (
     <span
       className={`rounded-full px-1.5 py-0.5 font-mono text-[10px] font-bold ${
-        count > 0 ? 'bg-rose-600 text-white' : 'bg-ink/5 text-ink-soft/45'
+        count > 0 ? 'bg-rose-600 text-white' : 'bg-paper text-fg-muted'
       }`}
       aria-label={`${label} ${count}`}
     >
@@ -105,7 +109,7 @@ function ItemBadge({ count, label }: { count: number; label: string }) {
   );
 }
 
-const GROUP_ORDER: SidebarGroup[] = ['operations', 'content', 'access', 'growth', 'system'];
+const GROUP_ORDER: SidebarGroup[] = ['problem', 'community', 'service'];
 
 const COLLAPSE_STORAGE_KEY = 'dc.console.collapsedGroups';
 
@@ -183,15 +187,36 @@ export default function ConsoleSidebar({
   const isActive = (item: SidebarItem) =>
     item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
+  /** 메뉴 한 줄. 묶음 안과 밖(개요)이 같은 모양이어야 해서 함수로 뽑았다. */
+  const renderItem = (item: SidebarItem) => {
+    const active = isActive(item);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        aria-current={active ? 'page' : undefined}
+        className={`flex items-center gap-3 rounded-[var(--radius-panel)] px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal ${
+          active ? 'bg-signal text-white shadow-sm shadow-brand-600/30' : 'text-fg hover:bg-paper hover:text-fg'
+        }`}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" aria-hidden className="shrink-0">
+          {ICONS[item.icon]}
+        </svg>
+        <span className="flex-1 truncate">{t(item.labelKey, language)}</span>
+        {item.count != null && <ItemBadge count={item.count} label={pendingLabel} />}
+      </Link>
+    );
+  };
+
   return (
     <>
       {/* 모바일: 가로 스크롤 칩 — 묶음 없이 한 줄로 흐른다 */}
       <nav
         aria-label={t('console-menu-aria', language)}
-        className="dc-scroll-none lg:hidden sticky top-0 z-10 overflow-x-auto border-b border-ink/10 bg-white/95 px-4 py-2 backdrop-blur"
+        className="dc-scroll-none lg:hidden sticky top-0 z-10 overflow-x-auto border-b border-hairline bg-surface/95 px-4 py-2 backdrop-blur"
       >
         {maintenanceOn && (
-          <p className="mb-2 rounded-lg bg-amber-100 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900">
+          <p className="mb-2 rounded-[var(--radius-card)] bg-amber-100 px-2.5 py-1.5 text-[11px] font-semibold text-amber-900">
             {t('console-maintenance-live', language)}
           </p>
         )}
@@ -200,8 +225,8 @@ export default function ConsoleSidebar({
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                isActive(item) ? 'bg-signal text-white' : 'text-ink-soft/70 hover:bg-paper hover:text-ink'
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-card)] px-3 py-1.5 text-xs font-medium transition-colors ${
+                isActive(item) ? 'bg-signal text-white' : 'text-fg-secondary hover:bg-paper hover:text-fg'
               }`}
             >
               {t(item.labelKey, language)}
@@ -212,19 +237,19 @@ export default function ConsoleSidebar({
       </nav>
 
       {/* 데스크톱: 좌측 고정 레일 */}
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-ink/10 bg-white lg:sticky lg:top-0 lg:h-screen">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-hairline bg-surface lg:sticky lg:top-0 lg:h-screen">
         <div className="px-6 pb-4 pt-7">
-          <p className="text-lg font-bold text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <p className="font-display text-lg font-bold text-fg">
             {t('console-title', language)}
           </p>
-          <p className="mt-0.5 text-sm text-ink-soft/55">{t('console-sub', language)}</p>
+          <p className="mt-0.5 text-sm text-fg-muted">{t('console-sub', language)}</p>
         </div>
 
         {/* 유지보수 경고 — 켜 두고 잊는 사고가 제일 흔해서 늘 보이는 자리에 둔다 */}
         {maintenanceOn && (
           <Link
             href="/console/system/maintenance"
-            className="mx-3 mb-2 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-[11px] font-semibold leading-relaxed text-amber-900 hover:bg-amber-100"
+            className="mx-3 mb-2 flex items-start gap-2 rounded-[var(--radius-panel)] border border-amber-300 bg-amber-50 px-3 py-2.5 text-[11px] font-semibold leading-relaxed text-amber-900 hover:bg-amber-100"
           >
             <span aria-hidden className="mt-0.5 h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-amber-600" />
             {t('console-maintenance-live', language)}
@@ -232,8 +257,18 @@ export default function ConsoleSidebar({
         )}
 
         <nav aria-label={t('console-menu-aria', language)} className="flex-1 overflow-y-auto px-3 pb-3">
+          {/* 개요는 묶음 밖에 둔다 — 세 묶음 중 하나에 넣으면 그 묶음을 접었을 때
+              콘솔 홈으로 돌아갈 길이 사라진다. */}
+          {items
+            .filter((item) => item.href === '/console')
+            .map((item) => (
+              <div key={item.href} className="mb-3">
+                {renderItem(item)}
+              </div>
+            ))}
+
           {GROUP_ORDER.map((group) => {
-            const groupItems = items.filter((item) => item.group === group);
+            const groupItems = items.filter((item) => item.group === group && item.href !== '/console');
             if (groupItems.length === 0) return null;
 
             const isCollapsed = collapsed.has(group);
@@ -248,7 +283,7 @@ export default function ConsoleSidebar({
                   onClick={() => toggleGroup(group)}
                   aria-expanded={!isCollapsed}
                   aria-label={`${t(`console-group-${group}`, language)} — ${t('console-group-toggle', language)}`}
-                  className="flex w-full items-center gap-1.5 rounded-lg px-3.5 pb-1.5 pt-1 text-left font-mono text-[10px] font-semibold uppercase tracking-widest text-ink-soft/35 hover:text-ink-soft/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                  className="flex w-full items-center gap-1.5 rounded-[var(--radius-card)] px-3.5 pb-1.5 pt-1 text-left font-mono text-[10px] font-semibold uppercase tracking-widest text-fg-quiet hover:text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                 >
                   <span aria-hidden className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`}>
                     ▾
@@ -263,25 +298,7 @@ export default function ConsoleSidebar({
 
                 {!isCollapsed && (
                   <div className="space-y-1">
-                    {groupItems.map((item) => {
-                      const active = isActive(item);
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          aria-current={active ? 'page' : undefined}
-                          className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal ${
-                            active ? 'bg-signal text-white shadow-sm shadow-brand-600/30' : 'text-ink-soft/75 hover:bg-paper hover:text-ink'
-                          }`}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 16 16" stroke="currentColor" aria-hidden className="shrink-0">
-                            {ICONS[item.icon]}
-                          </svg>
-                          <span className="flex-1 truncate">{t(item.labelKey, language)}</span>
-                          {item.count != null && <ItemBadge count={item.count} label={pendingLabel} />}
-                        </Link>
-                      );
-                    })}
+                    {groupItems.map(renderItem)}
                   </div>
                 )}
               </div>
@@ -290,14 +307,14 @@ export default function ConsoleSidebar({
         </nav>
 
         {/* 하단 접속자 카드 */}
-        <div className="border-t border-ink/10 p-4">
-          <div className="flex items-center gap-3 rounded-xl bg-paper/80 px-3.5 py-3">
+        <div className="border-t border-hairline p-4">
+          <div className="flex items-center gap-3 rounded-[var(--radius-panel)] bg-paper/80 px-3.5 py-3">
             <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-signal text-xs font-bold text-white">
               {(userName[0] ?? 'A').toUpperCase()}
             </span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink">{userName}</p>
-              <p className="flex items-center gap-1.5 font-mono text-[10px] text-ink-soft/50">
+              <p className="truncate text-sm font-semibold text-fg">{userName}</p>
+              <p className="flex items-center gap-1.5 font-mono text-[10px] text-fg-muted">
                 {roleName}
                 <span aria-hidden className="h-1 w-1 rounded-full bg-emerald-500" />
                 Active

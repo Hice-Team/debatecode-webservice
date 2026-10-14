@@ -12,6 +12,8 @@ import { requirePermission } from '../permissions-server';
 import { audit } from '../audit';
 import { SETTING_DEFS, settingDef, type SettingDef } from '../settings';
 import { sendMail, isEmailLive, emailTransportLabel } from '../email';
+import { sweepRateLimits } from '../rate-limit-durable';
+import { sweepAiUsage } from '../ai/usage-limits';
 
 /* ---------- 런타임 설정 ---------- */
 
@@ -264,4 +266,77 @@ export async function sendTestMail(_prev: TestMailState, formData: FormData): Pr
 
   if (result.sent > 0) return { ok: `${to}(으)로 보냈습니다. 받은편지함과 스팸함을 모두 확인하세요.` };
   return { error: result.error ?? '발송에 실패했습니다.' };
+}
+
+/* ---------- 만료 데이터 정리 ---------- */
+
+export interface SweepState {
+  message?: string;
+  error?: string;
+}
+
+/**
+ * 만료된 카운터와 채점 세션을 치운다.
+ *
+ * 이 정리 함수들은 만들어 두고 **부르는 곳이 없었다**(sweepRateLimits의 주석은
+ * "관리 콘솔이나 예약 작업에서 부른다"고 적혀 있었지만 호출부가 없었다).
+ * 그 사이 세 표가 단조 증가한다.
+ *
+ * cron으로 돌리지 않는 이유는 wrangler.jsonc에 적힌 그대로다 — OpenNext가 만드는
+ * worker.js에는 `scheduled` 핸들러가 없어 트리거를 걸면 매 실행이 실패한다.
+ * 정기 실행이 필요해지면 Supabase의 pg_cron으로 DB 안에서 도는 편이 맞다.
+ * 그전까지는 이 버튼이 그 자리를 대신한다.
+ */
+export async function sweepExpiredData(): Promise<SweepState> {
+  const caller = await getUser();
+  await requirePermission(caller, 'setting.write');
+
+  try {
+    const [rateLimits, aiUsage, judgeSessions, verifications, drafts, twoFactor] = await Promise.all([
+      sweepRateLimits(),
+      sweepAiUsage(),
+      prisma
+        .$queryRaw<{ judge_session_sweep: number }[]>`SELECT public.judge_session_sweep()`
+        .then((rows) => Number(rows[0]?.judge_session_sweep ?? 0))
+        .catch(() => 0),
+      // 만료된 인증 코드 — 소비되지 않은 채 시간이 지난 것들
+      prisma.emailVerification
+        .deleteMany({ where: { expiresAt: { lt: new Date() } } })
+        .then((r) => r.count)
+        .catch(() => 0),
+      // 가입 초안에는 암호화된 비밀번호가 들어 있다. 오래 둘수록 위험만 커진다.
+      prisma.signupDraft
+        .deleteMany({ where: { expiresAt: { lt: new Date() } } })
+        .then((r) => r.count)
+        .catch(() => 0),
+      // 만료된 2차 인증 통과 기록 — 지워야 그 기기가 다음에 다시 확인받는다
+      prisma.twoFactorSession
+        .deleteMany({ where: { expiresAt: { lt: new Date() } } })
+        .then((r) => r.count)
+        .catch(() => 0),
+    ]);
+
+    const total = rateLimits + aiUsage + judgeSessions + verifications + drafts + twoFactor;
+
+    await audit({
+      actor: caller,
+      action: 'system.sweep',
+      targetType: 'setting',
+      summary: `만료 데이터 ${total.toLocaleString()}건 정리`,
+      diff: { after: { rateLimits, aiUsage, judgeSessions, verifications, drafts, twoFactor } },
+    });
+
+    revalidatePath('/console/system');
+    return {
+      message:
+        total === 0
+          ? '정리할 만료 데이터가 없습니다.'
+          : `${total.toLocaleString()}건을 정리했습니다. ` +
+            `(레이트리밋 ${rateLimits} · AI 사용량 ${aiUsage} · 채점 세션 ${judgeSessions} · ` +
+            `인증 코드 ${verifications} · 가입 초안 ${drafts} · 2차 인증 기록 ${twoFactor})`,
+    };
+  } catch (error) {
+    console.error('[sweepExpiredData] 실패', error);
+    return { error: '정리 중 문제가 발생했습니다. 로그를 확인해 주세요.' };
+  }
 }

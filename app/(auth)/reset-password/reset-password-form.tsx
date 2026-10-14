@@ -1,17 +1,25 @@
 'use client';
 
 import { useActionState } from 'react';
-import { updatePassword, type UpdatePasswordState } from '@/app/lib/actions/auth';
+import { resetPasswordWithToken, type UpdatePasswordState } from '@/app/lib/actions/auth';
 
 const initialState: UpdatePasswordState = {};
 
-export default function ResetPasswordForm() {
-  const [state, formAction, pending] = useActionState(updatePassword, initialState);
+export default function ResetPasswordForm({ token, email }: { token: string; email: string }) {
+  const [state, formAction, pending] = useActionState(resetPasswordWithToken, initialState);
 
   return (
     <form action={formAction} className="space-y-5">
+      {/* 링크가 곧 신원이다 — 폼과 함께 그대로 넘긴다 */}
+      <input type="hidden" name="token" value={token} />
+      <input type="hidden" name="email" value={email} />
+
+      <p className="rounded-lg border border-hairline bg-paper px-4 py-2.5 text-xs text-fg-secondary">
+        <span className="text-fg-muted">계정</span> <strong className="font-medium text-fg">{email}</strong>
+      </p>
+
       <div>
-        <label htmlFor="password" className="block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5">
+        <label htmlFor="password" className="block font-mono text-xs text-fg-secondary tracking-wider mb-1.5">
           NEW PASSWORD
         </label>
         <input
@@ -21,7 +29,7 @@ export default function ResetPasswordForm() {
           autoComplete="new-password"
           required
           placeholder="영문 + 숫자, 8자 이상"
-          className="w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
+          className="w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm text-fg placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal"
         />
         {state.errors?.password && <p className="mt-1.5 text-xs text-rose-600">{state.errors.password[0]}</p>}
       </div>

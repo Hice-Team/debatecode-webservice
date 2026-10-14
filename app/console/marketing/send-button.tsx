@@ -31,20 +31,20 @@ export default function SendButton({
 
       {confirming ? (
         <div className="flex items-center gap-2">
-          <span className="text-[12px] text-ink-soft/70">
+          <span className="text-[12px] text-fg-secondary">
             {recipientCount.toLocaleString()}명에게 «{subject}» 발송할까요?
           </span>
           <button
             type="submit"
             disabled={pending}
-            className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50"
+            className="rounded-[var(--radius-card)] bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50"
           >
             {pending ? '발송 중…' : '발송'}
           </button>
           <button
             type="button"
             onClick={() => setConfirming(false)}
-            className="text-xs font-medium text-ink-soft/50 transition-colors hover:text-ink"
+            className="text-xs font-medium text-fg-muted transition-colors hover:text-fg"
           >
             취소
           </button>
@@ -53,7 +53,7 @@ export default function SendButton({
         <button
           type="button"
           onClick={() => setConfirming(true)}
-          className="rounded-lg bg-signal px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-600"
+          className="rounded-[var(--radius-card)] bg-signal px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-signal"
         >
           발송하기
         </button>

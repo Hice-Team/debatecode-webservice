@@ -89,5 +89,12 @@ HUGGINGFACE_API_KEY=
 NEXT_PUBLIC_CHANNEL_PLUGIN_KEY=
 
 # Google Picker (AI Search 첨부의 "Drive에서 파일 추가") — 빌드 변수
+# APP_ID(클라우드 프로젝트 번호)까지 있어야 drive.file 권한으로 파일을 내려받을 수 있다.
 NEXT_PUBLIC_GOOGLE_API_KEY=
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=
+NEXT_PUBLIC_GOOGLE_APP_ID=
+
+# GitHub 저장소 가져오기(AI Search 첨부) — 선택.
+# 없으면 익명 한도(시간당 60회)로 동작한다. 넣으면 5,000회로 올라간다.
+# 공개 저장소만 읽으므로 스코프 없는(public_repo도 불필요) 토큰이면 충분하다.
+GITHUB_TOKEN=

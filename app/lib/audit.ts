@@ -49,15 +49,25 @@ export const AUDIT_ACTIONS = {
   'mate.warn': '메이트 경고',
 
   'post.delete': '게시글 삭제',
+  'post.pin': '공지 상단 고정',
+  'post.unpin': '공지 고정 해제',
   'point.adjust': '포인트 수동 조정',
   'security.recovery_email': '복구 이메일 변경',
 
   'system.test_mail': '테스트 메일 발송',
+  'system.sweep': '만료 데이터 정리',
   'setting.update': '런타임 설정 변경',
   'setting.reset': '런타임 설정 초기화',
   'maintenance.on': '유지보수 모드 시작',
   'maintenance.off': '유지보수 모드 해제',
 
+
+  'season.reset': '시즌 번호 초기화',
+  'season.set': '시즌 번호 변경',
+  'ranking.reset': '전체 랭킹 초기화',
+  'ranking.reset.clear': '랭킹 집계 제한 해제',
+  'ranking.reset.user': '개인 랭킹 초기화',
+  'ranking.reset.user.undo': '개인 랭킹 초기화 취소',
 
   'announcement.publish': '공지 게시',
   'marketing.send': '홍보 메일 발송',
@@ -77,6 +87,7 @@ export type AuditTargetType =
   | 'problem'
   | 'sanction'
   | 'setting'
+  | 'season'
   | 'mate'
   | 'post'
   | 'macro'

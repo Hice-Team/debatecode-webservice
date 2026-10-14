@@ -85,6 +85,7 @@ export default async function ConsoleOverviewPage() {
     recentAudit,
     maintenance,
     flags,
+    oldest,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.submission.count(),
@@ -98,12 +99,7 @@ export default async function ConsoleOverviewPage() {
     has('inquiry.respond') ? prisma.inquiry.count({ where: { status: 'open' } }) : 0,
     has('problem.review') ? prisma.problemDraft.count({ where: { status: 'pending' } }) : 0,
     has('mate.review') ? prisma.debateMateApplication.count({ where: { status: 'pending' } }) : 0,
-    has('point.review')
-      ? Promise.all([
-          prisma.pointRequest.count({ where: { status: 'pending' } }),
-          prisma.shopOrder.count({ where: { status: 'requested' } }),
-        ]).then(([a, b]) => a + b)
-      : 0,
+    has('point.review') ? prisma.pointRequest.count({ where: { status: 'pending' } }) : 0,
     has('sanction.lift') ? prisma.sanction.count({ where: { appealStatus: 'pending' } }) : 0,
     prisma.user.count({ where: { createdAt: { gte: todayStart } } }),
     prisma.submission.count({ where: { createdAt: { gte: todayStart } } }),
@@ -118,7 +114,31 @@ export default async function ConsoleOverviewPage() {
       : Promise.resolve([]),
     maintenanceState(),
     has('setting.read') ? getSettingsByCategory('flag') : Promise.resolve([]),
+    // 각 큐에서 **가장 오래 기다린 것**의 접수 시각.
+    // 건수만으로는 "3건"이 10분 밀린 것인지 10일 밀린 것인지 알 수 없다.
+    // 운영 화면에서 먼저 보여야 하는 것은 개수가 아니라 밀린 정도다(DESIGN.md §13).
+    Promise.all([
+      has('report.review')
+        ? prisma.report.findFirst({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+      has('inquiry.respond')
+        ? prisma.inquiry.findFirst({ where: { status: 'open' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+      has('problem.review')
+        ? prisma.problemDraft.findFirst({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+      has('mate.review')
+        ? prisma.debateMateApplication.findFirst({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+      has('point.review')
+        ? prisma.pointRequest.findFirst({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+      has('sanction.lift')
+        ? prisma.sanction.findFirst({ where: { appealStatus: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })
+        : null,
+    ]),
   ]);
+  const [oldestReport, oldestInquiry, oldestDraft, oldestMate, oldestPoint, oldestAppeal] = oldest;
 
   const labels = Array.from({ length: DAYS }, (_, i) => {
     const d = new Date(start);
@@ -150,13 +170,18 @@ export default async function ConsoleOverviewPage() {
 
   // 처리 대기 큐 — 지금 손대야 할 것만. 볼 권한이 있는 항목만 나온다.
   const queue = [
-    { href: '/console/reports', label: '미처리 신고', count: pendingReports, show: has('report.review') },
-    { href: '/console/inquiries', label: '미답변 문의', count: openInquiries, show: has('inquiry.respond') },
-    { href: '/console/problem-review', label: '검토 대기 문제', count: pendingDrafts, show: has('problem.review') },
-    { href: '/console/mates', label: '메이트 신청', count: pendingMates, show: has('mate.review') },
-    { href: '/console/points', label: '포인트·주문', count: pendingPoints, show: has('point.review') },
-    { href: '/console/access/sanctions?tab=appeals', label: '제재 이의제기', count: openAppeals, show: has('sanction.lift') },
+    { href: '/console/reports', label: '미처리 신고', count: pendingReports, since: oldestReport?.createdAt, show: has('report.review') },
+    { href: '/console/inquiries', label: '미답변 문의', count: openInquiries, since: oldestInquiry?.createdAt, show: has('inquiry.respond') },
+    { href: '/console/problem-review', label: '검토 대기 문제', count: pendingDrafts, since: oldestDraft?.createdAt, show: has('problem.review') },
+    { href: '/console/mates', label: '메이트 신청', count: pendingMates, since: oldestMate?.createdAt, show: has('mate.review') },
+    { href: '/console/points', label: '포인트 심사', count: pendingPoints, since: oldestPoint?.createdAt, show: has('point.review') },
+    { href: '/console/access/sanctions?tab=appeals', label: '제재 이의제기', count: openAppeals, since: oldestAppeal?.createdAt, show: has('sanction.lift') },
   ].filter((q) => q.show);
+
+  // 가장 오래 밀린 것 — 머리글에 한 줄로 요약한다
+  const worst = queue
+    .filter((q) => q.count > 0 && q.since)
+    .sort((a, b) => new Date(a.since!).getTime() - new Date(b.since!).getTime())[0];
   const queueTotal = queue.reduce((sum, q) => sum + q.count, 0);
 
   const offFlags = flags.filter((f) => f.overridden && f.value === false);
@@ -165,11 +190,11 @@ export default async function ConsoleOverviewPage() {
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600">ADMIN CONSOLE</span>
-          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-fg-muted">ADMIN CONSOLE</span>
+          <h1 className="mt-1.5 font-display text-3xl font-bold tracking-tight text-fg">
             관리 콘솔
           </h1>
-          <p className="mt-1 text-sm text-ink-soft/60">
+          <p className="mt-1 text-sm text-fg-secondary">
             {user.name}님 · {roleLabel(user.role)} 권한으로 접속 중
             {extraAllows.length > 0 && (
               <span className="ml-1.5 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-mono text-[10px] text-emerald-700">
@@ -178,9 +203,10 @@ export default async function ConsoleOverviewPage() {
             )}
           </p>
         </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
-          📅 {now.toLocaleDateString('ko-KR')}
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-hairline bg-surface px-3 py-1.5 font-mono text-[11px] text-fg-muted">
+          {/* 초록 점 — 서비스가 살아 있다는 표시. 이모지는 기기마다 다른 그림이 나온다(§8) */}
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+          {now.toLocaleDateString('ko-KR')}
         </span>
       </div>
 
@@ -209,29 +235,37 @@ export default async function ConsoleOverviewPage() {
       {/* ② 처리 대기 큐 */}
       {queue.length > 0 && (
         <section
-          className={`mt-5 overflow-hidden rounded-2xl border ${
-            queueTotal > 0 ? 'border-rose-300 bg-rose-50/60' : 'border-ink/10 bg-white'
+          className={`mt-5 overflow-hidden rounded-[var(--radius-panel)] border ${
+            queueTotal > 0 ? 'border-rose-300 bg-rose-50' : 'border-hairline bg-surface'
           }`}
           aria-label="처리 대기 작업"
         >
           <div className="flex flex-wrap items-center gap-3 px-5 py-3">
-            <p className={`text-sm font-bold ${queueTotal > 0 ? 'text-rose-700' : 'text-ink'}`}>
+            <p className={`text-sm font-bold ${queueTotal > 0 ? 'text-rose-700' : 'text-fg'}`}>
               {queueTotal > 0 ? `처리 대기 ${queueTotal}건` : '처리 대기 없음'}
             </p>
-            <p className="text-xs text-ink-soft/55">
-              {queueTotal > 0 ? '지금 확인이 필요한 항목입니다.' : '모든 운영 큐가 비어 있습니다.'}
+            <p className="text-xs text-fg-muted">
+              {queueTotal === 0
+                ? '모든 운영 큐가 비어 있습니다.'
+                : worst
+                  ? `가장 오래 밀린 것은 ${worst.label}입니다.`
+                  : '지금 확인이 필요한 항목입니다.'}
             </p>
           </div>
-          <div className="grid grid-cols-2 divide-x divide-y divide-ink/[0.07] border-t border-ink/[0.07] sm:grid-cols-3 lg:grid-cols-6 lg:divide-y-0">
+          <div className="grid grid-cols-2 divide-x divide-y divide-hairline border-t border-hairline sm:grid-cols-3 lg:grid-cols-6 lg:divide-y-0">
             {queue.map((q) => (
               <Link
                 key={q.href}
                 href={q.href}
-                className="bg-white/70 px-4 py-3 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal"
+                className="bg-surface px-4 py-3 transition-colors hover:bg-paper focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal"
               >
-                <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">{q.label}</p>
-                <p className={`mt-0.5 font-display text-2xl font-bold ${q.count > 0 ? 'text-rose-600' : 'text-ink-soft/35'}`}>
-                  {q.count}
+                <p className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">{q.label}</p>
+                <p className="mt-0.5 flex items-baseline gap-1.5">
+                  <span className={`font-display text-2xl font-bold ${q.count > 0 ? 'text-rose-600' : 'text-fg-quiet'}`}>
+                    {q.count}
+                  </span>
+                  {/* 가장 오래 기다린 것이 얼마나 됐는지 — 24시간이 넘으면 색이 바뀐다 */}
+                  {q.count > 0 && q.since && <SlaBadge since={q.since} />}
                 </p>
               </Link>
             ))}
@@ -242,54 +276,54 @@ export default async function ConsoleOverviewPage() {
       {/* ③ KPI */}
       <div className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
         {kpis.map((c) => (
-          <div key={c.label} className="rounded-2xl border border-ink/10 bg-white p-5">
+          <div key={c.label} className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
             <div className="flex items-center justify-between gap-2">
-              <p className="font-mono text-[11px] tracking-wider text-ink-soft/55">{c.label}</p>
+              <p className="font-mono text-[11px] tracking-wider text-fg-muted">{c.label}</p>
               <DeltaBadge delta={c.delta} />
             </div>
-            <p className="mt-1.5 text-3xl font-bold text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            <p className="mt-1.5 font-display text-3xl font-bold text-fg">
               {c.value}
             </p>
-            <p className="mt-1 text-xs text-ink-soft/60">{c.sub}</p>
+            <p className="mt-1 text-xs text-fg-secondary">{c.sub}</p>
           </div>
         ))}
       </div>
 
       {/* ④ 추세 + 운영 활동 */}
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <div className="rounded-2xl border border-ink/10 bg-white p-5">
+        <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-lg font-bold text-ink">사용자 트래픽 · 최근 {DAYS}일</h3>
-            <span className="font-mono text-[10px] text-brand-600">일별 활동</span>
+            <h3 className="font-display text-[15px] font-bold tracking-tight text-fg">사용자 트래픽 · 최근 {DAYS}일</h3>
+            <span className="font-mono text-[10px] text-fg-quiet">일별 활동</span>
           </div>
           <AreaChart series={traffic} labels={labels} />
         </div>
 
-        <section className="overflow-hidden rounded-2xl border border-ink/10 bg-white" aria-labelledby="feed-title">
-          <div className="flex items-center justify-between border-b border-ink/[0.07] px-5 py-3">
-            <h3 id="feed-title" className="text-sm font-bold text-ink">최근 운영 활동</h3>
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface" aria-labelledby="feed-title">
+          <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
+            <h3 id="feed-title" className="font-display text-[15px] font-bold tracking-tight text-fg">최근 운영 활동</h3>
             {recentAudit.length > 0 && (
-              <Link href="/console/access/audit" className="font-mono text-[11px] text-brand-600 hover:underline">
+              <Link href="/console/access/audit" className="font-mono text-[11px] text-signal hover:underline">
                 전체 →
               </Link>
             )}
           </div>
           {recentAudit.length === 0 ? (
-            <p className="px-5 py-10 text-center text-sm text-ink-soft/45">
+            <p className="px-5 py-10 text-center text-sm text-fg-muted">
               {has('audit.read') ? '아직 기록된 운영 활동이 없습니다.' : '감사 로그 열람 권한이 없습니다.'}
             </p>
           ) : (
-            <ul className="divide-y divide-ink/5">
+            <ul className="divide-y divide-hairline">
               {recentAudit.map((entry) => (
                 <li key={entry.id}>
                   <Link
                     href="/console/access/audit"
-                    className="flex items-center gap-2.5 px-5 py-2.5 transition-colors hover:bg-brand-50/40"
+                    className="flex items-center gap-2.5 px-5 py-2.5 transition-colors hover:bg-paper"
                   >
-                    <span className="shrink-0 rounded bg-ink/[0.06] px-1.5 py-0.5 font-mono text-[9px] font-bold text-ink-soft/55">
+                    <span className="shrink-0 rounded-[var(--radius-control)] bg-paper px-1.5 py-0.5 font-mono text-[9px] font-bold text-fg-muted">
                       {auditActionLabel(entry.action)}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-xs text-ink-soft/75">{entry.summary}</span>
+                    <span className="min-w-0 flex-1 truncate text-xs text-fg">{entry.summary}</span>
                     <SlaBadge since={entry.createdAt} done />
                   </Link>
                 </li>

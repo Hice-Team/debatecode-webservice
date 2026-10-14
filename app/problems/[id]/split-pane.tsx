@@ -79,7 +79,7 @@ export function SplitHandle({
     >
       {/* 그립 — 평소엔 흐릿한 점 바, 호버/드래그 시 브랜드 컬러로 살아난다 */}
       <div
-        className={`rounded-full transition-all ${
+        className={`rounded-full transition-colors ${
           axis === 'x' ? 'h-12 w-1 group-hover:h-16' : 'h-1 w-12 group-hover:w-16'
         } ${dragging ? 'bg-brand-400 shadow-[0_0_10px_rgba(125,120,251,0.6)]' : 'bg-white/15 group-hover:bg-brand-400/70'}`}
       />

@@ -60,20 +60,11 @@ export const DEBATEAI_MODELS: DebateAiModel[] = [
   // 추론
   { id: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', vendor: 'DeepSeek', tier: 'free', role: 'reasoning', hint: '플래그십 — 복합 추론' },
   { id: 'deepseek-r1', label: 'DeepSeek R1', vendor: 'DeepSeek', tier: 'free', role: 'reasoning', hint: '단계적 추론' },
-  { id: 'exaone-deep', label: 'EXAONE Deep', vendor: 'LG AI Research', tier: 'free', role: 'reasoning', hint: '추론 특화 — 한국어' },
   // 빠른 답변
   { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', vendor: 'DeepSeek', tier: 'free', role: 'fast', hint: '빠른 응답' },
   { id: 'qwen-3.6', label: 'Qwen 3.6', vendor: 'Alibaba', tier: 'free', role: 'fast', hint: '범용 다국어' },
-  { id: 'k-exaone-2.0', label: 'K-EXAONE 2.0', vendor: 'LG AI Research', tier: 'free', role: 'fast', hint: '한국어 특화' },
-  { id: 'exaone-4.5', label: 'EXAONE 4.5', vendor: 'LG AI Research', tier: 'free', role: 'fast', hint: '한국어 범용' },
-  { id: 'solar-pro', label: 'Solar Pro', vendor: 'Upstage', tier: 'free', role: 'fast', hint: '한국어 플래그십' },
-  { id: 'solar-mini', label: 'Solar Mini', vendor: 'Upstage', tier: 'free', role: 'fast', hint: '경량·고속' },
-  { id: 'kanana-2', label: 'Kanana 2', vendor: 'Kakao', tier: 'free', role: 'fast', hint: '한국어 대화' },
-  // 코드 생성
-  { id: 'deepseek-coder-v2', label: 'DeepSeek Coder-V2', vendor: 'DeepSeek', tier: 'free', role: 'code', hint: '코드 특화 — 구현·디버깅' },
   // 에이전트
   { id: 'qwen3-coder-next', label: 'Qwen3-Coder-Next', vendor: 'Alibaba', tier: 'free', role: 'agent', hint: '코드 에이전트 — 여러 파일·긴 수정' },
-  { id: 'kimi-k3', label: 'Kimi K3', vendor: 'Moonshot AI', tier: 'free', role: 'agent', hint: '긴 문맥 — 대화를 오래 끌고 간다' },
 
   /* ---------- BYOK — 이용자 API 키 ---------- */
   { id: 'chatgpt', label: 'ChatGPT', vendor: 'OpenAI', tier: 'byok' },
@@ -96,7 +87,7 @@ export const DEBATEAI_MODEL_IDS = DEBATEAI_MODELS.map((m) => m.id) as [string, .
  * 두 모드 모두 "이미 쓰인 코드"를 읽고 따지는 일이라 코드 특화 모델을 기본으로 둔다.
  * 이용자는 설정 → 서비스에서 바꿀 수 있다(User.aiCodeModel).
  */
-export const DEFAULT_CODE_MODEL_ID = 'deepseek-coder-v2';
+export const DEFAULT_CODE_MODEL_ID = 'qwen3-coder-next';
 
 /** 학습 도우미(문제 풀이 중 질문)의 기본 모델. */
 export const DEFAULT_CHAT_MODEL_ID = 'deepseek-v4-flash';

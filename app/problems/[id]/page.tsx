@@ -11,6 +11,7 @@ import { DEFAULT_CODE_MODEL_ID } from '@/app/lib/ai/debateai-models';
 import type { StarterCodes } from '@/app/lib/types';
 import Workspace from './workspace';
 import { readEntrySource, type ProblemEntryContext } from './entry-context';
+import { parseEditorPrefs } from '@/app/lib/user-prefs';
 
 export default async function ProblemPage({ params, searchParams }: PageProps<'/problems/[id]'>) {
   // 스마트폰은 에디터를 띄우기 전에 되돌린다 — 무거운 번들을 내려받게 두지 않는다
@@ -25,7 +26,11 @@ export default async function ProblemPage({ params, searchParams }: PageProps<'/
   const [problem, session] = await Promise.all([
     prisma.problem.findUnique({
       where: { id: problemId },
-      include: { testCases: { orderBy: { order: 'asc' } } },
+      include: {
+        // expected는 고르지 않는다. 이 페이지는 기대 출력을 쓸 일이 없고,
+        // 읽지 않으면 실수로 props에 실어 보낼 수도 없다.
+        testCases: { orderBy: { order: 'asc' }, select: { id: true, input: true, isHidden: true } },
+      },
     }),
     getSessionOptional(),
   ]);
@@ -36,7 +41,7 @@ export default async function ProblemPage({ params, searchParams }: PageProps<'/
   const aiRow = session
     ? await prisma.user.findUnique({
         where: { id: session.userId },
-        select: { role: true, aiApiKey: true, aiBaseUrl: true, aiCodeModel: true },
+        select: { role: true, aiApiKey: true, aiBaseUrl: true, aiCodeModel: true, editorPrefs: true },
       })
     : null;
   const aiAccess = {
@@ -84,12 +89,17 @@ export default async function ProblemPage({ params, searchParams }: PageProps<'/
     timeLimitMs: problem.timeLimitMs,
     tags: problem.tags as string[],
     starterCodes: problem.starterCodes as unknown as StarterCodes,
-    cases: problem.testCases.map((tc) => ({
-      id: tc.id,
-      args: tc.input as unknown[],
-      expected: tc.expected,
-      isHidden: tc.isHidden,
-    })),
+    // 화면에 보여 줄 예제만 내려보낸다.
+    //
+    // 예전에는 히든 케이스까지, 그것도 기대 출력(expected)을 통째로 내려보냈다.
+    // 숨김은 화면에서 감추는 것뿐이었고 개발자 도구를 열면 전부 보였다 —
+    // 즉 히든 케이스가 히든이 아니었다.
+    // 이제 채점에 쓸 입력은 채점 세션이 그때그때 내려주고(/api/judge/session),
+    // 기대 출력은 어느 경로로도 브라우저에 오지 않는다.
+    examples: problem.testCases
+      .filter((tc) => !tc.isHidden)
+      .map((tc) => ({ id: tc.id, args: tc.input as unknown[] })),
+    hiddenCount: problem.testCases.filter((tc) => tc.isHidden).length,
   };
 
   return (
@@ -107,6 +117,7 @@ export default async function ProblemPage({ params, searchParams }: PageProps<'/
         entry={entry}
         defaultChatModel={aiRow?.aiCodeModel ?? DEFAULT_CODE_MODEL_ID}
         aiAccess={aiAccess}
+        editorPrefs={parseEditorPrefs(aiRow?.editorPrefs)}
       />
     </div>
   );

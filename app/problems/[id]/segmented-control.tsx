@@ -79,7 +79,7 @@ export default function SegmentedControl<K extends string>({
             title={option.title}
             onClick={() => onChange(option.key)}
             className={`relative z-10 whitespace-nowrap rounded-md px-3 py-1 transition-colors duration-200 disabled:opacity-50 ${
-              on ? 'text-white' : 'text-white/45 hover:text-white/80'
+              on ? 'text-white' : 'text-fg-on-dark-muted hover:text-fg-on-dark'
             }`}
           >
             {option.label}

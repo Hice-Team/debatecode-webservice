@@ -40,14 +40,14 @@ export default function EffortSlider({
       <div className="flex items-center gap-2">
         <svg
           viewBox="0 0 24 24"
-          className={`h-3.5 w-3.5 shrink-0 fill-none stroke-current stroke-[1.6] ${dark ? 'text-white/45' : 'text-ink-soft/45'}`}
+          className={`h-3.5 w-3.5 shrink-0 fill-none stroke-current stroke-[1.6] ${dark ? 'text-fg-on-dark-muted' : 'text-fg-muted'}`}
           aria-hidden
         >
           <path d="M6 4v16M18 4v16" strokeLinecap="round" />
           <path d="M9 9h6M9 15h6" strokeLinecap="round" />
         </svg>
-        <span className={`text-[12px] font-medium ${dark ? 'text-white/80' : 'text-ink'}`}>Effort</span>
-        <span className={`text-[11px] ${dark ? 'text-white/40' : 'text-ink-soft/45'}`}>
+        <span className={`text-[12px] font-medium ${dark ? 'text-fg-on-dark' : 'text-fg'}`}>Effort</span>
+        <span className={`text-[11px] ${dark ? 'text-fg-on-dark-quiet' : 'text-fg-muted'}`}>
           ({EFFORT_LABELS_EN[value]})
         </span>
 
@@ -56,7 +56,7 @@ export default function EffortSlider({
           <span
             aria-hidden
             className={`absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full ${
-              dark ? 'bg-white/10' : 'bg-ink/10'
+              dark ? 'bg-surface/10' : 'bg-ink/10'
             }`}
           />
           {/* 지나온 구간 */}
@@ -71,7 +71,7 @@ export default function EffortSlider({
               key={step}
               aria-hidden
               className={`absolute top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full ${
-                i <= index ? 'bg-transparent' : dark ? 'bg-white/25' : 'bg-ink/20'
+                i <= index ? 'bg-transparent' : dark ? 'bg-surface/25' : 'bg-ink/20'
               }`}
               style={{ left: `${(i / last) * 100}%` }}
             />
@@ -80,7 +80,7 @@ export default function EffortSlider({
           <span
             aria-hidden
             className={`absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border shadow-sm transition-[left] duration-100 ${
-              dark ? 'border-white/20 bg-white' : 'border-ink/10 bg-white'
+              dark ? 'border-white/20 bg-surface' : 'border-hairline bg-surface'
             }`}
             style={{ left: `${percent}%` }}
           />
@@ -100,7 +100,7 @@ export default function EffortSlider({
           />
         </div>
       </div>
-      <p className={`mt-1 pl-[22px] text-[10.5px] leading-relaxed ${dark ? 'text-white/35' : 'text-ink-soft/45'}`}>
+      <p className={`mt-1 pl-[22px] text-[10.5px] leading-relaxed ${dark ? 'text-fg-on-dark-quiet' : 'text-fg-muted'}`}>
         {EFFORT_HINTS[value]}
       </p>
     </div>

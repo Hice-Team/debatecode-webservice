@@ -267,6 +267,11 @@ export interface SmtpSendReport {
   failed: number;
   /** 첫 실패 사유 — 화면에 그대로 보여 준다. 전부 같은 이유로 실패하는 경우가 대부분이다. */
   error?: string;
+  /**
+   * 통별 결과. 합계만으로는 "실패 3건"을 보고 할 수 있는 일이 없다 —
+   * 누가 실패했는지 알아야 그 사람들에게만 다시 보낸다.
+   */
+  results: { to: string; ok: boolean; error?: string }[];
 }
 
 /**
@@ -277,7 +282,7 @@ export interface SmtpSendReport {
  * 주소 하나 때문에 홍보 메일 전체가 멈추면 안 된다.
  */
 export async function smtpSend(config: SmtpConfig, messages: SmtpMessage[]): Promise<SmtpSendReport> {
-  if (messages.length === 0) return { sent: 0, failed: 0 };
+  if (messages.length === 0) return { sent: 0, failed: 0, results: [] };
 
   let session: SmtpSession;
   try {
@@ -287,27 +292,39 @@ export async function smtpSend(config: SmtpConfig, messages: SmtpMessage[]): Pro
     await session.authenticate(config.user, config.pass);
   } catch (error) {
     // 접속·인증 실패는 전부 실패다. 개별 재시도로 풀릴 문제가 아니다.
+    const reason = error instanceof Error ? error.message : '메일 서버에 연결하지 못했습니다.';
     return {
       sent: 0,
       failed: messages.length,
-      error: error instanceof Error ? error.message : '메일 서버에 연결하지 못했습니다.',
+      error: reason,
+      results: messages.map((m) => ({ to: m.to, ok: false, error: reason })),
     };
   }
 
   let sent = 0;
   let failed = 0;
   let firstError: string | undefined;
+  const results: { to: string; ok: boolean; error?: string }[] = [];
 
-  for (const message of messages) {
+  for (const [i, message] of messages.entries()) {
     try {
       await session.send(message);
       sent += 1;
+      results.push({ to: message.to, ok: true });
     } catch (error) {
+      const reason = error instanceof Error ? error.message : '발송에 실패했습니다.';
       failed += 1;
-      firstError ??= error instanceof Error ? error.message : '발송에 실패했습니다.';
-      // 연결 자체가 죽었으면 남은 통은 시도할 필요가 없다
+      firstError ??= reason;
+      results.push({ to: message.to, ok: false, error: reason });
+
+      // 연결 자체가 죽었으면 남은 통은 시도할 필요가 없다.
+      // 시도조차 못 한 통도 실패로 남긴다 — 기록에 구멍을 내면 재발송 대상이 샌다.
       if (error instanceof SmtpError && error.code === 0) {
-        failed += messages.length - sent - failed;
+        const untried = messages.slice(i + 1);
+        failed += untried.length;
+        for (const m of untried) {
+          results.push({ to: m.to, ok: false, error: '앞선 통에서 연결이 끊겨 시도하지 못했습니다.' });
+        }
         break;
       }
       await session.reset();
@@ -315,5 +332,5 @@ export async function smtpSend(config: SmtpConfig, messages: SmtpMessage[]): Pro
   }
 
   await session.close();
-  return { sent, failed, error: firstError };
+  return { sent, failed, error: firstError, results };
 }

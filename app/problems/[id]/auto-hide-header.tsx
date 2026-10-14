@@ -19,7 +19,7 @@ function PinButton({ pinned, onToggle }: { pinned: boolean; onToggle: () => void
       className={`absolute left-1/2 top-full z-[70] flex -translate-x-1/2 items-center gap-1.5 rounded-b-lg border border-t-0 px-3 py-1 font-mono text-[10px] font-semibold shadow-lg backdrop-blur transition-colors ${
         pinned
           ? 'border-brand-400/50 bg-signal text-white hover:bg-brand-600'
-          : 'border-white/20 bg-ink/85 text-white/70 hover:border-white/40 hover:text-white'
+          : 'border-white/20 bg-ink/85 text-fg-on-dark-secondary hover:border-white/40 hover:text-white'
       }`}
     >
       <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden>

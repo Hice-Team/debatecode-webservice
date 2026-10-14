@@ -9,6 +9,7 @@ import { auditActionLabel } from '@/app/lib/audit';
 import { isEmailLive, emailTransportLabel } from '@/app/lib/email';
 import { PageHeader, StatGrid, Callout, EmptyRow, BTN_NEUTRAL } from '../ui';
 import TestMail from './test-mail';
+import SweepPanel from './sweep-panel';
 
 export const metadata: Metadata = { title: '시스템 상태' };
 
@@ -21,7 +22,7 @@ const STATUS_META: Record<Status, { label: string; dot: string; cls: string }> =
   ok: { label: '정상', dot: 'bg-emerald-500', cls: 'border-emerald-200 bg-emerald-50/50' },
   degraded: { label: '주의', dot: 'bg-amber-500', cls: 'border-amber-200 bg-amber-50/50' },
   down: { label: '장애', dot: 'bg-rose-500', cls: 'border-rose-300 bg-rose-50/60' },
-  unconfigured: { label: '미설정', dot: 'bg-ink/25', cls: 'border-ink/10 bg-white' },
+  unconfigured: { label: '미설정', dot: 'bg-ink/25', cls: 'border-hairline bg-surface' },
 };
 
 function configured(...names: string[]): boolean {
@@ -43,7 +44,7 @@ async function collectChecks() {
     dbError = error instanceof Error ? error.message.slice(0, 160) : '연결 실패';
   }
 
-  // AI 기능(Free AI·debateQ·AI Search·번역)은 전부 이 키 하나를 쓴다
+  // AI 기능(Free AI·debateQ·debateAI·번역)은 전부 이 키 하나를 쓴다
   const hasAi = configured('HUGGINGFACE_API_KEY', 'HF_TOKEN');
   const hasSupabase = configured('NEXT_PUBLIC_SUPABASE_URL') && configured('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
@@ -205,22 +206,22 @@ export default async function SystemHealthPage() {
 
       {/* 의존성 점검 */}
       <div className="mt-8">
-        <h3 className="mb-3 text-lg font-bold text-ink">의존성</h3>
+        <h3 className="mb-3 text-lg font-bold text-fg">의존성</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           {checks.map((check) => {
             const meta = STATUS_META[check.status];
             return (
-              <div key={check.key} className={`rounded-2xl border p-4 ${meta.cls}`}>
+              <div key={check.key} className={`rounded-[var(--radius-panel)] border p-4 ${meta.cls}`}>
                 <div className="flex items-center gap-2">
                   <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${meta.dot}`} />
-                  <p className="font-semibold text-ink">{check.label}</p>
-                  <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+                  <p className="font-semibold text-fg">{check.label}</p>
+                  <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                     {meta.label}
                   </span>
                 </div>
-                <p className="mt-1.5 break-words text-xs text-ink-soft/70">{check.detail}</p>
+                <p className="mt-1.5 break-words text-xs text-fg-secondary">{check.detail}</p>
                 {check.hint && (
-                  <p className="mt-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] leading-relaxed text-ink-soft/75">
+                  <p className="mt-1.5 rounded-[var(--radius-card)] bg-surface/70 px-2.5 py-1.5 text-[11px] leading-relaxed text-fg">
                     → {check.hint}
                   </p>
                 )}
@@ -229,21 +230,22 @@ export default async function SystemHealthPage() {
           })}
         </div>
         {canWrite && (
-          <div className="mt-3">
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
             <TestMail defaultTo={user.email} />
+            <SweepPanel />
           </div>
         )}
       </div>
 
       {/* 런타임 설정 요약 + 최근 변경 */}
       <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        <section className="rounded-2xl border border-ink/10 bg-white p-5">
-          <h3 className="text-lg font-bold text-ink">런타임 설정</h3>
-          <p className="mt-1 text-xs text-ink-soft/55">
-            전체 {SETTING_DEFS.length}개 중 <strong className="text-ink">{overrideCount}개</strong>가 기본값에서 변경돼
+        <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
+          <h3 className="text-lg font-bold text-fg">런타임 설정</h3>
+          <p className="mt-1 text-xs text-fg-muted">
+            전체 {SETTING_DEFS.length}개 중 <strong className="text-fg">{overrideCount}개</strong>가 기본값에서 변경돼
             있습니다.
           </p>
-          <p className="mt-3 rounded-xl bg-paper/60 px-3 py-2.5 text-[11px] leading-relaxed text-ink-soft/65">
+          <p className="mt-3 rounded-[var(--radius-panel)] bg-paper/60 px-3 py-2.5 text-[11px] leading-relaxed text-fg-secondary">
             여기 있는 값은 재배포 없이 즉시 반영됩니다. 특정 기능만 오류가 나면 그 기능 플래그를 끄고, 외부 AI가
             죽으면 공급자를 바꾸고, 전면 장애면 유지보수 모드를 켜세요.
           </p>
@@ -259,24 +261,24 @@ export default async function SystemHealthPage() {
           )}
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
-          <div className="flex items-center justify-between border-b border-ink/[0.07] px-5 py-3">
-            <h3 className="text-sm font-bold text-ink">최근 운영 변경</h3>
-            <Link href="/console/access/audit" className="font-mono text-[11px] text-brand-600 hover:underline">
+        <section className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
+          <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
+            <h3 className="text-sm font-bold text-fg">최근 운영 변경</h3>
+            <Link href="/console/access/audit" className="font-mono text-[11px] text-signal hover:underline">
               전체 감사 로그 →
             </Link>
           </div>
           {recentAudit.length === 0 ? (
             <EmptyRow text="아직 기록된 변경이 없습니다." />
           ) : (
-            <ul className="divide-y divide-ink/5">
+            <ul className="divide-y divide-hairline">
               {recentAudit.map((entry) => (
                 <li key={entry.id} className="flex items-start gap-2.5 px-5 py-2.5">
-                  <span className="shrink-0 rounded bg-ink/[0.06] px-1.5 py-0.5 font-mono text-[9px] font-bold text-ink-soft/55">
+                  <span className="shrink-0 rounded bg-paper px-1.5 py-0.5 font-mono text-[9px] font-bold text-fg-muted">
                     {auditActionLabel(entry.action)}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-xs text-ink-soft/75">{entry.summary}</span>
-                  <span className="shrink-0 font-mono text-[10px] text-ink-soft/35">{entry.actorName}</span>
+                  <span className="min-w-0 flex-1 truncate text-xs text-fg">{entry.summary}</span>
+                  <span className="shrink-0 font-mono text-[10px] text-fg-quiet">{entry.actorName}</span>
                 </li>
               ))}
             </ul>

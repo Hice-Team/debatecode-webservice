@@ -11,32 +11,20 @@ import {
   LANGUAGE_LABELS,
   type DefenseReport,
   type Language,
-  type RoundVerdict,
 } from '@/app/lib/types';
 
-const VERDICT_BADGE: Record<RoundVerdict, string> = {
-  DEFENDED: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  PARTIAL: 'bg-amber-100 text-amber-700 border-amber-200',
-  CONCEDED: 'bg-rose-100 text-rose-700 border-rose-200',
-};
-const VERDICT_LABEL: Record<RoundVerdict, string> = {
-  DEFENDED: '방어 성공',
-  PARTIAL: '부분 방어',
-  CONCEDED: '방어 실패',
-};
-const VERDICT_KEY: Record<RoundVerdict, string> = {
-  DEFENDED: 'verdict-defended',
-  PARTIAL: 'verdict-partial',
-  CONCEDED: 'verdict-conceded',
-};
 
 const RADAR_CATEGORIES = ['해시', '스택', 'DP', '그래프', '그리디', '자료구조'];
 
 // dataviz 검증 통과 팔레트 — 언어/도메인 분포
 const DIST_COLORS = { language: '#0369a1', domain: '#047857' };
 
-// 벤토 타일 공용 스타일
-const TILE = 'rounded-2xl border border-ink/10 bg-white p-5';
+// 벤토 타일 공용 스타일 (Premium)
+// 타일 하나 — 종이 한 장 들린 정도의 그림자만 준다(DESIGN.md §6).
+// 예전에는 타일마다 큰 그림자가 깔리고 호버할 때 위로 떠올랐다. 대시보드는 한 화면에
+// 타일이 열 개 넘게 놓이는 자리라, 그 하나하나가 떠오르면 어디를 봐야 할지 알 수 없다.
+const TILE =
+  'rounded-[var(--radius-panel)] border border-hairline bg-surface p-5 shadow-[0_1px_3px_rgba(8,9,26,0.05)]';
 
 // 연속 학습일(스트릭) — 활동한 날짜 집합에서 오늘(또는 어제)부터 이어지는 연속 일수.
 function computeStreak(dates: Date[]): number {
@@ -78,7 +66,10 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
       prisma.comment.count({ where: { post: { authorId: userId }, authorId: { not: userId } } }),
       prisma.debateMateApplication.findUnique({ where: { userId }, select: { status: true } }),
       prisma.debateQSession.count({ where: { userId, status: 'COMPLETED' } }),
-      prisma.user.findUnique({ where: { id: userId }, select: { starScore: true, rankBadgeVisible: true } }),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { starScore: true, rankBadgeVisible: true, profileGoal: true },
+      }),
       getMyRanks(userId),
       // 포인트가 전 회원에게 열렸으므로 대시보드에서 잔액과 상점 진입을 함께 보여 준다
       getPointSummary(userId),
@@ -138,416 +129,369 @@ export default async function PersonalDashboard({ userId, name, role }: { userId
   const tierProgress = nextRank
     ? Math.round(((starScore - currentRank.min) / (nextRank.min - currentRank.min)) * 100)
     : 100;
-  const RANK_TILES = [
-    { key: 'overall' as const, label: '전체' },
-    { key: 'solving' as const, label: '문제 풀이' },
-    { key: 'community' as const, label: '커뮤니티' },
-    { key: 'activity' as const, label: '활동 시간' },
-  ];
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-      {/* ---- 벤토 그리드 ---- */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* 히어로: 웰컴 + 스트릭 + 퀵네비 (대형) */}
-        <div className="lg:col-span-8 rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-white p-6 sm:p-8">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600">
-                <I18nSlot k="dash-eyebrow" fallback="MY DASHBOARD" />
-              </span>
-              <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                {name}
-                <I18nSlot k="dash-title-suffix" fallback="님의 디베이트 현황" />
-              </h1>
-              <p className="mt-2 text-sm text-ink-soft/60">
-                {streak > 0 ? (
-                  <>
-                    {streak}
-                    <I18nSlot k="dash-streak-active" fallback="일 연속 학습 중 — 오늘도 이어가 보세요!" />
-                  </>
-                ) : (
-                  <I18nSlot k="dash-streak-none" fallback="오늘 한 문제로 스트릭을 시작하세요." />
-                )}
-              </p>
-            </div>
-            <div className="shrink-0 text-center" role="status">
-              <p className="text-5xl font-bold text-signal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{streak}</p>
-              <p className="mt-1 font-mono text-[11px] text-ink-soft/60 tracking-wider">
-                <I18nSlot k="dash-streak-unit" fallback="DAY STREAK" />
-              </p>
-            </div>
-          </div>
-          <nav className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {[
-              { href: '#weak', k: 'weak', label: '오답노트', desc: '약점 복습' },
-              { href: '/problems/mine', k: 'workbook', label: '나의 문제집', desc: '스크랩 문제' },
-              { href: '#replays', k: 'replays', label: '면접 다시보기', desc: '방어 리뷰' },
-              { href: '/hall-of-fame', k: 'hof', label: '명예의 전당', desc: '랭킹 확인' },
-            ].map((a) => (
-              <Link
-                key={a.k}
-                href={a.href}
-                className="rounded-xl border border-ink/10 bg-white/80 p-3.5 transition-colors hover:border-brand-300 hover:bg-brand-50/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
-              >
-                <p className="text-sm font-bold text-ink">
-                  <I18nSlot k={`dash-nav-${a.k}`} fallback={a.label} />
-                </p>
-                <p className="mt-0.5 text-[11px] text-ink-soft/60">
-                  <I18nSlot k={`dash-nav-${a.k}-desc`} fallback={a.desc} />
-                </p>
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        {/* KPI 타일 (2×2) */}
-        <div className="lg:col-span-4 grid grid-cols-2 gap-4">
-          {[
-            { k: 'solved', label: '푼 문제', value: `${solvedProblemIds.size}`, sub: '전체 통과' },
-            { k: 'submissions', label: '총 제출', value: `${totalSubmissions}`, sub: '제출 기준' },
-            { k: 'response', label: '면접 응답률', value: responseRate != null ? `${responseRate}%` : '—', sub: '방어 성공' },
-            { k: 'defense', label: '평균 방어율', value: avgDefense != null ? `${avgDefense}%` : '—', sub: null },
-          ].map((c) => (
-            <div key={c.k} className="relative overflow-hidden rounded-2xl border border-ink/10 bg-white p-4 flex flex-col justify-between">
-              <span aria-hidden className="absolute left-0 top-0 h-full w-1 bg-signal/70" />
-              <p className="font-mono text-[10px] text-ink-soft/55 tracking-wider">
-                <I18nSlot k={`dash-kpi-${c.k}`} fallback={c.label} />
-              </p>
-              <p className="mt-1 text-2xl font-bold text-ink" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{c.value}</p>
-              <p className="mt-0.5 text-[10px] text-ink-soft/55">
-                {c.sub ? (
-                  <I18nSlot k={`dash-kpi-${c.k}-sub`} fallback={c.sub} />
-                ) : (
-                  <>
-                    <I18nSlot k="interview-count-prefix" fallback="면접 " />
-                    {interviews.length}
-                    <I18nSlot k="interview-count-suffix" fallback="건" />
-                  </>
-                )}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Star 점수 · 티어 · 명예의 전당 순위 (풀폭 스트립) */}
-        <section className="lg:col-span-12 overflow-hidden rounded-2xl border border-ink/10 bg-white" aria-labelledby="rank-title">
-          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:divide-x lg:divide-ink/[0.07]">
-            {/* 좌: Star 점수 + 티어 진행도 */}
-            <div className="p-5 sm:p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 id="rank-title" className="text-sm font-bold text-ink">
-                    <I18nSlot k="dash-star-title" fallback="Star 점수 · 티어" />
-                  </h3>
-                  <p className="mt-0.5 text-xs text-ink-soft/55">
-                    <I18nSlot k="dash-star-desc" fallback="문제 해결과 방어 성과로 쌓이는 누적 점수입니다." />
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">
-                  ★ {currentRank.name}
-                </span>
-              </div>
-
-              <p className="mt-4 font-display text-4xl font-bold tracking-tight text-signal">
-                {starScore.toLocaleString()}
-                <span className="ml-1.5 text-sm font-semibold text-ink-soft/35">star</span>
-              </p>
-
-              <div className="mt-4">
-                <div className="h-2 w-full overflow-hidden rounded-full bg-ink/[0.07]">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
-                    style={{ width: `${tierProgress}%` }}
-                  />
-                </div>
-                <p className="mt-1.5 font-mono text-[11px] text-ink-soft/45">
-                  {nextRank ? (
-                    <>
-                      {nextRank.name}
-                      <I18nSlot k="dash-star-to-next-1" fallback="까지 " />
-                      {(nextRank.min - starScore).toLocaleString()}
-                      <I18nSlot k="dash-star-to-next-2" fallback="점 남음" />
-                    </>
-                  ) : (
-                    <I18nSlot k="dash-star-max" fallback="최고 티어에 도달했습니다" />
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* 우: 명예의 전당 부문별 내 순위 */}
-            <div className="border-t border-ink/[0.07] p-5 sm:p-6 lg:border-t-0">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h3 className="text-sm font-bold text-ink">
-                  <I18nSlot k="dash-rank-title" fallback="명예의 전당 · 내 순위" />
-                </h3>
-                <Link href="/hall-of-fame" className="shrink-0 font-mono text-[11px] text-brand-600 hover:underline">
-                  <I18nSlot k="dash-rank-all" fallback="전체 랭킹 →" />
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                {RANK_TILES.map((tile) => {
-                  const entry = myRanks[tile.key];
-                  return (
-                    <Link
-                      key={tile.key}
-                      href={tile.key === 'overall' ? '/hall-of-fame' : `/hall-of-fame?tab=${tile.key}`}
-                      className="rounded-xl border border-ink/10 bg-paper/40 p-3 text-center transition-colors hover:border-brand-300 hover:bg-brand-50/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
-                    >
-                      <p className="font-display text-xl font-bold text-ink">
-                        {entry.rank != null ? `#${entry.rank}` : '—'}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-ink-soft/55">
-                        <I18nSlot k={`rank-tab-${tile.key}`} fallback={tile.label} />
-                      </p>
-                      {entry.rank != null && (
-                        <p className="mt-0.5 font-mono text-[9px] text-ink-soft/35">
-                          / {entry.total}
-                          <I18nSlot k="rank-unit-people" fallback="명" />
-                        </p>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-              <p className="mt-3 text-[11px] text-ink-soft/40">
-                {myRanks.overall.rank == null ? (
-                  <I18nSlot k="dash-rank-none" fallback="아직 집계된 활동이 없습니다. 문제를 풀거나 글을 남기면 순위에 오릅니다." />
-                ) : profile?.rankBadgeVisible ? (
-                  <I18nSlot k="dash-rank-badge-on" fallback="커뮤니티 글에 티어 배지가 함께 표시됩니다." />
-                ) : (
-                  <I18nSlot k="dash-rank-badge-off" fallback="앱 설정에서 티어 배지 노출을 켤 수 있습니다." />
-                )}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* 역량 레이더 */}
-        <div className={`lg:col-span-4 ${TILE}`}>
-          <h3 className="text-sm font-bold text-ink mb-2">
-            <I18nSlot k="dash-radar-title" fallback="역량 레이더 · 카테고리별 통과율" />
-          </h3>
-          <div className="flex items-center justify-center py-2">
-            <RadarChart axes={radarAxes} />
-          </div>
-        </div>
-
-        {/* 언어·도메인 분포 */}
-        <div className={`lg:col-span-4 ${TILE} space-y-5`}>
-          <div>
-            <h3 className="text-sm font-bold text-ink mb-3">
-              <I18nSlot k="dash-lang-dist" fallback="언어 분포" />
-            </h3>
-            <BarDistribution items={langDist} tone={DIST_COLORS.language} />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-ink mb-3">
-              <I18nSlot k="dash-domain-dist" fallback="도메인 분포" />
-            </h3>
-            <BarDistribution items={domainDist} tone={DIST_COLORS.domain} />
-          </div>
-        </div>
-
-        {/* 커뮤니티 + 디베이트메이트/debateQ */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
-          <div className={TILE}>
-            <h3 className="text-sm font-bold text-ink mb-3">
-              <I18nSlot k="dash-community-title" fallback="커뮤니티 · 내 활동" />
-            </h3>
-            <div className="grid grid-cols-3 gap-2.5 text-center">
-              {[
-                { k: 'my-posts', label: '내 글', value: myPosts, highlight: false },
-                { k: 'my-comments', label: '내 답글', value: myComments, highlight: false },
-                { k: 'new-replies', label: '새 댓글', value: newReplies, highlight: newReplies > 0 },
-              ].map((s) => (
-                <Link key={s.k} href="/community" className="rounded-xl border border-ink/10 bg-paper/40 p-3 hover:bg-brand-50/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal">
-                  <p className={`text-xl font-bold ${s.highlight ? 'text-rose-600' : 'text-ink'}`} style={{ fontFamily: 'var(--font-space-grotesk)' }}>{s.value}</p>
-                  <p className="mt-0.5 text-[10px] text-ink-soft/55">
-                    <I18nSlot k={`dash-${s.k}`} fallback={s.label} />
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* 디베이트포인트 · 상점 — 포인트는 이제 전 회원이 쓴다 */}
-          <Link
-            href="/shop"
-            className="group flex items-center gap-4 rounded-2xl border border-ink/10 bg-white p-5 transition-colors hover:border-brand-300 hover:bg-brand-50/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      {/* ────────── 1. 머리 — 누구의 화면이고, 지금 어디쯤인지 ──────────
+          큰 카드로 만들지 않는다. 이름과 스트릭은 확인하는 정보이지 누르는 것이 아니다. */}
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-fg-muted">
+            <I18nSlot k="dash-eyebrow" fallback="MY DASHBOARD" />
+          </p>
+          <h1
+            className="mt-1 font-display text-[1.75rem] font-bold tracking-tight text-fg sm:text-[2rem]"
+            style={{ wordBreak: 'keep-all' }}
           >
-            <span
-              aria-hidden
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-xl ring-1 ring-inset ring-brand-100"
-            >
-              🎁
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">DEBATE POINT</p>
-              <p className="mt-0.5 font-display text-2xl font-bold text-ink">
-                {points.balance.toLocaleString()}
-                <span className="ml-0.5 text-base font-semibold text-ink-soft/50">P</span>
-              </p>
-              <p className="mt-0.5 text-xs text-ink-soft/55">
-                {points.reserved > 0
-                  ? `발급 대기 ${points.reserved.toLocaleString()}P · 상점에서 교환하기 →`
-                  : '문제를 풀면 난이도에 비례해 쌓입니다. 상점에서 교환하기 →'}
-              </p>
-            </div>
-          </Link>
-
-          {isMate ? (
-            /* debateQ 타일 — 디베이트메이트 전용 */
-            <Link
-              href="/debate-mate/console"
-              className="group flex-1 rounded-2xl border border-brand-300 bg-gradient-to-br from-brand-900 to-brand-700 p-5 text-white transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
-            >
-              <p className="font-mono text-[11px] tracking-wider text-brand-200">MATE EXCLUSIVE</p>
-              <p className="mt-1.5 text-xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>debateQ</p>
-              <p className="mt-1.5 text-xs text-white/70 leading-relaxed">
-                <I18nSlot k="dash-debateq-desc" fallback="AI가 만든 결함 코드를 수정하며 변론하는 심화 모드." />
-                {debateQCount > 0 && (
-                  <>
-                    {' '}
-                    <I18nSlot k="dash-debateq-count-prefix" fallback="지금까지 " />
-                    {debateQCount}
-                    <I18nSlot k="dash-debateq-count-suffix" fallback="회 완료." />
-                  </>
-                )}
-              </p>
-              <span className="mt-3 inline-block rounded-lg bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-900 group-hover:bg-brand-50">
-                <I18nSlot k="dash-mate-console-cta" fallback="디베이트메이트 활동 콘솔로 이동하기 →" />
-              </span>
-            </Link>
-          ) : (
-            <div className={`${TILE} flex-1`}>
-              <h3 className="text-sm font-bold text-ink mb-1">
-                <I18nSlot k="debate-mate" fallback="디베이트메이트" />
-              </h3>
-              <p className="mb-3 text-xs text-ink-soft/55">
-                <I18nSlot k="dash-mate-desc" fallback="직접 문제를 출제하고 debateQ 모드를 여는 파트너 프로그램입니다." />
-              </p>
-              <MateApply status={mateStatus} />
-            </div>
+            {name}
+            <I18nSlot k="dash-title-suffix" fallback="님의 디베이트 현황" />
+          </h1>
+          {/* 지금의 목표 — 설정 › 개인 맞춤에서 적은 한 줄. 적어 둔 사람에게만 보인다. */}
+          {profile?.profileGoal && (
+            <p className="mt-2 flex items-start gap-2 text-sm text-fg-secondary">
+              <span aria-hidden className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-signal" />
+              <span className="min-w-0">{profile.profileGoal}</span>
+            </p>
           )}
         </div>
 
-        {/* 오답노트 (와이드) */}
-        <section id="weak" className={`lg:col-span-6 scroll-mt-20 ${TILE}`} aria-labelledby="weak-title">
-          <h3 id="weak-title" className="text-sm font-bold text-ink mb-3">
-            <I18nSlot k="dash-weak-title" fallback="오답노트 · 약점 키워드" />
-          </h3>
-          {weakKeywords.length === 0 ? (
-            <p className="py-8 text-center text-sm text-ink-soft/55">
-              <I18nSlot k="dash-weak-empty" fallback="아직 약점 데이터가 없습니다. 면접에서 방어에 실패한 개념이 여기에 쌓입니다." />
+        <p className="shrink-0 text-sm text-fg-secondary" role="status">
+          {streak > 0 ? (
+            <>
+              <span className="font-display text-2xl font-bold text-signal">{streak}</span>
+              <I18nSlot k="dash-streak-active" fallback="일 연속 학습 중" />
+            </>
+          ) : (
+            <I18nSlot k="dash-streak-none" fallback="오늘 한 문제로 스트릭을 시작하세요." />
+          )}
+        </p>
+      </header>
+
+      {/* ────────── 2. 다음에 할 일 — 이 화면의 유일한 채워진 버튼 ──────────
+          대시보드에 온 사람이 하려는 일은 "다음에 뭘 풀지 고르기"다(DESIGN.md §13).
+          그래서 화면에서 가장 먼저, 가장 크게 그 하나만 묻는다. */}
+      <section
+        aria-labelledby="next-title"
+        className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[var(--radius-panel)] border border-hairline bg-surface p-5 shadow-[0_1px_3px_rgba(8,9,26,0.05)] sm:p-6"
+      >
+        <div className="min-w-0 flex-1">
+          <h2 id="next-title" className="font-display text-[15px] font-bold tracking-tight text-fg">
+            {weakKeywords.length > 0 ? '약점부터 다시 볼까요?' : '오늘 한 문제 풀어 볼까요?'}
+          </h2>
+          <p className="mt-1 max-w-prose text-[13px] leading-relaxed text-fg-secondary">
+            {weakKeywords.length > 0 ? (
+              <>
+                면접에서 <strong className="font-semibold text-fg">{weakKeywords[0][0]}</strong> 을(를){' '}
+                {weakKeywords[0][1].count}번 방어하지 못했습니다. 같은 곳에서 또 막히기 전에 짚고 갑니다.
+              </>
+            ) : solvedProblemIds.size === 0 ? (
+              '아직 통과한 문제가 없습니다. 쉬운 문제부터 하나 풀면 여기에 기록이 쌓입니다.'
+            ) : (
+              `지금까지 ${solvedProblemIds.size}문제를 통과했습니다. 이어서 한 문제 더 풀어 보세요.`
+            )}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <Link
+            href={weakKeywords.length > 0 ? '#weak' : '/problems'}
+            className="dc-tap inline-flex min-h-10 items-center rounded-full bg-signal px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+          >
+            {weakKeywords.length > 0 ? '약점 보기' : '문제 풀러 가기'}
+          </Link>
+          {weakKeywords.length > 0 && (
+            <Link
+              href="/problems"
+              className="dc-tap inline-flex min-h-10 items-center rounded-full border border-hairline px-4 text-sm font-medium text-fg-secondary transition-colors hover:border-signal/40 hover:text-signal"
+            >
+              새 문제 풀기
+            </Link>
+          )}
+        </div>
+      </section>
+
+      {/* ────────── 3. 오늘의 숫자 — 카드 격자가 아니라 한 줄 ──────────
+          DESIGN.md §5: 목록은 카드가 아니라 줄이다. 네 숫자를 각각 카드로 세우면
+          "확인하는 정보"가 "누르는 것"처럼 보인다. */}
+      <dl className="mt-4 grid grid-cols-2 divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface sm:grid-cols-4 sm:divide-x">
+        {[
+          { k: 'solved', label: '푼 문제', value: `${solvedProblemIds.size}`, sub: '전체 통과' },
+          { k: 'submissions', label: '총 제출', value: `${totalSubmissions}`, sub: '제출 기준' },
+          {
+            k: 'response',
+            label: '면접 응답률',
+            value: responseRate != null ? `${responseRate}%` : '—',
+            sub: responseRate != null ? '방어 성공' : '면접 기록 없음',
+          },
+          {
+            k: 'defense',
+            label: '평균 방어율',
+            value: avgDefense != null ? `${avgDefense}%` : '—',
+            sub: `면접 ${interviews.length}건`,
+          },
+        ].map((c) => (
+          <div key={c.k} className="border-b border-hairline px-4 py-3.5 sm:border-b-0">
+            <dt className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">
+              <I18nSlot k={`dash-kpi-${c.k}`} fallback={c.label} />
+            </dt>
+            <dd>
+              <span className="font-display text-2xl font-bold text-fg">{c.value}</span>
+              <span className="ml-1.5 text-[11px] text-fg-quiet">{c.sub}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      {/* ────────── 두 번째 층: 내가 한 것 ──────────
+          위(1~3)는 "지금 무엇을 할까", 여기부터는 "지금까지 무엇을 했나"다.
+          성격이 바뀌는 자리에 이름을 붙여야 카드가 연달아 나와도 층이 읽힌다. */}
+      <h2 className="mt-10 font-mono text-[11px] font-semibold uppercase tracking-widest text-fg-quiet">
+        지금까지 한 것
+      </h2>
+
+      {/* ────────── 4. 약점 노트 ────────── */}
+      <section id="weak" className={`mt-3 scroll-mt-20 ${TILE}`} aria-labelledby="weak-title">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="weak-title" className="font-display text-[15px] font-bold tracking-tight text-fg">
+            약점 노트
+          </h2>
+          <p className="text-[12px] text-fg-muted">면접에서 방어하지 못한 개념을 자주 나온 순으로</p>
+        </div>
+
+        {weakKeywords.length === 0 ? (
+          // 빈 상태 — 왜 비었는지와 다음에 할 일을 함께 적는다(DESIGN.md §14)
+          <p className="mt-4 text-[13px] leading-relaxed text-fg-muted">
+            아직 약점으로 잡힌 개념이 없습니다. 문제를 풀고 <strong className="font-semibold text-fg">면접 방어</strong>
+            까지 마치면, 대답하지 못한 개념이 여기에 모입니다.{' '}
+            <Link href="/problems" className="font-medium text-signal underline underline-offset-2">
+              문제 풀러 가기
+            </Link>
+          </p>
+        ) : (
+          <ul className="mt-4 divide-y divide-hairline">
+            {weakKeywords.map(([keyword, entry]) => (
+              <li key={keyword} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
+                <span className="min-w-0 flex-1 text-sm font-semibold text-fg">{keyword}</span>
+                <span className="shrink-0 text-[12px] text-fg-muted">
+                  {[...entry.categories].slice(0, 2).join(' · ')}
+                </span>
+                <span className="shrink-0 rounded-full bg-rose-50 px-2 py-0.5 font-mono text-[11px] font-bold text-rose-600">
+                  {entry.count}회
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* ────────── 5. 최근 제출 · 면접 다시보기 ────────── */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <section className={TILE} aria-labelledby="recent-title">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id="recent-title" className="font-display text-[15px] font-bold tracking-tight text-fg">
+              최근 제출
+            </h2>
+            <Link href="/problems" className="text-[12px] font-medium text-signal hover:underline">
+              문제집
+            </Link>
+          </div>
+
+          {recentSubmissions.length === 0 ? (
+            <p className="mt-4 text-[13px] leading-relaxed text-fg-muted">
+              아직 제출한 답이 없습니다.{' '}
+              <Link href="/problems" className="font-medium text-signal underline underline-offset-2">
+                첫 문제 풀러 가기
+              </Link>
             </p>
           ) : (
-            <div className="divide-y divide-ink/5">
-              {weakKeywords.map(([kw, info]) => {
-                const category = [...info.categories][0];
-                return (
-                  <div key={kw} className="flex items-center gap-3 py-3">
-                    <span className="px-2.5 py-1 rounded-full border border-rose-200 bg-rose-50 text-rose-700 text-xs font-medium">{kw}</span>
-                    <span className="text-xs text-ink-soft/55 truncate">
-                      {[...info.problems].slice(0, 2).join(', ')}
-                      <I18nSlot k="dash-weak-in" fallback="에서 " />
-                      {info.count}
-                      <I18nSlot k="dash-weak-times" fallback="회" />
+            <ul className="mt-3 divide-y divide-hairline">
+              {recentSubmissions.map((s) => (
+                <li key={s.id}>
+                  <Link
+                    href={`/problems/${s.problemId}`}
+                    className="flex items-center gap-3 py-2.5 transition-colors hover:text-signal"
+                  >
+                    <span
+                      aria-hidden
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                        s.status === 'PASS' ? 'bg-emerald-600' : 'bg-rose-600'
+                      }`}
+                    />
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-fg">{s.problem.title}</span>
+                    <span className="shrink-0 font-mono text-[10px] text-fg-quiet">
+                      {DIFFICULTY_LABELS[s.problem.difficulty as keyof typeof DIFFICULTY_LABELS] ??
+                        s.problem.difficulty}
                     </span>
-                    <Link href={`/problems?category=${encodeURIComponent(category)}`} className="ml-auto font-mono text-[11px] text-brand-600 hover:underline whitespace-nowrap">
-                      {category}
-                      <I18nSlot k="dash-weak-retry" fallback=" 다시 풀기 →" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section id="replays" className={`scroll-mt-20 ${TILE}`} aria-labelledby="replays-title">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id="replays-title" className="font-display text-[15px] font-bold tracking-tight text-fg">
+              면접 다시보기
+            </h2>
+            <p className="text-[12px] text-fg-muted">{interviews.length}건</p>
+          </div>
+
+          {reports.length === 0 ? (
+            <p className="mt-4 text-[13px] leading-relaxed text-fg-muted">
+              아직 마친 면접이 없습니다. 문제를 통과한 뒤 <strong className="font-semibold text-fg">디베이트모드</strong>
+              로 들어가면 방어 기록이 남습니다.
+            </p>
+          ) : (
+            <ul className="mt-3 divide-y divide-hairline">
+              {reports.slice(0, 6).map(({ interview: iv, report }) => {
+                const rounds = report?.rounds ?? [];
+                const defended = rounds.filter((r) => r.verdict === 'DEFENDED').length;
+                return (
+                  <li key={iv.id}>
+                    <Link
+                      href={`/problems/${iv.submission.problem.id}`}
+                      className="flex items-center gap-3 py-2.5 transition-colors hover:text-signal"
+                    >
+                      <span className="min-w-0 flex-1 truncate text-[13px] text-fg">
+                        {iv.submission.problem.title}
+                      </span>
+                      {rounds.length > 0 && (
+                        <span className="shrink-0 font-mono text-[11px] text-fg-muted">
+                          {defended}/{rounds.length}
+                        </span>
+                      )}
+                      <span className="shrink-0 font-mono text-[10px] text-fg-quiet">
+                        {new Date(iv.createdAt).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}
+                      </span>
                     </Link>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
-          )}
-        </section>
-
-        {/* 최근 제출 (와이드) */}
-        <section className={`lg:col-span-6 ${TILE}`} aria-labelledby="recent-title">
-          <h3 id="recent-title" className="text-sm font-bold text-ink mb-3">
-            <I18nSlot k="dash-recent-title" fallback="최근 제출 · 다시보기" />
-          </h3>
-          {recentSubmissions.length === 0 ? (
-            <p className="py-8 text-center text-sm text-ink-soft/55">
-              <I18nSlot k="dash-recent-empty" fallback="아직 제출 기록이 없습니다." />{' '}
-              <Link href="/problems" className="text-brand-600 underline underline-offset-2">
-                <I18nSlot k="dash-recent-empty-cta" fallback="첫 문제에 도전" />
-              </Link>
-            </p>
-          ) : (
-            <div className="divide-y divide-ink/5">
-              {recentSubmissions.map((s) => (
-                <div key={s.id} className="flex items-center gap-3 py-3 text-sm">
-                  <span className={`font-mono text-[10px] px-2 py-0.5 rounded border ${s.status === 'PASS' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>{s.status}</span>
-                  <Link href={`/problems/${s.problemId}`} className="font-medium truncate hover:text-brand-600">{s.problem.title}</Link>
-                  <span className="ml-auto font-mono text-[11px] text-ink-soft/50 whitespace-nowrap">
-                    {LANGUAGE_LABELS[s.language as Language] ?? s.language} · {DIFFICULTY_LABELS[s.problem.difficulty]}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* 면접 다시보기 (풀폭) */}
-        <section id="replays" className="lg:col-span-12 scroll-mt-20" aria-labelledby="replays-title">
-          <div className="mb-3 flex items-end justify-between">
-            <h3 id="replays-title" className="text-lg font-bold text-ink">
-              <I18nSlot k="dash-replays-title" fallback="면접 분석 · 다시보기" />
-            </h3>
-            <Link href="/settings" className="font-mono text-[11px] text-ink-soft/55 hover:text-signal">
-              <I18nSlot k="settings" fallback="설정" /> →
-            </Link>
-          </div>
-          {reports.length === 0 ? (
-            <div className={`${TILE} py-8 text-center text-sm text-ink-soft/55`}>
-              <I18nSlot k="dash-replays-empty" fallback="완료된 면접이 없습니다. 문제를 전부 통과하면 AI 면접관이 기다립니다." />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {reports.map(({ interview: iv, report }) => (
-                <details key={iv.id} className="group bg-white rounded-2xl border border-ink/10 overflow-hidden">
-                  <summary className="flex items-center gap-4 px-5 py-4 cursor-pointer list-none hover:bg-paper/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-signal">
-                    <span className={`text-2xl font-bold w-16 text-center ${(iv.defenseScore ?? 0) >= 70 ? 'text-emerald-600' : (iv.defenseScore ?? 0) >= 50 ? 'text-brand-600' : 'text-rose-600'}`} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                      {iv.defenseScore}%
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-semibold truncate">{iv.submission.problem.title}</p>
-                      <p className="font-mono text-[11px] text-ink-soft/50">{iv.submission.problem.category} · {new Date(iv.createdAt).toLocaleDateString('ko-KR')}</p>
-                    </div>
-                    <span className="ml-auto font-mono text-xs text-ink-soft/40 group-open:rotate-90 transition-transform" aria-hidden>▶</span>
-                  </summary>
-                  {report && (
-                    <div className="px-5 pb-5 pt-1 border-t border-ink/5 space-y-4">
-                      <p className="text-sm text-ink-soft/70 leading-relaxed">{report.summary}</p>
-                      <div className="space-y-3">
-                        {report.rounds.map((r) => (
-                          <div key={r.round} className="rounded-lg bg-paper/60 border border-ink/5 p-4 text-sm">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="font-mono text-[11px] text-ink-soft/50">ROUND {r.round}</span>
-                              <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${VERDICT_BADGE[r.verdict]}`}>
-                                <I18nSlot k={VERDICT_KEY[r.verdict]} fallback={VERDICT_LABEL[r.verdict]} /> · {r.score}
-                                <I18nSlot k="score-unit" fallback="점" />
-                              </span>
-                            </div>
-                            <p className="text-ink-soft/80 mb-1.5"><span className="font-mono text-[11px] text-rose-500 mr-1.5">Q.</span>{r.question}</p>
-                            <p className="text-ink-soft/60 mb-1.5"><span className="font-mono text-[11px] text-emerald-600 mr-1.5">A.</span>{r.answer}</p>
-                            <p className="text-xs text-ink-soft/50">{r.feedback}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </details>
-              ))}
-            </div>
+            </ul>
           )}
         </section>
       </div>
+
+      {/* ────────── 6. 역량 분포 ────────── */}
+      {allSubs.length > 0 && (
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <section className={TILE} aria-labelledby="radar-title">
+            <h2 id="radar-title" className="font-display text-[15px] font-bold tracking-tight text-fg">
+              카테고리별 통과율
+            </h2>
+            <div className="mt-3 flex items-center justify-center">
+              <RadarChart axes={radarAxes} />
+            </div>
+          </section>
+
+          <section className={TILE} aria-labelledby="dist-title">
+            <h2 id="dist-title" className="font-display text-[15px] font-bold tracking-tight text-fg">
+              무엇을 얼마나 풀었나
+            </h2>
+            <div className="mt-4 space-y-5">
+              <div>
+                <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-muted">언어</p>
+                <BarDistribution items={langDist} tone={DIST_COLORS.language} />
+              </div>
+              <div>
+                <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-fg-muted">분야</p>
+                <BarDistribution items={domainDist} tone={DIST_COLORS.domain} />
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* ────────── 세 번째 층: 그래서 지금 어디쯤인가 ──────────
+          확인은 하지만 여기서 하는 일은 아니다. 그래서 화면 아래, 한 줄 높이로 둔다. */}
+      <section className="mt-10 border-t border-hairline pt-6" aria-labelledby="aside-title">
+        <h2
+          id="aside-title"
+          className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-widest text-fg-quiet"
+        >
+          지금 어디쯤인가
+        </h2>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* 등급 · Star 점수 */}
+          <div className={TILE}>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">RANK</p>
+              <Link href="/hall-of-fame" className="text-[12px] font-medium text-signal hover:underline">
+                명예의 전당
+              </Link>
+            </div>
+            <p className="mt-1 font-display text-xl font-bold text-fg">{currentRank.name}</p>
+            <p className="mt-0.5 font-mono text-[11px] text-fg-quiet">
+              {starScore.toLocaleString()} Star
+              {myRanks.overall ? ` · 전체 ${myRanks.overall}위` : ''}
+            </p>
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-paper">
+              <div className="h-full rounded-full bg-signal" style={{ width: `${tierProgress}%` }} />
+            </div>
+            <p className="mt-1.5 text-[11px] text-fg-muted">
+              {nextRank ? `${nextRank.name}까지 ${(nextRank.min - starScore).toLocaleString()} Star` : '최고 등급입니다.'}
+            </p>
+          </div>
+
+          {/* 디베이트포인트 — 랭킹 기여도로 쌓인다 */}
+          <div className={TILE}>
+            <p className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">DEBATE POINT</p>
+            <p className="mt-1 font-display text-xl font-bold text-fg">
+              {points.balance.toLocaleString()}
+              <span className="ml-0.5 text-sm font-semibold text-fg-muted">P</span>
+            </p>
+            {/* 상점이 없어졌으므로 "교환" 이야기를 하지 않는다.
+                쓸 곳이 없는데 있는 것처럼 적으면 그게 지어낸 문구다(DESIGN.md §5). */}
+            <p className="mt-1.5 text-[12px] leading-relaxed text-fg-muted">
+              문제를 풀고 답이 채택되면 난이도에 비례해 쌓입니다. 명예의 전당 점수에 함께 반영됩니다.
+            </p>
+          </div>
+
+          {/* 커뮤니티 */}
+          <Link href="/community" className={`${TILE} block transition-colors hover:border-signal/40`}>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">COMMUNITY</p>
+              {newReplies > 0 && (
+                <span className="rounded-full bg-rose-50 px-2 py-0.5 font-mono text-[10px] font-bold text-rose-600">
+                  새 댓글 {newReplies}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 font-display text-xl font-bold text-fg">
+              글 {myPosts} · 댓글 {myComments}
+            </p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-fg-muted">
+              막히는 곳은 물어보고, 아는 것은 답해 주세요.
+            </p>
+          </Link>
+        </div>
+
+        {/* 디베이트메이트 — 메이트에게는 콘솔로, 아닌 사람에게는 신청으로 */}
+        <div className="mt-4">
+          {isMate ? (
+            <Link
+              href="/debate-mate/console"
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--radius-panel)] bg-ink p-5 text-white ring-1 ring-inset ring-white/[0.06] transition-colors hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-fg-on-dark-muted">MATE CONSOLE</p>
+                <p className="mt-1 font-display text-lg font-bold">디베이트메이트 콘솔</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-fg-on-dark-secondary">
+                  문제를 출제하고 debateQ를 엽니다.
+                  {debateQCount > 0 && ` 지금까지 ${debateQCount}회 진행했습니다.`}
+                </p>
+              </div>
+              <span aria-hidden className="shrink-0 text-fg-on-dark-secondary">
+                →
+              </span>
+            </Link>
+          ) : (
+            <MateApply status={mateStatus} />
+          )}
+        </div>
+      </section>
     </div>
   );
 }

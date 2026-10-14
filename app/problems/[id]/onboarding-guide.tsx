@@ -203,7 +203,7 @@ export default function OnboardingGuide({ steps, onClose }: { steps: TourStep[];
       {rect ? (
         <div
           aria-hidden
-          className="pointer-events-none absolute rounded-xl border-2 border-brand-400/70 transition-all duration-300 ease-out motion-reduce:transition-none"
+          className="pointer-events-none absolute rounded-xl border-2 border-brand-400/70 transition-colors duration-300 ease-out motion-reduce:transition-none"
           style={{
             top: rect.top,
             left: rect.left,
@@ -223,7 +223,7 @@ export default function OnboardingGuide({ steps, onClose }: { steps: TourStep[];
       <div
         ref={cardRef}
         style={{ ...cardStyle, width: CARD_W }}
-        className="absolute max-w-[calc(100vw-2rem)] rounded-2xl border border-white/12 bg-[#12141C] p-5 shadow-2xl shadow-black/60 animate-in fade-in zoom-in-95 duration-200"
+        className="absolute max-w-[calc(100vw-2rem)] rounded-[var(--radius-panel)] border border-white/12 bg-[#12141C] p-5 shadow-2xl shadow-black/60 animate-in fade-in zoom-in-95 duration-200"
       >
         <div className="flex items-center gap-2">
           <span className="font-mono text-[10px] tracking-wider text-brand-300">
@@ -238,7 +238,7 @@ export default function OnboardingGuide({ steps, onClose }: { steps: TourStep[];
                 onClick={() => setIndex(i)}
                 aria-label={`${i + 1}단계로 이동`}
                 aria-current={i === index}
-                className={`h-1.5 rounded-full transition-all ${
+                className={`h-1.5 rounded-full transition-colors ${
                   i === index ? 'w-4 bg-brand-400' : 'w-1.5 bg-white/20 hover:bg-white/40'
                 }`}
               />
@@ -249,9 +249,9 @@ export default function OnboardingGuide({ steps, onClose }: { steps: TourStep[];
         <h2 id="tour-title" className="mt-2.5 text-base font-bold text-white">
           {step.title}
         </h2>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-white/60">{step.body}</p>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-fg-on-dark-secondary">{step.body}</p>
 
-        <label className="mt-4 flex cursor-pointer items-center gap-2 text-[11px] text-white/45 transition-colors hover:text-white/70">
+        <label className="mt-4 flex cursor-pointer items-center gap-2 text-[11px] text-fg-on-dark-muted transition-colors hover:text-fg-on-dark-secondary">
           <input
             type="checkbox"
             checked={dontShow}
@@ -265,7 +265,7 @@ export default function OnboardingGuide({ steps, onClose }: { steps: TourStep[];
           <button
             type="button"
             onClick={finish}
-            className="text-[11px] font-medium text-white/40 transition-colors hover:text-white/70"
+            className="text-[11px] font-medium text-fg-on-dark-quiet transition-colors hover:text-fg-on-dark-secondary"
           >
             건너뛰기
           </button>
@@ -275,7 +275,7 @@ export default function OnboardingGuide({ steps, onClose }: { steps: TourStep[];
               type="button"
               onClick={() => setIndex((i) => Math.max(i - 1, 0))}
               disabled={index === 0}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-[11px] font-semibold text-white/70 transition-colors hover:border-white/35 hover:text-white disabled:opacity-30"
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-[11px] font-semibold text-fg-on-dark-secondary transition-colors hover:border-white/35 hover:text-white disabled:opacity-30"
             >
               이전
             </button>

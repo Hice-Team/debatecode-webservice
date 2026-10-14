@@ -23,7 +23,7 @@ interface ProfileMenuProps {
   role?: string;
 }
 
-const ITEM = 'block px-4 py-2 text-sm text-ink-soft/75 transition-colors hover:bg-ink/5';
+const ITEM = 'block px-4 py-2 text-sm text-fg transition-colors hover:bg-paper';
 
 export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMenuProps) {
   const { language } = useLanguage();
@@ -31,7 +31,9 @@ export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMen
   const menuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
-  const isMate = role === 'debate_mate';
+  // 콘솔을 쓸 수 있는 사람은 메이트와 관리자다(app/lib/actions/mate.ts canUseMateConsole).
+  // 여기서 메이트만 보면 관리자가 신청 페이지로 떨어져, 들어갈 수 있는 화면을 못 찾는다.
+  const isMate = role === 'debate_mate' || role === 'admin';
   const mateHref = isMate ? '/debate-mate/console' : '/debate-mate';
 
   // 메뉴 외부 클릭 시 닫기
@@ -58,7 +60,7 @@ export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMen
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-signal bg-ink/5 transition-colors hover:border-brand-400"
+        className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-signal bg-paper transition-colors hover:border-brand-400"
         aria-label={language === 'ko' ? '프로필 메뉴' : 'Profile menu'}
         aria-expanded={isOpen}
       >
@@ -66,12 +68,12 @@ export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMen
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-56 animate-in rounded-xl border border-ink/10 bg-white py-2 shadow-xl shadow-ink/10 duration-200 fade-in zoom-in-95">
-          <div className="border-b border-ink/10 px-4 py-3">
-            <p data-no-translate className="text-sm font-semibold text-ink-soft">
+        <div className="absolute right-0 z-50 mt-2 w-56 animate-in rounded-xl border border-hairline bg-surface py-2 shadow-xl shadow-ink/10 duration-200 fade-in zoom-in-95">
+          <div className="border-b border-hairline px-4 py-3">
+            <p data-no-translate className="text-sm font-semibold text-fg">
               {name}
             </p>
-            <p data-no-translate className="truncate text-xs text-ink-soft/55">
+            <p data-no-translate className="truncate text-xs text-fg-muted">
               {email}
             </p>
           </div>
@@ -94,12 +96,27 @@ export default function ProfileMenu({ name, email, avatarUrl, role }: ProfileMen
                 )}
               </span>
             </Link>
+
+            {/* 커뮤니티 묶음 — 글·거래·문의는 성격이 달라 대시보드 한 칸에 뭉쳐 두면
+                "내가 올린 중고 물건"을 찾으러 매번 헤매게 된다. 갈 곳을 이름으로 나눈다. */}
+            <div className="my-1 border-t border-hairline" />
+            <p className="px-4 pb-1 pt-2 font-mono text-[10px] uppercase tracking-wider text-fg-quiet">
+              {t('community', language)}
+            </p>
+            <Link href="/dashboard/community-profile" className={ITEM} onClick={() => setIsOpen(false)}>
+              {t('profile-community', language)}
+            </Link>
+            <Link href="/dashboard/market" className={ITEM} onClick={() => setIsOpen(false)}>
+              {t('profile-market', language)}
+            </Link>
+            <div className="my-1 border-t border-hairline" />
+
             <Link href="/settings" className={ITEM} onClick={() => setIsOpen(false)}>
               {t('settings', language)}
             </Link>
           </div>
 
-          <div className="border-t border-ink/10 py-2">
+          <div className="border-t border-hairline py-2">
             <form action={logout} className="px-4 py-0">
               <button
                 type="submit"

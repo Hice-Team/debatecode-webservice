@@ -30,7 +30,7 @@ export default function MaintenanceForm({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-      <form action={formAction} className="rounded-2xl border border-ink/10 bg-white p-5" onSubmit={() => setConfirming(false)}>
+      <form action={formAction} className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5" onSubmit={() => setConfirming(false)}>
         <input type="hidden" name="enabled" value={String(enabled)} />
 
         <div className="flex items-start gap-4">
@@ -49,14 +49,14 @@ export default function MaintenanceForm({
           >
             <span
               aria-hidden
-              className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all ${
+              className={`absolute top-0.5 h-6 w-6 rounded-full bg-surface shadow transition-colors ${
                 enabled ? 'left-[1.625rem]' : 'left-0.5'
               }`}
             />
           </button>
           <div className="min-w-0">
-            <p className="font-semibold text-ink">유지보수 모드 {enabled ? '켬' : '끔'}</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-ink-soft/60">
+            <p className="font-semibold text-fg">유지보수 모드 {enabled ? '켬' : '끔'}</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-fg-secondary">
               켜면 일반 이용자에게는 점검 안내 화면만 보입니다. 콘솔 권한이 있는 계정은 그대로 서비스에 접속할 수
               있으므로, 켠 채로 확인 작업을 이어갈 수 있습니다.
             </p>
@@ -65,7 +65,7 @@ export default function MaintenanceForm({
 
         <div className="mt-5 space-y-4">
           <div>
-            <label htmlFor="mt-message" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="mt-message" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               점검 안내 문구
             </label>
             <textarea
@@ -77,13 +77,13 @@ export default function MaintenanceForm({
               placeholder="예: 데이터베이스 점검 중입니다. 15:00까지 완료 예정입니다."
               className={FIELD}
             />
-            <p className="mt-1 text-[11px] text-ink-soft/50">
+            <p className="mt-1 text-[11px] text-fg-muted">
               언제 끝나는지를 함께 적어 두면 같은 내용의 문의가 눈에 띄게 줄어듭니다.
             </p>
           </div>
 
           <div>
-            <label htmlFor="mt-eta" className="mb-1.5 block font-mono text-xs tracking-wider text-ink-soft/60">
+            <label htmlFor="mt-eta" className="mb-1.5 block font-mono text-xs tracking-wider text-fg-secondary">
               예상 종료 시각 (선택)
             </label>
             <input
@@ -105,7 +105,7 @@ export default function MaintenanceForm({
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+              className="rounded-[var(--radius-panel)] bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
             >
               유지보수 모드 켜기
             </button>
@@ -113,8 +113,8 @@ export default function MaintenanceForm({
             <button
               type="submit"
               disabled={pending}
-              className={`rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
-                confirming ? 'bg-rose-600 hover:bg-rose-700' : 'bg-brand-600 hover:bg-brand-500'
+              className={`rounded-[var(--radius-panel)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
+                confirming ? 'bg-rose-600 hover:bg-rose-700' : 'bg-signal hover:bg-brand-700'
               }`}
             >
               {pending ? '적용 중…' : confirming ? '확인 · 지금 켜기' : '저장'}
@@ -124,7 +124,7 @@ export default function MaintenanceForm({
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="rounded-xl border border-ink/15 px-4 py-2 text-sm text-ink-soft/70"
+              className="rounded-[var(--radius-panel)] border border-hairline px-4 py-2 text-sm text-fg-secondary"
             >
               취소
             </button>
@@ -143,9 +143,9 @@ export default function MaintenanceForm({
 
       {/* 이용자에게 실제로 보일 화면 */}
       <div>
-        <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">이용자에게 보이는 화면</p>
-        <div className="overflow-hidden rounded-2xl border border-ink/15 bg-paper">
-          <div className="flex items-center gap-1.5 border-b border-ink/10 bg-white px-3 py-2">
+        <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">이용자에게 보이는 화면</p>
+        <div className="overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-paper">
+          <div className="flex items-center gap-1.5 border-b border-hairline bg-surface px-3 py-2">
             <span aria-hidden className="h-2 w-2 rounded-full bg-rose-400" />
             <span aria-hidden className="h-2 w-2 rounded-full bg-amber-400" />
             <span aria-hidden className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -153,11 +153,11 @@ export default function MaintenanceForm({
           <div className="grid min-h-[16rem] place-items-center px-6 py-10 text-center">
             <div>
               <p aria-hidden className="text-3xl">🛠️</p>
-              <p className="mt-3 text-lg font-bold text-ink">점검 중입니다</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft/70">
+              <p className="mt-3 text-lg font-bold text-fg">점검 중입니다</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-fg-secondary">
                 {message || '(안내 문구를 입력하세요)'}
               </p>
-              {eta && <p className="mt-3 font-mono text-xs text-ink-soft/50">종료 예정 · {eta}</p>}
+              {eta && <p className="mt-3 font-mono text-xs text-fg-muted">종료 예정 · {eta}</p>}
             </div>
           </div>
         </div>

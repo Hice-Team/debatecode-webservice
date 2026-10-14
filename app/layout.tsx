@@ -4,8 +4,15 @@ import Providers from "./providers";
 import AnnouncementGate from "./components/announcement-gate";
 import MaintenanceGate from "./components/maintenance-gate";
 import GlobalBanner from "./components/global-banner";
+import BannerSlot from '@/app/components/banner-slot';
+import DomainNotice from '@/app/components/domain-notice';
 import AutoTranslate from "./components/auto-translate";
 import ChannelTalk from "./components/channel-talk";
+import SkipToContent from "./components/skip-to-content";
+import AccessibilityToolbar from "./components/accessibility-toolbar";
+import CommandPalette from "./components/command-palette";
+import ScrollToTop from "./components/scroll-to-top";
+import { THEME_BOOT_SCRIPT } from './lib/theme';
 
 // Fonts are loaded via Google Fonts stylesheet to avoid Turbopack internal imports
 
@@ -70,7 +77,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`h-full antialiased`}>
+    // suppressHydrationWarning — 테마 부트 스크립트가 하이드레이션 전에
+    // <html>의 data-theme·class를 바꾼다. 그 차이는 의도된 것이라 경고를 끈다.
+    // 이 한 겹에만 적용되고 아래 트리는 평소대로 검사된다.
+    <html lang="ko" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         {/* Monaco 에디터 · Pyodide 런타임 · Pretendard 웹폰트 CDN 선연결 (React 19가 head로 호이스팅) */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
@@ -83,6 +93,9 @@ export default async function RootLayout({
           rel="stylesheet"
         />
         {/* Pretendard — 워드마크와 어울리는 국문 본문 서체 */}
+        {/* 테마는 React가 붙기 전에 찍어야 한다 — 나중에 적용하면 다크를 고른 사람에게
+            흰 화면이 한 번 번쩍인다. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
@@ -92,14 +105,30 @@ export default async function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
         />
         <Providers>
+          {/* 접근성 본문 바로가기 건너뛰기 링크 */}
+          <SkipToContent />
           {/* 점검 모드가 켜져 있으면 일반 방문자에게는 안내 화면만 보인다 */}
           <MaintenanceGate>
-            {/* 콘솔에서 설정한 상시 안내 한 줄 — 비어 있으면 아무것도 렌더하지 않는다 */}
-            <GlobalBanner />
-            {children}
+            {/* 콘솔에서 설정한 상시 안내 한 줄 — 비어 있으면 아무것도 렌더하지 않는다.
+                문제 풀이 화면에서는 작업 공간을 밀어내지 않도록 BannerSlot이 통째로 뺀다. */}
+            {/* 비즈니스용 도메인으로 들어온 방문자 안내 — 해당 호스트에서만 뜬다.
+                이것도 상단을 차지하는 안내 줄이라 코드 에디터에서는 함께 뺀다. */}
+            <BannerSlot>
+              <DomainNotice />
+              <GlobalBanner />
+            </BannerSlot>
+            <main id="main-content" tabIndex={-1} className="outline-none flex-1 flex flex-col">
+              {children}
+            </main>
           </MaintenanceGate>
-          {/* EN 모드에서 화면의 한국어 텍스트(DB 콘텐츠 포함)를 자동 번역 */}
+          {/* 다국어 모드에서 화면의 한국어 텍스트(DB 콘텐츠 포함)를 자동 번역 */}
           <AutoTranslate />
+          {/* 베리어프리 · 접근성 도구 모음 */}
+          <AccessibilityToolbar />
+          {/* 전역 커맨드 검색창 (Ctrl+K) */}
+          <CommandPalette />
+          {/* 최상단 스크롤 복귀 버튼 */}
+          <ScrollToTop />
         </Providers>
         <AnnouncementGate />
         {/* 채널톡 — 커뮤니티/대시보드/설정/온보딩에서만 우측 하단 노출 */}

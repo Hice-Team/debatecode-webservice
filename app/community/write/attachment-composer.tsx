@@ -16,6 +16,9 @@ export interface AttachmentComposerHandle {
 
 const MAX_FILES = 5;
 const MAX_IMAGES = 5;
+// 합계 상한은 서버 액션(app/lib/actions/community.ts)이 원본이다 — 두 곳에서 각자 정하면
+// 화면은 통과시키고 서버는 거절하는 상태가 된다.
+const MAX_TOTAL_UPLOAD_BYTES = 20 * 1024 * 1024;
 const MIN_POLL_OPTIONS = 2;
 const MAX_POLL_OPTIONS = 6;
 
@@ -30,14 +33,14 @@ function isYoutubeUrl(value: string): boolean {
 
 function Chip({ icon, label, onRemove }: { icon: string; label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-ink/15 bg-white px-3 py-1 text-xs text-ink-soft/70">
+    <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-hairline bg-surface px-3 py-1 text-xs text-fg-secondary">
       <span aria-hidden>{icon}</span>
       <span className="truncate max-w-56">{label}</span>
       <button
         type="button"
         onClick={onRemove}
         title="첨부 제거"
-        className="text-ink-soft/40 hover:text-rose-500 transition-colors"
+        className="text-fg-quiet hover:text-rose-500 transition-colors"
       >
         ✕
       </button>
@@ -117,6 +120,12 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
 
   const hasChips = images.length + files.length + links.length + youtubes.length > 0;
 
+  // 합계 상한은 전송 **전에** 보여 준다.
+  // 서버 액션 본문 한도(25MB)는 액션 코드에 닿기 전에 걸리므로, 넘긴 채로 제출하면
+  // 이유 없는 실패로 보이고 작성 중이던 글까지 사라진다.
+  const totalBytes = [...images, ...files].reduce((sum, f) => sum + f.size, 0);
+  const overTotal = totalBytes > MAX_TOTAL_UPLOAD_BYTES;
+
   return (
     <div className="space-y-3">
       {/* 서버 액션이 읽는 실제 폼 필드 */}
@@ -133,7 +142,7 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
               <img
                 src={URL.createObjectURL(f)}
                 alt={f.name}
-                className="h-20 w-20 rounded-lg border border-ink/10 object-cover"
+                className="h-20 w-20 rounded-lg border border-hairline object-cover"
               />
               <button
                 type="button"
@@ -151,7 +160,13 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
       {/* 파일/링크/유튜브 칩 */}
       {hasChips && (
         <div className="flex flex-wrap gap-2">
-          {files.map((f, i) => (
+          {overTotal && (
+        <p role="alert" className="w-full text-xs text-rose-600">
+          첨부 합계 {(totalBytes / 1024 / 1024).toFixed(1)}MB — 최대{' '}
+          {MAX_TOTAL_UPLOAD_BYTES / 1024 / 1024}MB까지 올릴 수 있습니다. 일부를 빼 주세요.
+        </p>
+      )}
+      {files.map((f, i) => (
             <Chip key={`f-${f.name}-${i}`} icon="📎" label={f.name} onRemove={() => setFiles((p) => p.filter((_, idx) => idx !== i))} />
           ))}
           {links.map((url) => (
@@ -165,13 +180,13 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
 
       {/* 투표 작성 */}
       {showPoll && (
-        <div className="rounded-xl border border-ink/10 bg-paper/40 p-4 space-y-3">
+        <div className="rounded-xl border border-hairline bg-paper/40 p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-xs text-ink-soft/60 tracking-wider">📊 투표 만들기</span>
+            <span className="font-mono text-xs text-fg-secondary tracking-wider">📊 투표 만들기</span>
             <button
               type="button"
               onClick={() => setShowPoll(false)}
-              className="text-xs text-ink-soft/40 hover:text-rose-500 transition-colors"
+              className="text-xs text-fg-quiet hover:text-rose-500 transition-colors"
             >
               투표 제거
             </button>
@@ -181,7 +196,7 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
             type="text"
             maxLength={100}
             placeholder="투표 질문 (선택)"
-            className="w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60"
+            className="w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
           />
           <div className="space-y-2">
             {pollOptions.map((opt, i) => (
@@ -193,14 +208,14 @@ export default function AttachmentComposer({ ref }: { ref: Ref<AttachmentCompose
                   maxLength={50}
                   onChange={(e) => setPollOptions((prev) => prev.map((v, idx) => (idx === i ? e.target.value : v)))}
                   placeholder={`선택지 ${i + 1}`}
-                  className="w-full rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60"
+                  className="w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
                 />
                 {pollOptions.length > MIN_POLL_OPTIONS && (
                   <button
                     type="button"
                     onClick={() => setPollOptions((prev) => prev.filter((_, idx) => idx !== i))}
                     title="선택지 제거"
-                    className="shrink-0 h-9 w-9 rounded-lg border border-ink/15 text-ink-soft/50 hover:border-rose-300 hover:text-rose-500 transition-colors"
+                    className="shrink-0 h-9 w-9 rounded-lg border border-hairline text-fg-muted hover:border-rose-300 hover:text-rose-500 transition-colors"
                   >
                     ✕
                   </button>

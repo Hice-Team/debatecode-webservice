@@ -91,7 +91,7 @@ function checkEncryption(): Check {
   };
 }
 
-// Debate Free AI·debateQ·AI Search·번역이 전부 이 키 하나에 매달려 있다.
+// Debate Free AI·debateQ·번역이 전부 이 키 하나에 매달려 있다.
 // 상용 API(OpenAI·Claude 등)는 이용자가 자기 키를 등록해 쓰므로 여기서 보지 않는다.
 function checkFreeAi(): Check {
   const ok = configured('HUGGINGFACE_API_KEY', 'HF_TOKEN');

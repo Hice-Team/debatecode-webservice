@@ -14,16 +14,17 @@ const STATIC_ROUTES: Array<{ path: string; priority: number; changeFrequency: Me
   { path: '', priority: 1, changeFrequency: 'daily' },
   { path: '/problems', priority: 0.9, changeFrequency: 'daily' },
   { path: '/contests', priority: 0.9, changeFrequency: 'weekly' },
-  { path: '/study', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/community', priority: 0.8, changeFrequency: 'hourly' },
   { path: '/hall-of-fame', priority: 0.6, changeFrequency: 'daily' },
-  { path: '/shop', priority: 0.5, changeFrequency: 'weekly' },
   { path: '/debate-mate', priority: 0.5, changeFrequency: 'monthly' },
   { path: '/login', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/signup', priority: 0.4, changeFrequency: 'yearly' },
   { path: '/legal/terms', priority: 0.2, changeFrequency: 'yearly' },
   { path: '/legal/privacy', priority: 0.2, changeFrequency: 'yearly' },
   { path: '/legal/ai-terms', priority: 0.2, changeFrequency: 'yearly' },
+  { path: '/legal/mate-terms', priority: 0.2, changeFrequency: 'yearly' },
+  { path: '/legal/point-terms', priority: 0.2, changeFrequency: 'yearly' },
+  { path: '/legal/consent', priority: 0.2, changeFrequency: 'yearly' },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

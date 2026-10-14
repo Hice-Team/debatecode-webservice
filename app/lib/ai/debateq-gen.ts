@@ -3,6 +3,7 @@
 import type { Language } from '@/app/lib/types';
 import { llmChat } from './llm-interviewer';
 import { getBuiltinLlmConfig } from './builtin';
+import { builtinChatOptions } from './builtin';
 
 export interface FlawedCode {
   code: string;
@@ -158,7 +159,7 @@ export async function generateFlawedCode(
   const llmConfig = getBuiltinLlmConfig();
   if (llmConfig) {
     try {
-      const reply = await llmChat(llmConfig, GEN_SYSTEM, genUserPrompt(problem, language, starterCode));
+      const reply = await llmChat(llmConfig, GEN_SYSTEM, genUserPrompt(problem, language, starterCode), builtinChatOptions());
       const parsed = extractJson(reply);
       if (parsed?.code && parsed.code.trim().length > 20) {
         return {

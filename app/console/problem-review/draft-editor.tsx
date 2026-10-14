@@ -44,25 +44,25 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
   }
 
   return (
-    <form action={formAction} className="mt-3 space-y-3 rounded-xl border border-brand-200 bg-brand-50/30 p-4">
+    <form action={formAction} className="mt-3 space-y-3 rounded-[var(--radius-panel)] border border-brand-200 bg-brand-50/30 p-4">
       <input type="hidden" name="id" value={draft.id} />
 
       {draft.caseCount === 0 && (
         <Callout tone="danger" title="테스트케이스가 없습니다">
           이대로 승인하면 채점이 되지 않는 문제가 게시됩니다. 아래 payload의{' '}
-          <code className="rounded bg-white/60 px-1">testCases</code>를 채운 뒤 승인하세요.
+          <code className="rounded bg-surface/60 px-1">testCases</code>를 채운 뒤 승인하세요.
         </Callout>
       )}
 
       <div className="grid gap-3 sm:grid-cols-[1fr_7rem_9rem]">
         <div>
-          <label htmlFor={`t-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-ink-soft/55">
+          <label htmlFor={`t-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-fg-muted">
             제목
           </label>
           <input id={`t-${draft.id}`} name="title" defaultValue={draft.title} required className={FIELD} />
         </div>
         <div>
-          <label htmlFor={`d-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-ink-soft/55">
+          <label htmlFor={`d-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-fg-muted">
             난이도
           </label>
           <select id={`d-${draft.id}`} name="difficulty" defaultValue={draft.difficulty} className={FIELD}>
@@ -74,7 +74,7 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
           </select>
         </div>
         <div>
-          <label htmlFor={`c-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-ink-soft/55">
+          <label htmlFor={`c-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-fg-muted">
             카테고리
           </label>
           <select id={`c-${draft.id}`} name="category" defaultValue={draft.category} className={FIELD}>
@@ -91,7 +91,7 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
       </div>
 
       <div>
-        <label htmlFor={`desc-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-ink-soft/55">
+        <label htmlFor={`desc-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-fg-muted">
           문제 지문 (마크다운)
         </label>
         <textarea
@@ -105,7 +105,7 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
       </div>
 
       <div>
-        <label htmlFor={`p-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-ink-soft/55">
+        <label htmlFor={`p-${draft.id}`} className="mb-1 block font-mono text-[10px] tracking-wider text-fg-muted">
           payload — tags · timeLimitMs · starterCodes · keywords · testCases
         </label>
         <textarea
@@ -119,9 +119,9 @@ export default function DraftEditor({ draft }: { draft: DraftEditable }) {
         {payloadError ? (
           <p className="mt-1 text-[11px] text-rose-600">JSON 오류: {payloadError}</p>
         ) : (
-          <p className="mt-1 text-[11px] text-ink-soft/50">
+          <p className="mt-1 text-[11px] text-fg-muted">
             testCases의 input은 <strong>인자 배열</strong>입니다. 예:{' '}
-            <code className="rounded bg-white px-1">{'{"input": [[2,7,11,15], 9], "expected": [0,1]}'}</code>
+            <code className="rounded bg-surface px-1">{'{"input": [[2,7,11,15], 9], "expected": [0,1]}'}</code>
           </p>
         )}
       </div>

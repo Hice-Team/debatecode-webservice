@@ -44,6 +44,14 @@ export default async function ProblemReviewPage() {
     }),
   ]);
 
+  // 오늘 처리한 건수 — 목록의 길이가 아니라 실제로 센 값이다.
+  // (목록은 15건까지만 가져오므로 그 길이는 처리량을 말해 주지 못한다.)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const processedToday = await prisma.problemDraft.count({
+    where: { status: { in: ['approved', 'rejected'] }, reviewedAt: { gte: todayStart } },
+  });
+
   const withMeta = pending.map((d) => {
     const payload = (d.payload ?? {}) as DraftPayload;
     return { draft: d, payload, caseCount: payload.testCases?.length ?? 0 };
@@ -74,18 +82,20 @@ export default async function ProblemReviewPage() {
             { label: '검토 대기', value: pending.length, warn: pending.length > 0 },
             { label: '케이스 미비', value: missingCases, warn: missingCases > 0 },
             { label: '7일 초과 대기', value: stale, warn: stale > 0 },
-            { label: '최근 처리', value: processed.length },
+            // "최근 처리"는 조회 상한(take: 15)이라 15건을 넘기면 언제 봐도 15였다.
+            // 세어서 뜻이 있는 값으로 바꾼다 — 오늘 실제로 처리한 건수(§5).
+            { label: '오늘 처리', value: processedToday },
           ]}
         />
       </div>
 
-      <div className="divide-y divide-ink/5 overflow-hidden rounded-2xl border border-ink/10 bg-white">
+      <div className="divide-y divide-hairline overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface">
         {withMeta.length === 0 && (
           <EmptyState
             title="검토 대기 중인 문제가 없습니다"
             sub="출제자가 초안을 제출하면 여기에 나타납니다."
             action={
-              <Link href="/console/problems" className="font-mono text-xs text-brand-600 hover:underline">
+              <Link href="/console/problems" className="font-mono text-xs text-signal hover:underline">
                 직접 문제 업로드하기 →
               </Link>
             }
@@ -95,12 +105,12 @@ export default async function ProblemReviewPage() {
           <details key={d.id} className="group px-5 py-4">
             <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-center">
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-ink">
-                  <span className="mr-1.5 font-mono text-[10px] text-brand-600 group-open:hidden">▶</span>
-                  <span className="mr-1.5 hidden font-mono text-[10px] text-brand-600 group-open:inline">▼</span>
+                <p className="truncate font-medium text-fg">
+                  <span className="mr-1.5 font-mono text-[10px] text-signal group-open:hidden">▶</span>
+                  <span className="mr-1.5 hidden font-mono text-[10px] text-signal group-open:inline">▼</span>
                   {d.title}
                 </p>
-                <p className="font-mono text-[11px] text-ink-soft/55">
+                <p className="font-mono text-[11px] text-fg-muted">
                   {maskName(d.author.name)} · 난이도 {d.difficulty} · {d.category} ·{' '}
                   {d.createdAt.toLocaleDateString('ko-KR')}
                 </p>
@@ -119,13 +129,13 @@ export default async function ProblemReviewPage() {
               </div>
             </summary>
 
-            <div className="mt-3 rounded-xl border border-ink/10 bg-paper/40 p-4">
-              <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">문제 설명</p>
-              <p className="max-h-72 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-ink-soft/80">
+            <div className="mt-3 rounded-[var(--radius-panel)] border border-hairline bg-paper/40 p-4">
+              <p className="mb-1 font-mono text-[10px] uppercase tracking-wider text-fg-muted">문제 설명</p>
+              <p className="max-h-72 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-fg">
                 {d.description}
               </p>
 
-              <div className="mt-3 flex flex-wrap gap-3 font-mono text-[11px] text-ink-soft/50">
+              <div className="mt-3 flex flex-wrap gap-3 font-mono text-[11px] text-fg-muted">
                 <span>제한 {payload.timeLimitMs ?? 3000}ms</span>
                 <span>태그 {payload.tags?.length ?? 0}</span>
                 <span>키워드 {payload.keywords?.length ?? 0}</span>
@@ -135,12 +145,12 @@ export default async function ProblemReviewPage() {
               {(() => {
                 const cd = d.copyrightDelegation as { donated?: boolean; signerName?: string; agreedAt?: string } | null;
                 return cd?.donated ? (
-                  <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800">
+                  <p className="mt-3 rounded-[var(--radius-card)] border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800">
                     저작권 기증 위임서 제출됨 · 서명 {cd.signerName} ·{' '}
                     {cd.agreedAt ? new Date(cd.agreedAt).toLocaleDateString('ko-KR') : ''}
                   </p>
                 ) : (
-                  <p className="mt-3 font-mono text-[11px] text-ink-soft/45">저작권: 창작자 보유 (위임서 미제출)</p>
+                  <p className="mt-3 font-mono text-[11px] text-fg-muted">저작권: 창작자 보유 (위임서 미제출)</p>
                 );
               })()}
             </div>
@@ -167,8 +177,10 @@ export default async function ProblemReviewPage() {
                 <input type="hidden" name="action" value="reject" />
                 <input
                   name="note"
-                  placeholder="반려 사유 (선택 — 출제자에게 표시됩니다)"
-                  className="w-full flex-1 rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-xs placeholder:text-ink-soft/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                  required
+                  minLength={5}
+                  placeholder="반려 사유 — 출제자에게 그대로 표시됩니다"
+                  className="w-full flex-1 rounded-[var(--radius-card)] border border-hairline bg-surface px-3 py-1.5 text-xs placeholder:text-fg-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                 />
                 <button className={BTN_REJECT}>반려</button>
               </form>
@@ -185,9 +197,9 @@ export default async function ProblemReviewPage() {
       {/* 최근 처리 이력 */}
       <div className="mt-10">
         <SectionHeader title="최근 처리 이력" sub="최근 승인/반려된 초안 15건입니다." />
-        <div className="divide-y divide-ink/5 rounded-2xl border border-ink/10 bg-white">
+        <div className="divide-y divide-hairline rounded-[var(--radius-panel)] border border-hairline bg-surface">
           {processed.length === 0 && (
-            <p className="px-5 py-8 text-center text-sm text-ink-soft/55">처리한 초안이 아직 없습니다.</p>
+            <p className="px-5 py-8 text-center text-sm text-fg-muted">처리한 초안이 아직 없습니다.</p>
           )}
           {processed.map((d) => {
             const st = STATUS_BADGE[d.status] ?? STATUS_BADGE.rejected;
@@ -196,12 +208,12 @@ export default async function ProblemReviewPage() {
                 <span className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] ${st.cls}`}>
                   {st.label}
                 </span>
-                <span className="truncate font-medium text-ink">{d.title}</span>
-                <span className="font-mono text-[11px] text-ink-soft/45">
+                <span className="truncate font-medium text-fg">{d.title}</span>
+                <span className="font-mono text-[11px] text-fg-muted">
                   {maskName(d.author.name)} · {d.category}
                 </span>
-                {d.reviewNote && <span className="truncate text-xs text-ink-soft/55">— {d.reviewNote}</span>}
-                <span className="ml-auto shrink-0 font-mono text-[11px] text-ink-soft/45">
+                {d.reviewNote && <span className="truncate text-xs text-fg-muted">— {d.reviewNote}</span>}
+                <span className="ml-auto shrink-0 font-mono text-[11px] text-fg-muted">
                   {d.reviewedAt?.toLocaleDateString('ko-KR')}
                 </span>
               </div>

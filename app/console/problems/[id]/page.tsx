@@ -8,6 +8,7 @@ import { deleteProblem } from '@/app/lib/actions/admin-problems';
 import UploadForm from '../upload-form';
 import DeleteProblemButton from './delete-button';
 import { PageHeader, Callout, BTN_NEUTRAL } from '../../ui';
+import { problemLanguages } from '@/app/lib/types';
 
 export const metadata: Metadata = { title: '문제 수정' };
 
@@ -71,6 +72,7 @@ export default async function EditProblemPage({ params }: { params: Promise<{ id
           timeLimitMs: problem.timeLimitMs,
           company: problem.company ?? '',
           examYear: problem.examYear ?? '',
+          languages: problemLanguages(problem.starterCodes),
           starterJs: starters.javascript ?? '',
           starterPy: starters.python ?? '',
           cases: problem.testCases.map((tc) => ({
@@ -81,7 +83,7 @@ export default async function EditProblemPage({ params }: { params: Promise<{ id
         }}
       />
 
-      <div className="mt-10 rounded-2xl border border-rose-200 bg-rose-50/40 p-5">
+      <div className="mt-10 rounded-[var(--radius-panel)] border border-rose-200 bg-rose-50/40 p-5">
         <h3 className="text-sm font-bold text-rose-900">문제 삭제</h3>
         <p className="mt-1 text-xs leading-relaxed text-rose-800/80">
           {usage > 0

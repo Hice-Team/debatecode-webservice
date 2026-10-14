@@ -70,9 +70,9 @@ export default function AnalysisCta({
   return (
     <div className={`rounded-xl border bg-gradient-to-br p-4 ${LEVEL_TONE[level]}`}>
       <p className="text-sm font-bold text-white">{copy.title}</p>
-      <p className="mt-1 text-xs leading-relaxed text-white/55">{(locked && copy.lockedDesc) || copy.desc}</p>
+      <p className="mt-1 text-xs leading-relaxed text-fg-on-dark-muted">{(locked && copy.lockedDesc) || copy.desc}</p>
 
-      <p className="mt-2.5 border-l-2 border-white/15 pl-2 text-[11px] leading-relaxed text-white/45">{copy.hint}</p>
+      <p className="mt-2.5 border-l-2 border-white/15 pl-2 text-[11px] leading-relaxed text-fg-on-dark-muted">{copy.hint}</p>
 
       {!locked && (
         <button

@@ -2,28 +2,40 @@
 
 // 운영 콘솔 액션 — 역할 가드로 접근을 제어한다.
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
 import { getUser } from '../dal';
 import { prisma } from '../prisma';
 import { canReview, hasConsoleAccess } from '../roles';
 import { POINT_AMOUNTS, POINT_KINDS, grantPoints } from '../points';
 import { audit } from '../audit';
+import { requirePermission } from '../permissions-server';
+import type { Permission } from '../permissions';
 
 // 콘솔 접근 가능 역할 전용 (제재/신고/공지 등 일반 운영)
+//
+// 역할 검사만으로는 부족하다. PermissionGrant의 **개별 차단(deny)** 이 통하지 않기 때문이다.
+// 문제가 된 담당자의 권한 하나만 잠그려 해도, 역할만 보는 자리는 그대로 열려 있다.
+// requirePermission이 역할 기본값과 오버라이드를 함께 판정한다(app/lib/permissions-server.ts).
 async function requireConsole() {
   const caller = await getUser();
   if (!hasConsoleAccess(caller.role)) {
     throw new Error('운영 권한이 없습니다.');
   }
+  await requirePermission(caller, 'console.access');
   return caller;
 }
 
-// 검토(신고/문제초안/디베이트메이트 신청) 권한 전용
-async function requireReviewer() {
+/**
+ * 검토 권한 전용.
+ *
+ * 무엇을 검토하는지에 따라 필요한 권한이 다르다 — 신고와 문제 초안과 메이트 신청은
+ * 각각 다른 사람에게 맡길 수 있어야 한다. 그래서 호출부가 어느 권한인지 밝힌다.
+ */
+async function requireReviewer(permission: Permission) {
   const caller = await getUser();
   if (!canReview(caller.role)) {
     throw new Error('검토 권한이 없습니다.');
   }
+  await requirePermission(caller, permission);
   return caller;
 }
 
@@ -88,11 +100,14 @@ function slugify(title: string): string {
 
 // 문제 초안 검토 — approve=true면 Problem/TestCase 생성, false면 반려
 export async function reviewProblemDraft(formData: FormData) {
-  const caller = await requireReviewer();
+  const caller = await requireReviewer('problem.review');
   const id = String(formData.get('id') ?? '');
   const approve = String(formData.get('action') ?? '') === 'approve';
   const note = String(formData.get('note') ?? '').trim() || null;
   if (!id) return;
+  // 반려 사유는 출제자 화면에 그대로 뜬다. 사유 없는 반려는 출제자가 같은 초안을
+  // 그대로 다시 올리게 만들고, 검토자는 같은 초안을 또 읽는다.
+  if (!approve && (note?.length ?? 0) < 5) return;
 
   const draft = await prisma.problemDraft.findUnique({ where: { id } });
   if (!draft || draft.status !== 'pending') return;
@@ -167,11 +182,13 @@ export async function reviewProblemDraft(formData: FormData) {
 // 단, 이미 상위/특수 역할(admin·reviewer·problem_setter·partner)인 계정은 강등하지 않는다.
 // (일반 user만 debate_mate로 승격 — admin이 메이트 승인으로 강등되는 사고 방지)
 export async function reviewMateApplication(formData: FormData) {
-  const caller = await requireReviewer();
+  const caller = await requireReviewer('mate.review');
   const id = String(formData.get('id') ?? '');
   const approve = String(formData.get('action') ?? '') === 'approve';
   const note = String(formData.get('note') ?? '').trim().slice(0, 2000) || null;
   if (!id) return;
+  // 신청자에게 전달되는 문장이다 — 비어 있으면 반려를 진행하지 않는다.
+  if (!approve && (note?.length ?? 0) < 5) return;
 
   const app = await prisma.debateMateApplication.findUnique({ where: { id } });
   if (!app || app.status !== 'pending') return;
@@ -204,7 +221,7 @@ export async function reviewMateApplication(formData: FormData) {
 // 디베이트메이트 권한 회수 — 본인 요청 또는 활동 위반 시. role을 user로 되돌리고
 // 신청서를 revoked로 남겨 사유가 이력에 남는다. 재신청은 가능하다.
 export async function revokeDebateMate(formData: FormData) {
-  const caller = await requireReviewer();
+  const caller = await requireReviewer('mate.review');
   const userId = String(formData.get('userId') ?? '');
   const reason = String(formData.get('reason') ?? '').trim().slice(0, 2000) || '운영 정책에 따른 권한 회수';
   if (!userId) return;
@@ -245,7 +262,7 @@ export async function revokeDebateMate(formData: FormData) {
  * 사건이고, 필요한 것은 "몇 번 경고했나"와 "무엇 때문이었나" 둘뿐이라 이력만으로 충분하다.
  */
 export async function warnDebateMate(formData: FormData) {
-  const caller = await requireReviewer();
+  const caller = await requireReviewer('mate.review');
   const userId = String(formData.get('userId') ?? '');
   const reason = String(formData.get('reason') ?? '').trim().slice(0, 1000);
   if (!userId || !reason) return;

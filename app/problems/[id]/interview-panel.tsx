@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { VoiceButton, VoiceConsentDialog, VoiceWaveform, useVoiceInput } from '@/app/study/search/voice-input';
-import { voiceConsentStrings } from '@/app/study/search/voice-strings';
+import { useSpeech } from '@/app/lib/speech';
 import { useLanguage } from '@/app/context/language-context';
 import ModelMenu from './model-menu';
 import { DEFAULT_EFFORT, type Effort } from '@/app/lib/ai/effort';
@@ -51,16 +50,6 @@ function Typewriter({ text }: { text: string }) {
   );
 }
 
-// ---- 보이스 모드: TTS ----
-function speak(text: string) {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'ko-KR';
-  utter.rate = 1.05;
-  window.speechSynthesis.speak(utter);
-}
-
 export default function InterviewPanel({
   sessionId,
   firstQuestion,
@@ -102,14 +91,11 @@ export default function InterviewPanel({
     inputRef.current = input;
   }, [input]);
 
-  // 음성 답변 — debateAI 탭과 같은 훅을 쓴다(같은 파형·같은 권한 안내).
-  // 보이스 모드가 아니어도 쓸 수 있다. 말로 답하는 편이 편한 사람은 늘 있다.
+  // 면접에서는 음성 입력을 두지 않는다. 말한 것이 그대로 기록되고 평가되는 자리라,
+  // 받아쓰기가 한 글자만 틀려도 답변이 아니라 인식 오류를 변호하게 된다.
   const { language: uiLang } = useLanguage();
-  const appendSpoken = useCallback((spoken: string) => {
-    setInput((prev) => (prev ? `${prev.replace(/\s+$/, '')} ${spoken}` : spoken));
-  }, []);
-  const voiceInput = useVoiceInput({ lang: uiLang === 'en' ? 'en-US' : 'ko-KR', onCommit: appendSpoken });
-  const stopListening = voiceInput.stop;
+  // 면접관 질문 낭독 — 긴 질문이 중간에 끊기지 않도록 공용 훅을 쓴다
+  const { speak, stop: stopSpeaking } = useSpeech(uiLang);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -118,9 +104,7 @@ export default function InterviewPanel({
   // 보이스 모드: 첫 질문 낭독
   useEffect(() => {
     if (voice) speak(firstQuestion);
-    return () => {
-      if (typeof window !== 'undefined') window.speechSynthesis?.cancel();
-    };
+    return stopSpeaking;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -130,7 +114,6 @@ export default function InterviewPanel({
       if (!answer || report) return;
       setInput('');
       setTimeLeft(null); // 답변 제출 → 타이머 정지
-      stopListening();
       setMessages((prev) => [...prev, { role: 'user', content: answer }]);
       setThinking(true);
 
@@ -174,7 +157,7 @@ export default function InterviewPanel({
         setThinking(false);
       }
     },
-    [getCurrentCode, mode, report, sessionId, voice, stopListening],
+    [getCurrentCode, mode, report, sessionId, voice, speak],
   );
 
   // 엄격 모드: 카운트다운
@@ -193,12 +176,12 @@ export default function InterviewPanel({
       {/* 헤더 */}
       <div className="flex items-center gap-2 px-5 py-2.5 border-b border-white/10 bg-white/[0.02]">
         <span className="w-2 h-2 rounded-full bg-signal animate-pulse" />
-        <span className="font-mono text-xs text-white/70">DebateAI 면접관</span>
+        <span className="font-mono text-xs text-fg-on-dark-secondary">DebateAI 면접관</span>
         <span
           className={`font-mono text-[10px] px-2 py-0.5 rounded-full border ${
             mode === 'strict'
               ? 'text-rose-300 border-rose-500/40 bg-rose-500/10'
-              : 'text-white/50 border-white/15 bg-white/5'
+              : 'text-fg-on-dark-muted border-white/15 bg-white/5'
           }`}
         >
           {mode === 'strict' ? '엄격 모드' : '기본 모드'}
@@ -210,19 +193,19 @@ export default function InterviewPanel({
         )}
         {/* 입장 전에 고른 설정 — 왜 이런 질문이 오는지 화면에서 바로 확인된다 */}
         <span
-          className="hidden font-mono text-[10px] text-white/35 sm:inline"
+          className="hidden font-mono text-[10px] text-fg-on-dark-quiet sm:inline"
           title={`문항 ${maxRounds} · 난이도 ${LEVEL_LABELS[config.level]} · 경향 ${FOCUS_LABELS[config.focus]}`}
         >
           {LEVEL_LABELS[config.level]} · {FOCUS_LABELS[config.focus]}
         </span>
         {timeLeft !== null && !report && (
           <span
-            className={`font-mono text-xs font-bold ${timeLeft <= 15 ? 'text-rose-400 animate-pulse' : 'text-white/60'}`}
+            className={`font-mono text-xs font-bold ${timeLeft <= 15 ? 'text-rose-400 animate-pulse' : 'text-fg-on-dark-secondary'}`}
           >
             ⏱ {String(Math.floor(timeLeft / 60))}:{String(timeLeft % 60).padStart(2, '0')}
           </span>
         )}
-        <span className="ml-auto font-mono text-[11px] text-white/40">
+        <span className="ml-auto font-mono text-[11px] text-fg-on-dark-quiet">
           ROUND {Math.min(round, maxRounds)}/{maxRounds}
         </span>
       </div>
@@ -237,15 +220,15 @@ export default function InterviewPanel({
                   <span className="font-semibold">{VERDICT_STYLE[m.evaluation.verdict].label}</span>
                   <span>{m.evaluation.score}점</span>
                 </div>
-                <p className="mt-1 text-white/70">{m.evaluation.feedback}</p>
+                <p className="mt-1 text-fg-on-dark-secondary">{m.evaluation.feedback}</p>
               </div>
             )}
             <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                className={`max-w-[85%] rounded-[var(--radius-panel)] px-4 py-3 text-sm leading-relaxed ${
                   m.role === 'user'
                     ? 'bg-signal text-white whitespace-pre-wrap'
-                    : 'border border-white/10 bg-white/[0.06] text-white/90'
+                    : 'border border-white/10 bg-white/[0.06] text-fg-on-dark'
                 }`}
               >
                 {m.role === 'ai' && <p className="mb-1 font-mono text-[10px] text-brand-300">면접관 · {findLabel(model)}</p>}
@@ -257,7 +240,7 @@ export default function InterviewPanel({
 
         {thinking && (
           <div className="flex justify-start">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 font-mono text-xs text-white/50">
+            <div className="rounded-[var(--radius-panel)] border border-white/10 bg-white/[0.06] px-4 py-3 font-mono text-xs text-fg-on-dark-muted">
               답변을 심사하는 중<span className="animate-pulse">…</span>
             </div>
           </div>
@@ -267,8 +250,8 @@ export default function InterviewPanel({
         {report && (
           <div className="rounded-xl border border-signal/30 bg-signal/[0.04] overflow-hidden">
             <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
-              <span className="font-mono text-xs text-brand-300 tracking-wider">DEFENSE REPORT</span>
-              <span className="font-mono text-[10px] text-white/40">debate.code</span>
+              <span className="font-mono text-xs text-brand-300 tracking-wider">방어 리포트</span>
+              <span className="font-mono text-[10px] text-fg-on-dark-quiet">debate.code</span>
             </div>
             <div className="px-5 py-4 space-y-4">
               <div className="flex items-baseline gap-3">
@@ -278,25 +261,25 @@ export default function InterviewPanel({
                 >
                   {report.defenseScore}%
                 </span>
-                <span className="text-sm text-white/60">방어 성공률</span>
+                <span className="text-sm text-fg-on-dark-secondary">방어 성공률</span>
               </div>
-              <p className="text-sm text-white/75 leading-relaxed">{report.summary}</p>
+              <p className="text-sm text-fg-on-dark leading-relaxed">{report.summary}</p>
 
               <div className="space-y-1.5">
                 {report.rounds.map((r) => (
                   <div key={r.round} className="flex items-center gap-3 font-mono text-xs">
-                    <span className="text-white/40 w-8">R{r.round}</span>
+                    <span className="text-fg-on-dark-quiet w-8">R{r.round}</span>
                     <span className={`px-2 py-0.5 rounded border text-[10px] ${VERDICT_STYLE[r.verdict].className}`}>
                       {VERDICT_STYLE[r.verdict].label}
                     </span>
-                    <span className="text-white/50">{r.score}점</span>
+                    <span className="text-fg-on-dark-muted">{r.score}점</span>
                   </div>
                 ))}
               </div>
 
               {report.weakKeywords.length > 0 && (
                 <div>
-                  <p className="font-mono text-[11px] text-white/40 mb-2 tracking-wider">약점 키워드 → 오답노트 적재됨</p>
+                  <p className="font-mono text-[11px] text-fg-on-dark-quiet mb-2 tracking-wider">약점 키워드 → 오답노트 적재됨</p>
                   <div className="flex flex-wrap gap-1.5">
                     {report.weakKeywords.map((k) => (
                       <span key={k} className="px-2.5 py-1 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-300 text-[11px]">
@@ -316,7 +299,7 @@ export default function InterviewPanel({
                 </Link>
                 <Link
                   href="/problems"
-                  className="px-4 py-2.5 border border-white/15 rounded-xl text-xs text-white/70 hover:bg-white/5 transition-colors"
+                  className="px-4 py-2.5 border border-white/15 rounded-xl text-xs text-fg-on-dark-secondary hover:bg-white/5 transition-colors"
                 >
                   다른 문제 풀기
                 </Link>
@@ -330,42 +313,24 @@ export default function InterviewPanel({
           면접에서 보내는 말은 언제나 "답변"이라 고를 것이 없기 때문이다. */}
       {!report && (
         <div className="border-t border-white/10 p-3">
-          {voiceInput.error && (
-            <p className="mb-2 text-xs text-rose-400" role="alert">
-              {voiceInput.error}
-            </p>
-          )}
+          <div className="rounded-[var(--radius-panel)] border border-white/10 bg-white/5 transition-colors focus-within:border-signal/60">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              rows={2}
+              disabled={thinking}
+              placeholder="설계 의도를 논리적으로 방어하세요"
+              aria-label="면접 답변"
+              className="dc-scroll max-h-28 w-full resize-none bg-transparent px-4 py-2.5 text-sm text-white placeholder:text-fg-on-dark-quiet focus:outline-none disabled:cursor-not-allowed"
+            />
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 transition-colors focus-within:border-signal/60">
-            {voiceInput.listening ? (
-              <div className="px-2 pt-2">
-                <VoiceWaveform
-                  analyser={voiceInput.analyser}
-                  transcript={input}
-                  interim={voiceInput.interim}
-                  placeholder="듣고 있습니다. 말씀해 주세요…"
-                  tone="dark"
-                />
-              </div>
-            ) : (
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-                    e.preventDefault();
-                    send();
-                  }
-                }}
-                rows={2}
-                disabled={thinking}
-                placeholder="설계 의도를 논리적으로 방어하세요"
-                aria-label="면접 답변"
-                className="dc-scroll max-h-28 w-full resize-none bg-transparent px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none disabled:cursor-not-allowed"
-              />
-            )}
-
-            {/* 하단 줄 — [모델·강도] ····· [음성] [전송] */}
+            {/* 하단 줄 — [모델·강도] ····· [전송] */}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 px-2 pb-2">
               <ModelMenu
                 value={model}
@@ -376,26 +341,18 @@ export default function InterviewPanel({
                 access={access}
               />
 
-              <span className="hidden truncate font-mono text-[10px] text-white/25 sm:inline">
+              <span className="hidden truncate font-mono text-[10px] text-fg-on-dark-quiet sm:inline">
                 라운드 {Math.min(round, maxRounds)}/{maxRounds}
               </span>
 
               <div className="ml-auto flex shrink-0 items-center gap-1">
-                <VoiceButton
-                  listening={voiceInput.listening}
-                  onClick={voiceInput.toggle}
-                  disabled={thinking || !voiceInput.supported}
-                  label="음성으로 답변"
-                  stopLabel="음성 입력 끝내기"
-                  tone="dark"
-                />
                 <button
                   type="button"
                   onClick={() => send()}
                   disabled={thinking || !input.trim()}
                   title="반박 제출"
                   aria-label="반박 제출"
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.35)] transition-all hover:shadow-[0_3px_12px_rgba(24,0,172,0.5)] active:scale-95 disabled:bg-none disabled:bg-white/10 disabled:text-white/25 disabled:shadow-none"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-signal text-white shadow-[0_2px_8px_rgba(24,0,172,0.35)] transition-[color,background-color,border-color,box-shadow,transform] hover:shadow-[0_3px_12px_rgba(24,0,172,0.5)] active:scale-95 disabled:bg-none disabled:bg-white/10 disabled:text-fg-on-dark-quiet disabled:shadow-none"
                 >
                   {thinking ? (
                     <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white motion-reduce:animate-none" />
@@ -410,20 +367,12 @@ export default function InterviewPanel({
             </div>
           </div>
 
-          <p className="mt-1.5 text-[10px] text-white/30">
+          <p className="mt-1.5 text-[10px] text-fg-on-dark-quiet">
             Enter 전송 · Shift+Enter 줄바꿈 · 우측 에디터에서 코드를 고친 뒤 답변하면 면접관이 변경을 인지합니다
           </p>
         </div>
       )}
 
-      {/* 브라우저 권한 창 전에 한 번 — 음성이 어디로 가는지 밝힌다 */}
-      <VoiceConsentDialog
-        open={voiceInput.askingConsent}
-        onAccept={voiceInput.acceptConsent}
-        onDecline={voiceInput.declineConsent}
-        permission={voiceInput.permission}
-        strings={voiceConsentStrings(uiLang)}
-      />
     </div>
   );
 }

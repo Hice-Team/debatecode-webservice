@@ -11,13 +11,20 @@ import { prisma } from '../prisma';
 import { canReview } from '../roles';
 import { POINT_KINDS, grantPoints, getPointSummary } from '../points';
 import { audit } from '../audit';
+import { requirePermission } from '../permissions-server';
 import { maskName } from '../privacy';
 
 async function requireReviewer() {
   const caller = await getUser();
   if (!canReview(caller.role)) throw new Error('검토 권한이 없습니다.');
+  await requirePermission(caller, 'point.review');
   return caller;
 }
+//
+// 역할 검사만으로는 부족하다. PermissionGrant의 **개별 차단(deny)** 이 통하지 않기 때문이다.
+// 문제가 된 담당자의 권한 하나만 잠그려 해도, 역할만 보는 자리는 그대로 열려 있다 —
+// 하필 돈과 발송이 걸린 쪽이 그랬다. requirePermission이 역할 기본값과 오버라이드를
+// 함께 판정한다(app/lib/permissions-server.ts).
 
 /** 활동 인증 신청 승인/반려 — 승인 시에만 원장에 적립된다. */
 export async function reviewPointRequest(formData: FormData): Promise<void> {
@@ -26,6 +33,8 @@ export async function reviewPointRequest(formData: FormData): Promise<void> {
   const approve = String(formData.get('action') ?? '') === 'approve';
   const note = String(formData.get('note') ?? '').trim() || null;
   if (!id) return;
+  // 반려 사유는 신청자에게 그대로 전달된다 - 비어 있으면 진행하지 않는다.
+  if (!approve && (note?.length ?? 0) < 5) return;
 
   const request = await prisma.pointRequest.findUnique({ where: { id } });
   if (!request || request.status !== 'pending') return;
@@ -54,63 +63,13 @@ export async function reviewPointRequest(formData: FormData): Promise<void> {
   revalidatePath('/debate-mate/console');
 }
 
-/** 상점 주문 발급 확정 — 쿠폰 코드를 기록하고 fulfilled로 넘긴다. */
-export async function fulfillShopOrder(formData: FormData): Promise<void> {
-  await requireReviewer();
-  const id = String(formData.get('id') ?? '');
-  const couponCode = String(formData.get('couponCode') ?? '').trim();
-  const expiresRaw = String(formData.get('couponExpiresAt') ?? '').trim();
-  if (!id || !couponCode) return;
-
-  const order = await prisma.shopOrder.findUnique({ where: { id }, select: { status: true } });
-  if (!order || order.status !== 'requested') return;
-
-  await prisma.shopOrder.update({
-    where: { id },
-    data: {
-      status: 'fulfilled',
-      couponCode,
-      couponExpiresAt: expiresRaw ? new Date(expiresRaw) : null,
-      fulfilledAt: new Date(),
-    },
-  });
-
-  revalidatePath('/console/points');
-  revalidatePath('/debate-mate/console');
-}
-
-/** 발급 실패 처리 — 차감했던 포인트를 환불한다. */
-export async function failShopOrder(formData: FormData): Promise<void> {
-  await requireReviewer();
-  const id = String(formData.get('id') ?? '');
-  const reason = String(formData.get('reason') ?? '').trim() || '발급 실패';
-  if (!id) return;
-
-  const order = await prisma.shopOrder.findUnique({ where: { id } });
-  if (!order || order.status !== 'requested') return;
-
-  await prisma.$transaction(async (tx) => {
-    await tx.shopOrder.update({ where: { id }, data: { status: 'failed', failureReason: reason } });
-    await tx.pointLedger.create({
-      data: {
-        userId: order.userId,
-        amount: order.pointsSpent,
-        kind: POINT_KINDS.shopRefund,
-        memo: `발급 실패 환불 — ${reason}`,
-        refType: 'shopOrder',
-        refId: order.id,
-      },
-    });
-  });
-
-  revalidatePath('/console/points');
-  revalidatePath('/debate-mate/console');
-}
+/* 상점(기프티콘 발급)이 제거돼 주문 확정·실패 처리 액션도 함께 걷어냈다. */
 
 export interface PointGrantState {
   error?: string;
   saved?: string;
 }
+
 
 /**
  * 운영자 수동 포인트 지급·차감.
@@ -169,7 +128,6 @@ export async function adjustPoints(
 
     revalidatePath('/console/points');
     revalidatePath('/debate-mate/console');
-    revalidatePath('/shop');
     return {
       saved: `${maskName(target.name)}에게 ${amount > 0 ? '+' : ''}${amount.toLocaleString()}P를 반영했습니다.`,
     };

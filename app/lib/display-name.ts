@@ -13,3 +13,19 @@ export function rankingDisplayName(user: { name: string; anonymousTag?: string |
   if (user.rankBadgeVisible) return user.name;
   return user.anonymousTag ?? 'Anonymous';
 }
+
+/**
+ * 방문자를 고려한 명예의 전당 표시 이름.
+ *
+ * 공개 범위를 "회원 공개"로 둔 사람은 로그인하지 않은 방문자에게 식별자로만 보인다.
+ * 등급 비공개(rankBadgeVisible=false)는 방문자와 무관하게 늘 가린다 — 그쪽이 더 강한 선택이다.
+ */
+export function visibleRankingName(
+  user: { name: string; anonymousTag?: string | null; rankBadgeVisible: boolean; profileVisibility?: string },
+  viewerLoggedIn: boolean,
+): string {
+  if (!viewerLoggedIn && user.profileVisibility === 'members') {
+    return user.anonymousTag ?? 'Anonymous';
+  }
+  return rankingDisplayName(user);
+}

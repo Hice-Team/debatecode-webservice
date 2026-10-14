@@ -2,6 +2,7 @@ import { getSessionWithProfile } from '@/app/lib/dal';
 import NavFrame from './nav-frame';
 import MobileMenu from './mobile-menu';
 import LanguageSwitcher from './language-switcher';
+import ThemeToggle from './theme-toggle';
 import ProfileMenu from './profile-menu';
 import MobileAuthProfile from './mobile-auth-profile';
 import NavLogo from './nav-logo';
@@ -35,6 +36,7 @@ export default async function Nav() {
         <div className="flex items-center gap-2">
           <div className="hidden md:flex items-center gap-2">
             <LanguageSwitcher />
+            <ThemeToggle />
           </div>
           <div className="hidden md:flex items-center gap-4 text-sm font-medium">{desktopAuth}</div>
           <MobileMenu links={NAV_MENUS} authSlot={mobileAuth} />

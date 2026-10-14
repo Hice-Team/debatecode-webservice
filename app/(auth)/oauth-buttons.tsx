@@ -57,45 +57,62 @@ interface ProviderDef {
 
 // 고정 노출 5종 — 확장/더보기 없음. 순서: 구글 · 네이버 · 카카오 · 깃허브 · 디스코드
 const PROVIDERS: ProviderDef[] = [
-  { key: 'google', label: '구글로 계속하기', className: 'bg-white border border-[#dadce0] hover:bg-gray-50', symbol: <GoogleSymbol /> },
+  { key: 'google', label: '구글로 계속하기', className: 'bg-surface border border-[#dadce0] hover:bg-gray-50', symbol: <GoogleSymbol /> },
   { key: 'naver', label: '네이버로 계속하기', className: 'bg-[#03C75A] hover:brightness-95', symbol: <NaverSymbol /> },
   { key: 'kakao', label: '카카오로 계속하기', className: 'bg-[#FEE500] hover:brightness-95', symbol: <KakaoSymbol /> },
   { key: 'github', label: '깃허브로 계속하기', className: 'bg-[#181717] hover:bg-[#2b2a2a]', symbol: <GitHubSymbol /> },
   { key: 'discord', label: '디스코드로 계속하기', className: 'bg-[#5865F2] hover:brightness-110', symbol: <DiscordSymbol /> },
 ];
 
-// action: 프로바이더를 받아 OAuth 흐름을 시작하는 서버 액션 — 기본은 로그인, 가입 위저드는
-// 동의 쿠키를 심는 signupWithOAuth를 바인딩해 넘긴다.
+import { useLanguage } from '@/app/context/language-context';
+import { t, type Language } from '@/app/lib/i18n';
+
+const PROVIDER_NAMES: Record<OAuthProvider, Record<Language, string>> = {
+  google: { ko: 'Google로 계속하기', en: 'Continue with Google', ja: 'Googleで続ける', 'zh-CN': '使用 Google 继续', 'zh-TW': '使用 Google 繼續' },
+  naver: { ko: '네이버로 계속하기', en: 'Continue with Naver', ja: 'NAVERで続ける', 'zh-CN': '使用 Naver 继续', 'zh-TW': '使用 Naver 繼續' },
+  kakao: { ko: '카카오로 계속하기', en: 'Continue with Kakao', ja: 'カカオで続ける', 'zh-CN': '使用 Kakao 继续', 'zh-TW': '使用 Kakao 繼續' },
+  github: { ko: 'GitHub로 계속하기', en: 'Continue with GitHub', ja: 'GitHubで続ける', 'zh-CN': '使用 GitHub 继续', 'zh-TW': '使用 GitHub 繼續' },
+  discord: { ko: 'Discord로 계속하기', en: 'Continue with Discord', ja: 'Discordで続ける', 'zh-CN': '使用 Discord 继续', 'zh-TW': '使用 Discord 繼續' },
+  twitter: { ko: 'X(Twitter)로 계속하기', en: 'Continue with X', ja: 'Xで続ける', 'zh-CN': '使用 X 继续', 'zh-TW': '使用 X 繼續' },
+  facebook: { ko: 'Facebook으로 계속하기', en: 'Continue with Facebook', ja: 'Facebookで続ける', 'zh-CN': '使用 Facebook 继续', 'zh-TW': '使用 Facebook 繼續' },
+  linkedin_oidc: { ko: 'LinkedIn으로 계속하기', en: 'Continue with LinkedIn', ja: 'LinkedInで続ける', 'zh-CN': '使用 LinkedIn 继续', 'zh-TW': '使用 LinkedIn 繼續' },
+};
+
 export default function OAuthButtons({
   action,
-  heading = '간편 로그인',
+  heading,
 }: {
   action?: (provider: OAuthProvider) => Promise<void>;
   heading?: string;
 }) {
+  const { language } = useLanguage();
   const startOAuth = action ?? signInWithOAuth;
+  const displayHeading = heading ?? t('quick-social-login', language);
 
   return (
     <div>
       <div className="flex items-center gap-3 pb-4">
         <span className="h-px flex-1 bg-ink/10" />
-        <span className="font-mono text-[11px] text-ink-soft/40">OR</span>
+        <span className="font-mono text-[11px] text-fg-quiet">OR</span>
         <span className="h-px flex-1 bg-ink/10" />
       </div>
-      <p className="text-center font-mono text-[11px] text-ink-soft/40 tracking-wider mb-3">{heading}</p>
+      <p className="text-center font-mono text-[11px] text-fg-quiet tracking-wider mb-3">{displayHeading}</p>
       <div className="flex flex-wrap items-center justify-center gap-4">
-        {PROVIDERS.map((p) => (
-          <form key={p.key} action={startOAuth.bind(null, p.key)}>
-            <button
-              type="submit"
-              aria-label={p.label}
-              title={p.label}
-              className={`flex h-12 w-12 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-105 active:scale-95 ${p.className}`}
-            >
-              {p.symbol}
-            </button>
-          </form>
-        ))}
+        {PROVIDERS.map((p) => {
+          const providerLabel = PROVIDER_NAMES[p.key]?.[language] ?? p.label;
+          return (
+            <form key={p.key} action={startOAuth.bind(null, p.key)}>
+              <button
+                type="submit"
+                aria-label={providerLabel}
+                title={providerLabel}
+                className={`flex h-12 w-12 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-105 active:scale-95 ${p.className}`}
+              >
+                {p.symbol}
+              </button>
+            </form>
+          );
+        })}
       </div>
     </div>
   );

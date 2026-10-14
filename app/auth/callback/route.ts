@@ -19,8 +19,19 @@ export async function GET(request: NextRequest) {
     if (!error && data.user) {
       const user = await prisma.user.findUnique({
         where: { id: data.user.id },
-        select: { aiOnboarded: true, consentAt: true, profileCompleted: true },
+        select: { aiOnboarded: true, consentAt: true, profileCompleted: true, emailVerifiedAt: true },
       });
+
+      // 소셜 로그인은 제공자가 이미 주소를 확인했다 — 우리가 코드를 또 보낼 이유가 없다.
+      // (이메일 가입은 설정에서 6자리 코드로 직접 확인한다 — app/lib/actions/signup-extras.ts)
+      if (user && !user.emailVerifiedAt && data.user.email) {
+        await prisma.user
+          .updateMany({
+            where: { id: data.user.id, emailVerifiedAt: null },
+            data: { emailVerifiedAt: new Date() },
+          })
+          .catch(() => {});
+      }
 
       // 가입 위저드 1단계에서 심은 동의 쿠키가 있으면 최초 1회 기록
       const consent = request.cookies.get(SIGNUP_CONSENT_COOKIE)?.value;

@@ -8,7 +8,12 @@
 //   · "처리완료"가 무엇을 했다는 뜻인지 아무 데도 남지 않았다.
 //
 // 여기서는 대상별로 묶은 **케이스**가 단위이고, 조치(삭제·제재·종결)를 한 화면에서 끝낸다.
-import { useActionState, useMemo, useState } from 'react';
+//
+// 신고 처리는 같은 동작의 반복이다. 그래서 한 건에 드는 시간을 줄이는 데 화면을 맞춘다.
+//   · 자주 쓰는 처리 문구를 눌러 채운다 — 매번 손으로 치면 건당 십몇 초가 그대로 쌓이고,
+//     사람마다 다르게 적어서 나중에 "이번 달 스팸 삭제 몇 건"을 셀 수 없게 된다.
+//   · J/K(또는 ↑/↓)로 큐를 넘긴다 — 목록과 상세를 마우스로 오가지 않아도 된다.
+import { useActionState, useEffect, useMemo, useState } from 'react';
 import {
   resolveReportCase,
   assignReportCase,
@@ -74,6 +79,25 @@ export interface Reviewer {
 
 const initial: ReportActionState = {};
 
+/**
+ * 자주 쓰는 처리 문구.
+ *
+ * `actionTaken`은 케이스와 감사 로그에 그대로 남는다. 자유 입력만 두면 같은 조치를
+ * 사람마다 다르게 적어서, 남긴 기록으로 아무것도 세지 못한다. 자주 쓰는 것을 고정 문구로
+ * 두면 집계가 되고 손도 덜 간다 — 그 밖의 경우를 위해 자유 입력은 그대로 남긴다.
+ *
+ * `for`는 이 문구가 어느 결말에 어울리는지다. 기각 문구를 처리완료에 붙여 두면
+ * 기록이 서로 어긋난다.
+ */
+const ACTION_PRESETS: { label: string; text: string; for: 'resolve' | 'dismiss' }[] = [
+  { label: '스팸·광고', text: '광고성 게시물 삭제', for: 'resolve' },
+  { label: '욕설·비방', text: '욕설·비방 표현 삭제', for: 'resolve' },
+  { label: '가이드 안내', text: '작성자에게 커뮤니티 가이드라인 안내', for: 'resolve' },
+  { label: '제재 병행', text: '콘텐츠 삭제 + 작성자 제재', for: 'resolve' },
+  { label: '위반 아님', text: '검토 결과 가이드라인 위반 아님', for: 'dismiss' },
+  { label: '중복 신고', text: '동일 사안 중복 신고 — 앞선 케이스에서 처리', for: 'dismiss' },
+];
+
 export default function ReportWorkspace({
   cases,
   reviewers,
@@ -112,6 +136,39 @@ export default function ReportWorkspace({
 
   const selected = visible.find((c) => c.dedupeKey === selectedKey) ?? visible[0] ?? null;
 
+  /**
+   * J/K(또는 ↑/↓)로 큐를 넘긴다.
+   *
+   * 글을 치고 있을 때는 가로채지 않는다 — 메모에 "k"를 적으려다 케이스가 넘어가면
+   * 그 단축키는 방해가 된다. 조합키(Ctrl·Meta·Alt)도 그대로 흘려보낸다.
+   */
+  const currentKey = selected?.dedupeKey ?? null;
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      const typing = el?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el?.tagName ?? '');
+      if (typing) return;
+
+      const step =
+        e.key === 'j' || e.key === 'J' || e.key === 'ArrowDown'
+          ? 1
+          : e.key === 'k' || e.key === 'K' || e.key === 'ArrowUp'
+            ? -1
+            : 0;
+      if (step === 0 || visible.length === 0) return;
+
+      const at = visible.findIndex((c) => c.dedupeKey === currentKey);
+      const next = visible[Math.min(visible.length - 1, Math.max(0, (at < 0 ? 0 : at) + step))];
+      if (!next) return;
+
+      e.preventDefault();
+      setSelectedKey(next.dedupeKey);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [visible, currentKey]);
+
   const counts = {
     pending: cases.filter((c) => c.status === 'pending').length,
     mine: cases.filter((c) => c.status === 'pending' && c.assigneeId === currentUserId).length,
@@ -121,8 +178,8 @@ export default function ReportWorkspace({
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
       {/* ---------- 좌: 케이스 큐 ---------- */}
-      <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white lg:max-h-[calc(100vh-9rem)] lg:sticky lg:top-6">
-        <div className="border-b border-ink/[0.07] p-3">
+      <aside className="flex min-h-0 flex-col overflow-hidden rounded-[var(--radius-panel)] border border-hairline bg-surface lg:max-h-[calc(100vh-9rem)] lg:sticky lg:top-6">
+        <div className="border-b border-hairline p-3">
           <div className="mb-2 flex gap-1">
             {(
               [
@@ -135,8 +192,8 @@ export default function ReportWorkspace({
                 key={key}
                 type="button"
                 onClick={() => setFilter(key)}
-                className={`flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors ${FOCUS} ${
-                  filter === key ? 'bg-signal text-white' : 'text-ink-soft/60 hover:bg-paper'
+                className={`flex-1 rounded-[var(--radius-card)] px-2 py-1.5 text-xs font-semibold transition-colors ${FOCUS} ${
+                  filter === key ? 'bg-signal text-white' : 'text-fg-secondary hover:bg-paper'
                 }`}
               >
                 {label} {n > 0 && <span className="font-mono">{n}</span>}
@@ -147,7 +204,7 @@ export default function ReportWorkspace({
             aria-label="대상 필터"
             value={reasonFilter}
             onChange={(e) => setReasonFilter(e.target.value)}
-            className={`w-full rounded-lg border border-ink/15 bg-white px-2.5 py-1.5 text-xs ${FOCUS}`}
+            className={`mb-2 w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-2.5 py-1.5 text-xs ${FOCUS}`}
           >
             <option value="all">모든 대상</option>
             {REPORT_TARGETS.map((tt) => (
@@ -156,9 +213,14 @@ export default function ReportWorkspace({
               </option>
             ))}
           </select>
+          {/* 단축키가 있다는 것을 화면이 말해 주지 않으면 아무도 쓰지 않는다 */}
+          <p className="px-0.5 font-mono text-[10px] text-fg-quiet">
+            <kbd className="rounded-[var(--radius-control)] border border-hairline px-1">J</kbd>{' '}
+            <kbd className="rounded-[var(--radius-control)] border border-hairline px-1">K</kbd> 로 케이스 이동
+          </p>
         </div>
 
-        <div className="min-h-0 flex-1 divide-y divide-ink/5 overflow-y-auto">
+        <div className="min-h-0 flex-1 divide-y divide-hairline overflow-y-auto">
           {visible.length === 0 && (
             <EmptyState title="해당하는 신고가 없습니다" sub="필터를 바꿔 보세요." />
           )}
@@ -169,13 +231,16 @@ export default function ReportWorkspace({
                 key={c.dedupeKey}
                 type="button"
                 onClick={() => setSelectedKey(c.dedupeKey)}
-                className={`block w-full px-4 py-3 text-left transition-colors ${
-                  on ? 'bg-brand-50/70' : 'hover:bg-paper/60'
+                // 키보드로 넘길 때 고른 줄이 목록 밖으로 나가면 어디에 있는지 알 수 없다
+                ref={on ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
+                aria-current={on ? 'true' : undefined}
+                className={`block w-full border-l-2 px-4 py-3 text-left transition-colors ${
+                  on ? 'border-signal bg-brand-50' : 'border-transparent hover:bg-paper'
                 }`}
               >
                 <div className="flex items-center gap-1.5">
                   <PriorityBadge priority={c.priority} />
-                  <span className="font-mono text-[10px] text-ink-soft/45">
+                  <span className="font-mono text-[10px] text-fg-muted">
                     {targetLabel(c.targetType)}
                   </span>
                   {c.count > 1 && (
@@ -187,17 +252,17 @@ export default function ReportWorkspace({
                     <SlaBadge since={c.firstAt} done={c.status !== 'pending'} />
                   </span>
                 </div>
-                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-soft/75">
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-fg">
                   {c.content.gone ? '(삭제된 콘텐츠)' : c.content.title || c.content.body.slice(0, 80)}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-1">
                   {[...new Set(c.reasons.map((r) => r.reason))].map((r) => (
-                    <span key={r} className="rounded border border-ink/10 bg-paper px-1 py-0.5 font-mono text-[9px] text-ink-soft/50">
+                    <span key={r} className="rounded border border-hairline bg-paper px-1 py-0.5 font-mono text-[9px] text-fg-muted">
                       {reasonLabel(r)}
                     </span>
                   ))}
                   {c.assigneeName && (
-                    <span className="ml-auto font-mono text-[9px] text-brand-600">@{c.assigneeName}</span>
+                    <span className="ml-auto font-mono text-[9px] text-signal">@{c.assigneeName}</span>
                   )}
                 </div>
               </button>
@@ -218,7 +283,7 @@ export default function ReportWorkspace({
             canSanction={canSanction}
           />
         ) : (
-          <div className="rounded-2xl border border-ink/10 bg-white">
+          <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface">
             <EmptyState title="처리할 신고가 없습니다" sub="새 신고가 들어오면 왼쪽 목록에 나타납니다." />
           </div>
         )}
@@ -251,7 +316,7 @@ function CaseDetail({
   return (
     <div className="space-y-4">
       {/* 헤더 */}
-      <div className="rounded-2xl border border-ink/10 bg-white p-5">
+      <div className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
         <div className="flex flex-wrap items-center gap-2">
           {done ? (
             <StatusBadge label={item.status === 'resolved' ? '처리완료' : '기각'} tone={item.status === 'resolved' ? 'done' : 'muted'} />
@@ -259,27 +324,27 @@ function CaseDetail({
             <StatusBadge label="미처리" tone="open" />
           )}
           <PriorityBadge priority={item.priority} />
-          <span className="text-sm font-semibold text-ink">
+          <span className="text-sm font-semibold text-fg">
             {targetLabel(item.targetType)} 신고 {item.count}건
           </span>
-          <span className="ml-auto font-mono text-[11px] text-ink-soft/40">
+          <span className="ml-auto font-mono text-[11px] text-fg-quiet">
             최초 {new Date(item.firstAt).toLocaleString('ko-KR')}
           </span>
         </div>
 
         {/* 트리아지 컨트롤 */}
         {!done && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-ink/5 pt-3">
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">
             <form action={assignReportCase} className="flex items-center gap-1.5">
               <input type="hidden" name="dedupeKey" value={item.dedupeKey} />
-              <label htmlFor={`assign-${item.dedupeKey}`} className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+              <label htmlFor={`assign-${item.dedupeKey}`} className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                 담당
               </label>
               <select
                 id={`assign-${item.dedupeKey}`}
                 name="assigneeId"
                 defaultValue={item.assigneeId ?? ''}
-                className={`rounded-lg border border-ink/15 bg-white px-2 py-1 text-xs ${FOCUS}`}
+                className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
               >
                 <option value="">미지정</option>
                 {reviewers.map((r) => (
@@ -289,21 +354,21 @@ function CaseDetail({
                   </option>
                 ))}
               </select>
-              <button className="rounded-lg border border-ink/15 px-2 py-1 text-[11px] text-ink-soft/70 hover:border-ink/40">
+              <button className="rounded-[var(--radius-card)] border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
                 지정
               </button>
             </form>
 
             <form action={setReportPriority} className="flex items-center gap-1.5">
               <input type="hidden" name="dedupeKey" value={item.dedupeKey} />
-              <label htmlFor={`prio-${item.dedupeKey}`} className="font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+              <label htmlFor={`prio-${item.dedupeKey}`} className="font-mono text-[10px] uppercase tracking-wider text-fg-muted">
                 우선순위
               </label>
               <select
                 id={`prio-${item.dedupeKey}`}
                 name="priority"
                 defaultValue={item.priority}
-                className={`rounded-lg border border-ink/15 bg-white px-2 py-1 text-xs ${FOCUS}`}
+                className={`rounded-[var(--radius-card)] border border-hairline bg-surface px-2 py-1 text-xs ${FOCUS}`}
               >
                 {PRIORITIES.map((p) => (
                   <option key={p} value={p}>
@@ -311,7 +376,7 @@ function CaseDetail({
                   </option>
                 ))}
               </select>
-              <button className="rounded-lg border border-ink/15 px-2 py-1 text-[11px] text-ink-soft/70 hover:border-ink/40">
+              <button className="rounded-[var(--radius-card)] border border-hairline px-2 py-1 text-[11px] text-fg-secondary hover:border-fg-quiet">
                 변경
               </button>
             </form>
@@ -320,16 +385,16 @@ function CaseDetail({
       </div>
 
       {/* 신고 대상 원문 */}
-      <section className="rounded-2xl border border-ink/10 bg-white p-5">
-        <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">신고 대상 콘텐츠</h3>
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
+        <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">신고 대상 콘텐츠</h3>
         {item.content.gone ? (
-          <p className="rounded-xl border border-ink/10 bg-paper/50 px-4 py-6 text-center text-xs text-ink-soft/50">
+          <p className="rounded-[var(--radius-panel)] border border-hairline bg-paper/50 px-4 py-6 text-center text-xs text-fg-muted">
             삭제되었거나 찾을 수 없는 콘텐츠입니다. 이미 조치됐을 수 있습니다.
           </p>
         ) : (
-          <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-4">
-            {item.content.title && <p className="mb-1 font-semibold text-ink">{item.content.title}</p>}
-            <p className="max-h-60 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-ink-soft/80">
+          <div className="rounded-[var(--radius-panel)] border border-rose-100 bg-rose-50/40 p-4">
+            {item.content.title && <p className="mb-1 font-semibold text-fg">{item.content.title}</p>}
+            <p className="max-h-60 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-fg">
               {item.content.body}
             </p>
             {item.content.href && (
@@ -337,7 +402,7 @@ function CaseDetail({
                 href={item.content.href}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-block font-mono text-[11px] text-brand-600 hover:underline"
+                className="mt-2 inline-block font-mono text-[11px] text-signal hover:underline"
               >
                 원문 보기 ↗
               </a>
@@ -346,17 +411,17 @@ function CaseDetail({
         )}
 
         {/* 신고자별 사유 */}
-        <h3 className="mb-2 mt-4 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+        <h3 className="mb-2 mt-4 font-mono text-[10px] uppercase tracking-wider text-fg-muted">
           접수된 사유 ({item.reasons.length})
         </h3>
         <ul className="space-y-1.5">
           {item.reasons.map((r, i) => (
-            <li key={i} className="flex items-start gap-2 rounded-lg bg-paper/50 px-3 py-2">
-              <span className="shrink-0 rounded border border-rose-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-rose-700">
+            <li key={i} className="flex items-start gap-2 rounded-[var(--radius-card)] bg-paper/50 px-3 py-2">
+              <span className="shrink-0 rounded border border-rose-200 bg-surface px-1.5 py-0.5 font-mono text-[10px] text-rose-700">
                 {reasonLabel(r.reason)}
               </span>
-              <span className="min-w-0 flex-1 text-xs leading-relaxed text-ink-soft/70">
-                {r.detail || <span className="text-ink-soft/35">상세 사유 없음</span>}
+              <span className="min-w-0 flex-1 text-xs leading-relaxed text-fg-secondary">
+                {r.detail || <span className="text-fg-quiet">상세 사유 없음</span>}
               </span>
             </li>
           ))}
@@ -365,8 +430,8 @@ function CaseDetail({
 
       {/* 작성자 맥락 — 초범인지 반복인지가 조치 수위를 정한다 */}
       {item.author && (
-        <section className="rounded-2xl border border-ink/10 bg-white p-5">
-          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">작성자</h3>
+        <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
+          <h3 className="mb-2 font-mono text-[10px] uppercase tracking-wider text-fg-muted">작성자</h3>
           <div className="flex flex-wrap items-center gap-3">
             <span
               aria-hidden
@@ -375,11 +440,11 @@ function CaseDetail({
               {(item.author.name[0] ?? '?').toUpperCase()}
             </span>
             <div className="min-w-0">
-              <p className="font-medium text-ink">
+              <p className="font-medium text-fg">
                 {item.author.name}
-                <span className="ml-1.5 font-mono text-[11px] text-ink-soft/45">{item.author.roleLabel}</span>
+                <span className="ml-1.5 font-mono text-[11px] text-fg-muted">{item.author.roleLabel}</span>
               </p>
-              <p className="font-mono text-[11px] text-ink-soft/50">
+              <p className="font-mono text-[11px] text-fg-muted">
                 가입 {new Date(item.author.joinedAt).toLocaleDateString('ko-KR')} · 누적 신고{' '}
                 {item.author.totalReports}건 · 제재 이력 {item.author.pastSanctions}건
               </p>
@@ -408,10 +473,10 @@ function CaseDetail({
       )}
 
       {/* 내부 메모 */}
-      <section className="rounded-2xl border border-ink/10 bg-white p-5">
+      <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
         <form action={saveReportNote}>
           <input type="hidden" name="dedupeKey" value={item.dedupeKey} />
-          <label htmlFor={`note-${item.dedupeKey}`} className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+          <label htmlFor={`note-${item.dedupeKey}`} className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-fg-muted">
             내부 메모 (신고자·피신고자에게 보이지 않음)
           </label>
           <textarea
@@ -428,19 +493,19 @@ function CaseDetail({
 
       {/* 조치 */}
       {done ? (
-        <section className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-5">
+        <section className="rounded-[var(--radius-panel)] border border-emerald-200 bg-emerald-50/40 p-5">
           <p className="text-sm font-semibold text-emerald-900">
             {item.status === 'resolved' ? '처리 완료' : '기각'}
           </p>
           {item.actionTaken && <p className="mt-1 text-xs text-emerald-800/80">조치 내용: {item.actionTaken}</p>}
         </section>
       ) : (
-        <section className="rounded-2xl border border-ink/10 bg-white p-5">
-          <h3 className="mb-3 text-sm font-bold text-ink">조치</h3>
+        <section className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-5">
+          <h3 className="mb-3 text-sm font-bold text-fg">조치</h3>
 
           {/* 콘텐츠 삭제 — 삭제와 신고 종결이 한 동작으로 묶여 있다 */}
           {canModerate && !item.content.gone && item.targetType !== 'user' && (
-            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50/40 p-3.5">
+            <div className="mb-4 rounded-[var(--radius-panel)] border border-rose-200 bg-rose-50/40 p-3.5">
               {confirmDelete ? (
                 <form action={deleteReportedContent} className="flex flex-wrap items-center gap-2">
                   <input type="hidden" name="dedupeKey" value={item.dedupeKey} />
@@ -469,15 +534,38 @@ function CaseDetail({
           {/* 종결 */}
           <form action={formAction}>
             <input type="hidden" name="dedupeKey" value={item.dedupeKey} />
-            <label htmlFor={`taken-${item.dedupeKey}`} className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-ink-soft/45">
+            <label htmlFor={`taken-${item.dedupeKey}`} className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-fg-muted">
               처리 내용 (이력에 남습니다)
             </label>
+            {/* 눌러서 채운다 — 같은 문구를 매번 손으로 치지 않게. 고른 뒤에도 고칠 수 있다. */}
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {ACTION_PRESETS.map((preset) => {
+                const on = actionTaken === preset.text;
+                return (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setActionTaken(on ? '' : preset.text)}
+                    aria-pressed={on}
+                    title={preset.text}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${FOCUS} ${
+                      on
+                        ? 'border-signal bg-signal/[0.08] text-signal'
+                        : 'border-hairline text-fg-secondary hover:border-signal/40 hover:text-signal'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+
             <input
               id={`taken-${item.dedupeKey}`}
               name="actionTaken"
               value={actionTaken}
               onChange={(e) => setActionTaken(e.target.value)}
-              placeholder="예: 광고성 게시물 삭제 + 작성자 7일 글쓰기 제한"
+              placeholder="직접 적어도 됩니다 — 예: 광고성 게시물 삭제 + 작성자 7일 글쓰기 제한"
               className={FIELD}
             />
 
@@ -491,7 +579,7 @@ function CaseDetail({
               <button name="action" value="dismiss" disabled={pending} className={BTN_NEUTRAL}>
                 기각
               </button>
-              <p className="text-[11px] text-ink-soft/45">
+              <p className="text-[11px] text-fg-muted">
                 묶인 신고 {item.count}건이 함께 종결됩니다.
               </p>
             </div>

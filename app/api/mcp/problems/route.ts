@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import { Prisma } from '@/app/generated/prisma';
 import { authenticateMcp } from '@/app/lib/mcp-auth';
 import { rateLimit } from '@/app/lib/rate-limit';
 
@@ -19,25 +20,25 @@ export async function GET(request: Request) {
   const language = url.searchParams.get('language')?.trim()?.toLowerCase() || undefined;
   const limit = Math.min(50, Math.max(1, Number.parseInt(url.searchParams.get('limit') ?? '20', 10) || 20));
 
+  // 언어 필터를 DB에서 건다.
+  //
+  // 예전에는 200행을 가져와 앱에서 걸렀다. 문제가 200개를 넘는 순간 결과가 조용히
+  // 불완전해진다 — 조건에 맞는데도 뒤쪽 문제는 나오지 않는다. starterCodes가 jsonb이므로
+  // 키 존재 여부는 DB가 판단할 수 있다.
   const problems = await prisma.problem.findMany({
     where: {
       ...(q ? { title: { contains: q, mode: 'insensitive' } } : {}),
       ...(Number.isFinite(difficulty) ? { difficulty } : {}),
       ...(company ? { company } : {}),
+      ...(language ? { starterCodes: { path: [language], not: Prisma.DbNull } } : {}),
     },
     orderBy: [{ difficulty: 'asc' }, { id: 'asc' }],
     select: {
       id: true, slug: true, title: true, difficulty: true, category: true,
-      company: true, tags: true, starterCodes: language ? true : false,
+      company: true, tags: true,
     },
-    take: language ? 200 : limit,
+    take: limit,
   });
 
-  // 언어 필터는 starterCodes(JSON) 키 존재 여부로 in-memory 처리
-  const filtered = (language
-    ? problems.filter((p) => (p.starterCodes as Record<string, unknown> | null)?.[language] != null)
-    : problems
-  ).slice(0, limit).map(({ starterCodes: _s, ...rest }) => rest);
-
-  return NextResponse.json({ count: filtered.length, problems: filtered });
+  return NextResponse.json({ count: problems.length, problems });
 }

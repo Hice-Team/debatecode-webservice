@@ -30,7 +30,7 @@ export default function DeleteProblemButton({
       <button
         type="submit"
         disabled={!ready}
-        className="shrink-0 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-40"
+        className="shrink-0 rounded-[var(--radius-panel)] bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-40"
       >
         영구 삭제
       </button>

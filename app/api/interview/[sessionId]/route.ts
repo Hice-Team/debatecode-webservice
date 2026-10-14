@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { prisma } from '@/app/lib/prisma';
 import { createClient } from '@/app/lib/supabase/server';
 import { getProviderFor } from '@/app/lib/ai/provider';
-import { addFreeAiUsage, estimateTokens, getFreeAiQuota } from '@/app/lib/ai/free-ai';
+import { addFreeAiUsage, estimateTokens } from '@/app/lib/ai/free-ai';
+import { hasOwnFunding } from '@/app/lib/ai/funding';
 import { decryptSecret } from '@/app/lib/crypto';
 import { rateLimit } from '@/app/lib/rate-limit';
 import {
@@ -65,14 +66,26 @@ export async function POST(request: Request, ctx: RouteContext<'/api/interview/[
     aiConfig.aiApiKey = await decryptSecret(aiConfig.aiApiKey);
     aiConfig.aiBaseUrl = await decryptSecret(aiConfig.aiBaseUrl);
   }
-  // 디베이트메이트는 Pro Tier 상용 모델을 키 없이 쓸 수 있다
-  const aiConfigWithRole = aiConfig;
-  // Debate Free AI — 일일 토큰 소진 시 규칙 기반 모델로 자동 전환, 사용 시 토큰 누적
-  const usingFreeAi = aiConfig?.aiProvider === 'builtin_ai';
-  const freeQuota = usingFreeAi ? await getFreeAiQuota(user.id) : null;
-  const ai = getProviderFor(freeQuota?.exhausted ? null : aiConfigWithRole);
-  if (usingFreeAi && !freeQuota?.exhausted) {
-    addFreeAiUsage(user.id, estimateTokens(parsed.data.answer, parsed.data.currentCode), aiConfig?.aiCodeModel).catch(() => {});
+  // AI 면접관에는 사용 한도를 두지 않는다.
+  //
+  // 면접은 흐름이다. 4번째 질문에서 "오늘 한도를 다 썼습니다"가 뜨면 그 면접은
+  // 끝나지도, 다시 시작되지도 못한 채 남는다. 대신 문항 수(최대 8)가 이미 상한
+  // 역할을 하고, 면접을 열려면 문제를 실제로 통과해야 하므로 남용 경로가 좁다.
+  //
+  // 토큰은 계속 기록한다 — 한도가 아니라 설정 화면의 사용 내역용이다.
+  const ai = getProviderFor(aiConfig);
+  const serviceFunded = !hasOwnFunding({
+    provider: aiConfig?.aiProvider ?? 'builtin_ai',
+    model: aiConfig?.aiModel ?? null,
+    apiKey: aiConfig?.aiApiKey ?? null,
+    baseUrl: aiConfig?.aiBaseUrl ?? null,
+  });
+  if (serviceFunded) {
+    addFreeAiUsage(
+      user.id,
+      estimateTokens(parsed.data.answer, parsed.data.currentCode),
+      aiConfig?.aiCodeModel,
+    ).catch(() => {});
   }
   const problem = interview.submission.problem;
   const problemMeta = {

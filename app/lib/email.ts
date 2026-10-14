@@ -31,6 +31,8 @@ export interface SendResult {
   /** 전송 수단이 설정되지 않아 실제로는 보내지 않은 경우 */
   dryRun: boolean;
   error?: string;
+  /** 수신자별 결과 — 누가 실패했는지 기록으로 남기기 위한 것. dry-run에서는 비어 있다. */
+  results: { to: string; ok: boolean; error?: string }[];
 }
 
 export interface MailMessage {
@@ -131,12 +133,13 @@ async function sendViaResend(message: MailMessage, key: string): Promise<boolean
  */
 export async function sendBulk(messages: MailMessage[]): Promise<SendResult> {
   const active = transport();
-  if (active.kind === 'none') return { sent: 0, failed: 0, dryRun: true };
+  if (active.kind === 'none') return { sent: 0, failed: 0, dryRun: true, results: [] };
 
   const from = fromAddress();
   let sent = 0;
   let failed = 0;
   let error: string | undefined;
+  const results: { to: string; ok: boolean; error?: string }[] = [];
 
   for (let i = 0; i < messages.length; i += BATCH_SIZE) {
     const batch = messages.slice(i, i + BATCH_SIZE);
@@ -156,18 +159,24 @@ export async function sendBulk(messages: MailMessage[]): Promise<SendResult> {
       sent += report.sent;
       failed += report.failed;
       error ??= report.error;
+      results.push(...report.results);
       continue;
     }
 
-    const results = await Promise.all(batch.map((m) => sendViaResend(m, active.key)));
-    for (const ok of results) {
+    const batchResults = await Promise.all(batch.map((m) => sendViaResend(m, active.key)));
+    for (const [i, ok] of batchResults.entries()) {
       if (ok) sent += 1;
       else failed += 1;
+      results.push({
+        to: batch[i].to,
+        ok,
+        error: ok ? undefined : 'Resend가 이 주소로의 발송을 거부했습니다.',
+      });
     }
     if (failed > 0) error ??= 'Resend가 발송을 거부했습니다.';
   }
 
-  return { sent, failed, dryRun: false, error };
+  return { sent, failed, dryRun: false, error, results };
 }
 
 export async function sendMail(message: MailMessage): Promise<SendResult> {

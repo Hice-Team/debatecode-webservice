@@ -19,6 +19,7 @@ import {
   type AccountStepState,
   type ProfileStepState,
 } from '@/app/lib/actions/signup';
+import { confirmVerificationEmail, sendVerificationEmail } from '@/app/lib/actions/signup-extras';
 import OAuthButtons from '../oauth-buttons';
 import {
   GENDER_OPTIONS,
@@ -39,12 +40,13 @@ const STEP_LABELS: Record<Step, string> = {
 };
 
 const inputClass =
-  'w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm text-ink-soft placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60 focus:border-signal';
-const labelClass = 'block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5';
+  'w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-4 py-3 text-sm text-fg placeholder:text-fg-quiet focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25';
+const labelClass = 'block font-mono text-xs text-fg-secondary tracking-wider mb-1.5';
 const primaryBtnClass =
-  'w-full rounded-lg bg-brand-600 text-white font-semibold py-3 hover:bg-brand-500 transition-colors disabled:opacity-50 disabled:pointer-events-none';
+  'w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-50 disabled:pointer-events-none';
 const errorTextClass = 'mt-1.5 text-xs text-rose-600';
-const formErrorClass = 'text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-4 py-2.5';
+const formErrorClass =
+  'rounded-[var(--radius-card)] border border-rose-200 bg-rose-50/70 px-4 py-3 text-sm text-rose-700';
 
 function FieldError({ messages }: { messages?: string[] }) {
   if (!messages?.length) return null;
@@ -74,13 +76,13 @@ function Stepper({ current }: { current: Step }) {
                     ? 'bg-signal text-white'
                     : active
                       ? 'bg-brand-600 text-white'
-                      : 'bg-ink/5 text-ink-soft/40 border border-ink/10'
+                      : 'bg-paper text-fg-quiet border border-hairline'
                 }`}
               >
                 {done ? '✓' : String(i + 1).padStart(2, '0')}
               </span>
               <span
-                className={`text-[11px] ${active ? 'text-ink-soft font-semibold' : 'text-ink-soft/40'} hidden sm:block`}
+                className={`text-[11px] ${active ? 'text-fg font-semibold' : 'text-fg-quiet'} hidden sm:block`}
               >
                 {STEP_LABELS[step]}
               </span>
@@ -88,9 +90,9 @@ function Stepper({ current }: { current: Step }) {
           );
         })}
       </div>
-      <div className="h-1 rounded-full bg-ink/5 overflow-hidden">
+      <div className="h-1 rounded-full bg-paper overflow-hidden">
         <div
-          className="h-full rounded-full bg-signal transition-all duration-500 ease-out"
+          className="h-full rounded-full bg-signal transition-colors duration-500 ease-out"
           style={{ width: `${(currentIdx / (STEP_ORDER.length - 1)) * 100}%` }}
         />
       </div>
@@ -132,7 +134,9 @@ function ConsentStep({
     setMarketing(v);
   };
 
-  const rowClass = 'flex items-start gap-2.5 text-sm text-ink-soft/70 cursor-pointer';
+  // py-2.5 — 동의 항목은 체크박스가 아니라 줄 전체가 누르는 자리다.
+  // 줄 높이가 20px이면 손가락으로 옆 항목을 같이 누르게 된다.
+  const rowClass = 'flex cursor-pointer items-start gap-2.5 py-2.5 text-sm text-fg-secondary';
   const checkboxClass = 'mt-0.5 h-4 w-4 accent-[#4531d9]';
 
   return (
@@ -140,13 +144,13 @@ function ConsentStep({
       {oauthError && <FormError messages={[oauthError]} />}
 
       <div>
-        <h2 className="text-lg font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        <h2 className="text-lg font-bold text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           약관에 동의해 주세요
         </h2>
-        <p className="mt-1 text-sm text-ink-soft/50">서비스 이용을 위해 필수 약관 동의가 필요합니다.</p>
+        <p className="mt-1 text-sm text-fg-muted">서비스 이용을 위해 필수 약관 동의가 필요합니다.</p>
       </div>
 
-      <label className={`${rowClass} rounded-lg border border-ink/15 bg-paper/50 px-4 py-3 font-semibold text-ink-soft`}>
+      <label className={`${rowClass} rounded-lg border border-hairline bg-paper/50 px-4 py-3 font-semibold text-fg`}>
         <input type="checkbox" checked={allChecked} onChange={(e) => toggleAll(e.target.checked)} className={checkboxClass} />
         <span>전체 동의 (선택 항목 포함)</span>
       </label>
@@ -162,7 +166,11 @@ function ConsentStep({
             />
             <span>
               <span className="font-mono text-[11px] text-signal mr-1.5">[필수]</span>
-              <Link href={t.href} target="_blank" className="underline underline-offset-2 hover:text-ink-soft">
+              <Link
+                href={t.href}
+                target="_blank"
+                className="-my-3.5 inline-block py-3.5 underline underline-offset-2 hover:text-fg"
+              >
                 {t.label}
               </Link>
               에 동의합니다.
@@ -177,7 +185,7 @@ function ConsentStep({
             className={checkboxClass}
           />
           <span>
-            <span className="font-mono text-[11px] text-ink-soft/40 mr-1.5">[선택]</span>
+            <span className="font-mono text-[11px] text-fg-quiet mr-1.5">[선택]</span>
             새 문제·이벤트 등 마케팅 정보 수신에 동의합니다.
           </span>
         </label>
@@ -196,7 +204,7 @@ function ConsentStep({
       {allRequired ? (
         <OAuthButtons action={signupWithOAuth.bind(null, marketing)} heading="간편 가입" />
       ) : (
-        <p className="text-center text-xs text-ink-soft/40">
+        <p className="text-center text-xs text-fg-quiet">
           필수 약관에 동의하면 소셜 계정으로도 가입할 수 있습니다.
         </p>
       )}
@@ -223,7 +231,7 @@ function Chip({
       className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
         selected
           ? 'border-brand-600 bg-brand-600 text-white'
-          : 'border-ink/15 bg-white text-ink-soft/70 hover:border-ink/40'
+          : 'border-hairline bg-surface text-fg-secondary hover:border-fg-quiet'
       }`}
     >
       {children}
@@ -265,10 +273,10 @@ function AccountStep({
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        <h2 className="text-lg font-bold text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           계정 정보를 입력해 주세요
         </h2>
-        <p className="mt-1 text-sm text-ink-soft/50">
+        <p className="mt-1 text-sm text-fg-muted">
           {requiresPassword ? '로그인에 사용할 이메일·비밀번호와 기본 정보를 설정합니다.' : '서비스에서 사용할 기본 정보를 설정합니다.'}
         </p>
       </div>
@@ -316,7 +324,7 @@ function AccountStep({
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-ink-soft/50 hover:text-ink-soft"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-fg-muted hover:text-fg"
                 >
                   {showPassword ? '숨기기' : '보기'}
                 </button>
@@ -418,10 +426,10 @@ function ProfileStep({ onSaved, onBack }: { onSaved: (nickname?: string) => void
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        <h2 className="text-lg font-bold text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           거의 다 왔어요
         </h2>
-        <p className="mt-1 text-sm text-ink-soft/50">맞춤 문제와 면접 질문을 위해 몇 가지만 더 알려주세요.</p>
+        <p className="mt-1 text-sm text-fg-muted">맞춤 문제와 면접 질문을 위해 몇 가지만 더 알려주세요.</p>
       </div>
 
       <form action={formAction} className="space-y-6">
@@ -492,7 +500,7 @@ function ProfileStep({ onSaved, onBack }: { onSaved: (nickname?: string) => void
       <button
         type="button"
         onClick={onBack}
-        className="w-full text-center text-xs text-ink-soft/40 hover:text-ink-soft transition-colors"
+        className="w-full text-center text-xs text-fg-quiet hover:text-fg transition-colors"
       >
         ← 계정 정보 수정
       </button>
@@ -502,33 +510,154 @@ function ProfileStep({ onSaved, onBack }: { onSaved: (nickname?: string) => void
 
 /* ---------- 5단계: 환영 ---------- */
 
+/**
+ * 가입 마무리 — 선택 설정 세 가지.
+ *
+ * 계정은 이미 만들어졌다. 여기 있는 것은 전부 **나중에 해도 되는 일**이고, 그 사실을
+ * 화면에서 분명히 한다. 예전처럼 인증을 통과해야 들어올 수 있게 만들면 여기서 사람을 잃는다.
+ *
+ * 그래도 자리를 마련해 둔 이유는, 필요해진 순간에 설정 화면을 찾아 들어가는 사람이
+ * 생각보다 적기 때문이다. 지금 한 번은 보여 준다.
+ */
 function WelcomeStep({ nickname }: { nickname: string }) {
+  const [mailState, setMailState] = useState<{ ok?: string; error?: string; sent?: boolean } | null>(null);
+  const [sending, setSending] = useState(false);
+  const [code, setCode] = useState('');
+  const [confirming, setConfirming] = useState(false);
+  const [verified, setVerified] = useState(false);
+
+  async function sendMail() {
+    setSending(true);
+    setMailState(null);
+    try {
+      const result = await sendVerificationEmail();
+      setMailState(result);
+      // 이미 인증된 계정(소셜 가입 등)이면 입력란을 열 이유가 없다
+      if (result.ok && !result.sent) setVerified(true);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function confirmCode() {
+    setConfirming(true);
+    try {
+      const form = new FormData();
+      form.set('code', code);
+      const result = await confirmVerificationEmail({}, form);
+      setMailState(result);
+      if (result.ok && !result.error) {
+        setVerified(true);
+        setCode('');
+      }
+    } finally {
+      setConfirming(false);
+    }
+  }
+
   return (
-    <div className="space-y-6 text-center py-4">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-signal/15 text-3xl">🎉</div>
-      <div>
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-600">WELCOME ABOARD</span>
-        <h2 className="mt-2 text-2xl font-bold text-ink-soft" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-          {nickname ? `${nickname}님, 환영합니다!` : '가입을 환영합니다!'}
+    <div className="space-y-6 py-4">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-fg" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          {nickname ? `${nickname}님, 환영합니다` : '가입이 끝났습니다'}
         </h2>
-        <p className="mt-3 text-sm text-ink-soft/60 leading-relaxed">
-          이제 문제를 풀고, DebateAI 면접관 앞에서
-          <br />
-          당신의 코드를 변호할 차례입니다.
+        <p className="mt-2 text-sm leading-relaxed text-fg-secondary">
+          계정이 만들어졌습니다. 아래는 모두 <strong>선택</strong>이며 나중에 설정에서도 할 수 있습니다.
         </p>
       </div>
 
-      <div className="space-y-3">
-        <Link href="/onboarding/ai" className={`${primaryBtnClass} block`}>
-          DebateAI 면접관 설정하기
-        </Link>
-        <Link
-          href="/dashboard"
-          className="block w-full rounded-lg border border-ink/15 bg-white py-3 text-sm font-medium text-ink-soft/70 hover:border-ink/40 transition-colors"
-        >
-          나중에 하기 — 대시보드로 이동
-        </Link>
-      </div>
+      <ul className="space-y-3">
+        {/* 1. 이메일 인증 — 왜 필요한지 먼저 말한다 */}
+        <li className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-4">
+          <p className="text-sm font-semibold text-fg">이메일 인증</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-fg-muted">
+            비밀번호를 잊었을 때 되찾는 길이 되고, 중고 거래는 인증한 계정만 이용할 수 있습니다.
+          </p>
+          {verified ? (
+            <p className="mt-3 text-[13px] font-medium text-emerald-700">인증이 끝났습니다.</p>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={sendMail}
+                disabled={sending}
+                className="mt-3 rounded-full border border-hairline px-4 py-2 text-[13px] font-medium text-fg-secondary transition-colors hover:border-ink/25 disabled:opacity-40"
+              >
+                {sending ? '보내는 중…' : mailState?.sent ? '코드 다시 보내기' : '인증 코드 보내기'}
+              </button>
+
+              {/* 코드 입력란은 실제로 보낸 뒤에만 연다 — 보내기 전에 띄우면
+                  무엇을 넣어야 하는지 알 수 없는 빈 칸이 된다 */}
+              {mailState?.sent && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <label htmlFor="signup-verify-code" className="sr-only">
+                    인증 코드 6자리
+                  </label>
+                  <input
+                    id="signup-verify-code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="123456"
+                    className="w-32 rounded-[var(--radius-card)] border border-hairline px-3 py-2 text-center font-mono text-[15px] tracking-[0.3em]"
+                  />
+                  <button
+                    type="button"
+                    onClick={confirmCode}
+                    disabled={confirming || code.length !== 6}
+                    className="rounded-full bg-signal px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-40"
+                  >
+                    {confirming ? '확인 중…' : '확인'}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {mailState?.ok && !mailState.error && (
+            <p className="mt-2 text-[12px] text-emerald-700">{mailState.ok}</p>
+          )}
+          {mailState?.error && (
+            <p role="alert" className="mt-2 text-[12px] text-rose-600">
+              {mailState.error}
+            </p>
+          )}
+        </li>
+
+        {/* 2. AI 키 — 서비스 기본 모델로도 쓸 수 있다는 점을 분명히 */}
+        <li className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-4">
+          <p className="text-sm font-semibold text-fg">내 AI 키 등록</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-fg-muted">
+            등록하지 않아도 무료 모델로 쓸 수 있습니다. 자기 키를 넣으면 일일 한도 없이
+            원하는 모델을 씁니다. 키는 암호화해 저장합니다.
+          </p>
+          <Link
+            href="/onboarding/ai"
+            className="mt-3 inline-block rounded-full border border-hairline px-4 py-2 text-[13px] font-medium text-fg-secondary transition-colors hover:border-ink/25"
+          >
+            AI 설정하기
+          </Link>
+        </li>
+
+        {/* 3. 2차 보안 — 등록 흐름(QR 스캔)이 길어서 설정 화면으로 보낸다 */}
+        <li className="rounded-[var(--radius-panel)] border border-hairline bg-surface p-4">
+          <p className="text-sm font-semibold text-fg">2차 보안</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-fg-muted">
+            OTP 앱이나 보안키(패스키)를 등록하면 비밀번호가 새더라도 로그인을 막을 수 있습니다.
+          </p>
+          <Link
+            href="/settings#security"
+            className="mt-3 inline-block rounded-full border border-hairline px-4 py-2 text-[13px] font-medium text-fg-secondary transition-colors hover:border-ink/25"
+          >
+            보안 설정 열기
+          </Link>
+        </li>
+      </ul>
+
+      <Link href="/dashboard" className={`${primaryBtnClass} block text-center`}>
+        건너뛰고 시작하기
+      </Link>
     </div>
   );
 }

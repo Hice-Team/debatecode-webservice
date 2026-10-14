@@ -388,7 +388,11 @@ export async function resolveAppeal(formData: FormData) {
 
   const id = String(formData.get('id') ?? '');
   const accept = String(formData.get('action') ?? '') === 'accept';
-  const note = String(formData.get('note') ?? '').trim() || (accept ? '이의 인정' : '이의 기각');
+  const rawNote = String(formData.get('note') ?? '').trim();
+  // 인정은 결과 자체가 답이라 기본 문구로 충분하지만, 기각은 이유가 답이다.
+  // '이의 기각'만 돌려주면 이용자는 무엇을 다시 써야 할지 알 수 없다.
+  if (!accept && rawNote.length < 5) return;
+  const note = rawNote || '이의 인정';
 
   const sanction = await prisma.sanction.findUnique({
     where: { id },

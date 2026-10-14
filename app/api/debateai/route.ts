@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { buildAttachmentContext } from '@/app/lib/ai/attachment-context';
+import { isAttachmentProxyUrl } from '@/app/lib/storage';
 import { prisma } from '@/app/lib/prisma';
-import { createClient } from '@/app/lib/supabase/server';
+import { requireApiSession } from '@/app/lib/dal';
 import { decryptSecret } from '@/app/lib/crypto';
 import { rateLimit } from '@/app/lib/rate-limit';
-import { llmChat, type LlmConfig, type LlmUsage } from '@/app/lib/ai/llm-interviewer';
+import { llmChatStream, type LlmConfig, type LlmUsage } from '@/app/lib/ai/llm-interviewer';
 import { EFFORTS, asEffort, effortDirective, effortMaxTokens } from '@/app/lib/ai/effort';
 import { DEBATEAI_MODEL_IDS, findDebateAiModel } from '@/app/lib/ai/debateai-models';
 import { resolveDebateAiUpstream } from '@/app/lib/ai/debateai-upstream';
-import { addFreeAiUsage, estimateTokens, getFreeAiQuota } from '@/app/lib/ai/free-ai';
+import { addFreeAiUsage, estimateTokens } from '@/app/lib/ai/free-ai';
+import { consumeAiUsage, exhaustedMessage, refundAiUsage } from '@/app/lib/ai/usage-limits';
 
 // debateAI 챗봇 — 문제 정보와 에디터의 현재 코드를 매 턴 함께 보고 답한다.
 //
@@ -28,6 +31,30 @@ const schema = z.object({
   messages: z
     .array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(4_000) }))
     .max(24)
+    .default([]),
+  // 이번 질문에 붙인 첨부 (app/components/attachments/pending-attachments.ts).
+  // 원문은 서버가 스토리지에서 읽어 프롬프트에 싣는다.
+  attachments: z
+    .array(
+      z.object({
+        kind: z.enum(['image', 'file', 'link', 'code']),
+        name: z.string().max(400),
+        // 내부 프록시 주소이거나 외부 http(s)만 — javascript:/data: 스킴은 막는다
+        url: z
+          .string()
+          .max(2000)
+          .refine(
+            (value) => isAttachmentProxyUrl(value) || /^https?:\/\//i.test(value),
+            '첨부 주소를 확인해 주세요.',
+          ),
+        mime: z.string().max(120).optional(),
+        size: z.number().nonnegative().optional(),
+        source: z.string().max(40).optional(),
+        preview: z.string().max(2000).optional(),
+        group: z.string().max(200).optional(),
+      }),
+    )
+    .max(20)
     .default([]),
 });
 
@@ -84,12 +111,15 @@ function extractCodeBlock(reply: string, language: 'javascript' | 'python'): str
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const limitKey = user?.id ?? request.headers.get('x-forwarded-for') ?? 'anon';
-  if (!rateLimit(`debateai:${limitKey}`, 10, 60_000)) {
+  // 로그인 필수.
+  //
+  // 예전에는 비로그인도 그대로 통과했고, 쿠터 검사는 `if (user && ...)`이라 로그인한
+  // 사람에게만 걸렸다. 가입할수록 손해인 구조였고, 서비스 키는 상한 없이 열려 있었다.
+  const session = await requireApiSession();
+  if ('response' in session) return session.response;
+  const userId = session.userId;
+
+  if (!rateLimit(`debateai:${userId}`, 10, 60_000)) {
     return NextResponse.json({ error: '요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.' }, { status: 429 });
   }
 
@@ -97,7 +127,7 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
 
-  const { problemId, modelId, language, mode, code, messages } = parsed.data;
+  const { problemId, modelId, language, mode, code, messages, attachments } = parsed.data;
   const effort = asEffort(parsed.data.effort);
   // refactor-why는 사용자 발화 없이 AI가 먼저 말하는 자리라 messages가 비어 있을 수 있다
   if (mode !== 'refactor-why' && messages.length === 0) {
@@ -107,41 +137,45 @@ export async function POST(request: Request) {
   const model = findDebateAiModel(modelId);
 
   // 이용자 AI 설정 — BYOK 키와 로컬 엔드포인트는 암호화 저장이라 복호화해서 쓴다
-  const row = user
-    ? await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { role: true, aiApiKey: true, aiBaseUrl: true },
-      })
-    : null;
+  const row = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, aiApiKey: true, aiBaseUrl: true },
+  });
   const settings = {
-    apiKey: row ? await decryptSecret(row.aiApiKey) : null,
-    baseUrl: row ? await decryptSecret(row.aiBaseUrl) : null,
+    apiKey: await decryptSecret(row?.aiApiKey),
+    baseUrl: await decryptSecret(row?.aiBaseUrl),
   };
-
-  // 일일 쿠터는 서비스가 비용을 대는 경우에만 — 개인 키·로컬 실행은 이용자 부담이라 적용하지 않는다
-  const serviceFunded = model.tier === 'free' || (model.tier !== 'local' && !settings.apiKey);
-  if (user && serviceFunded) {
-    const quota = await getFreeAiQuota(user.id);
-    if (quota.exhausted) {
-      return NextResponse.json(
-        {
-          error: `오늘의 Debate Free AI 토큰(${quota.limit.toLocaleString()})을 모두 사용했습니다. ${
-            quota.resetAt ? quota.resetAt.toLocaleString('ko-KR') : '24시간 후'
-          }에 초기화됩니다.`,
-        },
-        { status: 429 },
-      );
-    }
-  }
 
   const resolved = resolveDebateAiUpstream(modelId, settings);
   if ('error' in resolved) return NextResponse.json({ error: resolved.error }, { status: resolved.status });
 
+  // 한도를 소비하기 전에 거절될 수 있는 것들을 먼저 끝낸다.
+  // 없는 문제나 잘못된 모델 때문에 이용자의 하루 횟수가 줄어들면 안 된다.
   const problem = await prisma.problem.findUnique({
     where: { id: problemId },
     select: { title: true, category: true, difficulty: true, description: true },
   });
   if (!problem) return NextResponse.json({ error: '문제를 찾을 수 없습니다.' }, { status: 404 });
+
+  // 누가 요금을 내는가 — 해석된 호출 경로 하나로만 판단한다(app/lib/ai/funding.ts).
+  // 모델 티어와 이용자 설정을 각자 조합해 짐작하던 방식은 라우트마다 답이 달라졌다.
+  const serviceFunded = model.tier === 'free';
+
+  // 문제당 하루 10회. 개인 키·로컬 모델로 도는 호출은 세지 않는다.
+  const allowance = await consumeAiUsage({
+    userId,
+    surface: 'debateai',
+    scope: String(problemId),
+    serviceFunded,
+  });
+  if (allowance.exhausted) {
+    return NextResponse.json(
+      { error: exhaustedMessage('debateai', allowance.resetAt), code: 'quota_exhausted' },
+      { status: 429 },
+    );
+  }
+  const refundOnFailure = () =>
+    refundAiUsage({ userId, surface: 'debateai', scope: String(problemId), serviceFunded });
 
   const SYSTEM =
     mode === 'refactor-why' ? SYSTEM_REFACTOR_WHY : mode === 'agent' ? SYSTEM_AGENT : SYSTEM_GENERAL;
@@ -150,73 +184,146 @@ export async function POST(request: Request) {
   const codeLabel = mode === 'refactor-why' ? '당신이 방금 작성한 코드' : '사용자의 현재 에디터 코드';
   const context = `[문제] ${problem.title} (${problem.category})\n${problem.description.slice(0, 2500)}\n\n[${codeLabel} — ${language}]\n\`\`\`\n${code.slice(0, 6000) || '(아직 비어 있음)'}\n\`\`\``;
 
+  // 첨부 원문을 읽어 프롬프트에 실을 블록으로 만든다.
+  // 스트림이 시작된 뒤에는 요청 스코프(쿠키 → 스토리지 권한)가 살아 있다고 보장할 수 없어
+  // 여기서 먼저 끝낸다. 실패해도 질문 자체는 계속 간다.
+  // debateAI 모델 카탈로그에는 아직 그림을 보는 모델이 없다 — 그림은 싣지 않고,
+  // 왜 못 보는지를 프롬프트에 적어 모델이 "봤다"는 듯이 답하지 않게 한다.
+  const attachmentContext = await buildAttachmentContext(attachments, userId, false).catch(() => ({
+    text: '',
+    read: 0,
+    listed: attachments.length,
+    images: [] as string[],
+  }));
+
   const prompt =
     mode === 'refactor-why'
       ? `${context}\n\n위 내용을 바탕으로 첫 발언을 작성하세요.`
-      : [context, ...messages.map((m) => `${m.role === 'user' ? '사용자' : '어시스턴트'}: ${m.content}`)].join('\n\n');
+      : [
+          context,
+          attachmentContext.text,
+          ...messages.map((m) => `${m.role === 'user' ? '사용자' : '어시스턴트'}: ${m.content}`),
+        ]
+          .filter(Boolean)
+          .join('\n\n');
 
   // 강도는 프롬프트 한 줄과 출력 상한으로만 적용한다 — 공급자 전용 파라미터는 쓰지 않는다
   const system = SYSTEM + effortDirective(effort);
   const maxTokens = effortMaxTokens(effort);
 
-  try {
-    let usage: LlmUsage | null = null;
-    let usedRepo = (resolved.config as Extract<LlmConfig, { kind: 'openai-compatible' }>).model ?? null;
-    let replaced = false;
+  /* ---------- 스트리밍 응답 ----------
+     예전에는 답이 다 만들어질 때까지 "생성 중…" 점 세 개만 돌았다. 긴 답변은 20초 넘게
+     아무 일도 일어나지 않는 것처럼 보여, 멈춘 줄 알고 다시 누르는 일이 잦았다.
+     NDJSON 스트림으로 만들어지는 대로 흘려보낸다.
 
-    const call = (config: LlmConfig) =>
-      llmChat(config, system, prompt, {
-        timeoutMs: 30_000,
-        maxTokens,
-        onUsage: (u) => {
-          usage = u;
-        },
-      });
+     Agent 모드의 코드 추출은 전문이 모여야 가능하므로 done 이벤트에서 한 번에 준다. */
+  const encoder = new TextEncoder();
 
-    let reply: string;
-    try {
-      reply = await call(resolved.config);
-    } catch (error) {
-      // Free Tier는 라우터에서 모델이 내려가 있는 일이 잦다. 오류를 띄우기 전에 한 번 더.
-      if (!resolved.fallbackModel) throw error;
-      reply = await call({ ...resolved.config, model: resolved.fallbackModel } as LlmConfig);
-      usedRepo = resolved.fallbackModel;
-      replaced = true;
-    }
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (event: unknown) => {
+        controller.enqueue(encoder.encode(`${JSON.stringify(event)}
+`));
+      };
 
-    const trimmed = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-    if (!trimmed) throw new Error('empty reply');
+      let usage: LlmUsage | null = null;
+      let usedRepo = (resolved.config as Extract<LlmConfig, { kind: 'openai-compatible' }>).model ?? null;
+      let replaced = false;
+      let reply = '';
 
-    // 토큰 — 공급자가 준 값이 있으면 그대로, 없으면 추정치를 넣고 그렇다고 표시한다
-    const measured: LlmUsage | null = usage;
-    const tokens = measured ?? {
-      promptTokens: estimateTokens(context, ...messages.map((m) => m.content)),
-      completionTokens: estimateTokens(trimmed),
-    };
+      /** 한 번의 생성 시도 — 흘려보낸 글자 수를 돌려준다. */
+      const run = async (config: LlmConfig): Promise<number> => {
+        let emitted = 0;
+        for await (const chunk of llmChatStream(config, system, prompt, {
+          timeoutMs: 60_000,
+          maxTokens,
+          signal: request.signal,
+          onUsage: (u) => {
+            usage = u;
+          },
+        })) {
+          if (chunk.kind === 'reasoning') {
+            send({ type: 'reasoning', text: chunk.text });
+            continue;
+          }
+          reply += chunk.text;
+          emitted += chunk.text.length;
+          send({ type: 'delta', text: chunk.text });
+        }
+        return emitted;
+      };
 
-    // 일일 쿠터 누적 — 응답을 막지 않는다
-    if (user && serviceFunded) {
-      addFreeAiUsage(user.id, (tokens.promptTokens ?? 0) + (tokens.completionTokens ?? 0), modelId).catch(() => {});
-    }
+      try {
+        try {
+          await run(resolved.config);
+        } catch (error) {
+          // Free Tier는 라우터에서 모델이 내려가 있는 일이 잦다. 오류를 띄우기 전에 한 번 더.
+          // 단, 이미 글자를 흘려보낸 뒤라면 다시 시도할 수 없다 — 화면에 두 번 이어 붙는다.
+          if (!resolved.fallbackModel || reply.length > 0) throw error;
+          await run({ ...resolved.config, model: resolved.fallbackModel } as LlmConfig);
+          usedRepo = resolved.fallbackModel;
+          replaced = true;
+        }
 
-    // Agent 모드는 코드 블록을 따로 뽑아 준다 — 화면이 마크다운을 다시 파싱하지 않아도 되고,
-    // 무엇을 에디터에 넣을지 서버와 화면의 판단이 갈리지 않는다.
-    const generated = mode === 'agent' ? extractCodeBlock(trimmed, language) : null;
-    return NextResponse.json({
-      reply: trimmed,
-      model: model.id,
-      code: generated,
-      usage: {
-        promptTokens: tokens.promptTokens ?? null,
-        completionTokens: tokens.completionTokens ?? null,
-        estimated: measured === null,
-        effort,
-        repo: usedRepo,
-        // 고른 모델이 막혀 대체 모델로 답한 경우 — 화면이 이를 밝힌다
-        replaced,
-      },
-    });
-  } catch {
-    return NextResponse.json({ error: 'AI 호출에 실패했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 502 });
-  }
+        const trimmed = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        if (!trimmed) throw new Error('empty reply');
+
+        // 토큰 — 공급자가 준 값이 있으면 그대로, 없으면 추정치를 넣고 그렇다고 표시한다
+        const measured: LlmUsage | null = usage;
+        const tokens = measured ?? {
+          promptTokens: estimateTokens(context, ...messages.map((m) => m.content)),
+          completionTokens: estimateTokens(trimmed),
+        };
+
+        // 토큰은 이제 한도가 아니라 **내역**이다 — 설정 화면이 "무엇을 얼마나 썼는지"를
+        // 보여 주는 데만 쓴다. 차단 기준은 위의 회수 한도(consumeAiUsage)다.
+        if (serviceFunded) {
+          addFreeAiUsage(userId, (tokens.promptTokens ?? 0) + (tokens.completionTokens ?? 0), modelId).catch(() => {});
+        }
+
+        // Agent 모드는 코드 블록을 따로 뽑아 준다 — 화면이 마크다운을 다시 파싱하지 않아도 되고,
+        // 무엇을 에디터에 넣을지 서버와 화면의 판단이 갈리지 않는다.
+        const generated = mode === 'agent' ? extractCodeBlock(trimmed, language) : null;
+
+        send({
+          type: 'done',
+          reply: trimmed,
+          model: model.id,
+          code: generated,
+          usage: {
+            promptTokens: tokens.promptTokens ?? null,
+            completionTokens: tokens.completionTokens ?? null,
+            estimated: measured === null,
+            effort,
+            repo: usedRepo,
+            // 고른 모델이 막혀 대체 모델로 답한 경우 — 화면이 이를 밝힌다
+            replaced,
+          },
+          // 남은 횟수 — 다 쓴 뒤에 알려 주면 늦다. 이번 답과 함께 내려보낸다.
+          allowance: allowance.unlimited
+            ? { unlimited: true as const }
+            : { unlimited: false as const, remaining: allowance.remaining, limit: allowance.limit },
+        });
+      } catch {
+        // 답을 만들지 못했다면 이번 호출은 없던 것으로 한다 — 업스트림 장애로
+        // 이용자의 하루 한도가 줄어들면 장애 난 날에 두 번 손해를 본다.
+        void refundOnFailure();
+        // 이용자가 창을 닫거나 중단을 누른 경우는 알릴 대상이 없다
+        if (!request.signal.aborted) {
+          send({ type: 'error', message: 'AI 호출에 실패했습니다. 잠시 후 다시 시도해 주세요.' });
+        }
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
+      'Cache-Control': 'no-store, no-transform',
+      // 프록시가 버퍼링하면 스트리밍의 의미가 없다
+      'X-Accel-Buffering': 'no',
+    },
+  });
 }

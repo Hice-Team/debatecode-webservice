@@ -4,6 +4,7 @@
 // initial이 있으면 수정 모드(updateProblem), 없으면 생성 모드(createProblem).
 import { useActionState, useRef, useState } from 'react';
 import { createProblem, updateProblem, type ProblemFormState } from '@/app/lib/actions/problems';
+import { LANGUAGES, LANGUAGE_LABELS, type Language } from '@/app/lib/types';
 import MarkdownToolbar from '@/app/community/write/markdown-toolbar';
 
 export interface ProblemInitial {
@@ -19,19 +20,33 @@ export interface ProblemInitial {
   examYear: string;
   starterJs: string;
   starterPy: string;
+  /** 이 문제가 이미 지원하는 언어 — 수정 모드에서 체크 상태의 초기값이 된다 */
+  languages: Language[];
   keywords: string[];
   testCases: { input: string; expected: string; isHidden: boolean }[];
 }
 
 const initialState: ProblemFormState = {};
 
-const LABEL = 'block font-mono text-xs text-ink-soft/60 tracking-wider mb-1.5';
+const LABEL = 'block font-mono text-xs text-fg-secondary tracking-wider mb-1.5';
 const FIELD =
-  'w-full rounded-lg border border-ink/15 bg-paper/50 px-4 py-2.5 text-sm placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60';
+  'w-full rounded-lg border border-hairline bg-paper/50 px-4 py-2.5 text-sm placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
 const CODE_FIELD =
-  'w-full rounded-lg border border-ink/15 bg-ink text-emerald-100 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-signal/60';
+  'w-full rounded-lg border border-hairline bg-ink text-emerald-100 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-fg-on-dark-quiet focus:outline-none focus:ring-2 focus:ring-signal/60';
 
 const CATEGORIES = ['해시', '스택', 'DP', '그리디', '그래프', '자료구조'];
+
+/** 언어 → 스타터 입력의 name과 빈 화면에 깔아 줄 뼈대 */
+const STARTER: Record<Language, { field: 'starterJs' | 'starterPy'; placeholder: string }> = {
+  javascript: {
+    field: 'starterJs',
+    placeholder: 'function solution(nums, target) {\n  // 여기에 작성\n}',
+  },
+  python: {
+    field: 'starterPy',
+    placeholder: 'def solution(nums, target):\n    # 여기에 작성\n    pass',
+  },
+};
 
 interface TcRow {
   key: number;
@@ -49,6 +64,15 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
       : [{ key: 0, hidden: false }],
   );
   const nextKey = useRef(initial ? initial.testCases.length : 1);
+  // 새 문제는 두 언어를 모두 켠 채로 시작한다 — 대부분의 문제가 그렇고, 끄는 편이
+  // 켜는 편보다 쉽다. 수정 모드에서는 실제로 스타터 코드가 있는 언어만 켠다.
+  const [languages, setLanguages] = useState<Language[]>(
+    initial ? initial.languages : [...LANGUAGES],
+  );
+
+  function toggleLanguage(l: Language) {
+    setLanguages((prev) => (prev.includes(l) ? prev.filter((x) => x !== l) : [...prev, l]));
+  }
 
   const err = (m?: string[]) => m?.length && <p className="mt-1.5 text-xs text-rose-600">{m[0]}</p>;
 
@@ -120,7 +144,7 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
           required
           defaultValue={initial?.description}
           placeholder={'문제 설명을 마크다운으로 작성하세요.\n\n### 입력\n- nums: 정수 배열\n\n### 출력\n- 두 수의 인덱스 배열'}
-          className="w-full rounded-b-lg border border-ink/15 bg-paper/50 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-ink-soft/30 focus:outline-none focus:ring-2 focus:ring-signal/60"
+          className="w-full rounded-b-lg border border-hairline bg-paper/50 px-4 py-3 text-sm font-mono leading-relaxed placeholder:text-fg-quiet focus:outline-none focus:ring-2 focus:ring-signal/60"
         />
         {err(state.errors?.description)}
       </div>
@@ -128,40 +152,75 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
       <div>
         <label htmlFor="keywords" className={LABEL}>KEYWORDS — 면접 평가 기대 키워드 (쉼표 구분, 필수)</label>
         <input id="keywords" name="keywords" required defaultValue={initial?.keywords.join(', ')} placeholder="시간복잡도, 해시맵, 공간 트레이드오프" className={FIELD} />
-        <p className="mt-1.5 text-xs text-ink-soft/40">DebateAI가 면접에서 이 키워드들을 짚었는지 평가합니다.</p>
+        <p className="mt-1.5 text-xs text-fg-quiet">DebateAI가 면접에서 이 키워드들을 짚었는지 평가합니다.</p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div>
-          <label htmlFor="starterJs" className={LABEL}>STARTER — JavaScript</label>
-          <textarea
-            id="starterJs"
-            name="starterJs"
-            rows={8}
-            required
-            defaultValue={initial?.starterJs}
-            placeholder={'function solution(nums, target) {\n  // 여기에 작성\n}'}
-            className={CODE_FIELD}
-          />
-          {err(state.errors?.starterJs)}
+      {/* ---- 지원 언어 ---- */}
+      <fieldset>
+        <legend className={LABEL}>LANGUAGES — 이 문제로 풀 수 있는 언어 (1개 이상)</legend>
+        <div className="flex flex-wrap gap-2">
+          {LANGUAGES.map((l) => {
+            const on = languages.includes(l);
+            return (
+              <label
+                key={l}
+                className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors ${
+                  on
+                    ? 'border-brand-300 bg-brand-50 text-brand-700'
+                    : 'border-hairline bg-surface text-fg-muted hover:border-brand-300 hover:text-signal'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  name="languages"
+                  value={l}
+                  checked={on}
+                  onChange={() => toggleLanguage(l)}
+                  className="h-4 w-4 accent-[#1800AC]"
+                />
+                {LANGUAGE_LABELS[l]}
+              </label>
+            );
+          })}
         </div>
-        <div>
-          <label htmlFor="starterPy" className={LABEL}>STARTER — Python</label>
-          <textarea
-            id="starterPy"
-            name="starterPy"
-            rows={8}
-            required
-            defaultValue={initial?.starterPy}
-            placeholder={'def solution(nums, target):\n    # 여기에 작성\n    pass'}
-            className={CODE_FIELD}
-          />
-          {err(state.errors?.starterPy)}
+        <p className="mt-1.5 text-xs text-fg-quiet">
+          고른 언어만 문제 화면의 언어 선택에 뜨고, 문제집 목록의 언어 필터에도 그대로 반영됩니다.
+        </p>
+        {err(state.errors?.languages)}
+      </fieldset>
+
+      {/* ---- 스타터 코드 — 고른 언어만 ---- */}
+      {languages.length === 0 ? (
+        <p className="rounded-[var(--radius-card)] border border-dashed border-hairline px-4 py-6 text-center text-sm text-fg-muted">
+          위에서 언어를 하나 이상 고르면 그 언어의 시작 코드를 입력하는 칸이 나타납니다.
+        </p>
+      ) : (
+        <div className={`grid gap-4 ${languages.length > 1 ? 'lg:grid-cols-2' : ''}`}>
+          {LANGUAGES.filter((l) => languages.includes(l)).map((l) => {
+            const { field, placeholder } = STARTER[l];
+            return (
+              <div key={l}>
+                <label htmlFor={field} className={LABEL}>
+                  STARTER — {LANGUAGE_LABELS[l]}
+                </label>
+                <textarea
+                  id={field}
+                  name={field}
+                  rows={8}
+                  required
+                  defaultValue={initial?.[field]}
+                  placeholder={placeholder}
+                  className={CODE_FIELD}
+                />
+                {err(state.errors?.[field])}
+              </div>
+            );
+          })}
         </div>
-      </div>
+      )}
 
       {/* ---- 테스트케이스 ---- */}
-      <div className="rounded-xl border border-ink/10 bg-paper/40 p-4">
+      <div className="rounded-xl border border-hairline bg-paper/40 p-4">
         <div className="mb-3 flex items-center justify-between">
           <span className={`${LABEL} mb-0`}>테스트케이스 — 입력은 인자 배열(JSON), 기대값은 JSON</span>
           <button
@@ -174,11 +233,11 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
         </div>
         <div className="space-y-3">
           {tcRows.map((row, i) => (
-            <div key={row.key} className="rounded-lg border border-ink/10 bg-white p-3">
+            <div key={row.key} className="rounded-lg border border-hairline bg-surface p-3">
               <div className="mb-2 flex items-center justify-between">
-                <span className="font-mono text-[11px] text-ink-soft/40">CASE {i + 1}</span>
+                <span className="font-mono text-[11px] text-fg-quiet">CASE {i + 1}</span>
                 <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-1.5 text-xs text-ink-soft/60 cursor-pointer">
+                  <label className="flex items-center gap-1.5 text-xs text-fg-secondary cursor-pointer">
                     <input
                       type="checkbox"
                       checked={row.hidden}
@@ -193,7 +252,7 @@ export default function ProblemEditor({ initial }: { initial?: ProblemInitial })
                     <button
                       type="button"
                       onClick={() => setTcRows((rows) => rows.filter((r) => r.key !== row.key))}
-                      className="text-xs text-ink-soft/40 hover:text-rose-500"
+                      className="text-xs text-fg-quiet hover:text-rose-500"
                     >
                       삭제
                     </button>

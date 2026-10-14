@@ -8,5 +8,5 @@ import { translations } from '@/app/lib/i18n';
 export default function I18nSlot({ k, fallback }: { k: string; fallback: React.ReactNode }) {
   const { language } = useLanguage();
   if (language === 'ko') return <>{fallback}</>;
-  return <>{translations.en[k] ?? fallback}</>;
+  return <>{translations[language]?.[k] ?? translations.en?.[k] ?? translations.ko?.[k] ?? fallback}</>;
 }
