@@ -1636,13 +1636,13 @@ export default function Workspace({
                 <button
                   type="button"
                   onClick={restartSolving}
-                  className="mt-5 w-full rounded-xl bg-signal py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600"
+                  className="mt-5 w-full rounded-[var(--radius-card)] bg-signal py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 active:scale-[0.98]"
                 >
                   {t('setup-restart', uiLang)}
                 </button>
                 <Link
                   href={entry.returnPath}
-                  className="mt-2 block w-full rounded-xl border border-white/15 py-2.5 text-sm font-medium text-fg-on-dark-secondary transition hover:border-white/35 hover:text-white"
+                  className="mt-2 block w-full rounded-[var(--radius-card)] border border-hairline-on-dark py-2.5 text-sm font-medium text-fg-on-dark-secondary transition hover:border-white/35 hover:text-white"
                 >
                   {entry.source === 'SET' && entry.setTitle ? `${entry.setTitle}(으)로 돌아가기` : '문제집으로 돌아가기'}
                 </Link>
@@ -1653,7 +1653,7 @@ export default function Workspace({
           {/* 면접 모드 선택 오버레이 */}
           {pendingInterview && (
             <div className="absolute inset-0 z-30 flex items-center justify-center bg-ink/85 backdrop-blur-sm p-6">
-              <div className="dc-scroll max-h-[88vh] w-full max-w-md space-y-5 overflow-y-auto rounded-xl border border-white/10 bg-ink-soft p-6">
+              <div className="dc-scroll max-h-[88vh] w-full max-w-md space-y-5 overflow-y-auto rounded-[var(--radius-panel)] border border-white/10 bg-ink-soft p-6">
                 <div>
                   <p className="font-mono text-[11px] text-brand-300 tracking-wider mb-1">면접 설정</p>
                   <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>

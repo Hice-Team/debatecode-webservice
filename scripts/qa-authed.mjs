@@ -16,8 +16,6 @@ const PAGES = [
   '/dashboard/community-profile',
   '/problems/mine',
   '/community/write',
-  '/study/search',
-  '/shop/orders',
 ];
 
 const browser = await chromium.launch();

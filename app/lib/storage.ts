@@ -12,10 +12,10 @@ export function safeStorageKey(userId: string, filename: string): string {
 /* ---------- 버킷 ---------- */
 
 /**
- * AI Search 첨부 전용 비공개 버킷.
+ * AI 첨부 전용 비공개 버킷 (debateAI 등).
  *
  * 커뮤니티 첨부(community-uploads)는 공개 버킷이다. 공개 글에 붙는 이미지라 그래도 되지만,
- * AI Search 첨부는 이용자가 Drive에서 가져온 개인 문서나 자기 컴퓨터의 소스 코드다.
+ * AI 첨부는 이용자가 가져온 개인 문서나 소스 코드다.
  * 키가 uuid라 추측은 어려워도, URL 하나가 새면 그대로 열리는 상태였다.
  * 이 버킷은 소유자만 읽을 수 있고(RLS), 앱은 짧은 서명 URL로만 내보낸다.
  */
@@ -26,7 +26,7 @@ export const AI_ATTACHMENT_BUCKET = 'ai-attachments';
  *
  * 이 크기를 요청 본문에 실어 보낼 수는 없다(서버리스 본문 상한). 그래서 일정 크기를
  * 넘는 파일은 서명된 업로드 주소를 받아 브라우저에서 스토리지로 직행한다
- * (app/api/ai-search/attachment/signed). 아래 임계값이 그 갈림길이다.
+ * (app/api/attachments/upload/signed). 아래 임계값이 그 갈림길이다.
  *
  * 실제로 10GB가 올라가려면 Supabase 프로젝트의 전역 업로드 상한도 함께 올려야 한다
  * (Storage → Settings → Upload file size limit). 무료 플랜 기본값은 50MB다.

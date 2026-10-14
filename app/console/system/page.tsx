@@ -44,7 +44,7 @@ async function collectChecks() {
     dbError = error instanceof Error ? error.message.slice(0, 160) : '연결 실패';
   }
 
-  // AI 기능(Free AI·debateQ·AI Search·번역)은 전부 이 키 하나를 쓴다
+  // AI 기능(Free AI·debateQ·debateAI·번역)은 전부 이 키 하나를 쓴다
   const hasAi = configured('HUGGINGFACE_API_KEY', 'HF_TOKEN');
   const hasSupabase = configured('NEXT_PUBLIC_SUPABASE_URL') && configured('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 

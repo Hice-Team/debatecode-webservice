@@ -128,7 +128,6 @@ export async function adjustPoints(
 
     revalidatePath('/console/points');
     revalidatePath('/debate-mate/console');
-    revalidatePath('/shop');
     return {
       saved: `${maskName(target.name)}에게 ${amount > 0 ? '+' : ''}${amount.toLocaleString()}P를 반영했습니다.`,
     };

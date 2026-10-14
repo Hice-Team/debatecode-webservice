@@ -1,4 +1,22 @@
-export type Language = 'ko' | 'en';
+export type Language = 'ko' | 'en' | 'ja' | 'zh-CN' | 'zh-TW';
+
+export interface SupportedLanguage {
+  code: Language;
+  label: string;
+  nativeLabel: string;
+}
+
+export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
+  { code: 'ko', label: '한국어', nativeLabel: '한국어' },
+  { code: 'en', label: 'English', nativeLabel: 'English' },
+  { code: 'ja', label: '일본어', nativeLabel: '日本語' },
+  { code: 'zh-CN', label: '중국어 (간체)', nativeLabel: '简体中文' },
+  { code: 'zh-TW', label: '중국어 (번체)', nativeLabel: '繁體中文' },
+];
+
+export function isSupportedLanguage(val: string): val is Language {
+  return ['ko', 'en', 'ja', 'zh-CN', 'zh-TW'].includes(val);
+}
 
 export const translations: Record<Language, Record<string, string>> = {
   ko: {
@@ -11,6 +29,28 @@ export const translations: Record<Language, Record<string, string>> = {
     'login': '로그인',
     'signup': '회원가입',
     'logout': '로그아웃',
+
+    // Auth & Login
+    'welcome-back': 'WELCOME BACK',
+    'login-title': '다시 논증할 시간입니다',
+    'reset-success-alert': '비밀번호를 변경했습니다. 새 비밀번호로 로그인해 주세요.',
+    'reset-success-sub': '안전을 위해 기존에 로그인돼 있던 기기는 모두 로그아웃되었습니다.',
+    'no-account': '아직 계정이 없나요?',
+    'sign-up-link': '회원가입',
+    'have-account': '이미 계정이 있나요?',
+    'quick-social-login': '간편 로그인',
+
+    // Accessibility & Barrier-free
+    'skip-to-content': '본문으로 건너뛰기',
+    'accessibility': '접근성 및 편의 설정',
+    'high-contrast': '고대비 모드',
+    'font-size': '글자 크기',
+    'font-normal': '보통',
+    'font-large': '크게',
+    'font-xlarge': '매우 크게',
+    'reduce-motion': '모션 감소',
+    'scroll-to-top': '맨 위로',
+    'command-search': '빠른 검색 / 바로가기',
 
     // Settings
     'settings': '설정',
@@ -136,7 +176,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'console-nav-mate': '메이트 관리',
     'console-nav-report': '신고 처리',
     'console-nav-inquiry': '문의 처리',
-    'console-nav-points': '포인트·상점',
+    'console-nav-points': '포인트 관리',
     'console-nav-drafts': '내 출제 초안',
     'console-nav-upload': '문제 관리',
     'console-nav-sets': '문제집 세트',
@@ -390,11 +430,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'coming-soon': '준비 중',
     'learn-with-debateai': 'debateAI와 학습',
 
-    // AI Search
-    'ai-search-title': '무엇을 찾아드릴까요?',
-    'ai-search-desc': 'DeepSeek 모델에게 개발 질문을 바로 물어보세요.',
-    'ai-search-placeholder': 'debateAI에게 물어보기',
-    'ai-search-submit': 'AI 검색',
+    // debateAI 대화
     'copy': '복사',
     'copied': '복사했습니다',
     'feedback-helpful': '도움이 됐어요',
@@ -435,19 +471,16 @@ export const translations: Record<Language, Record<string, string>> = {
     'about-sources-label': '답변 출처',
     'about-sources-model-only': '이 답변은 선택한 DeepSeek 모델이 생성한 내용이며, 서비스가 따로 검색해 덧붙인 문서는 없습니다.',
     'about-feedback-note': '지금은 피드백을 서버에 저장하지 않습니다. 이 화면에서만 표시됩니다.',
-    'ai-search-offline-badge': '문서 검색 모드',
-    'ai-search-conversation-empty': '아래 입력창에 궁금한 내용을 물어보세요.',
     'ai-attach': '첨부',
     'ai-model': '모델',
     'ai-new-chat': '새 대화',
-    'ai-search-disclaimer-short': '본 서비스는 AI이며 일부 정보 제공 시 실수를 할 수 있습니다.',
     'ai-terms-link': 'debateAI 이용약관',
     'theme-label': '화면 테마',
     'theme-system': '시스템 설정',
     'theme-light': '라이트',
     'theme-dark': '다크',
 
-    // AI Search — 첨부 메뉴
+    // AI — 첨부 메뉴
     'ai-attach-file': '파일 업로드',
     'ai-attach-drive': 'Drive에서 파일 추가',
     'ai-attach-more': '업로드 더보기',
@@ -467,7 +500,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-attach-fetch': '가져오기',
     'ai-attach-uploading': '업로드 중…',
 
-    // AI Search — 음성 입력
+    // AI — 음성 입력
     'ai-voice-start': '음성으로 입력',
     'ai-voice-stop': '음성 입력 끝내기',
     'ai-voice-listening': '듣고 있습니다. 말씀해 주세요…',
@@ -478,7 +511,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-voice-consent-denied': '이 사이트의 마이크 권한이 차단되어 있습니다. 주소창의 자물쇠 아이콘에서 마이크를 허용한 뒤 다시 시도해 주세요.',
     'ai-voice-consent-allow': '허용하고 시작',
 
-    // AI Search — 컴포저 / 내보내기
+    // AI — 컴포저 / 내보내기
     'ai-composer-hint': 'Enter 전송 · Shift+Enter 줄바꿈',
     'ai-stop': '생성 중단',
     'ai-stopped': '생성을 중단했습니다. 여기까지의 답변은 저장했습니다.',
@@ -487,12 +520,11 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-export-all-hint': '이 세션의 모든 질문과 답변을 .json으로 내려받습니다.',
     'ai-export-answer': '.json 내보내기',
 
-    // AI Search — 답변 툴바
+    // AI — 답변 툴바
     'regenerate': '답변 다시 생성',
     'ai-branch-new-chat': '새 채팅에서 브랜치 생성',
     'ai-tts': '듣기 (TTS)',
     'ai-tts-stop': '읽기 중지',
-    'ai-search-on-google': '구글로 검색하기',
     'ai-report-legal': '법적 문제 신고',
     'ai-report-desc': '저작권·명예훼손·개인정보 등 법적 문제가 있는 답변을 알려주시면 운영진이 검토합니다.',
     'ai-reasoning-trace': '추론 과정',
@@ -507,9 +539,6 @@ export const translations: Record<Language, Record<string, string>> = {
     'report-reason-copyright': '저작권 침해',
     'report-reason-defamation': '명예훼손 · 비방',
     'report-reason-privacy': '개인정보 노출',
-    'ai-search-back': '학습으로 돌아가기',
-    'ai-search-followup-placeholder': '이어서 물어보기',
-    'ai-search-disclaimer': 'AI 검색 결과는 정확하지 않을 수 있습니다. 중요한 내용은 반드시 원문 공식 문서에서 확인하세요.',
 
     // 문서 사이트맵 그룹
     'docs-group-basics': '기초',
@@ -782,6 +811,28 @@ export const translations: Record<Language, Record<string, string>> = {
     'signup': 'Sign Up',
     'logout': 'Logout',
 
+    // Auth & Login
+    'welcome-back': 'WELCOME BACK',
+    'login-title': 'Time to argue your logic again',
+    'reset-success-alert': 'Password changed successfully. Please log in with your new password.',
+    'reset-success-sub': 'For your security, all active sessions on other devices have been logged out.',
+    'no-account': "Don't have an account yet?",
+    'sign-up-link': 'Sign up',
+    'have-account': 'Already have an account?',
+    'quick-social-login': 'Quick Social Login',
+
+    // Accessibility & Barrier-free
+    'skip-to-content': 'Skip to main content',
+    'accessibility': 'Accessibility Settings',
+    'high-contrast': 'High Contrast',
+    'font-size': 'Font Size',
+    'font-normal': 'Default',
+    'font-large': 'Large',
+    'font-xlarge': 'Extra Large',
+    'reduce-motion': 'Reduce Motion',
+    'scroll-to-top': 'Back to top',
+    'command-search': 'Quick Navigation / Search',
+
     // Settings
     'settings': 'Settings',
     'select-ai-provider': 'Select AI Provider',
@@ -929,7 +980,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'console-nav-mate': 'Mates',
     'console-nav-report': 'Reports',
     'console-nav-inquiry': 'Inquiries',
-    'console-nav-points': 'Points & Shop',
+    'console-nav-points': 'Points Management',
     'console-nav-drafts': 'My Drafts',
     'console-nav-upload': 'Problems',
     'console-nav-sets': 'Problem Sets',
@@ -1036,11 +1087,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'ko-docs-link': 'Korean translation',
     'coming-soon': 'Soon',
     'learn-with-debateai': 'Learn with debateAI',
-    // AI Search
-    'ai-search-title': 'What can I look up for you?',
-    'ai-search-desc': 'Ask a DeepSeek model your development questions directly.',
-    'ai-search-placeholder': 'Ask debateAI',
-    'ai-search-submit': 'AI Search',
+    // debateAI conversation
     'copy': 'Copy',
     'copied': 'Copied',
     'feedback-helpful': 'Helpful',
@@ -1081,19 +1128,16 @@ export const translations: Record<Language, Record<string, string>> = {
     'about-sources-label': 'Answer source',
     'about-sources-model-only': 'This answer was generated by the selected DeepSeek model. The service does not append any separately retrieved documents.',
     'about-feedback-note': 'Feedback is not sent to the server yet; it only shows on this screen.',
-    'ai-search-offline-badge': 'Docs-only mode',
-    'ai-search-conversation-empty': 'Ask anything in the box below.',
     'ai-attach': 'Attach',
     'ai-model': 'Model',
     'ai-new-chat': 'New chat',
-    'ai-search-disclaimer-short': 'This service is AI and may make mistakes when providing information.',
     'ai-terms-link': 'debateAI Terms',
     'theme-label': 'Theme',
     'theme-system': 'System',
     'theme-light': 'Light',
     'theme-dark': 'Dark',
 
-    // AI Search — attachment menu
+    // AI — attachment menu
     'ai-attach-file': 'Upload file',
     'ai-attach-drive': 'Add from Drive',
     'ai-attach-more': 'More upload options',
@@ -1113,7 +1157,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-attach-fetch': 'Fetch',
     'ai-attach-uploading': 'Uploading…',
 
-    // AI Search — voice input
+    // AI — voice input
     'ai-voice-start': 'Speak your question',
     'ai-voice-stop': 'Stop voice input',
     'ai-voice-listening': 'Listening — go ahead…',
@@ -1124,7 +1168,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-voice-consent-denied': 'Microphone access is blocked for this site. Allow it from the lock icon in the address bar and try again.',
     'ai-voice-consent-allow': 'Allow and start',
 
-    // AI Search — composer / export
+    // AI — composer / export
     'ai-composer-hint': 'Enter to send · Shift+Enter for a new line',
     'ai-stop': 'Stop generating',
     'ai-stopped': 'Generation stopped. The answer so far has been saved.',
@@ -1133,12 +1177,11 @@ export const translations: Record<Language, Record<string, string>> = {
     'ai-export-all-hint': 'Downloads every question and answer in this session as .json.',
     'ai-export-answer': 'Export as .json',
 
-    // AI Search — response toolbar
+    // AI — response toolbar
     'regenerate': 'Regenerate answer',
     'ai-branch-new-chat': 'Branch into a new chat',
     'ai-tts': 'Listen (TTS)',
     'ai-tts-stop': 'Stop reading',
-    'ai-search-on-google': 'Search on Google',
     'ai-report-legal': 'Report a legal issue',
     'ai-report-desc': 'Tell us about answers with copyright, defamation, or privacy problems and the team will review them.',
     'ai-reasoning-trace': 'Reasoning trace',
@@ -1153,9 +1196,6 @@ export const translations: Record<Language, Record<string, string>> = {
     'report-reason-copyright': 'Copyright infringement',
     'report-reason-defamation': 'Defamation / harassment',
     'report-reason-privacy': 'Personal data exposure',
-    'ai-search-back': 'Back to Study',
-    'ai-search-followup-placeholder': 'Ask a follow-up',
-    'ai-search-disclaimer': 'AI search results may be inaccurate. Always confirm anything important against the original official documentation.',
 
     // Docs sitemap groups
     'docs-group-basics': 'Basics',
@@ -1183,7 +1223,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'mate-perk-1-title': 'Problem Authoring',
     'mate-perk-1-desc': 'Craft real interview-style problems and publish them to the community.',
     'mate-perk-2-title': 'DebatePoints',
-    'mate-perk-2-desc': 'Approved problems, accepted answers, and verified promotions earn points you can redeem in the DebateShop.',
+    'mate-perk-2-desc': 'Approved problems, accepted answers, and verified promotions earn points you can use for ranking and badges.',
     'mate-perk-3-title': 'Mentor Badge',
     'mate-perk-3-desc': 'Verified mentors gain a badge and can participate in the Mentor Board.',
     'mate-perk-4-title': 'Priority Review',
@@ -1194,9 +1234,9 @@ export const translations: Record<Language, Record<string, string>> = {
     'debateq-toggle-link': 'Enable debateQ toggle in Problems →',
     'mate-console-cta': 'Open the DebateMate console →',
     'mate-console-title': 'Your activity console is open',
-    'mate-console-desc': 'Manage authoring, reviews, DebatePoints, and the DebateShop in one place.',
+    'mate-console-desc': 'Manage authoring, reviews, and DebatePoints in one place.',
     'mate-terms-cta': 'DebateMate activity terms',
-    'mate-terms-desc': 'Copyright, point criteria, and DebateShop exchange rules.',
+    'mate-terms-desc': 'Copyright and point criteria rules.',
     'mate-apply-title': 'Apply for DebateMate',
     'mate-apply-desc': 'Submit your motivation and the team will review and grant access to debateQ.',
     'mate-apply-login-required': 'Login required to apply for DebateMate.',
@@ -1539,8 +1579,403 @@ export const translations: Record<Language, Record<string, string>> = {
     'difficulty-3': 'Medium',
     'difficulty-4': 'Hard',
   },
+  ja: {
+    // Nav & Header
+    'study': '学習',
+    'problems': '問題集',
+    'contests': 'コーディングテスト',
+    'community': 'コミュニティ',
+    'dashboard': 'ダッシュボード',
+    'login': 'ログイン',
+    'signup': '新規登録',
+    'logout': 'ログアウト',
+    'debate-mate': 'ディベートメイト',
+
+    // Auth & Login
+    'welcome-back': 'おかえりなさい',
+    'login-title': 'コードの論理を証明する時間です',
+    'reset-success-alert': 'パスワードを変更しました。新しいパスワードでログインしてください。',
+    'reset-success-sub': '安全のため、以前ログインしていたすべての端末からログアウトしました。',
+    'no-account': 'まだアカウントをお持ちではありませんか？',
+    'sign-up-link': '新規登録',
+    'have-account': 'すでにアカウントをお持ちですか？',
+    'quick-social-login': 'ソーシャルログイン',
+
+    // Accessibility & Barrier-free
+    'skip-to-content': 'メインコンテンツへスキップ',
+    'accessibility': 'アクセシビリティ設定',
+    'high-contrast': 'ハイコントラスト',
+    'font-size': '文字サイズ',
+    'font-normal': '標準',
+    'font-large': '大',
+    'font-xlarge': '特大',
+    'reduce-motion': 'アニメーション削減',
+    'scroll-to-top': 'トップへ戻る',
+    'command-search': 'クイック検索 / 移動',
+
+    // Settings
+    'settings': '設定',
+    'select-ai-provider': 'AIプロバイダー選択',
+    'change-password': 'パスワード変更',
+    'email': 'メールアドレス',
+    'theme': 'テーマ',
+    'language': '言語',
+    'light-mode': 'Light Mode',
+    'dark-mode': 'Dark Mode',
+    'english': 'English',
+    'korean': '韓国語',
+    'japanese': '日本語',
+    'chinese-simplified': '简体中文',
+    'chinese-traditional': '繁體中文',
+    'theme-label': '画面テーマ',
+    'theme-system': 'システム設定',
+    'theme-light': 'ライト',
+    'theme-dark': 'ダーク',
+
+    // Problems & Contests
+    'challenge-list': '問題一覧',
+    'defense-success-rate': '防御成功率',
+    'pass-rate': '防御成功率',
+    'beginner': '入門',
+    'easy': '初級',
+    'medium': '中級',
+    'hard': '上級',
+    'run-code': 'コード実行',
+    'submit-code': '提出してディベート',
+    'time-over': '制限時間終了',
+    'time-over-desc': '制限時間が経過しました。',
+    'setup-restart': '最初からやり直す',
+    'minutes-short': '分',
+    'no-matched-problems': '条件に一致する問題がありません。',
+    'no-matched-contests': '条件に一致する問題集セットがありません。',
+    'my-problems': 'マイスクラップ',
+    'all': 'すべて',
+    'back': '戻る',
+    'comments': 'コメント',
+    'views': '閲覧数',
+    'like': 'いいね',
+    'unlike': 'いいね解除',
+    'new-post': '投稿作成',
+    'search-posts': '投稿検索…',
+    'search-problems': '過去問タイトル検索…',
+
+    // Set kinds & stats
+    'set-kind-all': 'すべて',
+    'set-kind-exam': '過去問コレクション',
+    'set-kind-mock': '実戦模試',
+    'set-kind-theme': 'テーマ別問題集',
+    'problems-unit': '問',
+    'solved-label': '完了',
+    'back-to-contests': 'コーディングテストへ戻る',
+    'set-stat-problems': '問題数',
+    'set-stat-difficulty': '難易度',
+    'set-stat-time': '目安時間',
+    'set-stat-progress': '進捗率',
+    'set-continue': '続きから解く',
+    'set-start': '開始する',
+    'set-solve-cta': '問題を解きに行く →',
+    'set-problem-list': 'セット構成問題',
+    'set-empty': 'このセットにはまだ問題がありません。',
+
+    // Footer
+    'footer-desc': '問題を解くだけでなく、AI面接官とリアルタイムで議論しコードを防御する、新しいオンラインジャッジ。',
+    'footer-service': 'サービス',
+    'footer-support': 'サポート',
+    'footer-inquiry': 'お問い合わせ',
+    'footer-terms': '利用規約',
+    'footer-ai-terms': 'AI利用規約',
+    'footer-privacy': 'プライバシーポリシー',
+    'footer-consent': '個人情報同意',
+    'footer-mate-terms': 'メイト活動規約',
+    'footer-point-terms': 'ポイント規約',
+    'footer-rep': '代表者: 江石浩',
+    'footer-maker': '制作: HICE Team (Luce 402 Studio)',
+    'footer-address': '所在地: 大韓民国 京畿道 城南市 盆唐区',
+    'open-menu': 'メニューを開く',
+    'close-menu': 'メニューを閉じる',
+  },
+  'zh-CN': {
+    // Nav & Header
+    'study': '学习',
+    'problems': '题库',
+    'contests': '机试竞赛',
+    'community': '社区',
+    'dashboard': '控制台',
+    'login': '登录',
+    'signup': '注册',
+    'logout': '退出登录',
+    'debate-mate': '辩论伙伴',
+
+    // Auth & Login
+    'welcome-back': '欢迎回来',
+    'login-title': '是时候再次为代码答辩了',
+    'reset-success-alert': '密码已成功修改。请使用新密码重新登录。',
+    'reset-success-sub': '为了保障您的账号安全，其他设备上的会话均已强制下线。',
+    'no-account': '还没有账号？',
+    'sign-up-link': '立即注册',
+    'have-account': '已有账号？',
+    'quick-social-login': '快捷第三方登录',
+
+    // Accessibility & Barrier-free
+    'skip-to-content': '跳至主要内容',
+    'accessibility': '无障碍辅助设置',
+    'high-contrast': '高对比度模式',
+    'font-size': '字号大小',
+    'font-normal': '默认',
+    'font-large': '较大',
+    'font-xlarge': '超大',
+    'reduce-motion': '减弱动态效果',
+    'scroll-to-top': '回到顶部',
+    'command-search': '快捷检索 / 页面跳转',
+
+    // Settings
+    'settings': '设置',
+    'select-ai-provider': '选择AI服务商',
+    'change-password': '修改密码',
+    'email': '邮箱',
+    'theme': '主题',
+    'language': '语言',
+    'light-mode': '浅色模式',
+    'dark-mode': '深色模式',
+    'english': 'English',
+    'korean': '韩语',
+    'japanese': '日语',
+    'chinese-simplified': '简体中文',
+    'chinese-traditional': '繁体中文',
+    'theme-label': '界面主题',
+    'theme-system': '跟随系统',
+    'theme-light': '浅色',
+    'theme-dark': '深色',
+
+    // Problems & Contests
+    'challenge-list': '题目列表',
+    'defense-success-rate': '答辩通过率',
+    'pass-rate': '答辩通过率',
+    'beginner': '入门',
+    'easy': '简单',
+    'medium': '中等',
+    'hard': '困难',
+    'run-code': '运行代码',
+    'submit-code': '提交并答辩',
+    'time-over': '时间到',
+    'time-over-desc': '考试时间已结束。',
+    'setup-restart': '重新开始',
+    'minutes-short': '分钟',
+    'no-matched-problems': '没有找到符合条件的题目。',
+    'no-matched-contests': '没有找到符合条件的问题集。',
+    'my-problems': '我的题集',
+    'all': '全部',
+    'back': '返回',
+    'comments': '评论',
+    'views': '浏览',
+    'like': '点赞',
+    'unlike': '取消点赞',
+    'new-post': '发帖',
+    'search-posts': '搜索帖子…',
+    'search-problems': '搜索题目名称…',
+
+    // Set kinds & stats
+    'set-kind-all': '全部',
+    'set-kind-exam': '企业真题集',
+    'set-kind-mock': '实战模拟考',
+    'set-kind-theme': '专项题集',
+    'problems-unit': '题',
+    'solved-label': '已完成',
+    'back-to-contests': '返回机试竞赛',
+    'set-stat-problems': '题目数',
+    'set-stat-difficulty': '难度',
+    'set-stat-time': '建议时间',
+    'set-stat-progress': '我的进度',
+    'set-continue': '继续答题',
+    'set-start': '开始答题',
+    'set-solve-cta': '前往做题 →',
+    'set-problem-list': '包含题目',
+    'set-empty': '该题集暂未添加题目。',
+
+    // Footer
+    'footer-desc': '不仅做题，更能与AI面试官实时辩论并为代码逻辑答辩的全新刷题与技术面试平台。',
+    'footer-service': '服务',
+    'footer-support': '支持与帮助',
+    'footer-inquiry': '在线咨询',
+    'footer-terms': '服务条款',
+    'footer-ai-terms': 'AI服务协议',
+    'footer-privacy': '隐私政策',
+    'footer-consent': '个人信息同意书',
+    'footer-mate-terms': '伙伴计划条款',
+    'footer-point-terms': '积分规则',
+    'footer-rep': '代表人: 姜硕浩',
+    'footer-maker': '开发团队: HICE Team (Luce 402 Studio)',
+    'footer-address': '地址: 韩国京畿道城南市盆唐区',
+    'open-menu': '展开菜单',
+    'close-menu': '关闭菜单',
+  },
+  'zh-TW': {
+    // Nav & Header
+    'study': '學習',
+    'problems': '題庫',
+    'contests': '程式測驗',
+    'community': '社群',
+    'dashboard': '控制台',
+    'login': '登入',
+    'signup': '註冊',
+    'logout': '登出',
+    'debate-mate': '辯論夥伴',
+
+    // Auth & Login
+    'welcome-back': '歡迎回來',
+    'login-title': '是時候再次為程式碼答辯了',
+    'reset-success-alert': '密碼已成功修改。請使用新密碼重新登入。',
+    'reset-success-sub': '為了保障帳號安全，其他裝置上的連線均已強制登出。',
+    'no-account': '還沒有帳號？',
+    'sign-up-link': '立即註冊',
+    'have-account': '已有帳號？',
+    'quick-social-login': '快速第三方登入',
+
+    // Accessibility & Barrier-free
+    'skip-to-content': '跳至主要內容',
+    'accessibility': '無障礙輔助設定',
+    'high-contrast': '高對比模式',
+    'font-size': '字級大小',
+    'font-normal': '預設',
+    'font-large': '較大',
+    'font-xlarge': '特大',
+    'reduce-motion': '減少動態效果',
+    'scroll-to-top': '回到頂部',
+    'command-search': '快速搜尋 / 頁面跳轉',
+
+    // Settings
+    'settings': '設定',
+    'select-ai-provider': '選擇AI服務商',
+    'change-password': '變更密碼',
+    'email': '電子郵件',
+    'theme': '主題',
+    'language': '語言',
+    'light-mode': '淺色模式',
+    'dark-mode': '深色模式',
+    'english': 'English',
+    'korean': '韓語',
+    'japanese': '日語',
+    'chinese-simplified': '簡體中文',
+    'chinese-traditional': '繁體中文',
+    'theme-label': '介面主題',
+    'theme-system': '跟隨系統',
+    'theme-light': '淺色',
+    'theme-dark': '深色',
+
+    // Problems & Contests
+    'challenge-list': '題目列表',
+    'defense-success-rate': '答辯通過率',
+    'pass-rate': '答辯通過率',
+    'beginner': '入門',
+    'easy': '簡單',
+    'medium': '中等',
+    'hard': '困難',
+    'run-code': '執行程式碼',
+    'submit-code': '提交並答辯',
+    'time-over': '時間截止',
+    'time-over-desc': '作答時間已結束。',
+    'setup-restart': '重新開始',
+    'minutes-short': '分鐘',
+    'no-matched-problems': '找不到符合條件的題目。',
+    'no-matched-contests': '找不到符合條件的題組。',
+    'my-problems': '我的題庫',
+    'all': '全部',
+    'back': '返回',
+    'comments': '留言',
+    'views': '觀看',
+    'like': '按讚',
+    'unlike': '取消按讚',
+    'new-post': '發表文章',
+    'search-posts': '搜尋文章…',
+    'search-problems': '搜尋題目名稱…',
+
+    // Set kinds & stats
+    'set-kind-all': '全部',
+    'set-kind-exam': '企業考古題',
+    'set-kind-mock': '實戰模擬考',
+    'set-kind-theme': '專項題組',
+    'problems-unit': '題',
+    'solved-label': '已完成',
+    'back-to-contests': '返回程式測驗',
+    'set-stat-problems': '題目數量',
+    'set-stat-difficulty': '難度',
+    'set-stat-time': '建議作答時間',
+    'set-stat-progress': '我的進度',
+    'set-continue': '接續答題',
+    'set-start': '開始答題',
+    'set-solve-cta': '前往解題 →',
+    'set-problem-list': '題組題目列表',
+    'set-empty': '此題組尚無題目。',
+
+    // Footer
+    'footer-desc': '不僅解題，更能與AI面試官即時辯論並為程式邏輯答辯的全新線上刷題與技術面試平台。',
+    'footer-service': '服務',
+    'footer-support': '支援與協助',
+    'footer-inquiry': '線上客服',
+    'footer-terms': '服務條款',
+    'footer-ai-terms': 'AI服務條款',
+    'footer-privacy': '隱私權政策',
+    'footer-consent': '個人資訊同意書',
+    'footer-mate-terms': '夥伴活動條款',
+    'footer-point-terms': '點數規則',
+    'footer-rep': '代表人: 姜碩浩',
+    'footer-maker': '製作團隊: HICE Team (Luce 402 Studio)',
+    'footer-address': '地址: 韓國京畿道城南市盆唐區',
+    'open-menu': '開啟選單',
+    'close-menu': '關閉選單',
+  },
 };
 
-export function t(key: string, lang: Language = 'ko'): string {
-  return translations[lang]?.[key] ?? key;
+export const CATEGORY_TRANSLATIONS: Record<string, Record<Language, string>> = {
+  '구현': { ko: '구현', en: 'Implementation', ja: '実装', 'zh-CN': '模拟实现', 'zh-TW': '模擬實現' },
+  '해시': { ko: '해시', en: 'Hash Map', ja: 'ハッシュ', 'zh-CN': '哈希表', 'zh-TW': '雜湊表' },
+  '정렬': { ko: '정렬', en: 'Sorting', ja: 'ソート', 'zh-CN': '排序', 'zh-TW': '排序' },
+  '그리디': { ko: '그리디', en: 'Greedy', ja: '貪欲法', 'zh-CN': '贪心算法', 'zh-TW': '貪婪演算法' },
+  '동적계획법': { ko: '동적계획법', en: 'Dynamic Programming', ja: '動的計画法', 'zh-CN': '动态规划', 'zh-TW': '動態規劃' },
+  'DP': { ko: 'DP', en: 'DP', ja: 'DP', 'zh-CN': '动态规划', 'zh-TW': '動態規劃' },
+  'DFS/BFS': { ko: 'DFS/BFS', en: 'DFS/BFS', ja: '深さ/幅優先探索', 'zh-CN': '深度/广度搜索', 'zh-TW': '深度/廣度搜尋' },
+  '탐색': { ko: '탐색', en: 'Search', ja: '探索', 'zh-CN': '搜索', 'zh-TW': '搜尋' },
+  '문자열': { ko: '문자열', en: 'String', ja: '文字列', 'zh-CN': '字符串', 'zh-TW': '字串' },
+  '스택/큐': { ko: '스택/큐', en: 'Stack & Queue', ja: 'スタック/キュー', 'zh-CN': '栈与队列', 'zh-TW': '堆疊與佇列' },
+  '스택': { ko: '스택', en: 'Stack', ja: 'スタック', 'zh-CN': '栈', 'zh-TW': '堆疊' },
+  '큐': { ko: '큐', en: 'Queue', ja: 'キュー', 'zh-CN': '队列', 'zh-TW': '佇列' },
+  '완전탐색': { ko: '완전탐색', en: 'Brute Force', ja: '全探索', 'zh-CN': '暴力搜索', 'zh-TW': '暴力搜尋' },
+  '브루트포스': { ko: '브루트포스', en: 'Brute Force', ja: '全探索', 'zh-CN': '暴力搜索', 'zh-TW': '暴力搜尋' },
+  '이분탐색': { ko: '이분탐색', en: 'Binary Search', ja: '二分探索', 'zh-CN': '二分查找', 'zh-TW': '二分搜尋' },
+  '그래프': { ko: '그래프', en: 'Graph', ja: 'グラフ', 'zh-CN': '图论', 'zh-TW': '圖論' },
+  '수학': { ko: '수학', en: 'Math', ja: '数学', 'zh-CN': '数学', 'zh-TW': '數學' },
+  '트리': { ko: '트리', en: 'Tree', ja: '木構造', 'zh-CN': '树', 'zh-TW': '樹' },
+  '힙': { ko: '힙', en: 'Heap', ja: 'ヒープ', 'zh-CN': '堆', 'zh-TW': '堆積' },
+  '우선순위큐': { ko: '우선순위 큐', en: 'Priority Queue', ja: '優先度付きキュー', 'zh-CN': '优先队列', 'zh-TW': '優先佇列' },
+  '백트래킹': { ko: '백트래킹', en: 'Backtracking', ja: 'バックトラッキング', 'zh-CN': '回溯', 'zh-TW': '回溯' },
+  '투포인터': { ko: '투포인터', en: 'Two Pointers', ja: '2ポインタ', 'zh-CN': '双指针', 'zh-TW': '雙指針' },
+  '누적합': { ko: '누적합', en: 'Prefix Sum', ja: '累積和', 'zh-CN': '前缀和', 'zh-TW': '前綴和' },
+  '기타': { ko: '기타', en: 'Others', ja: 'その他', 'zh-CN': '其他', 'zh-TW': '其他' },
+};
+
+export const COMPANY_TRANSLATIONS: Record<string, Record<Language, string>> = {
+  '카카오': { ko: '카카오', en: 'Kakao', ja: 'カカオ', 'zh-CN': 'Kakao', 'zh-TW': 'Kakao' },
+  '삼성전자': { ko: '삼성전자', en: 'Samsung', ja: 'サムスン電子', 'zh-CN': '三星电子', 'zh-TW': '三星電子' },
+  '현대자동차': { ko: '현대자동차', en: 'Hyundai Motor', ja: '現代自動車', 'zh-CN': '现代汽车', 'zh-TW': '現代汽車' },
+  '토스': { ko: '토스', en: 'Toss', ja: 'トス', 'zh-CN': 'Toss', 'zh-TW': 'Toss' },
+  '네이버': { ko: '네이버', en: 'Naver', ja: 'ネイバー', 'zh-CN': 'Naver', 'zh-TW': 'Naver' },
+  '라인': { ko: '라인', en: 'LINE', ja: 'LINE', 'zh-CN': 'LINE', 'zh-TW': 'LINE' },
+  '쿠팡': { ko: '쿠팡', en: 'Coupang', ja: 'クーパン', 'zh-CN': 'Coupang', 'zh-TW': 'Coupang' },
+  '우아한형제들': { ko: '우아한형제들', en: 'Woowa Brothers', ja: '優雅な兄弟たち', 'zh-CN': 'Woowa', 'zh-TW': 'Woowa' },
+  '당근': { ko: '당근', en: 'Karrot', ja: 'ニンジン', 'zh-CN': 'Karrot', 'zh-TW': 'Karrot' },
+};
+
+export function translateCategory(cat: string, lang: Language = 'ko'): string {
+  if (!cat) return '';
+  return CATEGORY_TRANSLATIONS[cat]?.[lang] ?? cat;
 }
+
+export function translateCompany(comp: string | null | undefined, lang: Language = 'ko'): string {
+  if (!comp) return '';
+  return COMPANY_TRANSLATIONS[comp]?.[lang] ?? comp;
+}
+
+export function t(key: string, lang: Language = 'ko'): string {
+  return translations[lang]?.[key] ?? translations['en']?.[key] ?? translations['ko']?.[key] ?? key;
+}
+

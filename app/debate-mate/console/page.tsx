@@ -92,10 +92,10 @@ export default async function MateConsolePage() {
         desc="출제·검토 현황과 디베이트포인트를 한곳에서 관리합니다."
         actions={
           <Link
-            href="/problems/new"
+            href={user.role === 'admin' ? '/problems/new' : '/console/drafts'}
             className="inline-flex items-center gap-2 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
           >
-            + 문제 만들기
+            {user.role === 'admin' ? '+ 문제 만들기' : '+ 초안 작성하기'}
           </Link>
         }
       />
@@ -172,7 +172,7 @@ export default async function MateConsolePage() {
           </div>
           {drafts.length === 0 ? (
             <p className="px-5 py-10 text-center text-sm text-fg-muted">
-              아직 출제한 문제가 없습니다. 위의 <span className="font-semibold text-signal">문제 만들기</span>로 시작해 보세요.
+              아직 출제한 문제가 없습니다. 위의 <span className="font-semibold text-signal">초안 작성하기</span>로 시작해 보세요.
             </p>
           ) : (
             <ul className="divide-y divide-hairline">

@@ -27,7 +27,7 @@ const getSpeechSupported = () => !!getRecognitionCtor() && !!navigator.mediaDevi
 export type MicPermission = 'unknown' | 'prompt' | 'granted' | 'denied';
 
 /** 한 번 설명을 읽고 동의했으면 다음부터는 브라우저 권한창만 뜨게 한다. */
-const CONSENT_KEY = 'dc:ai-search:voice-consent';
+const CONSENT_KEY = 'dc:voice-consent';
 
 export interface VoiceState {
   supported: boolean;
@@ -351,7 +351,7 @@ export function VoiceButton({
   disabled,
   label,
   stopLabel,
-  /** 얹히는 배경 — 밝은 컴포저(AI Search)와 어두운 패널(debateAI)의 색이 반대다 */
+  /** 얹히는 배경 — 밝은 배경과 어두운 패널(debateAI)의 색 분기 */
   tone = 'light',
 }: {
   listening: boolean;

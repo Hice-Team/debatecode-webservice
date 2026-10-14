@@ -8,6 +8,9 @@ import { mapAuthError } from '@/app/lib/auth-errors';
 import OAuthButtons from '../oauth-buttons';
 import { z } from 'zod';
 
+import { useLanguage } from '@/app/context/language-context';
+import type { Language } from '@/app/lib/i18n';
+
 const emailSchema = z.string().email('올바른 이메일 형식이 아닙니다.');
 
 const SAVED_EMAIL_KEY = 'dc_saved_email';
@@ -19,23 +22,102 @@ const SAVED_EMAIL_KEY = 'dc_saved_email';
 // useSyncExternalStore는 서버 스냅샷을 따로 받으므로 하이드레이션 불일치 없이 첫 렌더에
 // 바로 값을 넣을 수 있다. localStorage는 이 페이지가 떠 있는 동안 밖에서 바뀌지 않으므로
 // 구독은 아무것도 하지 않는다.
+
+interface LoginCopy {
+  emailInvalid: string;
+  passwordRequired: string;
+  unexpectedError: string;
+  forgotPassword: string;
+  show: string;
+  hide: string;
+  remember: string;
+  submit: string;
+  pending: string;
+  ssoHint: string;
+}
+
+const LOGIN_COPY: Record<Language, LoginCopy> = {
+  ko: {
+    emailInvalid: '올바른 이메일 형식이 아닙니다.',
+    passwordRequired: '비밀번호를 입력해 주세요. (회사 SSO 계정이라면 관리자에게 문의)',
+    unexpectedError: '로그인 중 예상치 못한 오류가 발생했습니다.',
+    forgotPassword: '비밀번호를 잊으셨나요?',
+    show: '보기',
+    hide: '숨기기',
+    remember: '아이디 저장',
+    submit: '로그인',
+    pending: '확인 중…',
+    ssoHint: '회사 SSO 계정은 회사 이메일만 입력하고 로그인하면 자동으로 연결됩니다.',
+  },
+  en: {
+    emailInvalid: 'Please enter a valid email address.',
+    passwordRequired: 'Please enter your password.',
+    unexpectedError: 'An unexpected error occurred during sign in.',
+    forgotPassword: 'Forgot password?',
+    show: 'Show',
+    hide: 'Hide',
+    remember: 'Remember email',
+    submit: 'Sign in',
+    pending: 'Signing in…',
+    ssoHint: 'Enterprise SSO users can simply enter their work email to be redirected.',
+  },
+  ja: {
+    emailInvalid: '有効なメールアドレスを入力してください。',
+    passwordRequired: 'パスワードを入力してください。',
+    unexpectedError: 'ログイン中に予期せぬエラーが発生しました。',
+    forgotPassword: 'パスワードをお忘れですか？',
+    show: '表示',
+    hide: '非表示',
+    remember: 'ログイン情報を記憶',
+    submit: 'ログイン',
+    pending: '確認中…',
+    ssoHint: '企業SSOアカウントは社内メールアドレスを入力するだけで自動連携されます。',
+  },
+  'zh-CN': {
+    emailInvalid: '请输入有效的电子邮箱地址。',
+    passwordRequired: '请输入密码。',
+    unexpectedError: '登录过程中发生未知错误。',
+    forgotPassword: '忘记密码？',
+    show: '显示',
+    hide: '隐藏',
+    remember: '记住邮箱',
+    submit: '登录',
+    pending: '正在验证…',
+    ssoHint: '企业 SSO 账户输入企业邮箱后将自动跳转身份认证。',
+  },
+  'zh-TW': {
+    emailInvalid: '請輸入有效的電子郵件地址。',
+    passwordRequired: '請輸入密碼。',
+    unexpectedError: '登入過程中發生未知錯誤。',
+    forgotPassword: '忘記密碼？',
+    show: '顯示',
+    hide: '隱藏',
+    remember: '記住電子郵件',
+    submit: '登入',
+    pending: '正在驗證…',
+    ssoHint: '企業 SSO 帳戶輸入企業信箱後將自動跳轉驗證。',
+  },
+};
+
 const noopSubscribe = () => () => {};
 
 function readSavedEmail(): string | null {
   try {
     return localStorage.getItem(SAVED_EMAIL_KEY);
   } catch {
-    return null; // localStorage가 꺼진 환경(사생활 보호 모드 등)
+    return null;
   }
 }
 
 export default function LoginForm({ oauthError }: { oauthError?: string }) {
   const router = useRouter();
   const supabase = createClient();
+  const { language } = useLanguage();
+  const copy = LOGIN_COPY[language] ?? LOGIN_COPY.ko;
+
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
   const savedEmail = useSyncExternalStore(noopSubscribe, readSavedEmail, () => null);
-  // 이용자가 손대기 전에는 저장된 값을 그대로 보여 준다(null = 아직 손대지 않음).
   const [emailInput, setEmailInput] = useState<string | null>(null);
   const [rememberInput, setRememberInput] = useState<boolean | null>(null);
   const email = emailInput ?? savedEmail ?? '';
@@ -47,7 +129,6 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
     form?: string[];
   }>({});
 
-  // 로그인 성공 시: 아이디 저장 + (지원 브라우저라면) 자격증명/패스키 저장 프롬프트
   async function persistCredential(loginEmail: string, password?: string) {
     try {
       if (remember) localStorage.setItem(SAVED_EMAIL_KEY, loginEmail);
@@ -57,48 +138,32 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
     }
     if (remember && password && typeof window !== 'undefined' && 'PasswordCredential' in window) {
       try {
-        // @ts-expect-error — Credential Management API (Chromium 계열)
+        // @ts-expect-error — Credential Management API (Chromium)
         const cred = new window.PasswordCredential({ id: loginEmail, password, name: loginEmail });
         await navigator.credentials.store(cred);
       } catch {
-        /* 미지원/거부 무시 — autoComplete 속성으로도 브라우저 저장 프롬프트가 뜬다 */
+        /* ignore */
       }
     }
   }
 
-  // 통합 로그인 — 하나의 버튼이 SSO와 이메일/비밀번호를 모두 처리한다.
-  //  1) 이메일 도메인으로 등록된 SSO(SAML) IdP가 있으면 그쪽으로 이동
-  //  2) SSO가 없으면 비밀번호 로그인으로 자동 폴백
-  /**
-   * 로그인 제출.
-   *
-   * 폼에 `method="post"`가 붙어 있는 이유를 여기 적어 둔다. 이 폼은 onSubmit으로만
-   * 동작하는 클라이언트 폼이라, **하이드레이션이 끝나기 전**이나 JS가 실패한 상황에서
-   * 제출하면 브라우저가 기본 동작을 한다. 그 기본값이 GET이라 입력값이 주소창에 붙는다 —
-   * `/login?email=…&password=…` 가 되고, 그 주소는 브라우저 기록·Referer 헤더·프록시
-   * 로그에 남는다. (자동 QA가 하이드레이션 전에 눌러서 실제로 이 상태를 재현했다.)
-   *
-   * method="post"면 같은 상황에서도 값이 본문으로 가고 주소에는 남지 않는다.
-   */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setErrors({});
 
     const formData = new FormData(event.currentTarget);
-    const email = ((formData.get('email') as string) ?? '').trim();
+    const emailVal = ((formData.get('email') as string) ?? '').trim();
     const password = (formData.get('password') as string) ?? '';
 
-    // 이메일 형식 검증 (SSO·비밀번호 공통)
-    const emailCheck = emailSchema.safeParse(email);
+    const emailCheck = z.string().email(copy.emailInvalid).safeParse(emailVal);
     if (!emailCheck.success) {
       setErrors({ email: [emailCheck.error.issues[0].message] });
       setPending(false);
       return;
     }
 
-    // 1) 회사 도메인 SSO 우선 시도 — 등록된 IdP가 있으면 IdP 로그인 페이지로 이동
-    const domain = email.split('@')[1]?.toLowerCase() ?? '';
+    const domain = emailVal.split('@')[1]?.toLowerCase() ?? '';
     if (/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) {
       try {
         const { data, error } = await supabase.auth.signInWithSSO({
@@ -106,31 +171,29 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
           options: { redirectTo: `${window.location.origin}/auth/callback` },
         });
         if (!error && data?.url) {
-          await persistCredential(email); // 아이디 저장 (SSO는 비밀번호 없음)
-          window.location.href = data.url; // 전환 — pending 유지
+          await persistCredential(emailVal);
+          window.location.href = data.url;
           return;
         }
       } catch {
-        /* SSO 미등록/오류 → 아래 비밀번호 로그인으로 폴백 */
+        /* fallback to password */
       }
     }
 
-    // 2) 비밀번호 로그인
     if (!password) {
-      setErrors({ password: ['비밀번호를 입력해 주세요. (회사 SSO 계정이라면 관리자에게 문의)'] });
+      setErrors({ password: [copy.passwordRequired] });
       setPending(false);
       return;
     }
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: emailVal, password });
       if (error) {
         setErrors({ form: [mapAuthError(error)] });
         setPending(false);
         return;
       }
-      await persistCredential(email, password);
-      // IP 보안 — 로그인 위치/기기 기록 및 새 IP 감지 (실패해도 로그인은 진행)
+      await persistCredential(emailVal, password);
       try {
         await fetch('/api/security/login-event', { method: 'POST' });
       } catch {
@@ -139,7 +202,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
       router.push('/dashboard');
       router.refresh();
     } catch {
-      setErrors({ form: ['로그인 중 예상치 못한 오류가 발생했습니다.'] });
+      setErrors({ form: [copy.unexpectedError] });
       setPending(false);
     }
   }
@@ -175,7 +238,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
               PASSWORD
             </label>
             <Link href="/forgot-password" className="-my-3.5 inline-block py-3.5 text-xs text-fg-muted transition-colors hover:text-signal">
-              비밀번호를 잊으셨나요?
+              {copy.forgotPassword}
             </Link>
           </div>
           <div className="relative">
@@ -187,21 +250,18 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
               placeholder="••••••••"
               className="w-full rounded-[var(--radius-card)] border border-hairline bg-surface px-4 py-3 pr-16 text-sm text-fg placeholder:text-fg-quiet focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/25"
             />
-            {/* 비밀번호 보기 — 글자만 있는 24×16 버튼이라 누르기 어려웠다.
-                입력칸 안이라 크기를 키우면 글자를 가리므로 좌우·상하 여백으로 영역을 넓힌다. */}
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-pressed={showPassword}
               className="absolute right-1 top-1/2 -translate-y-1/2 rounded-[var(--radius-control)] px-3 py-3 text-xs font-medium text-fg-muted transition-colors hover:bg-paper hover:text-fg"
             >
-              {showPassword ? '숨기기' : '보기'}
+              {showPassword ? copy.hide : copy.show}
             </button>
           </div>
           {errors.password && <p className="mt-1.5 text-xs text-rose-600">{errors.password[0]}</p>}
         </div>
 
-        {/* 아이디 저장 — 체크 시 브라우저에 이메일 저장(+ 지원 시 자격증명/패스키) */}
         <label className="flex cursor-pointer select-none items-center gap-2 py-2.5 text-sm text-fg-secondary">
           <input
             type="checkbox"
@@ -209,7 +269,7 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
             onChange={(e) => setRememberInput(e.target.checked)}
             className="h-4 w-4 rounded border-fg-quiet text-signal accent-[#4531d9] focus:ring-signal/40"
           />
-          아이디 저장
+          {copy.remember}
         </label>
 
         {errors.form && (
@@ -223,11 +283,11 @@ export default function LoginForm({ oauthError }: { oauthError?: string }) {
           disabled={pending}
           className="w-full rounded-full bg-signal py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-50"
         >
-          {pending ? '확인 중…' : '로그인'}
+          {pending ? copy.pending : copy.submit}
         </button>
 
-        <p className="text-center text-[11px] text-fg-quiet">
-          회사 SSO 계정은 회사 이메일만 입력하고 로그인하면 자동으로 연결됩니다.
+        <p className="text-center text-[11px] text-fg-quiet [word-break:keep-all]">
+          {copy.ssoHint}
         </p>
       </form>
 

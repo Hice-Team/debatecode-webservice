@@ -18,8 +18,8 @@ const initialState: DeleteAccountState = {};
 const LOSES = [
   '작성한 글·답글과 받은 좋아요',
   '문제 풀이 기록·제출 이력·AI 면접 리포트',
-  'AI Search 대화와 등록한 API 키',
-  '보유 포인트와 디베이트샵 주문 내역',
+  '등록한 API 키와 AI 개인 설정',
+  '보유 포인트와 활동 인증 내역',
   '등록한 보안키·인증 앱·백업 코드',
 ];
 

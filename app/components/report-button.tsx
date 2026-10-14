@@ -225,7 +225,7 @@ export default function ReportButton({
                       // 작은 라디오 점 하나만으로는 무엇을 골랐는지 잘 보이지 않는다.
                       <label
                         key={reason.value}
-                        className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-hairline px-3 py-2 text-sm transition-colors hover:border-fg-quiet has-[:checked]:border-signal has-[:checked]:bg-brand-50/60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-signal"
+                        className="flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-control)] border border-hairline px-3 py-2 text-sm transition-colors hover:border-fg-quiet has-[:checked]:border-signal has-[:checked]:bg-brand-50/60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-signal"
                       >
                         <input
                           type="radio"
@@ -273,14 +273,14 @@ export default function ReportButton({
                   <button
                     type="button"
                     onClick={close}
-                    className="rounded-lg border border-hairline px-4 py-2 text-sm text-fg-secondary hover:border-fg-quiet"
+                    className="rounded-[var(--radius-control)] border border-hairline px-4 py-2 text-sm text-fg-secondary hover:border-fg-quiet"
                   >
                     취소
                   </button>
                   <button
                     type="submit"
                     disabled={pending}
-                    className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
+                    className="rounded-[var(--radius-control)] bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
                   >
                     {pending ? '접수 중…' : '신고하기'}
                   </button>

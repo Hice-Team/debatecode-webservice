@@ -29,8 +29,6 @@ model User {
   // 면접·리팩토링 모드에서 쓸 debateAI 모델 (app/lib/ai/debateai-models.ts의 id)
   // 비어 있으면 DEFAULT_CODE_MODEL_ID(deepseek-coder-v2)를 쓴다
   aiCodeModel                      String?
-  // AI Search에서 기본으로 열 모델 (app/lib/ai/search-models.ts의 id).
-  // aiCodeModel(면접·리팩토링)과 나눠 둔다 — 코드를 따지는 일과 개념을 찾는 일은
   // 이용자가 직접 적는 지침 — string[]. 대화마다 앞에 붙는다.
   //
   // 한 덩어리 텍스트가 아니라 목록인 이유: 지침은 하나씩 추가되고 하나씩 후회된다.
@@ -67,7 +65,7 @@ model User {
   //   · 소셜 로그인 — 제공자가 이미 확인한 주소다
   emailVerifiedAt                  DateTime?
   consentAt                        DateTime? // 개인정보 수집·이용 동의 시각
-  // debateAI 이용약관 동의 시각 — AI 기능(면접·AI Search) 최초 이용 전 받는다
+  // debateAI 이용약관 동의 시각 — AI 기능(면접·debateAI) 최초 이용 전 받는다
   aiTermsAgreedAt                  DateTime?
   // 학습 활용 동의 (선택) — 동의한 경우에만 대화·코드가 가명처리 후 모델 개선에 쓰인다.
   // 미동의여도 AI 기능 이용에 제한이 없다(KISA 안내서: 선택 동의 거부 시 불이익 금지).
@@ -899,15 +897,6 @@ model EmailDelivery {
   @@index([campaignId, status])
 }
 
-// ---------- AI Search: 대화 세션 ----------
-
-// AI Search 대화 세션 — 사용자당 최근 1개만 활성으로 유지한다.
-// '새로 시작하기'를 고르면 기존 세션을 삭제하고 새 세션을 만든다.
-/// AI Search 답변 피드백 — 답변 하나에 이용자 한 명당 한 건(다시 누르면 갱신·취소).
-///
-/// 신고(Report)와는 목적이 다르다. 신고는 법적 문제를 처리 큐에 올리는 것이고,
-/// 이쪽은 "이 답변이 쓸모 있었는가"를 모아 모델·프롬프트를 고치는 데 쓴다.
-/// 그래서 사유는 자유 서술이 아니라 고정된 항목(reasons)으로 받아 집계할 수 있게 했다.
 /// 중고 거래 매물 — 커뮤니티 글(board='market')에 붙는 거래 정보.
 ///
 /// 왜 Post를 그대로 쓰지 않고 따로 두는가. 거래에는 글에 없는 상태가 있다 —
@@ -1107,7 +1096,7 @@ model AiUsageCounter {
   id      String   @id @default(cuid())
   userId  String   @db.Uuid
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  /// ai-search | debateai (면접관은 한도가 없어 여기 들어오지 않는다)
+  /// debateai (면접관은 한도가 없어 여기 들어오지 않는다)
   surface String
   /// 한도가 걸리는 단위. 전역이면 "-", 문제 단위면 문제 id.
   scope   String   @default("-")

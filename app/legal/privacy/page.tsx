@@ -56,18 +56,6 @@ export default function PrivacyPolicyPage() {
             <td>게시판 이용 시 입력 / 가입 시 자동 생성</td>
           </tr>
           <tr>
-            <td>AI Search</td>
-            <td>질문·답변 대화 내용, 첨부한 이미지·파일·코드, 첨부한 URL과 그 발췌, 사용한 모델, 대화 시각</td>
-            <td>AI Search 이용 시 입력</td>
-          </tr>
-          <tr>
-            <td>AI Search 음성 입력</td>
-            <td>
-              받아쓰기 <strong>결과 텍스트만</strong> — 음성 자체는 서비스가 수신·저장하지 않습니다(제3조의2)
-            </td>
-            <td>이용자가 마이크 사용에 동의하고 말한 경우에만</td>
-          </tr>
-          <tr>
             <td>디베이트메이트</td>
             <td>신청서(PDF)·지원 동기, 출제 문제 초안, 활동 인증 자료(외부 링크·설명), 포인트 적립·사용 내역</td>
             <td>신청·활동 과정에서 입력 / 자동 생성</td>
@@ -86,7 +74,6 @@ export default function PrivacyPolicyPage() {
         <li>알고리즘 채점, DebateAI 면접 진행 및 방어 성공률 리포트 생성</li>
         <li>대시보드 통계, 오답노트(약점 키워드), 학습 진도 제공</li>
         <li>커뮤니티 게시판 운영 및 부정 이용 방지</li>
-        <li>AI Search 대화 맥락 유지(현재 세션 한정) 및 이용자별 최근 세션 복원</li>
         <li>디베이트메이트 활동 심사, 디베이트포인트 정산 및 부정 적립 확인</li>
         <li>(선택 동의 시) 서비스 소식·업데이트 등 마케팅 정보 전송</li>
       </ul>
@@ -116,7 +103,7 @@ export default function PrivacyPolicyPage() {
             <td>언제든 철회 가능 — 철회해도 나머지 기능은 그대로 이용</td>
           </tr>
           <tr>
-            <td>AI Search·Debate Free AI 등 국외 AI 사업자로의 전송</td>
+            <td>Debate Free AI 등 국외 AI 사업자로의 전송</td>
             <td>동의 (제6조 제1항 a호) 및 제49조 제1항 a호</td>
             <td>해당 기능을 쓰지 않으면 전송되지 않음</td>
           </tr>
@@ -154,22 +141,10 @@ export default function PrivacyPolicyPage() {
         (내장 면접관/채점 시스템으로) 서비스를 이용할 수 있습니다.
       </p>
       <p>
-        <strong>AI Search</strong> 역시 AI 기반 기능이며 <strong>DeepSeek</strong>가 공개한 대규모 언어모델(DeepSeek
-        V4 Flash, DeepSeek Coder-V2)을 사용합니다. 이용자가 입력한 질문과 <strong>같은 세션의 최근 8턴</strong> 대화가
-        답변 생성을 위해 AI 모델에 전송되며, 생성된 답변은 <strong>정확하지 않을 수 있어</strong> 화면에 주의 문구와
-        함께 표기됩니다. 화면에 보이는 답변은 <strong>전부 모델이 생성한 내용</strong>이고 서비스가 별도로 검증하거나
-        출처 문서를 덧붙이지 않으므로, 중요한 내용은 반드시 원문 공식 문서에서 확인하시기 바랍니다.
-      </p>
-      <p>
-        <strong>학습 미활용</strong> — 서비스는 AI Search를 포함한 debateAI 대화·코드·첨부를{' '}
+        <strong>학습 미활용</strong> — 서비스는 debateAI 대화·코드·첨부를{' '}
         <strong>인공지능 모델의 학습(사전학습·미세조정·평가 데이터셋 구축 등)에 사용하지 않으며</strong>, 제3자에게
         학습 목적으로 제공하거나 판매하지 않습니다. 자세한 내용은{' '}
         <a href="/legal/ai-terms">debateAI 이용약관</a> 제5조를 참고하세요.
-      </p>
-      <p>
-        <strong>메모리 기능 없음</strong> — AI Search는 지금 열려 있는 <strong>하나의 세션 안에서만</strong> 맥락을
-        유지합니다. 대화에서 이용자의 취향·직업·개인적 사실을 추출해 별도로 축적하거나 다음 대화에 자동으로 불러오는
-        기능은 제공하지 않습니다.
       </p>
 
       <h3>3-1. 프롬프트에 개인정보를 입력하지 마세요</h3>
@@ -182,7 +157,7 @@ export default function PrivacyPolicyPage() {
 
       <h3>3-2. 음성 입력에 관한 고지</h3>
       <p>
-        AI Search의 음성 입력은 <strong>선택 기능</strong>입니다. 마이크 버튼을 누르면 먼저 안내 화면이 뜨고, 동의한
+        음성 입력은 <strong>선택 기능</strong>입니다. 마이크 버튼을 누르면 먼저 안내 화면이 뜨고, 동의한
         뒤에야 브라우저가 마이크 권한을 요청합니다. 받아쓰기는 <strong>브라우저에 내장된 음성 인식 기능(Web Speech
         API)</strong>이 수행하며, 상당수 브라우저(예: Chrome 계열)는{' '}
         <strong>음성 데이터를 해당 브라우저 제공사의 서버로 전송해 인식</strong>합니다. 이 전송은 서비스가 아니라
@@ -286,22 +261,6 @@ export default function PrivacyPolicyPage() {
             <td>각 프로바이더 정책에 따름</td>
           </tr>
           <tr>
-            <td>Hugging Face, Inc. (Inference Router) 및 라우터가 배정하는 추론 사업자</td>
-            <td>미국 (배정된 추론 사업자의 소재 국가에 따라 달라질 수 있음)</td>
-            <td>AI Search 질문, 같은 세션의 최근 8턴 대화, 첨부 파일의 이름</td>
-            <td>AI Search 답변 생성 (DeepSeek 모델 호출)</td>
-            <td>이용자가 AI Search로 질문할 때</td>
-            <td>각 사업자 정책에 따름 (서비스는 별도 보관하지 않음)</td>
-          </tr>
-          <tr>
-            <td>DeepSeek (항저우 딥시크 인공지능 기초기술연구 유한회사) — 자체 API를 직접 연결하는 경우</td>
-            <td>중화인민공화국</td>
-            <td>AI Search 질문, 같은 세션의 최근 8턴 대화, 첨부 파일의 이름</td>
-            <td>AI Search 답변 생성</td>
-            <td>운영자가 DeepSeek 자체 API를 연결하도록 설정한 경우 (연결 전 본 방침을 갱신해 사전 고지)</td>
-            <td>DeepSeek 정책에 따름</td>
-          </tr>
-          <tr>
             <td>이용자의 브라우저 제공사 (예: Google — Chrome 음성 인식)</td>
             <td>미국 등 해당 사업자 소재 국가</td>
             <td>마이크 음성 (받아쓰기 목적)</td>
@@ -323,7 +282,7 @@ export default function PrivacyPolicyPage() {
       </table>
       <p>
         이용자는 <strong>회원가입 시 위와 같은 개인정보의 국외 이전(수집·이용 동의에 포함)에 동의</strong>하게 됩니다.
-        국외 이전을 원하지 않을 경우 <strong>AI Search·음성 입력·Drive 첨부·외부 AI 연동·Debate Free AI를 사용하지
+        국외 이전을 원하지 않을 경우 <strong>음성 입력·Drive 첨부·외부 AI 연동·Debate Free AI를 사용하지
         않을 수 있고, 그 경우에도 문제 풀이·채점·커뮤니티 등 나머지 기능은 제한 없이 이용</strong>할 수 있습니다.
         다만 인증·DB(Supabase)·호스팅(Cloudflare)을 위한 인프라 이전은 서비스 제공에 필수적이어서 거부 시 서비스
         이용이 제한될 수 있습니다.
@@ -378,7 +337,7 @@ export default function PrivacyPolicyPage() {
             <td>계약 이행</td>
           </tr>
           <tr>
-            <td>AI Search·debateAI 대화</td>
+            <td>debateAI 대화</td>
             <td>이용자가 삭제할 때까지 (탈퇴 시 지체 없이 파기)</td>
             <td>계약 이행</td>
           </tr>
@@ -436,19 +395,6 @@ export default function PrivacyPolicyPage() {
         한국인터넷진흥원에 신고하고, <strong>EU/EEA·영국</strong>에서는 GDPR 제33조에 따라 인지 후 72시간 이내에
         감독기관에 통지하며 정보주체에게 높은 위험이 있는 경우 제34조에 따라 개별 통지합니다.{' '}
         <strong>미국</strong>에서는 각 주의 유출 통지법이 정한 기한과 방법에 따릅니다.
-      </p>
-
-      <h3>AI Search 대화의 보관</h3>
-      <p>
-        AI Search 대화는 <strong>세션 단위</strong>로 보관하며, 모델에 전달되는 맥락은 언제나{' '}
-        <strong>지금 열려 있는 하나의 세션</strong>(그중 최근 8턴)으로 한정됩니다. 이용자는 대화를 언제든 삭제할 수
-        있고, 삭제한 대화는 복구되지 않습니다. 설정의 데이터 정리에서 전체 삭제도 가능하며, 회원 탈퇴 시에는 지체
-        없이 파기합니다.
-      </p>
-      <p>
-        대화를 보존하려면 내보내기 기능으로 JSON 파일을 직접 내려받아 보관하시기 바랍니다. 세션 전체를 내보내거나
-        개별 답변만 내보낼 수 있으며, 내보내기 파일에는 <strong>API 키·인증 토큰·내부 식별자가 포함되지
-        않습니다.</strong> 이는 GDPR 제20조의 데이터 이동권을 행사하는 수단으로도 사용할 수 있습니다.
       </p>
 
       <h3>익명 식별자</h3>

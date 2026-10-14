@@ -19,12 +19,11 @@ const env = Object.fromEntries(
 const TABLES = [
   'User', 'Problem', 'TestCase', 'Submission', 'RunAttempt', 'InterviewSession',
   'DebateQSession', 'DebateAiChat', 'Post', 'Comment', 'PostLike', 'Attachment',
-  'PollVote', 'Bookmark', 'Workbook', 'WorkbookItem', 'Announcement', 'Course',
-  'Lesson', 'LessonProgress', 'PointLedger', 'PointRequest', 'ShopProduct',
-  'ShopOrder', 'Report', 'Inquiry', 'Sanction', 'ProblemDraft',
+  'PollVote', 'Bookmark', 'Workbook', 'WorkbookItem', 'Announcement',
+  'PointLedger', 'PointRequest', 'Report', 'Inquiry', 'Sanction', 'ProblemDraft',
   'DebateMateApplication', 'LoginEvent', 'BackupCode', 'WebauthnKey',
   'ProblemSet', 'ProblemSetItem', 'LaunchNotify', 'MarketingContact',
-  'EmailCampaign', 'AiSession', 'AiMessage',
+  'EmailCampaign',
   'AppSetting', 'AuditLog', 'PermissionGrant', 'CannedResponse',
 ];
 

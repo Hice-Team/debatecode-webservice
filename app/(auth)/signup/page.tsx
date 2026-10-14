@@ -7,15 +7,12 @@ import { loadDraft } from '@/app/lib/signup-draft';
 import { decryptSecret } from '@/app/lib/crypto';
 import SignupWizard from './signup-wizard';
 
+import I18nSlot from '@/app/components/i18n-slot';
+import LanguageSwitcher from '@/app/components/language-switcher';
+import ThemeToggle from '@/app/components/theme-toggle';
+
 export const metadata: Metadata = { title: '회원가입' };
 
-// 위저드 시작 단계는 **진행 중인 초안**이 결정한다(app/lib/signup-draft.ts).
-// 계정은 마지막 단계에서 만들어지므로, 그전까지의 진행 상태는 세션이 아니라 초안에만 있다.
-//
-// · 초안 없음 → 약관 동의부터
-// · 초안 있음 → 초안이 기록한 단계부터, 입력값을 채워서
-// · 같은 IP에 초안이 있으나 쿠키가 없음 → 동의부터 시작하되 "이어서 할 수 있다"고 알린다
-// · 프로필까지 끝난 계정으로 들어옴 → 대시보드로
 export default async function SignupPage({ searchParams }: PageProps<'/signup'>) {
   const { oauthError } = await searchParams;
 
@@ -27,7 +24,6 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
   const { draft, resumableByEmail } = await loadDraft();
 
   let initialStep: 'consent' | 'account' | 'profile' = 'consent';
-  // 세션이 있으면 소셜 가입이다 — 이메일·비밀번호는 소셜 계정이 정하므로 묻지 않는다.
   const requiresPassword = !user;
   let initialEmail = draft?.email ?? '';
   let initialNickname = draft?.nickname ?? '';
@@ -43,7 +39,6 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
     initialNickname =
       initialNickname || dbUser?.name || (typeof user.user_metadata?.name === 'string' ? user.user_metadata.name : '');
 
-    // 소셜 가입은 OAuth 콜백이 동의를 이미 기록한다 — 돌아온 사람에게 동의를 두 번 받지 않는다
     if (dbUser?.consentAt) initialStep = 'account';
   }
 
@@ -51,13 +46,12 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
     initialStep = draft.step;
   }
 
-  // 초안의 개인정보는 암호화돼 있다 — 화면에 다시 채우려면 여기서 푼다
   const initialBirthdate = (await decryptSecret(draft?.birthdateEnc)) ?? '';
   const initialGender = (await decryptSecret(draft?.genderEnc)) ?? '';
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden bg-paper">
-      {/* Premium Background Mesh / Radial Gradient */}
+    <div className="relative min-h-screen flex flex-col justify-between px-4 py-6 overflow-hidden bg-paper">
+      {/* Mesh Background */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
@@ -66,21 +60,34 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
             'radial-gradient(120% 100% at 50% -20%, rgba(91,76,240,0.15) 0%, rgba(245,246,251,1) 60%)',
         }}
       />
-      
-      <div className="w-full max-w-lg relative z-10">
-        <div className="mb-8 text-center">
-          <Link href="/" className="inline-block py-2.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-600">JOIN THE DEBATE</span>
-          </Link>
+
+      {/* Top Bar — Brand & Controls */}
+      <header className="w-full max-w-4xl mx-auto flex items-center justify-between pb-6">
+        <Link href="/" className="flex items-center gap-2 group">
+          <span className="font-display font-bold text-lg text-fg tracking-tight group-hover:text-signal transition-colors">
+            Debate Code
+          </span>
+        </Link>
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <main className="w-full max-w-lg mx-auto my-auto relative z-10">
+        <div className="mb-6 text-center">
+          <span className="inline-block text-xs font-bold uppercase tracking-wider text-brand-600 mb-2">
+            JOIN THE DEBATE
+          </span>
           <h1
-            className="mt-2 text-3xl font-bold tracking-tight text-fg"
+            className="text-2xl sm:text-3xl font-bold tracking-tight text-fg [word-break:keep-all]"
             style={{ fontFamily: 'var(--font-space-grotesk)' }}
           >
-            당신의 코드를 변호하세요
+            <I18nSlot k="signup-title" fallback="당신의 코드를 변호하세요" />
           </h1>
         </div>
 
-        <div className="bg-surface/90 backdrop-blur-xl rounded-[var(--radius-panel)] border border-brand-100 shadow-[0_24px_60px_-24px_rgba(24,0,172,0.15)] p-8">
+        <div className="bg-surface/90 backdrop-blur-xl rounded-[var(--radius-panel)] border border-brand-100 shadow-[0_24px_60px_-24px_rgba(24,0,172,0.15)] p-6 sm:p-8">
           <SignupWizard
             initialStep={initialStep}
             requiresPassword={requiresPassword}
@@ -94,15 +101,19 @@ export default async function SignupPage({ searchParams }: PageProps<'/signup'>)
         </div>
 
         <p className="mt-6 text-center text-sm text-fg-secondary">
-          이미 계정이 있나요?{' '}
+          <I18nSlot k="have-account" fallback="이미 계정이 있나요?" />{' '}
           <Link
             href="/login"
             className="font-semibold text-fg underline underline-offset-4 hover:text-signal transition-colors"
           >
-            로그인
+            <I18nSlot k="login" fallback="로그인" />
           </Link>
         </p>
-      </div>
+      </main>
+
+      <footer className="w-full text-center py-4 text-xs text-fg-quiet">
+        © {new Date().getFullYear()} Debate Code. All rights reserved.
+      </footer>
     </div>
   );
 }

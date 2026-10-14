@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { PageShell, PageHeader } from '@/app/components/page-shell';
 import I18nSlot from '@/app/components/i18n-slot';
+import { I18nCategorySlot, I18nCompanySlot } from '@/app/components/i18n-db-slot';
 import { prisma } from '@/app/lib/prisma';
 import { getSessionOptional } from '@/app/lib/dal';
 import { DIFFICULTY_LABELS, LANGUAGE_LABELS, problemLanguages } from '@/app/lib/types';
@@ -204,7 +205,7 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
                       </Link>
                       {p.company && (
                         <span className="ml-2 align-middle text-[10px] font-medium text-brand-700 bg-brand-50 border border-brand-200 rounded-full px-2 py-0.5">
-                          {p.company} <I18nSlot k="company-variant-label" fallback="변형" />
+                          <I18nCompanySlot company={p.company} /> <I18nSlot k="company-variant-label" fallback="변형" />
                         </span>
                       )}
                     </td>
@@ -230,7 +231,9 @@ export default async function ProblemsPage({ searchParams }: PageProps<'/problem
                         );
                       })()}
                     </td>
-                    <td className="px-3 py-2.5 text-center font-mono text-xs whitespace-nowrap text-fg-muted">{p.category}</td>
+                    <td className="px-3 py-2.5 text-center font-mono text-xs whitespace-nowrap text-fg-muted">
+                      <I18nCategorySlot category={p.category} />
+                    </td>
                     <td className="px-3 py-2.5 text-center whitespace-nowrap">
                       <span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-medium ${DIFFICULTY_BADGE[p.difficulty]}`}>
                         <I18nSlot k={p.difficulty === 1 ? 'beginner' : p.difficulty === 2 ? 'easy' : p.difficulty === 3 ? 'medium' : 'hard'} fallback={DIFFICULTY_LABELS[p.difficulty]} />

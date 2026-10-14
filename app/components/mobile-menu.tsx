@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/app/context/language-context';
 import { t } from '@/app/lib/i18n';
+import LanguageSwitcher from './language-switcher';
+import ThemeToggle from './theme-toggle';
 
 interface Props {
   links: readonly { href: string; key: string; label: string }[];
@@ -56,20 +58,16 @@ export default function MobileMenu({ links, authSlot }: Props) {
           {/* 사용자 인증 섹션 */}
           <div className="mt-4 border-t border-hairline pt-4 flex flex-col gap-2">{authSlot}</div>
 
-          {/* 언어 전환 섹션 */}
-          <div className="mt-4 border-t border-hairline pt-4">
-            <button
-              onClick={() => setLanguage(language === 'ko' ? 'en' : 'ko')}
-              className="flex w-full items-center justify-center gap-2 px-3 py-2.5 bg-paper hover:bg-paper rounded-lg transition-colors text-sm font-medium text-fg-secondary hover:text-fg"
-              title={language === 'ko' ? 'Switch to English' : '한국어로 전환'}
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              </svg>
-              <span>{language === 'ko' ? 'English' : '한국어'}</span>
-            </button>
+          {/* 언어 및 테마 전환 섹션 */}
+          <div className="mt-4 border-t border-hairline pt-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-medium text-fg-muted">Language</span>
+              <LanguageSwitcher align="right" />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-medium text-fg-muted">{t('theme-label', language)}</span>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       )}

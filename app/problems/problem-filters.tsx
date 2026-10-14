@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LANGUAGE_LABELS, type Language } from '@/app/lib/types';
 import { useLanguage } from '@/app/context/language-context';
-import { t } from '@/app/lib/i18n';
+import { t, translateCategory, translateCompany } from '@/app/lib/i18n';
 
 interface Props {
   categories: string[];
@@ -127,7 +127,9 @@ export default function ProblemFilters({
           접힌 상태에서도 눌러야 한다. 펼친 패널의 같은 칩과 상태를 공유하므로
           어느 쪽에서 눌러도 결과가 같다. */}
       <div className="dc-scroll-none flex items-center gap-1.5 overflow-x-auto border-t border-hairline px-4 py-2.5">
-        <span className="shrink-0 font-mono text-[10px] tracking-wider text-fg-quiet">빠른 선택</span>
+        <span className="shrink-0 font-mono text-[10px] tracking-wider text-fg-quiet">
+          {language === 'ko' ? '빠른 선택' : language === 'ja' ? 'クイック選択' : language === 'zh-CN' || language === 'zh-TW' ? '快捷筛选' : 'Quick Filter'}
+        </span>
         {[1, 2, 3, 4].map((d) => (
           <button
             key={d}
@@ -146,7 +148,7 @@ export default function ProblemFilters({
             onClick={() => toggle('category', c)}
             className={`${quickChip} ${activeCategories.includes(c) ? on : off}`}
           >
-            {c}
+            {translateCategory(c, language)}
           </button>
         ))}
       </div>
@@ -175,7 +177,7 @@ export default function ProblemFilters({
               <span className={groupLabel}>Company</span>
               {companies.map((c) => (
                 <button key={c} onClick={() => toggle('company', c)} className={`${chipBase} ${activeCompanies.includes(c) ? on : off}`}>
-                  {c}
+                  {translateCompany(c, language)}
                 </button>
               ))}
             </div>
@@ -184,7 +186,7 @@ export default function ProblemFilters({
             <span className={groupLabel}>Topic</span>
             {categories.map((c) => (
               <button key={c} onClick={() => toggle('category', c)} className={`${chipBase} ${activeCategories.includes(c) ? on : off}`}>
-                {c}
+                {translateCategory(c, language)}
               </button>
             ))}
           </div>

@@ -738,7 +738,7 @@ ALTER TABLE public."RankingReset" ENABLE ROW LEVEL SECURITY;
 -- community-uploads는 public 버킷이다. 커뮤니티 글의 이미지는 어차피 공개 글에 붙는 것이라
 -- 그래도 되지만, AI Search 첨부는 다르다 — 이용자가 Drive에서 가져온 개인 문서나 자기
 -- 컴퓨터의 소스 코드가 URL만 알면 누구나 열리는 자리에 놓여 있었다.
--- 새 첨부는 이 비공개 버킷으로 가고, 앱은 서명 URL로만 내보낸다(app/api/ai-search/file).
+-- 새 첨부는 이 비공개 버킷으로 가고, 앱은 서명 URL로만 내보낸다(app/api/attachments/file).
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('ai-attachments', 'ai-attachments', false)
 ON CONFLICT (id) DO UPDATE SET public = false;

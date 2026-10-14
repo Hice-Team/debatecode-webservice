@@ -62,7 +62,7 @@ export function parseRepoUrl(url: URL): RepoTarget | null {
 function apiHeaders(): HeadersInit {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json',
-    'User-Agent': 'debateCode-ai-search/1.0',
+    'User-Agent': 'debateCode/1.0',
     'X-GitHub-Api-Version': '2022-11-28',
   };
   // 선택 — 없으면 익명 한도(시간당 60회)로 동작한다
@@ -166,7 +166,7 @@ export async function fetchRepoFiles(target: RepoTarget): Promise<RepoImportResu
           .map(encodeURIComponent)
           .join('/')}`;
         const res = await fetch(raw, {
-          headers: { 'User-Agent': 'debateCode-ai-search/1.0' },
+          headers: { 'User-Agent': 'debateCode/1.0' },
           signal: AbortSignal.timeout(20_000),
         }).catch(() => null);
         if (!res?.ok) return null;

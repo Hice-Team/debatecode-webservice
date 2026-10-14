@@ -3,7 +3,7 @@
 // AI 제공자 설정 — 고를 수 있는 길은 둘뿐이다.
 //
 //   DebateAI Free Tier  키 없이 바로. 어떤 모델을 얼마나 썼는지 여기서 확인한다.
-//   네이티브 API        본인 키를 등록. 모델은 AI Search와 debateAI 탭의 셀렉터에서 고르므로
+//   네이티브 API        본인 키를 등록. 모델은 debateAI 탭의 셀렉터에서 고르므로
 //                       이 화면은 키만 받는다.
 //
 // 규칙 기반 모델은 선택지에서 뺐다 — Free Tier 한도를 다 쓰면 자동으로 넘어가는 자리라
@@ -95,7 +95,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
           <span className="min-w-0 flex-1">
             DebateAI Free Tier
             <span className="mt-0.5 block text-[11px] font-normal leading-relaxed text-fg-muted">
-              키 없이 바로 사용 · AI Search 하루 15회 · debateAI 문제당 10회
+              키 없이 바로 사용 · debateAI 문제당 하루 10회
             </span>
           </span>
           <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] text-emerald-700">
@@ -103,7 +103,7 @@ export default function AiSettingsForm({ initial, freeQuota, redirectTo, showSki
           </span>
         </label>
 
-        {/* 모델별 사용량 — AI Search와 debateAI 탭에서 고른 모델을 기준으로 나눠 보여 준다 */}
+        {/* 모델별 사용량 — debateAI 탭에서 고른 모델을 기준으로 나눠 보여 준다 */}
         {provider === 'builtin_ai' && freeQuota && <FreeUsagePanel quota={freeQuota} />}
       </section>
 

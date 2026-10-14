@@ -233,7 +233,7 @@ export default function ProfileForm({
             )}
           </Row>
 
-          <Row label="AI가 답할 언어" desc="AI Search와 debateAI가 답하는 언어입니다." htmlFor="chatLanguage">
+          <Row label="AI가 답할 언어" desc="debateAI가 답하는 언어입니다." htmlFor="chatLanguage">
             <select
               id="chatLanguage"
               name="chatLanguage"

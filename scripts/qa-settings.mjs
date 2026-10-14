@@ -284,15 +284,12 @@ try {
   for (const [label, needle] of [
     ['기본 모델 2종', '기본 모델'],
     ['면접·리팩토링 모델', '면접 · 리팩토링'],
-    ['AI Search 모델', 'AI Search'],
     ['지침', 'AI에게 늘 전할 지침'],
     ['맥락 양', '함께 보낼 대화의 양'],
     ['대화 관리', '대화 관리'],
   ]) {
     expect(aiText.includes(needle), label);
   }
-  if ((await page.locator('select#aiSearchModel').count())) ok('AI Search 기본 모델 셀렉터');
-  else no('AI Search 셀렉터');
 
   // 지침 추가 → 저장 → 복원
   const instInput = page.getByLabel('새 지침');

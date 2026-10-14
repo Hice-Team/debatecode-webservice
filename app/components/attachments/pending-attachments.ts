@@ -4,7 +4,7 @@
 // 첨부는 두 자리로 나뉜다(slotOf).
 //   thumb    파일 그 자체 — 입력창 안쪽 가로 캐러셀에 썸네일 카드로 눕는다
 //   mention  가져온 출처 — 입력창 본문 안에 '@멘션' 칩으로 앉고 Backspace로 지워진다
-export const PENDING_ATTACHMENTS_KEY = 'dc:ai-search:pending-attachments';
+export const PENDING_ATTACHMENTS_KEY = 'dc:pending-attachments';
 
 /**
  * 어느 표면에 놓이는가 — 밝은 캔버스(검색바·컴포저)와 어두운 캔버스(에디터 챗).

@@ -61,3 +61,21 @@ export function applyTheme(choice: ThemeChoice): void {
 
   for (const fn of listeners) fn();
 }
+
+export function getEffectiveTheme(choice: ThemeChoice = readTheme()): 'light' | 'dark' {
+  if (choice === 'dark') return 'dark';
+  if (choice === 'light') return 'light';
+  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+  return 'light';
+}
+
+/** 라이트와 다크 사이를 즉시 전환(중간 단계 없이 1클릭 직관적 전환) */
+export function toggleTheme(): 'light' | 'dark' {
+  const current = getEffectiveTheme();
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  return next;
+}
+

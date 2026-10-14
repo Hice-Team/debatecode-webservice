@@ -41,7 +41,6 @@ export const CACHE_GROUPS: CacheGroup[] = [
       'dc:tablet-notice-dismissed',
       'dc:workspace:onboarding-dismissed',
       'dc:workspace:onboarding-seen',
-      'dc:ai-search:resume-dismissed',
     ],
   },
   {

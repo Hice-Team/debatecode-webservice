@@ -20,17 +20,17 @@ const BATCH_SIZE = 40;
 // 서버가 한 건당 600자를 넘기지 못한다. 긴 문단은 문장 경계로 잘라 보내고 다시 이어 붙인다.
 const MAX_UNIT = 600;
 
-function cacheGet(src: string): string | null {
+function cacheGet(lang: string, src: string): string | null {
   try {
-    return window.localStorage.getItem(CACHE_PREFIX + src);
+    return window.localStorage.getItem(`${CACHE_PREFIX}${lang}:${src}`);
   } catch {
     return null;
   }
 }
 
-function cacheSet(src: string, translated: string) {
+function cacheSet(lang: string, src: string, translated: string) {
   try {
-    window.localStorage.setItem(CACHE_PREFIX + src, translated);
+    window.localStorage.setItem(`${CACHE_PREFIX}${lang}:${src}`, translated);
   } catch {
     // 캐시 가득참 — 무시 (번역은 메모리로만 유지)
   }
@@ -92,7 +92,7 @@ export default function AutoTranslate() {
   const inflight = useRef(new Set<string>());
 
   useEffect(() => {
-    if (language !== 'en') return;
+    if (language === 'ko') return;
     let cancelled = false;
 
     /**
@@ -116,7 +116,7 @@ export default function AutoTranslate() {
       const result = new Map<string, string>();
       const need: string[] = [];
       for (const t of texts) {
-        const hit = cacheGet(t);
+        const hit = cacheGet(language, t);
         if (hit) result.set(t, hit);
         else if (!inflight.current.has(t)) need.push(t);
       }
@@ -127,7 +127,7 @@ export default function AutoTranslate() {
           const res = await fetch('/api/translate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ texts: chunk }),
+            body: JSON.stringify({ texts: chunk, targetLang: language }),
           });
           if (res.ok) {
             const data = (await res.json()) as { translations?: string[] };
@@ -135,7 +135,7 @@ export default function AutoTranslate() {
               chunk.forEach((src, j) => {
                 const out = data.translations![j];
                 result.set(src, out);
-                if (out !== src) cacheSet(src, out);
+                if (out !== src) cacheSet(language, src, out);
               });
             }
           }

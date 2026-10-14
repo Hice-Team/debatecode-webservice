@@ -147,7 +147,7 @@ export default async function ProblemSetPage({ params }: PageProps<'/contests/[s
           </div>
           <Link
             href={setEntryHref(nextItem.problem.id, set.slug)}
-            className="ml-auto shrink-0 rounded-xl bg-signal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 active:scale-[0.98]"
+            className="ml-auto shrink-0 rounded-full bg-signal px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 active:scale-[0.98]"
           >
             <I18nSlot k="set-solve-cta" fallback="문제 풀러 가기 →" />
           </Link>

@@ -66,10 +66,10 @@ export default function MateTermsPage() {
         <li>출제 문제에 표절·오류가 확인된 경우</li>
       </ul>
 
-      <h2>제6조 (디베이트샵)</h2>
+      <h2>제6조 (포인트의 사용)</h2>
       <p>
-        포인트로 상품을 교환하는 절차와 취소·환불 규정은{' '}
-        <Link href="/legal/point-terms">디베이트포인트 약관</Link> 제6조를 따릅니다.
+        포인트의 성격, 적립 기준 및 등급 반영 방식은{' '}
+        <Link href="/legal/point-terms">디베이트포인트 약관</Link>을 따릅니다.
       </p>
 
       <h2>제7조 (게시판 운영 규칙)</h2>

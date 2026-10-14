@@ -10,11 +10,10 @@
 //
 //   1  회원가입 (약관 → 계정 → 프로필)
 //   2  로그아웃 → 로그인
-//   3  AI 검색
-//   4  시그니처 / 디베이트 / 리팩토링 모드 — 풀이 · 실행 · AI · 면접
-//   5  디베이트메이트 신청 (PDF 첨부)
-//   6  관리자 승인
-//   7  메이트 문제 초안 제출 + 관리자 문제 등록 (지원 언어 선택 포함)
+//   3  시그니처 / 디베이트 / 리팩토링 모드 — 풀이 · 실행 · AI · 면접
+//   4  디베이트메이트 신청 (PDF 첨부)
+//   5  관리자 승인
+//   6  메이트 문제 초안 제출 + 관리자 문제 등록 (지원 언어 선택 포함)
 //
 // 앱의 Prisma 클라이언트를 그대로 쓴다(커넥션을 두 벌 열면 풀러가 중간에 끊는다).
 import { chromium } from 'playwright';
@@ -324,55 +323,6 @@ async function qaLogin(browser) {
   await check('로그인 상태에서 대시보드가 열린다', async () => {
     await page.goto(`${BASE}/dashboard`, { waitUntil: 'domcontentloaded' });
     expect(!page.url().includes('/login'), '대시보드가 로그인으로 되돌렸다');
-  });
-
-}
-
-/* ================= 3. AI 검색 ================= */
-
-async function qaAiSearch(browser) {
-  head('3. AI 검색');
-  const session = await tryLogin(browser, USER.email, phase);
-  if (!session) return;
-  const { page, errors } = session;
-  errors.length = 0; // 이 단계에서 새로 난 것만 본다
-
-  await check('AI 검색 화면이 열린다', async () => {
-    await page.goto(`${BASE}/study/search`, { waitUntil: 'domcontentloaded' });
-    expect(!page.url().includes('/login'), '로그인으로 되돌아갔다');
-  });
-
-  await check('질문을 보내면 답변이 온다', async () => {
-    const box = page.locator('textarea').first();
-    if (!(await box.count())) return { skip: '입력창을 찾지 못했다' };
-    // 보내기 전 본문 길이를 재 둔다 — 늘어난 만큼이 답변이다.
-    // 화면 전체 길이를 기준으로 두면 안내 문구를 줄이는 것만으로 검사가 깨진다.
-    const before = (await page.locator('main').first().innerText()).length;
-    await box.fill('파이썬에서 리스트를 정렬하는 방법을 한 문장으로 알려줘');
-    await box.press('Enter');
-
-    // 스트리밍이라 시간이 걸린다. 답변이 끝나야 붙는 모델 표기를 신호로 쓴다.
-    const done = await page
-      .waitForSelector('text=/DeepSeek/', { timeout: 120_000 })
-      .then(() => true)
-      .catch(() => false);
-    if (!done) return { warn: '120초 안에 모델 표기가 붙지 않았다 (업스트림 지연 가능)' };
-
-    await page.waitForTimeout(1500);
-    const grew = (await page.locator('main').first().innerText()).length - before;
-    if (grew < 40) return { warn: `답변이 거의 늘지 않았다 (+${grew}자)` };
-    return `+${grew}자 응답`;
-  });
-
-  await check('대화가 세션으로 저장된다', async () => {
-    const me = createdUsers.find((u) => u.email === USER.email);
-    const n = await prisma.aiSession.count({ where: { userId: me.id } });
-    expect(n >= 1, '세션이 저장되지 않았다');
-    return `세션 ${n}개`;
-  });
-
-  await check('AI 검색 중 콘솔 오류·5xx 없음', async () => {
-    expect(errors.length === 0, errors.slice(0, 3).join(' / '));
   });
 
 }
@@ -931,7 +881,6 @@ async function main() {
   try {
     await qaSignup(browser);
     await qaLogin(browser);
-    await qaAiSearch(browser);
     const problemId = await loadFixture();
     await qaSolveModes(browser, problemId);
     await qaMateApply(browser);

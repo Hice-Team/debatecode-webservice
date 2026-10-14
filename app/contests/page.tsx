@@ -134,9 +134,9 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
         <Link
           href={buildHref({ kind: undefined, page: undefined })}
           aria-current={!activeKind ? 'page' : undefined}
-          className={`shrink-0 rounded-full border px-4 py-3 text-sm font-semibold transition-colors ${
+          className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
             !activeKind
-              ? 'border-signal bg-signal text-white'
+              ? 'border-brand-300 bg-brand-50 text-brand-700 shadow-[inset_0_0_0_1px_rgba(69,49,217,0.15)]'
               : 'border-hairline bg-surface text-fg-secondary hover:border-brand-300 hover:text-signal'
           }`}
         >
@@ -147,14 +147,14 @@ export default async function ContestsPage({ searchParams }: PageProps<'/contest
             key={k}
             href={buildHref({ kind: k, page: undefined })}
             aria-current={activeKind === k ? 'page' : undefined}
-            className={`shrink-0 rounded-full border px-4 py-3 text-sm font-semibold transition-colors ${
+            className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
               activeKind === k
-                ? 'border-signal bg-signal text-white'
+                ? 'border-brand-300 bg-brand-50 text-brand-700 shadow-[inset_0_0_0_1px_rgba(69,49,217,0.15)]'
                 : 'border-hairline bg-surface text-fg-secondary hover:border-brand-300 hover:text-signal'
             }`}
           >
             <I18nSlot k={`set-kind-${k}`} fallback={SET_KIND_LABELS[k]} />
-            <span className="ml-1.5 font-mono text-[11px] opacity-60">{countByKind.get(k) ?? 0}</span>
+            <span className="ml-1.5 font-mono text-[11px] opacity-70">{countByKind.get(k) ?? 0}</span>
           </Link>
         ))}
       </nav>

@@ -1,4 +1,4 @@
-// AI Search 원격 첨부 — GitHub 코드 가져오기 / URL 첨부.
+// debateAI 원격 첨부 — GitHub 코드 가져오기 / URL 첨부.
 //
 // 브라우저에서 직접 가져오면 CORS에 막히고, 원본을 보관할 곳도 없다.
 // 그래서 서버가 대신 받아 GitHub 코드는 스토리지에 파일로 남기고,
@@ -161,7 +161,7 @@ async function fetchRemote(target: string, maxHops = 4): Promise<Response | null
     const res = await fetch(current, {
       redirect: 'manual',
       signal: AbortSignal.timeout(15_000),
-      headers: { 'User-Agent': 'debateCode-ai-search/1.0', Accept: '*/*' },
+      headers: { 'User-Agent': 'debateCode/1.0', Accept: '*/*' },
     });
 
     if (res.status < 300 || res.status >= 400) return res;

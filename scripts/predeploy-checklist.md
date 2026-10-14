@@ -122,9 +122,9 @@ npx tsx --env-file=.env scripts/qa-roles.mjs --base http://localhost:3100
       제출은 `/api/judge/session` → `/api/judge/verify` 두 번의 왕복이다.
 - [ ] **히든 케이스** — 문제 페이지 HTML에 기대 출력(`expected`)이 없다.
       브라우저 개발자 도구에서 확인: 히든 케이스의 입력조차 보이면 안 된다.
-- [ ] **AI 한도** — 설정 › AI에서 "AI Search 하루 15회 / debateAI 문제당 10회 / 면접관 제한 없음"이
+- [ ] **AI 한도** — 설정 › AI에서 "debateAI 문제당 10회 / 면접관 제한 없음"이
       보인다. 개인 키를 등록하면 "사용 한도 없음"으로 바뀐다.
-- [ ] **로그인 필수** — 비로그인으로 `/api/debateai`·`/api/ai-search/ask` 호출 시 **401 JSON**
+- [ ] **로그인 필수** — 비로그인으로 `/api/debateai` 호출 시 **401 JSON**
       (로그인 페이지 HTML이 아니다).
 - [ ] **번역** — 비로그인 화면에서 언어 전환 시 사전 항목만 번역되고 나머지는 원문으로 남는다.
 - [ ] **탈퇴** — 2차 인증이 없는 계정은 종전대로 문구 입력만으로 탈퇴된다.
@@ -143,7 +143,7 @@ npm run deploy         # 또는 main에 push → GitHub Actions
 
 - [ ] `curl https://<도메인>/api/health` → `{"ok":true}`
 - [ ] 문제 하나를 실제로 **제출**해 통과 처리되고 포인트가 쌓이는지 (채점 경로가 바뀌었다)
-- [ ] AI Search에 한 번 질문 → 답이 오고, 설정 › AI의 "오늘 사용" 수치가 1 오른다
+- [ ] debateAI에 한 번 질문 → 답이 오고, 설정 › AI의 "오늘 사용" 수치가 1 오른다
 - [ ] 2차 인증을 켠 계정으로 로그인 → `/login/verify`를 거쳐 들어간다
 - [ ] `/console/system`에서 DB 왕복시간이 정상 범위(수백 ms 이내)
 - [ ] `npx wrangler tail`로 첫 몇 분간 5xx가 없는지 확인

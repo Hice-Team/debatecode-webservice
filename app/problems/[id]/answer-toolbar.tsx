@@ -1,11 +1,7 @@
 'use client';
 
 // debateAI 답변 툴바 — [👍] [👎] [새로고침] [복사] [⋮]
-//
-// AI Search의 응답 툴바와 같은 구성이다. 다만 어두운 패널에 얹히고, 답변이 DB의
-// AiMessage가 아니라 대화 JSON이라 서버 메시지 id가 필요한 두 항목은 빠진다.
-//   빠짐: "새 채팅에서 브랜치 생성"(AI Search 세션 전용), "법적 문제 신고"(신고 대상 id 필요)
-// 남는 항목은 이 답변 하나에만 적용되는 동작이다.
+// debateAI 답변에 적용되는 동작 툴바 (평가, 재생성, 복사, 낭독, 상세 정보).
 import { useEffect, useRef, useState } from 'react';
 import { useSpeech } from '@/app/lib/speech';
 import SpeechPlayer from '@/app/components/speech-player';

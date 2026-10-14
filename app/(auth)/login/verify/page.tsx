@@ -6,10 +6,6 @@ import VerifyForm from './verify-form';
 
 export const metadata: Metadata = { title: '2차 인증' };
 
-// 로그인 마지막 단계 — 비밀번호는 통과했고 확인만 남았다.
-//
-// 이 화면은 verifySession()을 쓰지 않는다. 그 함수가 통과하지 못한 세션을 여기로
-// 되돌려 보내므로, 여기서 그것을 쓰면 무한 고리가 된다.
 export default async function LoginVerifyPage({ searchParams }: PageProps<'/login/verify'>) {
   const pending = await getPendingSession();
   if (!pending) redirect('/login');
@@ -27,15 +23,18 @@ export default async function LoginVerifyPage({ searchParams }: PageProps<'/logi
   const state = await getTwoFactorState(pending.userId);
 
   return (
-    <VerifyForm
-      next={next}
-      email={pending.email}
-      options={{
-        totp: state.totp,
-        securityKeys: state.securityKeys,
-        backupCodesLeft: state.backupCodesLeft,
-        recoveryEmailMasked: state.recoveryEmail ? maskEmail(state.recoveryEmail) : null,
-      }}
-    />
+    // 화면 정중앙으로 위치하도록 (가로 세로 모두)
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <VerifyForm
+        next={next}
+        email={pending.email}
+        options={{
+          totp: state.totp,
+          securityKeys: state.securityKeys,
+          backupCodesLeft: state.backupCodesLeft,
+          recoveryEmailMasked: state.recoveryEmail ? maskEmail(state.recoveryEmail) : null,
+        }}
+      />
+    </div>
   );
 }

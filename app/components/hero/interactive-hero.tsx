@@ -10,6 +10,8 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/app/context/language-context';
 
+import type { Language } from '@/app/lib/i18n';
+
 interface Scenario {
   file: string;
   code: string[];
@@ -20,7 +22,7 @@ interface Scenario {
   scoreTo: number;
 }
 
-type Lang = 'ko' | 'en';
+type Lang = Language;
 
 const SCENARIOS_BY_LANG: Record<Lang, Scenario[]> = {
   ko: [
@@ -111,6 +113,138 @@ const SCENARIOS_BY_LANG: Record<Lang, Scenario[]> = {
       scoreTo: 95,
     },
   ],
+  ja: [
+    {
+      file: 'review / solution.py',
+      code: [
+        'def solution(nums, target):',
+        '    for i in range(len(nums)):',
+        '        for j in range(i+1, len(nums)):',
+        '            if nums[i]+nums[j] == target:',
+        '                return [i, j]',
+      ],
+      refactored: [
+        'def solution(nums, target):',
+        '    seen = {}',
+        '    for i, n in enumerate(nums):',
+        '        if target - n in seen:',
+        '            return [seen[target-n], i]',
+        '        seen[n] = i',
+      ],
+      aiLine: '# AI: 二重ループなので O(N²) ですが、入力が 10⁶ 件でも通過できますか？',
+      userLine: '# 自分: ハッシュマップで 1 回走査し、O(N) まで削減します',
+      scoreFrom: 72,
+      scoreTo: 91,
+    },
+    {
+      file: 'review / fibonacci.py',
+      code: [
+        'def solution(n):',
+        '    if n < 2:',
+        '        return n',
+        '    return solution(n-1) + solution(n-2)',
+      ],
+      refactored: [
+        'def solution(n):',
+        '    a, b = 0, 1',
+        '    for _ in range(n):',
+        '        a, b = b, a + b',
+        '    return a',
+      ],
+      aiLine: '# AI: 重複計算が指数関数的に爆発します。n=40 の場合は？',
+      userLine: '# 自分: ボトムアップ DP に変更すれば O(N) の時間と定数空間で済みます',
+      scoreFrom: 64,
+      scoreTo: 95,
+    },
+  ],
+  'zh-CN': [
+    {
+      file: 'review / solution.py',
+      code: [
+        'def solution(nums, target):',
+        '    for i in range(len(nums)):',
+        '        for j in range(i+1, len(nums)):',
+        '            if nums[i]+nums[j] == target:',
+        '                return [i, j]',
+      ],
+      refactored: [
+        'def solution(nums, target):',
+        '    seen = {}',
+        '    for i, n in enumerate(nums):',
+        '        if target - n in seen:',
+        '            return [seen[target-n], i]',
+        '        seen[n] = i',
+      ],
+      aiLine: '# AI: 双重循环复杂度为 O(N²)，若输入量达到 10⁶ 能通过吗？',
+      userLine: '# 我: 使用哈希表一次遍历，优化至 O(N) 复杂度',
+      scoreFrom: 72,
+      scoreTo: 91,
+    },
+    {
+      file: 'review / fibonacci.py',
+      code: [
+        'def solution(n):',
+        '    if n < 2:',
+        '        return n',
+        '    return solution(n-1) + solution(n-2)',
+      ],
+      refactored: [
+        'def solution(n):',
+        '    a, b = 0, 1',
+        '    for _ in range(n):',
+        '        a, b = b, a + b',
+        '    return a',
+      ],
+      aiLine: '# AI: 重复调用呈指数级暴增，如果 n=40 怎么办？',
+      userLine: '# 我: 采用自底向上的动态规划，O(N) 时间和常数空间即可解决',
+      scoreFrom: 64,
+      scoreTo: 95,
+    },
+  ],
+  'zh-TW': [
+    {
+      file: 'review / solution.py',
+      code: [
+        'def solution(nums, target):',
+        '    for i in range(len(nums)):',
+        '        for j in range(i+1, len(nums)):',
+        '            if nums[i]+nums[j] == target:',
+        '                return [i, j]',
+      ],
+      refactored: [
+        'def solution(nums, target):',
+        '    seen = {}',
+        '    for i, n in enumerate(nums):',
+        '        if target - n in seen:',
+        '            return [seen[target-n], i]',
+        '        seen[n] = i',
+      ],
+      aiLine: '# AI: 雙重迴圈複雜度為 O(N²)，若輸入量達 10⁶ 還能通過嗎？',
+      userLine: '# 我: 使用雜湊表一次走訪，優化至 O(N) 複雜度',
+      scoreFrom: 72,
+      scoreTo: 91,
+    },
+    {
+      file: 'review / fibonacci.py',
+      code: [
+        'def solution(n):',
+        '    if n < 2:',
+        '        return n',
+        '    return solution(n-1) + solution(n-2)',
+      ],
+      refactored: [
+        'def solution(n):',
+        '    a, b = 0, 1',
+        '    for _ in range(n):',
+        '        a, b = b, a + b',
+        '    return a',
+      ],
+      aiLine: '# AI: 重複遞迴呈指數型暴增，若 n=40 時該如何處理？',
+      userLine: '# 我: 改用自底向上的動態規劃，O(N) 時間與常數空間即可解決',
+      scoreFrom: 64,
+      scoreTo: 95,
+    },
+  ],
 };
 
 const HERO_COPY: Record<Lang, {
@@ -155,6 +289,48 @@ const HERO_COPY: Record<Lang, {
     replayNote: 'Replaying the actual service flow — ',
     replayLink: 'enter the interview room now',
   },
+  ja: {
+    badge: '対話型オンラインジャッジ · 完全無料',
+    titleA: 'コードを解いたなら、',
+    titleB: '次は',
+    titleHighlight: '論証',
+    titleC: 'する番です。',
+    desc: '正誤判定だけで終わる学習はもうおしまい。Debate Code は AI とのリアルタイムな技術ディベートを通じて、コードの背後にあるロジックを自らの言葉で防御する真の技術面接力を養います。',
+    ctaPrimary: '無料で始める',
+    ctaSecondary: '問題一覧を見る',
+    defenseRate: '防御成功率',
+    proofs: ['課金・サブスクなし', '毎週月曜に新問10問', 'AIなしでも判定可能'],
+    replayNote: '実際のサービスフローを再生中 — ',
+    replayLink: '今すぐ面接室に入室する',
+  },
+  'zh-CN': {
+    badge: '全新对话式在线判题平台 · 100% 永久免费',
+    titleA: '写出正确代码后，',
+    titleB: '现在是时候',
+    titleHighlight: '答辩论证',
+    titleC: '了。',
+    desc: '告别只看对错的单向判题。Debate Code 通过与 AI 面试官的实时辩论，助你亲口为代码逻辑辩护，真正掌握应对顶尖大厂技术面试的核心实力。',
+    ctaPrimary: '免费开启学习',
+    ctaSecondary: '浏览精选题库',
+    defenseRate: '答辩通过率',
+    proofs: ['无订阅 · 零收费', '每周一更新10道新题', '无需AI亦可直接判题'],
+    replayNote: '正在回放真实流程 — ',
+    replayLink: '立即进入技术面试间',
+  },
+  'zh-TW': {
+    badge: '全新對話式線上評判平台 · 100% 永久免費',
+    titleA: '寫出正確程式碼後，',
+    titleB: '現在是時候',
+    titleHighlight: '答辯論證',
+    titleC: '了。',
+    desc: '告別只看對錯的單向評判。Debate Code 透過與 AI 面試官的即時辯論，助你親口為程式邏輯辯護，真正掌握應對頂尖科技公司技術面試的核心實力。',
+    ctaPrimary: '免費開始體驗',
+    ctaSecondary: '瀏覽精選題庫',
+    defenseRate: '答辯通過率',
+    proofs: ['無訂閱 · 零收費', '每週一更新10道新題目', '無需AI亦可直接評測'],
+    replayNote: '正在回放實際流程 — ',
+    replayLink: '立即進入技術面試室',
+  },
 };
 
 type Phase = 'typing' | 'tests' | 'question' | 'answer' | 'refactor' | 'score' | 'hold';
@@ -193,8 +369,8 @@ function usePrefersReducedMotion() {
 export default function InteractiveHero() {
   const reduced = usePrefersReducedMotion();
   const { language } = useLanguage();
-  const copy = HERO_COPY[language];
-  const scenarios = SCENARIOS_BY_LANG[language];
+  const copy = HERO_COPY[language] ?? HERO_COPY.ko;
+  const scenarios = SCENARIOS_BY_LANG[language] ?? SCENARIOS_BY_LANG.ko;
   const [scenarioIdx, setScenarioIdx] = useState(0);
   const [phase, setPhase] = useState<Phase>('typing');
   const [charCount, setCharCount] = useState(0);
@@ -204,7 +380,7 @@ export default function InteractiveHero() {
   const [score, setScore] = useState<number | null>(null);
   const [refactored, setRefactored] = useState(false);
 
-  const sc = scenarios[scenarioIdx];
+  const sc = scenarios[scenarioIdx] ?? scenarios[0];
   const codeJoined = sc.code.join('\n');
 
   // ---- 타임라인 엔진 ----
@@ -275,7 +451,7 @@ export default function InteractiveHero() {
   const showUser = reduced || phase === 'answer' || phase === 'refactor' || phase === 'score' || phase === 'hold';
 
   return (
-    <section className="relative overflow-hidden bg-surface pt-20 pb-14 sm:pt-28 sm:pb-20">
+    <section className="relative overflow-hidden bg-surface pt-16 pb-12 sm:pt-24 sm:pb-18 md:pt-28 md:pb-20">
       {/* 은은한 브랜드 배경 워시 */}
       <div
         aria-hidden
@@ -286,21 +462,21 @@ export default function InteractiveHero() {
         }}
       />
 
-      <div className="relative max-w-4xl mx-auto px-6 sm:px-8 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-1.5 text-xs sm:text-sm font-semibold text-brand-700">
+      <div className="relative max-w-4xl mx-auto px-5 sm:px-8 text-center">
+        <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1 text-xs sm:text-sm font-semibold text-brand-700">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse motion-reduce:animate-none" />
           {copy.badge}
         </span>
 
-        <h1 className="mt-6 font-display text-4xl sm:text-6xl font-bold tracking-tight leading-[1.12] text-fg">
+        <h1 className="mt-5 sm:mt-6 font-display text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.15] text-fg [word-break:keep-all]">
           {copy.titleA}
-          <br />
-          {copy.titleB}
+          <br className="hidden sm:inline" />
+          {' '}{copy.titleB}
           <span className="text-brand-600">{copy.titleHighlight}</span>
           {copy.titleC}
         </h1>
 
-        <p className="mt-6 mx-auto max-w-2xl text-base sm:text-lg text-fg-secondary leading-relaxed">
+        <p className="mt-4 sm:mt-6 mx-auto max-w-2xl text-sm sm:text-base md:text-lg text-fg-secondary leading-relaxed [word-break:keep-all]">
           {copy.desc}
         </p>
 

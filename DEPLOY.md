@@ -72,7 +72,7 @@ npx wrangler secret put SMTP_USER          # hicecorp.team@gmail.com
 npx wrangler secret put SMTP_PASS          # Gmail 앱 비밀번호 16자리 (계정 비밀번호 아님)
 npx wrangler secret put EMAIL_FROM         # debateCode <hicecorp.team@gmail.com>
 
-# AI — Free AI · debateQ · AI Search · 번역이 전부 이 키 하나를 쓴다.
+# AI — Free AI · debateQ · debateAI · 번역이 전부 이 키 하나를 쓴다.
 # 상용 API 키는 넣지 않는다(이용자가 설정에서 자기 키를 등록해 쓴다).
 npx wrangler secret put HUGGINGFACE_API_KEY
 ```
@@ -251,15 +251,15 @@ Sender    hicecorp.team@gmail.com / debateCode
 |---|---|---|
 | SQL 인젝션 | Prisma 파라미터 바인딩. 원시 쿼리는 태그드 템플릿만 사용하고 `$queryRawUnsafe`는 쓰지 않는다 | 전역 |
 | 무차별 대입(로그인·가입·재설정) | DB 기반 지속 카운터. 인스턴스가 바뀌어도 횟수가 남고, 증가·판정이 한 SQL 문에서 원자적으로 처리된다 | `app/lib/rate-limit-durable.ts` |
-| 비용 남용(AI 호출) | 로그인 필수 + **회수 기반 사용 한도**(AI Search 하루 15회 · debateAI 문제당 10회 · 면접관 무제한). 증가·판정이 한 SQL 문에서 원자적으로 처리된다. 개인 API 키·로컬 모델은 이용자 부담이라 세지 않는다 | `app/lib/ai/usage-limits.ts`, `app/lib/ai/funding.ts` |
+| 비용 남용(AI 호출) | 로그인 필수 + **회수 기반 사용 한도**(debateAI 문제당 10회 · 면접관 무제한). 증가·판정이 한 SQL 문에서 원자적으로 처리된다. 개인 API 키·로컬 모델은 이용자 부담이라 세지 않는다 | `app/lib/ai/usage-limits.ts`, `app/lib/ai/funding.ts` |
 | 비용 남용(업로드·번역) | 인메모리 슬라이딩 윈도우 + 지속 카운터. `/api/translate`의 LLM 경로는 로그인 필수(사전 조회만 공개) | `app/lib/rate-limit.ts`, `app/api/translate/route.ts` |
 | 채점 결과 위조 | 판정을 서버가 한다. 브라우저는 실행 결과만 보고하고, 기대 출력은 내려가지 않는다. 세션은 1회용이고 코드 지문으로 묶인다 | `app/lib/judge/server.ts` |
 | 포인트 이중 사용 | 잔액 확인과 차감이 한 트랜잭션(Serializable). 재고는 `UPDATE … WHERE stock > 0`의 영향 행 수로 판정 | `app/lib/actions/mate.ts` |
-| SSRF(URL·GitHub 가져오기) | 사설망·루프백·메타데이터 IP 차단, 리다이렉트 홉마다 재검사 | `app/api/ai-search/import/route.ts` |
+| SSRF(URL·GitHub 가져오기) | 사설망·루프백·메타데이터 IP 차단, 리다이렉트 홉마다 재검사 | `app/api/attachments/import/route.ts` |
 | XSS | React 기본 이스케이프. `dangerouslySetInnerHTML` 0건. CSP `object-src 'none'`, `base-uri 'self'` | `next.config.ts` |
 | 클릭재킹 | `X-Frame-Options: DENY`, CSP `frame-ancestors 'none'` | `next.config.ts` |
 | 이용자 API 키 유출 | AES-256-GCM 이중 암호화. **키가 없으면 운영에서는 저장을 거부한다**(평문으로 떨어지지 않는다) | `app/lib/crypto.ts` |
-| 개인 첨부 유출 | 비공개 버킷 + 소유자 확인 후 5분 서명 URL. 버킷 RLS가 2차 방어 | `app/api/ai-search/file/route.ts` |
+| 개인 첨부 유출 | 비공개 버킷 + 소유자 확인 후 5분 서명 URL. 버킷 RLS가 2차 방어 | `app/api/attachments/file/route.ts` |
 | 권한 우회 | 역할 + 계정별 오버라이드(deny 우선), 서버에서만 판정 | `app/lib/permissions-server.ts` |
 | 비밀번호만으로의 계정 접근 | 2차 인증을 켠 계정은 세션이 확인을 통과해야 화면·API가 열린다. 수단은 인증 앱·복구 이메일·복구 키·보안키 넷 | `app/lib/dal.ts`, `app/lib/two-factor.ts` |
 | 자격 증명이 주소에 남는 것 | 클라이언트 폼에 `method="post"` — 하이드레이션 전 제출도 본문으로 나간다 | `app/(auth)/login/login-form.tsx` |
@@ -267,7 +267,7 @@ Sender    hicecorp.team@gmail.com / debateCode
 ### 엣지가 맡아야 하는 것 (Cloudflare 대시보드에서 설정 — 코드로 불가)
 
 1. **Rate Limiting Rules** — `/api/*`와 `/login`에 IP 단위 상한.
-   권장 시작값: `/api/ai-search/*` 분당 30, `/login` 분당 20, 그 외 `/api/*` 분당 120.
+   권장 시작값: `/api/debateai` 분당 30, `/login` 분당 20, 그 외 `/api/*` 분당 120.
 2. **WAF Managed Rules** — OWASP 코어 룰셋을 켠다.
 3. **Bot Fight Mode** — 자동화 트래픽 차단.
 4. **DDoS Protection** — 기본 활성이지만 임계값을 서비스 규모에 맞춘다.

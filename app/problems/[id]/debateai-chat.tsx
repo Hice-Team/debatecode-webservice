@@ -7,7 +7,7 @@
 // 모델 셀렉터는 상단 바가 아니라 입력바 안에 둔다. 무엇으로 답할지 고르는 일과
 // 무엇을 물을지 쓰는 일이 같은 자리에서 끝나야 하기 때문이다.
 //
-// 첨부는 AI Search와 같은 부품을 쓴다(어두운 표면이라 tone="dark").
+// 첨부는 어두운 표면(tone="dark")으로 렌더링된다.
 //   · 업로드한 파일·Drive → 입력창 위 정사각 썸네일 캐러셀
 //   · GitHub·Local 프로젝트·URL → 같은 캐러셀에 덩어리 하나당 카드 하나
 // 붙인 파일의 원문은 서버가 읽어 프롬프트에 싣는다(app/lib/ai/attachment-context.ts).
@@ -594,7 +594,7 @@ export default function DebateAiChat({
                       {t.content}
                     </ReactMarkdown>
                   </div>
-                  {/* AI Search와 같은 구성의 툴바 — 토큰 수는 여기 세부정보에 있다 */}
+                  {/* 답변 툴바 — 평가, 재생성, 토큰 수 등 세부정보 */}
                   <AnswerToolbar
                     content={t.content}
                     modelId={model}

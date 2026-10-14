@@ -8,26 +8,39 @@ import Link from 'next/link';
 import { useLanguage } from '@/app/context/language-context';
 
 type Tab = 'problem' | 'analysis' | 'attempts' | 'debate';
-type Lang = 'ko' | 'en';
 
-const COPY: Record<Lang, {
+interface AnalysisRow {
+  label: string;
+  value: string;
+  tone: 'ok' | 'warn' | 'plain';
+}
+
+interface AttemptRow {
+  label: string;
+  result: string;
+  pass: boolean;
+}
+
+interface ShowcaseCopy {
   tabs: Record<Tab, string>;
   problemTitle: string;
   problemLimits: string;
   problemDesc: string;
   problemTags: string[];
   analysisTitle: string;
-  analysisRows: { label: string; value: string; tone: 'ok' | 'warn' | 'plain' }[];
+  analysisRows: AnalysisRow[];
   analysisHint: string;
   attemptsTitle: string;
-  attempts: { label: string; result: string; pass: boolean }[];
+  attempts: AttemptRow[];
   attemptsNote: string;
   debateAi: string;
   debateUser: string;
   debateTyping: string;
   openEditor: string;
   codeComment: string;
-}> = {
+}
+
+const COPY: Record<string, ShowcaseCopy> = {
   ko: {
     tabs: { problem: '문제사항', analysis: '문제분석', attempts: '시도횟수', debate: 'DebateAI' },
     problemTitle: 'Q. 두 수의 합 찾기 (Two Sum)',
@@ -82,14 +95,99 @@ const COPY: Record<Lang, {
     openEditor: 'Try it in the real editor →',
     codeComment: '# hash-based optimization applied',
   },
+  ja: {
+    tabs: { problem: '問題文', analysis: '問題分析', attempts: '試行回数', debate: 'DebateAI' },
+    problemTitle: 'Q. 2つの数の和 (Two Sum)',
+    problemLimits: '制限時間: 2秒 | メモリ: 128MB',
+    problemDesc: '整数配列 nums とターゲット target が与えられたとき、足して target になる2つの数のインデックスを返してください。',
+    problemTags: ['#ハッシュ', '#配列', '#入門'],
+    analysisTitle: '静的解析結果',
+    analysisRows: [
+      { label: '予想時間計算量', value: 'O(n)', tone: 'ok' },
+      { label: '検出されたデータ構造', value: 'ハッシュマップ', tone: 'plain' },
+      { label: '二重ループ', value: 'なし', tone: 'ok' },
+      { label: '境界値ガード', value: '未検出', tone: 'warn' },
+    ],
+    analysisHint: '💡 面接官が「空配列の処理」について深く質問する可能性が高いです。',
+    attemptsTitle: '提出履歴 (3回)',
+    attempts: [
+      { label: '#1 · 二重ループ', result: 'FAIL 3/5', pass: false },
+      { label: '#2 · ソート + 2ポインタ', result: 'FAIL 4/5', pass: false },
+      { label: '#3 · ハッシュマップ', result: 'PASS 5/5', pass: true },
+    ],
+    attemptsNote: 'PASS すると直ちに面接モードが開放されます。',
+    debateAi: 'AI: ハッシュマップの空間計算量を犠牲にした理由は何ですか？',
+    debateUser: '自分: 計算量がO(n²)からO(n)に削減され、明確なトレードオフだからです。',
+    debateTyping: 'DebateAI 入力中',
+    openEditor: '実際のエディタで体験する →',
+    codeComment: '# ハッシュアルゴリズム最適化を適用',
+  },
+  'zh-CN': {
+    tabs: { problem: '题目描述', analysis: '题目分析', attempts: '提交历史', debate: 'DebateAI' },
+    problemTitle: 'Q. 两数之和 (Two Sum)',
+    problemLimits: '时间限制: 2秒 | 内存: 128MB',
+    problemDesc: '给定一个整数数组 nums 和一个目标值 target，请你在该数组中找出和为目标值的那两个整数，并返回它们的数组下标。',
+    problemTags: ['#哈希表', '#数组', '#入门'],
+    analysisTitle: '静态代码分析',
+    analysisRows: [
+      { label: '预估时间复杂度', value: 'O(n)', tone: 'ok' },
+      { label: '识别出的数据结构', value: '哈希表', tone: 'plain' },
+      { label: '嵌套循环', value: '无', tone: 'ok' },
+      { label: '边界防御守卫', value: '未检测到', tone: 'warn' },
+    ],
+    analysisHint: '💡 面试官极可能会深入追问“空数组与极端值处理”。',
+    attemptsTitle: '提交记录 (3次)',
+    attempts: [
+      { label: '#1 · 暴力双重循环', result: 'FAIL 3/5', pass: false },
+      { label: '#2 · 排序 + 双指针', result: 'FAIL 4/5', pass: false },
+      { label: '#3 · 哈希表优化', result: 'PASS 5/5', pass: true },
+    ],
+    attemptsNote: 'PASS 后立即开启真实面试对辩模式。',
+    debateAi: 'AI: 为什么你选择牺牲空间复杂度来使用哈希表？',
+    debateUser: '我: 时间复杂度由 O(n²) 显著降至 O(n)，权衡清晰合理。',
+    debateTyping: 'DebateAI 正在输入…',
+    openEditor: '前往完整工作区体验 →',
+    codeComment: '# 应用哈希算法优化',
+  },
+  'zh-TW': {
+    tabs: { problem: '題目描述', analysis: '題目分析', attempts: '提交歷程', debate: 'DebateAI' },
+    problemTitle: 'Q. 兩數之和 (Two Sum)',
+    problemLimits: '時間限制: 2秒 | 記憶體: 128MB',
+    problemDesc: '給定一個整數陣列 nums 與目標值 target，請找出和為目標值的兩個整數，並回傳它們在陣列中的索引。',
+    problemTags: ['#雜湊表', '#陣列', '#入門'],
+    analysisTitle: '靜態代碼分析',
+    analysisRows: [
+      { label: '預估時間複雜度', value: 'O(n)', tone: 'ok' },
+      { label: '識別出的資料結構', value: '雜湊表', tone: 'plain' },
+      { label: '巢狀迴圈', value: '無', tone: 'ok' },
+      { label: '極限邊界守衛', value: '未檢測到', tone: 'warn' },
+    ],
+    analysisHint: '💡 面試官極可能會深入追問「空陣列與邊界例外處理」。',
+    attemptsTitle: '提交紀錄 (3次)',
+    attempts: [
+      { label: '#1 · 雙層迴圈', result: 'FAIL 3/5', pass: false },
+      { label: '#2 · 排序 + 雙指針', result: 'FAIL 4/5', pass: false },
+      { label: '#3 · 雜湊表優化', result: 'PASS 5/5', pass: true },
+    ],
+    attemptsNote: 'PASS 後立即開啟全真面試辯論模式。',
+    debateAi: 'AI: 為什麼你選擇犧牲空間複雜度來使用雜湊表？',
+    debateUser: '我: 時間複雜度從 O(n²) 大幅降至 O(n)，權衡清晰明確。',
+    debateTyping: 'DebateAI 正在輸入…',
+    openEditor: '前往完整工作區體驗 →',
+    codeComment: '# 套用雜湊演算法最佳化',
+  },
 };
 
-const TONE_CLASS = { ok: 'text-emerald-400', warn: 'text-rose-400', plain: 'text-fg-on-dark-secondary' } as const;
+const TONE_CLASS: Record<'ok' | 'warn' | 'plain', string> = {
+  ok: 'text-emerald-400',
+  warn: 'text-rose-400',
+  plain: 'text-fg-on-dark-secondary',
+};
 
 export default function EditorShowcase() {
   const [tab, setTab] = useState<Tab>('problem');
   const { language } = useLanguage();
-  const c = COPY[language];
+  const c = COPY[language] ?? COPY.ko;
   const tabs = Object.entries(c.tabs) as [Tab, string][];
 
   return (
@@ -125,7 +223,7 @@ export default function EditorShowcase() {
                 <p className="text-fg-on-dark-quiet text-[10px]">{c.problemLimits}</p>
                 <p>{c.problemDesc}</p>
                 <div className="pt-1 flex flex-wrap gap-1.5">
-                  {c.problemTags.map((t) => (
+                  {c.problemTags.map((t: string) => (
                     <span key={t} className="font-mono text-[9px] text-fg-on-dark-quiet bg-surface/5 border border-white/10 rounded-full px-2 py-0.5">
                       {t}
                     </span>
@@ -138,7 +236,7 @@ export default function EditorShowcase() {
               <div className="space-y-2.5">
                 <p className="font-bold text-white text-sm">{c.analysisTitle}</p>
                 <div className="space-y-1.5 font-mono text-[10.5px]">
-                  {c.analysisRows.map((r) => (
+                  {c.analysisRows.map((r: AnalysisRow) => (
                     <p key={r.label} className="flex justify-between">
                       <span className="text-fg-on-dark-quiet">{r.label}</span>
                       <span className={TONE_CLASS[r.tone]}>{r.value}</span>
@@ -153,7 +251,7 @@ export default function EditorShowcase() {
               <div className="space-y-2">
                 <p className="font-bold text-white text-sm">{c.attemptsTitle}</p>
                 <div className="space-y-1 font-mono text-[10.5px]">
-                  {c.attempts.map((a) => (
+                  {c.attempts.map((a: AttemptRow) => (
                     <p key={a.label} className="flex justify-between items-center">
                       <span className="text-fg-on-dark-quiet">{a.label}</span>
                       <span className={a.pass ? 'text-emerald-400' : 'text-rose-400'}>{a.result}</span>

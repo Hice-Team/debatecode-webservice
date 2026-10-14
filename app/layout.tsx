@@ -8,6 +8,10 @@ import BannerSlot from '@/app/components/banner-slot';
 import DomainNotice from '@/app/components/domain-notice';
 import AutoTranslate from "./components/auto-translate";
 import ChannelTalk from "./components/channel-talk";
+import SkipToContent from "./components/skip-to-content";
+import AccessibilityToolbar from "./components/accessibility-toolbar";
+import CommandPalette from "./components/command-palette";
+import ScrollToTop from "./components/scroll-to-top";
 import { THEME_BOOT_SCRIPT } from './lib/theme';
 
 // Fonts are loaded via Google Fonts stylesheet to avoid Turbopack internal imports
@@ -101,6 +105,8 @@ export default async function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
         />
         <Providers>
+          {/* 접근성 본문 바로가기 건너뛰기 링크 */}
+          <SkipToContent />
           {/* 점검 모드가 켜져 있으면 일반 방문자에게는 안내 화면만 보인다 */}
           <MaintenanceGate>
             {/* 콘솔에서 설정한 상시 안내 한 줄 — 비어 있으면 아무것도 렌더하지 않는다.
@@ -111,10 +117,18 @@ export default async function RootLayout({
               <DomainNotice />
               <GlobalBanner />
             </BannerSlot>
-            {children}
+            <main id="main-content" tabIndex={-1} className="outline-none flex-1 flex flex-col">
+              {children}
+            </main>
           </MaintenanceGate>
-          {/* EN 모드에서 화면의 한국어 텍스트(DB 콘텐츠 포함)를 자동 번역 */}
+          {/* 다국어 모드에서 화면의 한국어 텍스트(DB 콘텐츠 포함)를 자동 번역 */}
           <AutoTranslate />
+          {/* 베리어프리 · 접근성 도구 모음 */}
+          <AccessibilityToolbar />
+          {/* 전역 커맨드 검색창 (Ctrl+K) */}
+          <CommandPalette />
+          {/* 최상단 스크롤 복귀 버튼 */}
+          <ScrollToTop />
         </Providers>
         <AnnouncementGate />
         {/* 채널톡 — 커뮤니티/대시보드/설정/온보딩에서만 우측 하단 노출 */}

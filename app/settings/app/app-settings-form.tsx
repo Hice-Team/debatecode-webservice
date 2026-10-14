@@ -12,6 +12,7 @@ import { useActionState, useState } from 'react';
 import { updateAppSettings, type AppSettingsFormState } from '@/app/lib/actions/profile';
 import { LANGUAGE_LABELS, type Language } from '@/app/lib/types';
 import { useLanguage } from '@/app/context/language-context';
+import { SUPPORTED_LANGUAGES, type Language as UiLanguage } from '@/app/lib/i18n';
 import { useSettingsForm } from '../save-bar';
 import Toggle from '@/app/components/toggle';
 import {
@@ -102,11 +103,14 @@ export default function AppSettingsForm({
           <select
             id="uiLanguage"
             value={uiLanguage}
-            onChange={(e) => setUiLanguage(e.target.value as 'ko' | 'en')}
+            onChange={(e) => setUiLanguage(e.target.value as UiLanguage)}
             className={SELECT}
           >
-            <option value="ko">한국어</option>
-            <option value="en">English</option>
+            {SUPPORTED_LANGUAGES.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.label} ({lang.nativeLabel})
+              </option>
+            ))}
           </select>
         </Row>
 

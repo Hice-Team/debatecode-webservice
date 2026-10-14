@@ -32,7 +32,7 @@ const schema = z.object({
     .array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(4_000) }))
     .max(24)
     .default([]),
-  // 이번 질문에 붙인 첨부 — AI Search와 같은 모양이다(app/study/search/pending-attachments.ts).
+  // 이번 질문에 붙인 첨부 (app/components/attachments/pending-attachments.ts).
   // 원문은 서버가 스토리지에서 읽어 프롬프트에 싣는다.
   attachments: z
     .array(
@@ -214,7 +214,7 @@ export async function POST(request: Request) {
   /* ---------- 스트리밍 응답 ----------
      예전에는 답이 다 만들어질 때까지 "생성 중…" 점 세 개만 돌았다. 긴 답변은 20초 넘게
      아무 일도 일어나지 않는 것처럼 보여, 멈춘 줄 알고 다시 누르는 일이 잦았다.
-     AI Search와 같은 NDJSON 스트림으로 바꿔 만들어지는 대로 흘려보낸다.
+     NDJSON 스트림으로 만들어지는 대로 흘려보낸다.
 
      Agent 모드의 코드 추출은 전문이 모여야 가능하므로 done 이벤트에서 한 번에 준다. */
   const encoder = new TextEncoder();

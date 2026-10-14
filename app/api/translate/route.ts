@@ -14,7 +14,7 @@ import { builtinChatOptions } from '@/app/lib/ai/builtin';
 // 이 라우트는 인증이 없었다. 그래서 주소만 알면 누구나 서비스 AI 키로 한 번에
 // 36,000자를 번역할 수 있었다 — 사실상 공개 LLM 프록시였다. 식별은 x-forwarded-for
 // 하나였고 그 헤더는 위조된다. 서비스의 AI 예산 전체가 키 하나에 매달려 있으므로,
-// 이 구멍 하나로 면접·debateQ·AI Search가 함께 죽을 수 있었다.
+// 이 구멍 하나로 면접·debateQ·debateAI가 함께 죽을 수 있었다.
 //
 // 그렇다고 통째로 로그인 뒤로 넣으면 비로그인 화면(랜딩·문제 목록)의 언어 전환이
 // 깨진다. 그래서 나눈다.
@@ -26,30 +26,27 @@ import { builtinChatOptions } from '@/app/lib/ai/builtin';
 //
 // 비로그인 이용자는 사전에 있는 것까지 번역된 화면을 보고, 나머지는 원문으로 남는다.
 // 예전처럼 조용히 요금이 나가는 것보다 낫다.
+import type { Language } from '@/app/lib/i18n';
+
 const schema = z.object({
   texts: z.array(z.string().min(1).max(600)).min(1).max(60),
+  targetLang: z.enum(['en', 'ja', 'zh-CN', 'zh-TW']).optional().default('en'),
 });
 
-const SYSTEM = `You are a translator for a Korean developer-education website. Translate each Korean string to natural, concise English.
-Keep code identifiers, numbers, brand names (debateCode, debateQ, debateMate 등) and punctuation as-is. Do not add explanations.
-Reply ONLY with a JSON array of translated strings in the same order and same length as the input array.`;
-
-/**
- * 번역 캐시.
- *
- * 상한이 필요하다. 임의 입력을 받는 자리라 상한이 없으면 아이솔레이트 메모리가
- * 입력 길이에 비례해 계속 늘어난다(rate-limit.ts가 버킷에 상한을 두는 것과 같은 이유).
- * Map은 삽입 순서를 유지하므로 가장 오래된 것부터 버린다.
- */
 const MAX_CACHE = 5_000;
 const cache = new Map<string, string>();
 
-function remember(source: string, translated: string): void {
+function remember(targetLang: string, source: string, translated: string): void {
+  const key = `${targetLang}:${source}`;
   if (cache.size >= MAX_CACHE) {
     const oldest = cache.keys().next().value;
     if (oldest !== undefined) cache.delete(oldest);
   }
-  cache.set(source, translated);
+  cache.set(key, translated);
+}
+
+function getCache(targetLang: string, source: string): string | undefined {
+  return cache.get(`${targetLang}:${source}`);
 }
 
 export async function POST(request: Request) {
@@ -57,18 +54,18 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: 'bad request' }, { status: 400 });
 
-  const { texts } = parsed.data;
+  const { texts, targetLang } = parsed.data;
 
   /* ---------- 사전 계층 — 비용이 없고 인증도 필요 없다 ---------- */
   for (const text of texts) {
-    if (cache.has(text)) continue;
-    const fixed = glossaryLookup(text);
-    if (fixed) remember(text, fixed);
+    if (getCache(targetLang, text)) continue;
+    const fixed = glossaryLookup(text, targetLang as Language);
+    if (fixed) remember(targetLang, text, fixed);
   }
 
-  const missing = texts.filter((t) => !cache.has(t));
+  const missing = texts.filter((t) => !getCache(targetLang, t));
   if (missing.length === 0) {
-    return NextResponse.json({ translations: texts.map((t) => cache.get(t) ?? t) });
+    return NextResponse.json({ translations: texts.map((t) => getCache(targetLang, t) ?? t) });
   }
 
   /* ---------- LLM 계층 — 여기부터 서비스 요금이 나간다 ---------- */
@@ -77,7 +74,7 @@ export async function POST(request: Request) {
     // 비로그인은 사전으로 번역된 것까지만 받는다. 오류가 아니라 부분 결과다 —
     // 화면은 번역되지 않은 문장을 원문 그대로 보여 주면 된다.
     return NextResponse.json({
-      translations: texts.map((t) => cache.get(t) ?? t),
+      translations: texts.map((t) => getCache(targetLang, t) ?? t),
       partial: true,
       reason: 'login-required',
     });
@@ -86,7 +83,7 @@ export async function POST(request: Request) {
   // 같은 아이솔레이트 안의 연타를 먼저 끊고,
   if (!rateLimit(`translate:${session.userId}`, 20, 60_000)) {
     return NextResponse.json(
-      { translations: texts.map((t) => cache.get(t) ?? t), partial: true, reason: 'rate-limited' },
+      { translations: texts.map((t) => getCache(targetLang, t) ?? t), partial: true, reason: 'rate-limited' },
       { status: 429 },
     );
   }
@@ -95,7 +92,7 @@ export async function POST(request: Request) {
   const gate = await durableRateLimit(`translate:${session.userId}`, 120, 60 * 60 * 1000);
   if (!gate.allowed) {
     return NextResponse.json(
-      { translations: texts.map((t) => cache.get(t) ?? t), partial: true, reason: 'rate-limited' },
+      { translations: texts.map((t) => getCache(targetLang, t) ?? t), partial: true, reason: 'rate-limited' },
       { status: 429 },
     );
   }
@@ -103,19 +100,29 @@ export async function POST(request: Request) {
   const config = getFreeAiLlmConfig();
   if (!config) {
     // 번역 수단 없음 — 원문 유지 (클라이언트는 그대로 표시)
-    return NextResponse.json({ translations: texts.map((t) => cache.get(t) ?? t), partial: true });
+    return NextResponse.json({ translations: texts.map((t) => getCache(targetLang, t) ?? t), partial: true });
   }
 
+  const langName =
+    targetLang === 'ja'
+      ? 'Japanese'
+      : targetLang === 'zh-CN'
+        ? 'Simplified Chinese'
+        : targetLang === 'zh-TW'
+          ? 'Traditional Chinese'
+          : 'English';
+  const systemPrompt = `You are a professional translator for a technical interview and coding platform. Translate the following JSON array of Korean UI texts into natural, concise ${langName}. Preserve technical terms, placeholders, and structure. Return ONLY a valid JSON array of translated strings matching the exact count and order of the input array.`;
+
   try {
-    const reply = await llmChat(config, SYSTEM, JSON.stringify(missing), builtinChatOptions());
+    const reply = await llmChat(config, systemPrompt, JSON.stringify(missing), builtinChatOptions());
     const match = reply.match(/\[[\s\S]*\]/);
     const arr = match ? (JSON.parse(match[0]) as unknown) : null;
     if (Array.isArray(arr) && arr.length === missing.length && arr.every((x) => typeof x === 'string')) {
-      missing.forEach((src, i) => remember(src, arr[i] as string));
+      missing.forEach((src, i) => remember(targetLang, src, arr[i] as string));
     }
   } catch {
     // 번역 실패 — 원문을 그대로 돌려준다
   }
 
-  return NextResponse.json({ translations: texts.map((t) => cache.get(t) ?? t) });
+  return NextResponse.json({ translations: texts.map((t) => getCache(targetLang, t) ?? t) });
 }

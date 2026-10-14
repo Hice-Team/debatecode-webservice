@@ -189,7 +189,7 @@ export interface LlmChunk {
 }
 
 /**
- * 토큰 스트리밍 채팅 — AI Search 진행 단계를 실제 생성 과정과 맞추기 위해 쓴다.
+ * 토큰 스트리밍 채팅 — 진행 단계를 실제 생성 과정과 맞추기 위해 쓴다.
  *
  * OpenAI 호환(=Hugging Face Router, DeepSeek 포함)만 실제로 스트리밍하고,
  * Anthropic·Gemini는 한 번에 받아 한 조각으로 흘려보낸다(호출부는 차이를 몰라도 된다).

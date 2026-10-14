@@ -17,8 +17,6 @@ const PAGES = [
   '/community?board=market',
   '/problems',
   '/hall-of-fame',
-  '/shop',
-  '/study',
   '/contests',
   '/login',
   '/signup',

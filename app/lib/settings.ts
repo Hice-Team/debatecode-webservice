@@ -131,14 +131,6 @@ export const SETTING_DEFS = [
     default: true,
   },
   {
-    key: 'flag.ai_search',
-    category: 'flag',
-    valueType: 'boolean',
-    label: 'AI Search',
-    description: '끄면 AI Search 진입이 막힌다.',
-    default: true,
-  },
-  {
     key: 'flag.interview',
     category: 'flag',
     valueType: 'boolean',

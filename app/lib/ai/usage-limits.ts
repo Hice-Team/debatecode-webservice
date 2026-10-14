@@ -8,7 +8,6 @@
 // 한 번의 호출이 쓸 수 있는 양을 묶어 두기 때문이다.
 //
 // ── 정책 ───────────────────────────────────────────────────────────────────
-//   AI Search   하루 15회
 //   debateAI    문제당 하루 10회
 //   AI 면접관   한도 없음 — 면접은 흐름이 끊기면 그 자체로 성립하지 않는다.
 //               (라운드 수가 이미 상한 역할을 한다 — 최대 8문항)
@@ -22,7 +21,7 @@
 // 창을 하루로 두면 "문제당 10회"라는 약속은 그대로 지키면서 그 문제가 사라진다.
 import { prisma } from '../prisma';
 
-export type AiSurface = 'ai-search' | 'debateai';
+export type AiSurface = 'debateai';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -37,15 +36,6 @@ interface SurfacePolicy {
 }
 
 export const AI_USAGE_POLICY: Record<AiSurface, SurfacePolicy> = {
-  'ai-search': {
-    limit: 15,
-    windowMs: DAY_MS,
-    perScope: false,
-    label: 'AI Search 대화',
-    exhausted: (at) =>
-      `오늘 쓸 수 있는 AI Search 대화 15회를 모두 사용했습니다. ${at}에 다시 열립니다. ` +
-      `설정 › AI에서 내 API 키를 등록하면 한도 없이 쓸 수 있습니다.`,
-  },
   debateai: {
     limit: 10,
     windowMs: DAY_MS,

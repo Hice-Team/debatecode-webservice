@@ -3,7 +3,7 @@ import { requireApiSession } from '@/app/lib/dal';
 import { createClient } from '@/app/lib/supabase/server';
 import { AI_ATTACHMENT_BUCKET } from '@/app/lib/storage';
 
-// AI Search 첨부 열람 — 비공개 버킷의 파일을 잠깐 열리는 서명 URL로 넘겨준다.
+// debateAI 첨부 열람 — 비공개 버킷의 파일을 잠깐 열리는 서명 URL로 넘겨준다.
 //
 // 왜 프록시를 두는가. 서명 URL은 몇 분이면 만료되므로 메시지에 담아 저장할 수 없다.
 // 그래서 DB에는 만료되지 않는 이 주소를 담고, 실제로 열 때마다 세션을 확인해 새 서명 URL을

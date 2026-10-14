@@ -101,9 +101,7 @@ export async function deleteAccount(
       await tx.pointRequest.deleteMany({ where: { userId } });
       await tx.pointLedger.deleteMany({ where: { userId } });
 
-      // 5) AI Search 대화 (메시지는 cascade)
-
-      // 6) 출제·메이트·보안 기록
+      // 5) 출제·메이트·보안 기록
       await tx.problemDraft.deleteMany({ where: { authorId: userId } });
       await tx.debateMateApplication.deleteMany({ where: { userId } });
       await tx.sanction.deleteMany({ where: { userId } });

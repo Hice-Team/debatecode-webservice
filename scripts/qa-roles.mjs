@@ -294,11 +294,6 @@ async function qaAnonymous(browser) {
     expect(r.status === 401, `HTTP ${r.status}`);
   });
 
-  await check('AI Search는 401', async () => {
-    const r = await api(page, '/api/ai-search/ask', { method: 'POST', body: { question: 'hi' } });
-    expect(r.status === 401, `HTTP ${r.status}`);
-  });
-
   await check('번역은 사전만 (LLM 미호출)', async () => {
     const r = await api(page, '/api/translate', { method: 'POST', body: { texts: ['해시'] } });
     expect(r.status === 200, `HTTP ${r.status}`);
@@ -475,8 +470,8 @@ async function qaUser(browser, userId) {
   /* ---- AI 한도 ---- */
   await check('AI 사용 한도가 회수로 표시된다', async () => {
     const state = await prisma.$queryRaw`
-      SELECT * FROM public.ai_usage_peek(${userId}::uuid, 'ai-search', '-')`;
-    return `ai-search 사용 ${state[0]?.current_count ?? 0}회`;
+      SELECT * FROM public.ai_usage_peek(${userId}::uuid, 'debateai', ${String(problem.id)})`;
+    return `debateAI 사용 ${state[0]?.current_count ?? 0}회`;
   });
 
   await check('debateAI 한도 카운터가 원자적으로 오른다', async () => {
@@ -658,24 +653,6 @@ async function qaMate(browser, mateId) {
     const res = await page.goto(`${BASE}/problems/new`, { waitUntil: 'domcontentloaded' });
     expect(res.status() === 200, `HTTP ${res.status()}`);
     expect(!page.url().includes('/login'), `되돌려졌다: ${page.url()}`);
-  });
-
-  await check('디베이트샵이 열리고 메이트 전용 상품이 보인다', async () => {
-    const res = await page.goto(`${BASE}/shop`, { waitUntil: 'domcontentloaded' });
-    // goto는 문서 내 이동이면 null을 돌려준다 — 상태 코드가 없다고 실패로 보면 안 된다
-    expect(!res || res.status() === 200, `HTTP ${res ? res.status() : 'null'}`);
-    expect(page.url().includes('/shop'), `되돌려졌다: ${page.url()}`);
-    const mateOnly = await prisma.shopProduct.count({ where: { scope: 'mate', active: true } });
-    return `메이트 전용 상품 ${mateOnly}종`;
-  });
-
-  await check('포인트가 부족하면 주문이 막힌다', async () => {
-    const product = await prisma.shopProduct.findFirst({ where: { active: true }, select: { id: true, priceKrw: true } });
-    if (!product) return '상품 없음 — 건너뜀';
-    const summary = await prisma.pointLedger.aggregate({ where: { userId: mateId }, _sum: { amount: true } });
-    const balance = summary._sum.amount ?? 0;
-    expect(balance < product.priceKrw, `잔액 ${balance}P가 상품가 ${product.priceKrw}P 이상이라 이 검사를 할 수 없다`);
-    return `잔액 ${balance}P · 상품 ${product.priceKrw}P → 주문 불가 상태`;
   });
 
   await context.close();
